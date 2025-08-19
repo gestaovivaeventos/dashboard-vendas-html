@@ -109,24 +109,14 @@
         <section class="table-container" id="table-section" style="display: none;">
             <h2>Dados Detalhados</h2>
             <table id="dados-table" class="display" style="width:100%">
-                <thead>
-                    <tr>
-                        <th>Cód. Integrante</th>
-                        <th>Nome Integrante</th>
-                        <th>Unidade</th>
-                        <th>Cód. Fundo</th>
-                        <th>Nome Fundo</th>
-                        <th>VVR (Plano)</th>
-                        <th>Data de Cadastro</th>
-                    </tr>
-                </thead>
+                <thead><tr><th>Unidade</th><th>VVR (Plano)</th><th>Data de Cadastro</th></tr></thead>
                 <tbody></tbody>
             </table>
         </section>
     </div>
 
     <script>
-        const API_URL = "https://api-adesoes-comercial.vercel.app/dados"; // <<< VERIFIQUE SE ESTA É A URL CORRETA!
+        const API_URL = "https://api-adesoes-comercial.vercel.app/dados"; // Verifique se esta é a URL correta.
         
         let allData = [];
         let vvrPorUnidadeChart, vvrPorMesChart;
@@ -144,4 +134,121 @@
                     const el = document.getElementById(id);
                     el.style.display = el.tagName === 'SECTION' ? 'grid' : 'block';
                 });
-                document.getElementById
+                document.getElementById('filters-section').style.display = 'flex';
+
+                populateFilters();
+                addEventListeners();
+                updateDashboard();
+            } else {
+                loader.innerHTML = 'Falha ao carregar dados da API.';
+            }
+        });
+
+        async function fetchAllData() {
+            let fetchedData = []; let offset = 0; const limit = 5000;
+            while (true) {
+                try {
+                    const response = await fetch(`${API_URL}?limit=${limit}&offset=${offset}`);
+                    if (!response.ok) { console.error('API Error:', response.statusText); break; }
+                    const dataObject = await response.json();
+                    const pageData = dataObject.dados || [];
+                    if (pageData.length === 0) { break; }
+                    fetchedData.push(...pageData);
+                    offset += limit;
+                } catch (error) { console.error('Fetch Error:', error); break; }
+            }
+            return fetchedData.map(d => {
+                if (!d.dt_cadastro_integrante) return null; // Ignora registros sem data
+                return {
+                    ...d, 
+                    vl_plano: parseFloat(d.vl_plano) || 0, 
+                    dt_cadastro_integrante: new Date(d.dt_cadastro_integrante)
+                }
+            }).filter(Boolean); // Remove os registros nulos
+        }
+
+        function populateFilters() {
+            const unidades = ['Todas', ...new Set(allData.map(d => d.nm_unidade))].sort();
+            const unidadeFilter = document.getElementById('unidade-filter');
+            unidadeFilter.innerHTML = '';
+            unidades.forEach(u => {
+                const option = document.createElement('option');
+                option.value = u; option.textContent = u; unidadeFilter.appendChild(option);
+            });
+            
+            const dates = allData.map(d => d.dt_cadastro_integrante.getTime());
+            const minDate = new Date(Math.min(...dates));
+            const maxDate = new Date(Math.max(...dates));
+            
+            document.getElementById('start-date').value = minDate.toISOString().split('T')[0];
+            document.getElementById('end-date').value = maxDate.toISOString().split('T')[0];
+        }
+        
+        function addEventListeners() {
+            ['unidade-filter', 'start-date', 'end-date'].forEach(id => {
+                document.getElementById(id).addEventListener('change', updateDashboard);
+            });
+        }
+
+        function updateDashboard() {
+            const selectedUnidade = document.getElementById('unidade-filter').value;
+            
+            // --- CORREÇÃO DEFINITIVA PARA DATAS E FUSO HORÁRIO ---
+            const startDateString = document.getElementById('start-date').value;
+            const endDateString = document.getElementById('end-date').value;
+
+            // Cria as datas de forma segura, tratando a string como fuso horário local
+            const startDate = new Date(startDateString + 'T00:00:00');
+            const endDate = new Date(endDateString + 'T23:59:59');
+            // --------------------------------------------------------
+
+            const filteredData = allData.filter(d => {
+                const isUnidadeMatch = (selectedUnidade === 'Todas' || d.nm_unidade === selectedUnidade);
+                const isDateMatch = (d.dt_cadastro_integrante >= startDate && d.dt_cadastro_integrante <= endDate);
+                return isUnidadeMatch && isDateMatch;
+            });
+            
+            updateKPIs(filteredData);
+            updateVvrPorUnidadeChart(filteredData);
+            updateVvrPorMesChart(filteredData);
+            updateDataTable(filteredData);
+        }
+        
+        function updateKPIs(data) {
+            const vvrTotal = data.reduce((sum, d) => sum + d.vl_plano, 0);
+            const adesoes = data.length;
+            const ticketMedio = adesoes > 0 ? vvrTotal / adesoes : 0;
+            document.getElementById('kpi-vvr-total').textContent = formatCurrency(vvrTotal);
+            document.getElementById('kpi-adesoes').textContent = adesoes.toLocaleString('pt-BR');
+            document.getElementById('kpi-ticket-medio').textContent = formatCurrency(ticketMedio);
+        }
+
+        function updateVvrPorUnidadeChart(data) {
+            const dataByUnidade = data.reduce((acc, d) => { acc[d.nm_unidade] = (acc[d.nm_unidade] || 0) + d.vl_plano; return acc; }, {});
+            const labels = Object.keys(dataByUnidade); const values = Object.values(dataByUnidade);
+            if (vvrPorUnidadeChart) vvrPorUnidadeChart.destroy();
+            vvrPorUnidadeChart = new Chart(document.getElementById('vvrPorUnidadeChart'), {
+                type: 'bar', data: { labels: labels, datasets: [{ label: 'VVR por Unidade', data: values, backgroundColor: 'rgba(88, 166, 255, 0.6)', borderColor: 'rgba(88, 166, 255, 1)', borderWidth: 1 }] },
+                options: { scales: { y: { beginAtZero: true } } }
+            });
+        }
+
+        function updateVvrPorMesChart(data) {
+            const dataByMonth = data.reduce((acc, d) => { const month = d.dt_cadastro_integrante.toISOString().slice(0, 7); acc[month] = (acc[month] || 0) + d.vl_plano; return acc; }, {});
+            const sortedMonths = Object.keys(dataByMonth).sort();
+            const labels = sortedMonths; const values = sortedMonths.map(month => dataByMonth[month]);
+            if (vvrPorMesChart) vvrPorMesChart.destroy();
+            vvrPorMesChart = new Chart(document.getElementById('vvrPorMesChart'), {
+                type: 'line', data: { labels: labels, datasets: [{ label: 'Evolução do VVR', data: values, fill: false, borderColor: 'rgb(255, 127, 14)', tension: 0.1 }] },
+                options: { scales: { x: { type: 'time', time: { unit: 'month' } } } }
+            });
+        }
+
+        function updateDataTable(data) {
+            const tableData = data.map(d => [d.nm_unidade, formatCurrency(d.vl_plano), d.dt_cadastro_integrante.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })]);
+            if (dataTable) { dataTable.clear().rows.add(tableData).draw(); } 
+            else { dataTable = $('#dados-table').DataTable({ data: tableData, pageLength: 10, language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json', } }); }
+        }
+    </script>
+</body>
+</html>
