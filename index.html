@@ -2,18 +2,75 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Página de Teste de JavaScript</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Vendas - Passo 1</title>
+    <style>
+        body { font-family: sans-serif; background-color: #0E1117; color: #FAFAFA; padding: 20px; }
+        #status { font-size: 1.2em; }
+    </style>
 </head>
 <body>
-    <h1>Teste de Execução</h1>
-    <p id="mensagem">Se você está vendo esta mensagem, o HTML carregou. Aguardando o JavaScript...</p>
+    <h1>Dashboard de Vendas</h1>
+    <div id="status">Iniciando busca de dados... (Abra o console para ver o progresso)</div>
 
     <script>
-        // Se este script executar, a mensagem abaixo DEVE aparecer no console.
-        console.log("SUCESSO: O bloco de script começou a ser executado!");
+        // 1. Bloco de script iniciado.
+        console.log("Iniciando Passo 1: Busca de Dados.");
 
-        // E o texto na tela DEVE ser alterado pela linha abaixo.
-        document.getElementById('mensagem').textContent = 'ÓTIMO! O JavaScript está funcionando e alterou este texto!';
+        // 2. Defina a URL da sua API aqui
+        const API_URL = "https://api-adesoes-comercial.vercel.app/dados";
+
+        // 3. Função para buscar todos os dados com paginação
+        async function fetchAllData() {
+            console.log("Dentro de fetchAllData. Iniciando loop...");
+            let fetchedData = [];
+            let offset = 0;
+            const limit = 5000;
+            
+            while (true) {
+                try {
+                    const response = await fetch(`${API_URL}?limit=${limit}&offset=${offset}`);
+                    if (!response.ok) {
+                        console.error(`API Error: Status ${response.status}`);
+                        break;
+                    }
+                    const dataObject = await response.json();
+                    const pageData = dataObject.dados || [];
+                    
+                    if (pageData.length === 0) {
+                        console.log("Página vazia recebida, finalizando busca.");
+                        break;
+                    }
+                    
+                    fetchedData.push(...pageData);
+                    offset += limit;
+                    console.log(`Página com offset ${offset - limit} carregada. Total parcial: ${fetchedData.length} registros.`);
+
+                } catch (error) {
+                    console.error("Erro durante o fetch:", error);
+                    break;
+                }
+            }
+            return fetchedData;
+        }
+
+        // 4. Evento que inicia tudo quando a página carrega
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log("Página carregada. Chamando fetchAllData.");
+            const allData = await fetchAllData();
+            
+            const statusDiv = document.getElementById('status');
+
+            if (allData.length > 0) {
+                const successMessage = `Sucesso! ${allData.length} registros foram carregados da API.`;
+                console.log(successMessage);
+                statusDiv.textContent = successMessage;
+            } else {
+                const errorMessage = "Falha ao carregar dados ou nenhum dado foi retornado.";
+                console.error(errorMessage);
+                statusDiv.textContent = errorMessage;
+            }
+        });
     </script>
 </body>
 </html>
