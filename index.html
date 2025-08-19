@@ -2,51 +2,260 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Teste de Busca - Google Sheet</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Vendas</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.css">
+    <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.js"></script>
+    <style>
+        /* Seu CSS completo aqui, sem mudanças... */
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #0E1117; color: #FAFAFA; margin: 0; padding: 20px; }
+        .container { display: grid; grid-template-columns: repeat(12, 1fr); grid-gap: 20px; }
+        .header, .filters, .kpi-container, .chart-container, .table-container { grid-column: span 12; background-color: #161B22; padding: 20px; border-radius: 10px; border: 1px solid #30363D; }
+        h1, h2 { margin-top: 0; border-bottom: 2px solid #30363D; padding-bottom: 10px; }
+        .filters { display: flex; gap: 20px; align-items: center; }
+        .filter-item { display: flex; flex-direction: column; }
+        label { margin-bottom: 5px; font-size: 0.9em; color: #8B949E; }
+        select, input[type="date"] { background-color: #010409; color: #FAFAFA; border: 1px solid #30363D; border-radius: 6px; padding: 8px; }
+        .kpi-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
+        .kpi-card { text-align: center; }
+        .kpi-value { font-size: 2.5em; font-weight: bold; color: #58A6FF; }
+        .kpi-label { font-size: 1em; color: #8B949E; }
+        .loader { text-align: center; font-size: 1.5em; padding: 50px; }
+        .dataTables_wrapper { color: #FAFAFA; }
+        .dataTables_wrapper .dataTables_length select, .dataTables_wrapper .dataTables_filter input { background-color: #010409; color: #FAFAFA; border: 1px solid #30363D; border-radius: 6px; padding: 5px; }
+        .dataTables_wrapper .dataTables_paginate .paginate_button { color: #FAFAFA !important; border: 1px solid #30363D; }
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current { background: #58A6FF !important; border-color: #58A6FF !important; }
+    </style>
 </head>
 <body>
-    <h1>Teste de Busca de Metas</h1>
-    <p>Abra o console do navegador (Inspecionar -> Console) para ver o resultado.</p>
-    <pre id="output" style="background-color:#eee; color:#333; padding:10px; border:1px solid #ccc; white-space: pre-wrap; word-wrap: break-word;"></pre>
+    <div class="container">
+        <header class="header"><h1>Dashboard de Vendas e Metas</h1></header>
+        <section id="loader" class="filters"><div class="loader">Carregando dados da API e Planilha...</div></section>
+        <section class="filters" id="filters-section" style="display: none;">
+            <div class="filter-item"><label for="unidade-filter">Filtrar por Unidade</label><select id="unidade-filter"></select></div>
+            <div class="filter-item"><label for="start-date">Data de Início</label><input type="date" id="start-date"></div>
+            <div class="filter-item"><label for="end-date">Data de Fim</label><input type="date" id="end-date"></div>
+        </section>
+        <section class="kpi-container" id="kpi-section" style="display: none;">
+            <div class="kpi-card"><div class="kpi-value" id="kpi-vvr-total">R$ 0,00</div><div class="kpi-label">VVR Total Realizado</div></div>
+            <div class="kpi-card"><div class="kpi-value" id="kpi-meta-vvr-total">R$ 0,00</div><div class="kpi-label">Meta VVR Total</div></div>
+            <div class="kpi-card"><div class="kpi-value" id="kpi-atingimento-vvr">0%</div><div class="kpi-label">Atingimento VVR</div></div>
+            <div class="kpi-card"><div class="kpi-value" id="kpi-adesoes">0</div><div class="kpi-label">Adesões Realizadas</div></div>
+        </section>
+        <section class="chart-container" id="chart1-section" style="display: none;"><h2>Desempenho por Unidade (VVR Realizado vs. Meta)</h2><canvas id="desempenhoUnidadeChart"></canvas></section>
+        <section class="table-container" id="table-section" style="display: none;">
+            <h2>Dados Detalhados por Mês/Unidade</h2>
+            <table id="dados-table" class="display" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>Unidade</th><th>Período</th><th>VVR Realizado</th><th>Meta VVR</th><th>Atingimento VVR</th><th>Adesões Realizadas</th><th>Meta Adesões</th><th>Atingimento Adesões</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </section>
+    </div>
 
     <script>
-        // COLE A SUA URL GERADA NO PASSO 2 AQUI
+        const API_URL = "https://api-adesoes-comercial.vercel.app/dados"; 
         const METAS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ6koJ60VvpmCheGW4CcSgaJ1NTDAlnIDgGMj-SYkkDD61ODu2FMUJjC6cK0EJZx229RdiQAPJSmyiK/pub?gid=0&single=true&output=csv";
 
-        async function testFetch() {
-            const outputElement = document.getElementById('output');
-            console.log("Iniciando o teste de busca na Planilha...");
-            outputElement.textContent = "Tentando buscar dados da Planilha...";
+        let allData = [];
+        let metasData = new Map();
+        let desempenhoUnidadeChart;
+        let dataTable;
 
+        const formatCurrency = (value) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+        const formatPercent = (value) => new Intl.NumberFormat('pt-BR', { style: 'percent', minimumFractionDigits: 1 }).format(value);
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const loader = document.getElementById('loader');
+            const [apiData, sheetData] = await Promise.all([fetchAllApiData(), fetchMetasData()]);
+            allData = apiData;
+            metasData = sheetData;
+
+            if (allData.length > 0) {
+                loader.style.display = 'none';
+                ['filters-section', 'kpi-section', 'chart1-section', 'table-section'].forEach(id => document.getElementById(id).style.display = 'block');
+                document.getElementById('filters-section').style.display = 'flex';
+                document.getElementById('kpi-section').style.display = 'grid';
+                populateFilters();
+                addEventListeners();
+                updateDashboard();
+            } else {
+                loader.innerHTML = 'Falha ao carregar dados.';
+            }
+        });
+        
+        async function fetchMetasData() {
+            if (!METAS_URL.startsWith('http')) return new Map();
             try {
                 const response = await fetch(METAS_URL);
-                console.log("Resposta recebida da URL:", response);
-
-                if (!response.ok) {
-                    console.error("A resposta da rede não foi OK. Status:", response.status);
-                    outputElement.textContent = `Erro! O servidor respondeu com o status: ${response.status}. Veja o console.`;
-                    return;
-                }
-
                 const csvText = await response.text();
                 
-                // Verifica se o texto recebido é um HTML (página de login)
-                if (csvText.trim().toLowerCase().startsWith("<!doctype html")) {
-                    console.error("ERRO: O conteúdo recebido é uma página HTML, não um CSV. Verifique as permissões de compartilhamento da planilha.");
-                    outputElement.textContent = "ERRO: A planilha retornou uma página HTML em vez de dados CSV. Garanta que o 'Acesso geral' da planilha está como 'Qualquer pessoa com o link'.";
-                    return;
-                }
+                // Parser de CSV robusto que lida com vírgulas dentro de aspas
+                const lines = csvText.split(/\r?\n/);
+                const headers = lines[0].split(',').map(h => h.trim());
+                const rows = lines.slice(1).map(line => {
+                    const regex = /(?:"([^"]*)"|([^,]*))/g;
+                    let values = [];
+                    let match;
+                    while (match = regex.exec(line)) {
+                        values.push(match[1] || match[2]);
+                    }
+                    return values;
+                });
                 
-                console.log("Texto CSV recebido (primeiros 500 caracteres):", csvText.substring(0, 500));
-                outputElement.textContent = "SUCESSO! Os dados foram recebidos. Veja o conteúdo no console.\n\n" + csvText.substring(0, 500) + "...";
+                const metasMap = new Map();
+                const unidadeIndex = headers.indexOf("nm_unidade");
+                const anoIndex = headers.indexOf("ANO");
+                const mesIndex = headers.indexOf("MÊS");
+                const metaVvrIndex = headers.indexOf("meta vl_plano");
+                const metaAdesoesIndex = headers.indexOf("META ADESÕES");
 
+                rows.forEach(row => {
+                    if (row.length < headers.length) return; 
+                    
+                    const unidade = row[unidadeIndex];
+                    const ano = row[anoIndex];
+                    const mes = String(row[mesIndex]).padStart(2, '0');
+                    const metaVvrString = row[metaVvrIndex] || "0";
+                    const metaVvr = parseFloat(metaVvrString.replace(/\./g, '').replace(',', '.')) || 0;
+                    const metaAdesoes = parseInt(row[metaAdesoesIndex]) || 0;
+                    
+                    if (unidade && ano && mes) {
+                        const chave = `${unidade}-${ano}-${mes}`;
+                        metasMap.set(chave, { meta_vvr: metaVvr, meta_adesoes: metaAdesoes });
+                    }
+                });
+                return metasMap;
             } catch (error) {
-                console.error("ERRO CRÍTICO DURANTE O FETCH:", error);
-                outputElement.textContent = "ERRO CRÍTICO! Verifique o console para detalhes do erro de 'fetch'. Provavelmente é um problema de CORS ou de rede.";
+                console.error("Erro ao buscar dados das metas:", error);
+                return new Map();
             }
         }
+        
+        async function fetchAllApiData() { 
+            let fetchedData = []; let offset = 0; const limit = 5000; 
+            while (true) { 
+                try { 
+                    const response = await fetch(`${API_URL}?limit=${limit}&offset=${offset}`); 
+                    if (!response.ok) { console.error('API Error:', response.statusText); break; } 
+                    const dataObject = await response.json(); 
+                    const pageData = dataObject.dados || []; 
+                    if (pageData.length === 0) { break; } 
+                    fetchedData.push(...pageData); 
+                    offset += limit; 
+                } catch (error) { console.error('Fetch Error:', error); break; } 
+            } 
+            return fetchedData.map(d => { 
+                if (!d.dt_cadastro_integrante) return null; 
+                return { ...d, vl_plano: parseFloat(d.vl_plano) || 0, dt_cadastro_integrante: new Date(d.dt_cadastro_integrante) } 
+            }).filter(Boolean); 
+        }
 
-        testFetch();
+        function populateFilters() { 
+            const unidades = ['Todas', ...new Set(allData.map(d => d.nm_unidade))].sort(); 
+            const unidadeFilter = document.getElementById('unidade-filter'); 
+            unidadeFilter.innerHTML = ''; 
+            unidades.forEach(u => { const option = document.createElement('option'); option.value = u; option.textContent = u; unidadeFilter.appendChild(option); }); 
+            const dates = allData.map(d => d.dt_cadastro_integrante.getTime()); 
+            const minDate = new Date(Math.min(...dates)); 
+            const maxDate = new Date(Math.max(...dates)); 
+            document.getElementById('start-date').value = minDate.toISOString().split('T')[0]; 
+            document.getElementById('end-date').value = maxDate.toISOString().split('T')[0]; 
+        }
+
+        function addEventListeners() { 
+            ['unidade-filter', 'start-date', 'end-date'].forEach(id => document.getElementById(id).addEventListener('change', updateDashboard)); 
+        }
+
+        function updateDashboard() { 
+            const selectedUnidade = document.getElementById('unidade-filter').value; 
+            const startDateString = document.getElementById('start-date').value; 
+            const endDateString = document.getElementById('end-date').value; 
+            const startDate = new Date(startDateString + 'T00:00:00'); 
+            const endDate = new Date(endDateString + 'T23:59:59'); 
+            const filteredApiData = allData.filter(d => { 
+                const isUnidadeMatch = (selectedUnidade === 'Todas' || d.nm_unidade === selectedUnidade); 
+                const isDateMatch = (d.dt_cadastro_integrante >= startDate && d.dt_cadastro_integrante <= endDate); 
+                return isUnidadeMatch && isDateMatch; 
+            }); 
+            const vendasPorMesUnidade = filteredApiData.reduce((acc, d) => { 
+                const periodo = d.dt_cadastro_integrante.toISOString().slice(0, 7); 
+                const chave = `${d.nm_unidade}-${periodo}`; 
+                if (!acc[chave]) { 
+                    acc[chave] = { unidade: d.nm_unidade, periodo: periodo, realizado_vvr: 0, realizado_adesoes: 0 }; 
+                } 
+                acc[chave].realizado_vvr += d.vl_plano; 
+                acc[chave].realizado_adesoes += 1; 
+                return acc; 
+            }, {}); 
+            const finalData = Object.values(vendasPorMesUnidade).map(item => { 
+                const chaveMeta = `${item.unidade}-${item.periodo}`; 
+                const meta = metasData.get(chaveMeta) || { meta_vvr: 0, meta_adesoes: 0 }; 
+                const atingimentoVvr = meta.meta_vvr > 0 ? item.realizado_vvr / meta.meta_vvr : 0; 
+                const atingimentoAdesoes = meta.meta_adesoes > 0 ? item.realizado_adesoes / meta.meta_adesoes : 0; 
+                return { ...item, ...meta, atingimento_vvr: atingimentoVvr, atingimento_adesoes: atingimentoAdesoes }; 
+            }); 
+            updateKPIs(finalData); 
+            updateDesempenhoUnidadeChart(finalData); 
+            updateDataTable(finalData); 
+        }
+
+        function updateKPIs(data) { 
+            const vvrTotal = data.reduce((sum, d) => sum + d.realizado_vvr, 0); 
+            const metaVvrTotal = data.reduce((sum, d) => sum + d.meta_vvr, 0); 
+            const atingimentoVvrTotal = metaVvrTotal > 0 ? vvrTotal / metaVvrTotal : 0; 
+            const adesoesTotal = data.reduce((sum, d) => sum + d.realizado_adesoes, 0); 
+            document.getElementById('kpi-vvr-total').textContent = formatCurrency(vvrTotal); 
+            document.getElementById('kpi-meta-vvr-total').textContent = formatCurrency(metaVvrTotal); 
+            document.getElementById('kpi-atingimento-vvr').textContent = formatPercent(atingimentoVvrTotal); 
+            document.getElementById('kpi-adesoes').textContent = adesoesTotal.toLocaleString('pt-BR'); 
+        }
+
+        function updateDesempenhoUnidadeChart(data) { 
+            const dataByUnidade = data.reduce((acc, d) => { 
+                if (!acc[d.unidade]) acc[d.unidade] = { realizado: 0, meta: 0 }; 
+                acc[d.unidade].realizado += d.realizado_vvr; 
+                acc[d.unidade].meta += d.meta_vvr; 
+                return acc; 
+            }, {}); 
+            const labels = Object.keys(dataByUnidade); 
+            const realizadoValues = labels.map(l => dataByUnidade[l].realizado); 
+            const metaValues = labels.map(l => dataByUnidade[l].meta); 
+            if (desempenhoUnidadeChart) desempenhoUnidadeChart.destroy(); 
+            desempenhoUnidadeChart = new Chart(document.getElementById('desempenhoUnidadeChart'), { 
+                type: 'bar', 
+                data: { 
+                    labels: labels, 
+                    datasets: [ 
+                        { label: 'VVR Realizado', data: realizadoValues, backgroundColor: 'rgba(88, 166, 255, 0.7)' }, 
+                        { label: 'Meta VVR', data: metaValues, backgroundColor: 'rgba(255, 99, 132, 0.7)' } 
+                    ] 
+                }, 
+                options: { scales: { y: { beginAtZero: true } } } 
+            }); 
+        }
+
+        function updateDataTable(data) { 
+            const tableData = data.sort((a,b) => a.periodo.localeCompare(b.periodo) || a.unidade.localeCompare(b.unidade)).map(d => [ 
+                d.unidade, d.periodo, formatCurrency(d.realizado_vvr), formatCurrency(d.meta_vvr), 
+                formatPercent(d.atingimento_vvr), d.realizado_adesoes, d.meta_adesoes, formatPercent(d.atingimento_adesoes) 
+            ]); 
+            if (dataTable) { dataTable.clear().rows.add(tableData).draw(); } 
+            else { 
+                dataTable = $('#dados-table').DataTable({ 
+                    data: tableData, 
+                    pageLength: 10, 
+                    language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json' }, 
+                    destroy: true 
+                }); 
+            } 
+        }
     </script>
 </body>
 </html>
