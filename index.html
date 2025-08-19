@@ -59,7 +59,6 @@
             try {
                 const response = await fetch(METAS_URL);
                 const csvText = await response.text();
-                // \r\n para ser compatível com diferentes sistemas operacionais
                 const rows = csvText.split(/\r?\n/).map(row => row.trim().split(',')); 
                 
                 const metasMap = new Map();
@@ -71,16 +70,16 @@
                 const metaAdesoesIndex = headers.indexOf("META ADESÕES");
 
                 rows.slice(1).forEach(row => {
-                    if (row.length < headers.length) return; // Pula linhas vazias ou malformadas
+                    if (row.length < headers.length) return; 
                     
                     const unidade = row[unidadeIndex];
                     const ano = row[anoIndex];
                     const mes = String(row[mesIndex]).padStart(2, '0');
                     
-                    // --- CORREÇÃO IMPORTANTE AQUI ---
-                    // Pega a string (ex: "250000,00"), troca a vírgula por ponto, e converte para número.
+                    // --- CORREÇÃO DEFINITIVA AQUI ---
                     const metaVvrString = row[metaVvrIndex] || "0";
-                    const metaVvr = parseFloat(metaVvrString.replace(',', '.')) || 0;
+                    // 1. Remove os pontos de milhar. 2. Troca a vírgula decimal por ponto.
+                    const metaVvr = parseFloat(metaVvrString.replace(/\./g, '').replace(',', '.')) || 0;
                     // ------------------------------------
 
                     const metaAdesoes = parseInt(row[metaAdesoesIndex]) || 0;
@@ -90,7 +89,6 @@
                         metasMap.set(chave, { meta_vvr: metaVvr, meta_adesoes: metaAdesoes });
                     }
                 });
-                console.log("Metas carregadas:", Object.fromEntries(metasMap)); // Log para depuração
                 return metasMap;
             } catch (error) {
                 console.error("Erro ao buscar dados das metas:", error);
