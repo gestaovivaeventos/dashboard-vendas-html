@@ -9,11 +9,8 @@
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.css">
     <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.js"></script>
-    
-    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-
     <style>
-        /* ... Seu CSS completo aqui, sem mudanças ... */
+        /* Seu CSS completo aqui... */
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #0E1117; color: #FAFAFA; margin: 0; padding: 20px; }
         .container { display: grid; grid-template-columns: repeat(12, 1fr); grid-gap: 20px; }
         .header, .filters, .kpi-container, .chart-container, .table-container { grid-column: span 12; background-color: #161B22; padding: 20px; border-radius: 10px; border: 1px solid #30363D; }
@@ -22,12 +19,9 @@
         .filter-item { display: flex; flex-direction: column; }
         label { margin-bottom: 5px; font-size: 0.9em; color: #8B949E; }
         select, input[type="date"] { background-color: #010409; color: #FAFAFA; border: 1px solid #30363D; border-radius: 6px; padding: 8px; }
-        button { background-color: #238636; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; }
-        button:hover { background-color: #2ea043; }
-        .table-header { display: flex; justify-content: space-between; align-items: center; }
         .kpi-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
         .kpi-card { text-align: center; }
-        .kpi-value { font-size: 2.5em; font-weight: bold; color: #58A6FF; }
+        .kpi-value { font-size: 2.5em; font-weight: bold; color: #58AFF; }
         .kpi-label { font-size: 1em; color: #8B949E; }
         .loader { text-align: center; font-size: 1.5em; padding: 50px; }
         .dataTables_wrapper { color: #FAFAFA; }
@@ -37,7 +31,6 @@
     </style>
 </head>
 <body>
-
     <div class="container">
         <header class="header"><h1>Dashboard de Vendas</h1></header>
         <section id="loader" class="filters"><div class="loader">Carregando dados da API...</div></section>
@@ -53,17 +46,18 @@
         </section>
         <section class="chart-container" id="chart1-section" style="display: none;"><h2>VVR por Unidade</h2><canvas id="vvrPorUnidadeChart"></canvas></section>
         <section class="chart-container" id="chart2-section" style="display: none;"><h2>Evolução de VVR no Tempo</h2><canvas id="vvrPorMesChart"></canvas></section>
-        
         <section class="table-container" id="table-section" style="display: none;">
-            <div class="table-header">
-                <h2>Dados Detalhados</h2>
-                <button id="export-btn">Exportar para Excel (XLSX)</button>
-            </div>
+            <h2>Dados Detalhados</h2>
             <table id="dados-table" class="display" style="width:100%">
                 <thead>
                     <tr>
-                        <th>Cód. Integrante</th><th>Nome Integrante</th><th>Unidade</th>
-                        <th>Cód. Fundo</th><th>Nome Fundo</th><th>VVR (Plano)</th><th>Data de Cadastro</th>
+                        <th>Cód. Integrante</th>
+                        <th>Nome Integrante</th>
+                        <th>Unidade</th>
+                        <th>Cód. Fundo</th>
+                        <th>Nome Fundo</th>
+                        <th>VVR (Plano)</th>
+                        <th>Data de Cadastro</th>
                     </tr>
                 </thead>
                 <tbody></tbody>
@@ -72,25 +66,34 @@
     </div>
 
     <script>
+        // Substitua pela sua URL da API que já tem o CORS configurado
         const API_URL = "https://api-adesoes-comercial.vercel.app/dados"; 
         
         let allData = [];
-        let filteredData = []; // Variável para guardar os dados filtrados
         let vvrPorUnidadeChart, vvrPorMesChart;
         let dataTable;
 
         const formatCurrency = (value) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 
-        document.addEventListener('DOMContentLoaded', async () => { /* ...código igual, sem mudanças... */ });
-        async function fetchAllData() { /* ...código igual, sem mudanças... */ }
-        function populateFilters() { /* ...código igual, sem mudanças... */ }
-        function updateDashboard() { /* ...código igual, sem mudanças... */ }
-        function updateKPIs(data) { /* ...código igual, sem mudanças... */ }
-        function updateVvrPorUnidadeChart(data) { /* ...código igual, sem mudanças... */ }
-        function updateVvrPorMesChart(data) { /* ...código igual, sem mudanças... */ }
-        function updateDataTable(data) { /* ...código igual, sem mudanças... */ }
-        
-        // As funções abaixo foram mantidas para referência, copie o bloco inteiro
+        // O resto do seu script que já funcionava
+        document.addEventListener('DOMContentLoaded', async () => {
+            const loader = document.getElementById('loader');
+            allData = await fetchAllData();
+            if (allData.length > 0) {
+                loader.style.display = 'none';
+                ['filters-section', 'kpi-section', 'chart1-section', 'chart2-section', 'table-section'].forEach(id => {
+                    const el = document.getElementById(id);
+                    el.style.display = el.tagName === 'SECTION' ? 'grid' : 'block';
+                });
+                document.getElementById('filters-section').style.display = 'flex';
+                populateFilters();
+                addEventListeners();
+                updateDashboard();
+            } else {
+                loader.innerHTML = 'Falha ao carregar dados da API.';
+            }
+        });
+
         async function fetchAllData() {
             let fetchedData = []; let offset = 0; const limit = 5000;
             while (true) {
@@ -106,27 +109,33 @@
             }
             return fetchedData.map(d => {
                 if (!d.dt_cadastro_integrante) return null;
-                return {...d, vl_plano: parseFloat(d.vl_plano) || 0, dt_cadastro_integrante: new Date(d.dt_cadastro_integrante)}
+                return {
+                    ...d, 
+                    vl_plano: parseFloat(d.vl_plano) || 0, 
+                    dt_cadastro_integrante: new Date(d.dt_cadastro_integrante)
+                }
             }).filter(Boolean);
         }
+
         function populateFilters() {
             const unidades = ['Todas', ...new Set(allData.map(d => d.nm_unidade))].sort();
             const unidadeFilter = document.getElementById('unidade-filter');
             unidadeFilter.innerHTML = '';
-            unidades.forEach(u => { const option = document.createElement('option'); option.value = u; option.textContent = u; unidadeFilter.appendChild(option); });
+            unidades.forEach(u => {
+                const option = document.createElement('option');
+                option.value = u; option.textContent = u; unidadeFilter.appendChild(option);
+            });
             const dates = allData.map(d => d.dt_cadastro_integrante.getTime());
-            const minDate = new Date(Math.min(...dates)); const maxDate = new Date(Math.max(...dates));
+            const minDate = new Date(Math.min(...dates));
+            const maxDate = new Date(Math.max(...dates));
             document.getElementById('start-date').value = minDate.toISOString().split('T')[0];
             document.getElementById('end-date').value = maxDate.toISOString().split('T')[0];
         }
 
-        // --- PASSO 3: ADICIONANDO A LÓGICA DO BOTÃO ---
         function addEventListeners() {
             ['unidade-filter', 'start-date', 'end-date'].forEach(id => {
                 document.getElementById(id).addEventListener('change', updateDashboard);
             });
-            // Adiciona o evento de clique para o novo botão
-            document.getElementById('export-btn').addEventListener('click', exportToExcel);
         }
 
         function updateDashboard() {
@@ -135,53 +144,69 @@
             const endDateString = document.getElementById('end-date').value;
             const startDate = new Date(startDateString + 'T00:00:00');
             const endDate = new Date(endDateString + 'T23:59:59');
-
-            // Atualiza a variável global com os dados filtrados
-            filteredData = allData.filter(d => {
+            const filteredData = allData.filter(d => {
                 const isUnidadeMatch = (selectedUnidade === 'Todas' || d.nm_unidade === selectedUnidade);
                 const isDateMatch = (d.dt_cadastro_integrante >= startDate && d.dt_cadastro_integrante <= endDate);
                 return isUnidadeMatch && isDateMatch;
             });
-            
             updateKPIs(filteredData);
             updateVvrPorUnidadeChart(filteredData);
             updateVvrPorMesChart(filteredData);
             updateDataTable(filteredData);
         }
 
-        function exportToExcel() {
-            if (filteredData.length === 0) {
-                alert("Não há dados para exportar. Por favor, ajuste os filtros.");
-                return;
-            }
-
-            // Prepara os dados para a planilha, selecionando e renomeando colunas
-            const dataToExport = filteredData.map(row => ({
-                'Cód. Integrante': row.codigo_integrante,
-                'Nome Integrante': row.nm_integrante,
-                'Unidade': row.nm_unidade,
-                'Cód. Fundo': row.id_fundo,
-                'Nome Fundo': row.nm_fundo,
-                'VVR (Plano)': row.vl_plano,
-                'Data de Cadastro': row.dt_cadastro_integrante.toLocaleDateString('pt-BR')
-            }));
-
-            // Cria a planilha a partir dos dados (JSON)
-            const worksheet = XLSX.utils.json_to_sheet(dataToExport);
-            // Cria um novo "livro" de Excel
-            const workbook = XLSX.utils.book_new();
-            // Adiciona a planilha ao livro
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Dados");
-
-            // Força o download do arquivo .xlsx
-            XLSX.writeFile(workbook, "RelatorioDeVendas.xlsx");
+        function updateKPIs(data) {
+            const vvrTotal = data.reduce((sum, d) => sum + d.vl_plano, 0);
+            const adesoes = data.length;
+            const ticketMedio = adesoes > 0 ? vvrTotal / adesoes : 0;
+            document.getElementById('kpi-vvr-total').textContent = formatCurrency(vvrTotal);
+            document.getElementById('kpi-adesoes').textContent = adesoes.toLocaleString('pt-BR');
+            document.getElementById('kpi-ticket-medio').textContent = formatCurrency(ticketMedio);
         }
+
+        function updateVvrPorUnidadeChart(data) { /* ...código igual, sem mudanças... */ }
+        function updateVvrPorMesChart(data) { /* ...código igual, sem mudanças... */ }
         
-        // O resto das suas funções de update continuam iguais...
-        function updateKPIs(data) { const vvrTotal = data.reduce((sum, d) => sum + d.vl_plano, 0); const adesoes = data.length; const ticketMedio = adesoes > 0 ? vvrTotal / adesoes : 0; document.getElementById('kpi-vvr-total').textContent = formatCurrency(vvrTotal); document.getElementById('kpi-adesoes').textContent = adesoes.toLocaleString('pt-BR'); document.getElementById('kpi-ticket-medio').textContent = formatCurrency(ticketMedio); }
-        function updateVvrPorUnidadeChart(data) { const dataByUnidade = data.reduce((acc, d) => { acc[d.nm_unidade] = (acc[d.nm_unidade] || 0) + d.vl_plano; return acc; }, {}); const labels = Object.keys(dataByUnidade); const values = Object.values(dataByUnidade); if (vvrPorUnidadeChart) vvrPorUnidadeChart.destroy(); vvrPorUnidadeChart = new Chart(document.getElementById('vvrPorUnidadeChart'), { type: 'bar', data: { labels: labels, datasets: [{ label: 'VVR por Unidade', data: values, backgroundColor: 'rgba(88, 166, 255, 0.6)', borderColor: 'rgba(88, 166, 255, 1)', borderWidth: 1 }] }, options: { scales: { y: { beginAtZero: true } } } }); }
-        function updateVvrPorMesChart(data) { const dataByMonth = data.reduce((acc, d) => { const month = d.dt_cadastro_integrante.toISOString().slice(0, 7); acc[month] = (acc[month] || 0) + d.vl_plano; return acc; }, {}); const sortedMonths = Object.keys(dataByMonth).sort(); const labels = sortedMonths; const values = sortedMonths.map(month => dataByMonth[month]); if (vvrPorMesChart) vvrPorMesChart.destroy(); vvrPorMesChart = new Chart(document.getElementById('vvrPorMesChart'), { type: 'line', data: { labels: labels, datasets: [{ label: 'Evolução do VVR', data: values, fill: false, borderColor: 'rgb(255, 127, 14)', tension: 0.1 }] }, options: { scales: { x: { type: 'time', time: { unit: 'month' } } } } }); }
-        function updateDataTable(data) { const tableData = data.map(d => [d.codigo_integrante, d.nm_integrante, d.nm_unidade, d.id_fundo, d.nm_fundo, formatCurrency(d.vl_plano), d.dt_cadastro_integrante.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })]); if (dataTable) { dataTable.clear().rows.add(tableData).draw(); } else { dataTable = $('#dados-table').DataTable({ data: tableData, pageLength: 10, language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json', } }); } }
+        // As duas funções de gráfico mantêm-se iguais
+        function updateVvrPorUnidadeChart(data) {
+            const dataByUnidade = data.reduce((acc, d) => { acc[d.nm_unidade] = (acc[d.nm_unidade] || 0) + d.vl_plano; return acc; }, {});
+            const labels = Object.keys(dataByUnidade); const values = Object.values(dataByUnidade);
+            if (vvrPorUnidadeChart) vvrPorUnidadeChart.destroy();
+            vvrPorUnidadeChart = new Chart(document.getElementById('vvrPorUnidadeChart'), { type: 'bar', data: { labels: labels, datasets: [{ label: 'VVR por Unidade', data: values, backgroundColor: 'rgba(88, 166, 255, 0.6)', borderColor: 'rgba(88, 166, 255, 1)', borderWidth: 1 }] }, options: { scales: { y: { beginAtZero: true } } } });
+        }
+        function updateVvrPorMesChart(data) {
+            const dataByMonth = data.reduce((acc, d) => { const month = d.dt_cadastro_integrante.toISOString().slice(0, 7); acc[month] = (acc[month] || 0) + d.vl_plano; return acc; }, {});
+            const sortedMonths = Object.keys(dataByMonth).sort(); const labels = sortedMonths; const values = sortedMonths.map(month => dataByMonth[month]);
+            if (vvrPorMesChart) vvrPorMesChart.destroy();
+            vvrPorMesChart = new Chart(document.getElementById('vvrPorMesChart'), { type: 'line', data: { labels: labels, datasets: [{ label: 'Evolução do VVR', data: values, fill: false, borderColor: 'rgb(255, 127, 14)', tension: 0.1 }] }, options: { scales: { x: { type: 'time', time: { unit: 'month' } } } } });
+        }
+
+        // --- FUNÇÃO DA TABELA ATUALIZADA ---
+        function updateDataTable(data) {
+            // Mapeia os dados para a nova ordem de colunas
+            const tableData = data.map(d => [
+                d.codigo_integrante,
+                d.nm_integrante,
+                d.nm_unidade,
+                d.id_fundo,
+                d.nm_fundo,
+                formatCurrency(d.vl_plano),
+                d.dt_cadastro_integrante.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })
+            ]);
+            
+            if (dataTable) {
+                dataTable.clear().rows.add(tableData).draw();
+            } 
+            else {
+                dataTable = $('#dados-table').DataTable({
+                    data: tableData,
+                    pageLength: 10,
+                    language: {
+                        url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json',
+                    }
+                });
+            }
+        }
     </script>
 </body>
 </html>
