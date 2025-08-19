@@ -2,125 +2,18 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard de Vendas</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.css">
-    <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.js"></script>
-
-    <style>
-        /* ... Seu CSS continua o mesmo ... */
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #0E1117; color: #FAFAFA; margin: 0; padding: 20px; }
-        .container { display: grid; grid-template-columns: repeat(12, 1fr); grid-gap: 20px; }
-        .header, .filters, .kpi-container, .chart-container, .table-container { grid-column: span 12; background-color: #161B22; padding: 20px; border-radius: 10px; border: 1px solid #30363D; }
-        h1, h2 { margin-top: 0; border-bottom: 2px solid #30363D; padding-bottom: 10px; }
-        .filters { display: flex; gap: 20px; align-items: center; }
-        .filter-item { display: flex; flex-direction: column; }
-        label { margin-bottom: 5px; font-size: 0.9em; color: #8B949E; }
-        select, input[type="date"] { background-color: #010409; color: #FAFAFA; border: 1px solid #30363D; border-radius: 6px; padding: 8px; }
-        .kpi-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
-        .kpi-card { text-align: center; }
-        .kpi-value { font-size: 2.5em; font-weight: bold; color: #58A6FF; }
-        .kpi-label { font-size: 1em; color: #8B949E; }
-        .loader { text-align: center; font-size: 1.5em; padding: 50px; }
-        .dataTables_wrapper { color: #FAFAFA; }
-        .dataTables_wrapper .dataTables_length select, .dataTables_wrapper .dataTables_filter input { background-color: #010409; color: #FAFAFA; border: 1px solid #30363D; border-radius: 6px; padding: 5px; }
-        .dataTables_wrapper .dataTables_paginate .paginate_button { color: #FAFAFA !important; border: 1px solid #30363D; }
-        .dataTables_wrapper .dataTables_paginate .paginate_button.current { background: #58A6FF !important; border-color: #58A6FF !important; }
-    </style>
+    <title>Página de Teste de JavaScript</title>
 </head>
 <body>
-    <div class="container">
-        <header class="header"><h1>Dashboard de Vendas</h1></header>
-        <section id="loader" class="filters"><div class="loader">Carregando dados da API...</div></section>
-        <section class="filters" id="filters-section" style="display: none;">
-            <div class="filter-item"><label for="unidade-filter">Filtrar por Unidade</label><select id="unidade-filter"></select></div>
-            <div class="filter-item"><label for="start-date">Data de Início</label><input type="date" id="start-date"></div>
-            <div class="filter-item"><label for="end-date">Data de Fim</label><input type="date" id="end-date"></div>
-        </section>
-        <section class="kpi-container" id="kpi-section" style="display: none;"> <div class="kpi-card"><div class="kpi-value" id="kpi-vvr-total">R$ 0,00</div><div class="kpi-label">VVR Total no Período</div></div> <div class="kpi-card"><div class="kpi-value" id="kpi-adesoes">0</div><div class="kpi-label">Adesões no Período</div></div> <div class="kpi-card"><div class="kpi-value" id="kpi-ticket-medio">R$ 0,00</div><div class="kpi-label">Ticket Médio</div></div> </section> <section class="chart-container" id="chart1-section" style="display: none;"><h2>VVR por Unidade</h2><canvas id="vvrPorUnidadeChart"></canvas></section> <section class="chart-container" id="chart2-section" style="display: none;"><h2>Evolução de VVR no Tempo</h2><canvas id="vvrPorMesChart"></canvas></section> <section class="table-container" id="table-section" style="display: none;"> <h2>Dados Detalhados</h2> <table id="dados-table" class="display" style="width:100%"> <thead><tr><th>Cód. Integrante</th><th>Nome Integrante</th><th>Unidade</th><th>Cód. Fundo</th><th>Nome Fundo</th><th>VVR (Plano)</th><th>Data de Cadastro</th></tr></thead> <tbody></tbody> </table> </section>
-    </div>
+    <h1>Teste de Execução</h1>
+    <p id="mensagem">Se você está vendo esta mensagem, o HTML carregou. Aguardando o JavaScript...</p>
 
     <script>
-        console.log("Debug: Bloco de script iniciado."); // PISTA 1
+        // Se este script executar, a mensagem abaixo DEVE aparecer no console.
+        console.log("SUCESSO: O bloco de script começou a ser executado!");
 
-        const API_URL = "https://api-adesoes-comercial.vercel.app/dados"; // <<< VERIFIQUE ESTA URL COM MUITA ATENÇÃO!
-        
-        let allData = [];
-        let vvrPorUnidadeChart, vvrPorMesChart, dataTable;
-
-        const formatCurrency = (value) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
-
-        document.addEventListener('DOMContentLoaded', async () => {
-            console.log("Debug: Evento DOMContentLoaded disparado. Iniciando dashboard."); // PISTA 2
-            
-            const loader = document.getElementById('loader');
-            
-            console.log("Debug: Chamando a função fetchAllData..."); // PISTA 3
-            allData = await fetchAllData();
-            console.log(`Debug: fetchAllData finalizou. Total de registros: ${allData.length}`); // PISTA 4
-
-            if (allData.length > 0) {
-                loader.style.display = 'none';
-                ['filters-section', 'kpi-section', 'chart1-section', 'chart2-section', 'table-section'].forEach(id => {
-                    const el = document.getElementById(id);
-                    el.style.display = el.tagName === 'SECTION' ? 'grid' : 'block';
-                });
-                document.getElementById('filters-section').style.display = 'flex';
-
-                populateFilters();
-                addEventListeners();
-                updateDashboard();
-            } else {
-                loader.innerHTML = 'Falha ao carregar dados da API ou nenhum dado retornado.';
-            }
-        });
-
-        async function fetchAllData() {
-            console.log("Debug: Dentro de fetchAllData. Iniciando loop de paginação."); // PISTA 5
-            let fetchedData = []; let offset = 0; const limit = 5000;
-            while (true) {
-                try {
-                    console.log(`Debug: Buscando página com offset: ${offset}`); // PISTA 6
-                    const response = await fetch(`${API_URL}?limit=${limit}&offset=${offset}`);
-                    if (!response.ok) { 
-                        console.error('API Error:', response.status, response.statusText); 
-                        break; 
-                    }
-                    const dataObject = await response.json();
-                    const pageData = dataObject.dados || [];
-                    if (pageData.length === 0) { 
-                        console.log("Debug: Página vazia recebida, finalizando loop.");
-                        break; 
-                    }
-                    fetchedData.push(...pageData);
-                    offset += limit;
-                } catch (error) { 
-                    console.error('Fetch Error:', error); 
-                    break; 
-                }
-            }
-            return fetchedData.map(d => {
-                if (!d.dt_cadastro_integrante) return null;
-                return {...d, vl_plano: parseFloat(d.vl_plano) || 0, dt_cadastro_integrante: new Date(d.dt_cadastro_integrante)}
-            }).filter(Boolean);
-        }
-
-        // As outras funções continuam as mesmas...
-        function populateFilters(){ /* ... */ }
-        function addEventListeners(){ /* ... */ }
-        function updateDashboard(){ /* ... */ }
-        function updateKPIs(data){ /* ... */ }
-        function updateVvrPorUnidadeChart(data){ /* ... */ }
-        function updateVvrPorMesChart(data){ /* ... */ }
-        function updateDataTable(data){ /* ... */ }
-
-        function populateFilters() { const unidades = ['Todas', ...new Set(allData.map(d => d.nm_unidade))].sort(); const unidadeFilter = document.getElementById('unidade-filter'); unidadeFilter.innerHTML = ''; unidades.forEach(u => { const option = document.createElement('option'); option.value = u; option.textContent = u; unidadeFilter.appendChild(option); }); const dates = allData.map(d => d.dt_cadastro_integrante.getTime()); const minDate = new Date(Math.min(...dates)); const maxDate = new Date(Math.max(...dates)); document.getElementById('start-date').value = minDate.toISOString().split('T')[0]; document.getElementById('end-date').value = maxDate.toISOString().split('T')[0]; }
-        function addEventListeners() { ['unidade-filter', 'start-date', 'end-date'].forEach(id => document.getElementById(id).addEventListener('change', updateDashboard)); }
-        function updateDashboard() { const selectedUnidade = document.getElementById('unidade-filter').value; const startDateString = document.getElementById('start-date').value; const endDateString = document.getElementById('end-date').value; const startDate = new Date(startDateString + 'T00:00:00'); const endDate = new Date(endDateString + 'T23:59:59'); const filteredData = allData.filter(d => { const isUnidadeMatch = (selectedUnidade === 'Todas' || d.nm_unidade === selectedUnidade); const isDateMatch = (d.dt_cadastro_integrante >= startDate && d.dt_cadastro_integrante <= endDate); return isUnidadeMatch && isDateMatch; }); updateKPIs(filteredData); updateVvrPorUnidadeChart(filteredData); updateVvrPorMesChart(filteredData); updateDataTable(filteredData); }
-        function updateKPIs(data) { const vvrTotal = data.reduce((sum, d) => sum + d.vl_plano, 0); const adesoes = data.length; const ticketMedio = adesoes > 0 ? vvrTotal / adesoes : 0; document.getElementById('kpi-vvr-total').textContent = formatCurrency(vvrTotal); document.getElementById('kpi-adesoes').textContent = adesoes.toLocaleString('pt-BR'); document.getElementById('kpi-ticket-medio').textContent = formatCurrency(ticketMedio); }
-        function updateVvrPorUnidadeChart(data) { const dataByUnidade = data.reduce((acc, d) => { acc[d.nm_unidade] = (acc[d.nm_unidade] || 0) + d.vl_plano; return acc; }, {}); const labels = Object.keys(dataByUnidade); const values = Object.values(dataByUnidade); if (vvrPorUnidadeChart) vvrPorUnidadeChart.destroy(); vvrPorUnidadeChart = new Chart(document.getElementById('vvrPorUnidadeChart'), { type: 'bar', data: { labels: labels, datasets: [{ label: 'VVR por Unidade', data: values, backgroundColor: 'rgba(88, 166, 255, 0.6)', borderColor: 'rgba(88, 166, 255, 1)', borderWidth: 1 }] }, options: { scales: { y: { beginAtZero: true } } } }); }
-        function updateVvrPorMesChart(data) { const dataByMonth = data.reduce((acc, d) => { const month = d.dt_cadastro_integrante.toISOString().slice(0, 7); acc[month] = (acc[month] || 0) + d.vl_plano; return acc; }, {}); const sortedMonths = Object.keys(dataByMonth).sort(); const labels = sortedMonths; const values = sortedMonths.map(month => dataByMonth[month]); if (vvrPorMesChart) vvrPorMesChart.destroy(); vvrPorMesChart = new Chart(document.getElementById('vvrPorMesChart'), { type: 'line', data: { labels: labels, datasets: [{ label: 'Evolução do VVR', data: values, fill: false, borderColor: 'rgb(255, 127, 14)', tension: 0.1 }] }, options: { scales: { x: { type: 'time', time: { unit: 'month' } } } } }); }
-        function updateDataTable(data) { const tableData = data.map(d => [d.codigo_integrante, d.nm_integrante, d.nm_unidade, d.id_fundo, d.nm_fundo, formatCurrency(d.vl_plano
+        // E o texto na tela DEVE ser alterado pela linha abaixo.
+        document.getElementById('mensagem').textContent = 'ÓTIMO! O JavaScript está funcionando e alterou este texto!';
+    </script>
+</body>
+</html>
