@@ -131,7 +131,8 @@
             if (allData.length > 0) {
                 loader.style.display = 'none';
                 ['filters-section', 'kpi-section', 'chart1-section', 'chart2-section', 'table-section'].forEach(id => {
-                    document.getElementById(id).style.display = document.getElementById(id).tagName === 'SECTION' ? 'grid' : 'block';
+                    const el = document.getElementById(id);
+                    el.style.display = el.tagName === 'SECTION' ? 'grid' : 'block';
                 });
                 document.getElementById('filters-section').style.display = 'flex';
 
@@ -156,13 +157,20 @@
                     offset += limit;
                 } catch (error) { console.error('Fetch Error:', error); break; }
             }
-            return fetchedData.map(d => ({...d, vl_plano: parseFloat(d.vl_plano) || 0, dt_cadastro_integrante: new Date(d.dt_cadastro_integrante)}));
+            return fetchedData.map(d => {
+                if (!d.dt_cadastro_integrante) return null; // Ignora registros sem data
+                return {
+                    ...d, 
+                    vl_plano: parseFloat(d.vl_plano) || 0, 
+                    dt_cadastro_integrante: new Date(d.dt_cadastro_integrante)
+                }
+            }).filter(Boolean); // Remove os registros nulos
         }
 
         function populateFilters() {
             const unidades = ['Todas', ...new Set(allData.map(d => d.nm_unidade))].sort();
             const unidadeFilter = document.getElementById('unidade-filter');
-            unidadeFilter.innerHTML = ''; // Limpa opções antigas
+            unidadeFilter.innerHTML = '';
             unidades.forEach(u => {
                 const option = document.createElement('option');
                 option.value = u; option.textContent = u; unidadeFilter.appendChild(option);
@@ -184,16 +192,15 @@
 
         function updateDashboard() {
             const selectedUnidade = document.getElementById('unidade-filter').value;
-            const startDate = new Date(document.getElementById('start-date').value);
             
-            // --- CORREÇÃO IMPORTANTE AQUI ---
-            // Pega a data final e ajusta para o final do dia (23:59:59)
-            const endDate = new Date(document.getElementById('end-date').value);
-            endDate.setUTCHours(23, 59, 59, 999);
-            // ------------------------------------
-            
-            // Ajusta a data inicial para o começo do dia para evitar problemas de fuso horário
-            startDate.setUTCHours(0, 0, 0, 0);
+            // --- CORREÇÃO DEFINITIVA PARA DATAS E FUSO HORÁRIO ---
+            const startDateString = document.getElementById('start-date').value;
+            const endDateString = document.getElementById('end-date').value;
+
+            // Cria as datas de forma segura, tratando a string como fuso horário local
+            const startDate = new Date(startDateString + 'T00:00:00');
+            const endDate = new Date(endDateString + 'T23:59:59');
+            // --------------------------------------------------------
 
             const filteredData = allData.filter(d => {
                 const isUnidadeMatch = (selectedUnidade === 'Todas' || d.nm_unidade === selectedUnidade);
@@ -207,12 +214,6 @@
             updateDataTable(filteredData);
         }
         
-        function updateKPIs(data) { /* ...código igual ao anterior... */ }
-        function updateVvrPorUnidadeChart(data) { /* ...código igual ao anterior... */ }
-        function updateVvrPorMesChart(data) { /* ...código igual ao anterior... */ }
-        function updateDataTable(data) { /* ...código igual ao anterior... */ }
-
-        // Mantenha as funções de update de KPI, Gráficos e Tabela iguais às da versão anterior
         function updateKPIs(data) {
             const vvrTotal = data.reduce((sum, d) => sum + d.vl_plano, 0);
             const adesoes = data.length;
@@ -221,6 +222,7 @@
             document.getElementById('kpi-adesoes').textContent = adesoes.toLocaleString('pt-BR');
             document.getElementById('kpi-ticket-medio').textContent = formatCurrency(ticketMedio);
         }
+
         function updateVvrPorUnidadeChart(data) {
             const dataByUnidade = data.reduce((acc, d) => { acc[d.nm_unidade] = (acc[d.nm_unidade] || 0) + d.vl_plano; return acc; }, {});
             const labels = Object.keys(dataByUnidade); const values = Object.values(dataByUnidade);
@@ -230,6 +232,7 @@
                 options: { scales: { y: { beginAtZero: true } } }
             });
         }
+
         function updateVvrPorMesChart(data) {
             const dataByMonth = data.reduce((acc, d) => { const month = d.dt_cadastro_integrante.toISOString().slice(0, 7); acc[month] = (acc[month] || 0) + d.vl_plano; return acc; }, {});
             const sortedMonths = Object.keys(dataByMonth).sort();
@@ -240,8 +243,9 @@
                 options: { scales: { x: { type: 'time', time: { unit: 'month' } } } }
             });
         }
+
         function updateDataTable(data) {
-            const tableData = data.map(d => [d.nm_unidade, formatCurrency(d.vl_plano), d.dt_cadastro_integrante.toLocaleDateString('pt-BR')]);
+            const tableData = data.map(d => [d.nm_unidade, formatCurrency(d.vl_plano), d.dt_cadastro_integrante.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })]);
             if (dataTable) { dataTable.clear().rows.add(tableData).draw(); } 
             else { dataTable = $('#dados-table').DataTable({ data: tableData, pageLength: 10, language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json', } }); }
         }
