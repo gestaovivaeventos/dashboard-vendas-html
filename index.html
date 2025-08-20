@@ -28,6 +28,19 @@
             border-radius: 10px; 
             border: 1px solid #495057; 
         }
+
+        /* --- ALTERAÇÃO CSS PARA O LOGO --- */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #company-logo {
+            height: 45px; /* Ajuste a altura do seu logo conforme necessário */
+            width: auto;
+        }
+        /* --- FIM DA ALTERAÇÃO --- */
+
         h1, h2 { margin-top: 0; border-bottom: 2px solid #495057; padding-bottom: 10px; }
         .filters { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-end; }
         .filter-item { display: flex; flex-direction: column; }
@@ -50,21 +63,9 @@
         .kpi-card-title { font-size: 0.9em; color: #ADB5BD; font-weight: bold; }
         .kpi-card-value { font-size: 2.1em; font-weight: bold; color: #F8F9FA; }
         .kpi-card-details { font-size: 0.8em; color: #ADB5BD; }
-
-        /* --- ALTERAÇÃO CSS --- */
-        .kpi-card-details .percent { 
-            font-weight: bold; /* Cor removida para ser controlada via JS */
-            transition: color 0.5s ease-in-out;
-        }
+        .kpi-card-details .percent { font-weight: bold; transition: color 0.5s ease-in-out; }
         .progress-bar-bg { width: 100%; height: 10px; background-color: #495057; border-radius: 5px; overflow: hidden; }
-        .progress-bar-fg { 
-            height: 100%; 
-            border-radius: 5px; 
-            width: 0%; 
-            /* Cor de fundo removida e transição adicionada */
-            transition: width 0.5s ease-in-out, background-color 0.5s ease-in-out; 
-        }
-        /* --- FIM DA ALTERAÇÃO --- */
+        .progress-bar-fg { height: 100%; border-radius: 5px; width: 0%; transition: width 0.5s ease-in-out, background-color 0.5s ease-in-out; }
         
         .loader { text-align: center; font-size: 1.5em; padding: 50px; }
         .dataTables_wrapper { color: #F8F9FA; }
@@ -75,7 +76,16 @@
 </head>
 <body>
     <div class="container">
-        <header class="header"><h1>Dashboard de Vendas e Metas</h1></header>
+        <!-- --- ALTERAÇÃO HTML PARA O LOGO --- -->
+        <header class="header">
+            <h1>Dashboard de Vendas e Metas</h1>
+            <!-- COLOQUE A URL DO SEU LOGO AQUI -->
+            <img id="company-logo" 
+                 src="https://github.com/gestaovivaeventos/dashboard-vendas-html/blob/main/Logo%20VIVA%20completa%20em%20PNG.png?raw=true" 
+                 alt="Logo da Empresa">
+        </header>
+        <!-- --- FIM DA ALTERAÇÃO --- -->
+
         <section id="loader" class="filters"><div class="loader">Carregando dados...</div></section>
         
         <section class="filters" id="filters-section" style="display: none;">
@@ -114,7 +124,7 @@
     </div>
 
 <script>
-    // --- Configurações ---
+    // --- O JAVASCRIPT ABAIXO PERMANECE O MESMO ---
     const API_URL = "https://api-adesoes-comercial.vercel.app/dados";
     const SPREADSHEET_ID = "1KywSOsTn7qUdVp2dLthWD3Y27RsE1aInk6hRJhp7BFw";
     const SHEET_NAME = "metas";
@@ -222,13 +232,11 @@
         });
     }
 
-    // --- ALTERAÇÃO JAVASCRIPT ---
     function updateMainKPIs(dataBruta, dataAgregadaComMetas) {
-        // Função auxiliar para definir a cor com base no percentual
         const getColorForPercentage = (percent) => {
-            if (percent >= 1) return '#28a745'; // Verde para 100% ou mais
-            if (percent >= 0.5) return '#ffc107'; // Amarelo para 50% a 99.9%
-            return '#dc3545'; // Vermelho para menos de 50%
+            if (percent >= 1) return '#28a745';
+            if (percent >= 0.5) return '#ffc107';
+            return '#dc3545';
         };
 
         const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -242,7 +250,6 @@
         const percentVendas = metaVendas > 0 ? realizadoVendas / metaVendas : 0;
         const percentPosVendas = metaPosVendas > 0 ? realizadoPosVendas / metaPosVendas : 0;
         
-        // Aplica os valores e as cores dinâmicas para o KPI TOTAL
         const totalColor = getColorForPercentage(percentTotal);
         document.getElementById('kpi-total-realizado').textContent = formatCurrency(realizadoTotal);
         document.getElementById('kpi-total-meta').textContent = formatCurrency(metaTotal);
@@ -252,7 +259,6 @@
         document.getElementById('kpi-total-progress').style.backgroundColor = totalColor;
         document.getElementById('kpi-total-progress').style.width = `${Math.min(percentTotal * 100, 100)}%`;
 
-        // Aplica os valores e as cores dinâmicas para o KPI VENDAS
         const vendasColor = getColorForPercentage(percentVendas);
         document.getElementById('kpi-vendas-realizado').textContent = formatCurrency(realizadoVendas);
         document.getElementById('kpi-vendas-meta').textContent = formatCurrency(metaVendas);
@@ -262,7 +268,6 @@
         document.getElementById('kpi-vendas-progress').style.backgroundColor = vendasColor;
         document.getElementById('kpi-vendas-progress').style.width = `${Math.min(percentVendas * 100, 100)}%`;
         
-        // Aplica os valores e as cores dinâmicas para o KPI PÓS VENDAS
         const posVendasColor = getColorForPercentage(percentPosVendas);
         document.getElementById('kpi-posvendas-realizado').textContent = formatCurrency(realizadoPosVendas);
         document.getElementById('kpi-posvendas-meta').textContent = formatCurrency(metaPosVendas);
@@ -272,7 +277,6 @@
         document.getElementById('kpi-posvendas-progress').style.backgroundColor = posVendasColor;
         document.getElementById('kpi-posvendas-progress').style.width = `${Math.min(percentPosVendas * 100, 100)}%`;
     }
-    // --- FIM DA ALTERAÇÃO ---
 
     function updateDashboard() {
         const selectedUnidades = $('#unidade-filter').val() || [];
