@@ -33,8 +33,7 @@
         .multiselect-container > li:not(.multiselect-group):not(.multiselect-filter):hover { background-color: #58A6FF; }
         .multiselect-container .multiselect-filter .form-control { background-color: #010409; color: #FAFAFA; border: 1px solid #30363D; }
         .multiselect-container > li > a > label.checkbox input[type="checkbox"] { margin-right: 10px; }
-        .kpi-main-wrapper { display: flex; flex-wrap: wrap; align-items: center; gap: 30px; }
-        .kpi-main-title { flex-basis: 150px; text-align: center; color: #8B949E; font-weight: bold; border-right: 1px solid #30363D; padding-right: 30px; }
+        .kpi-main-wrapper { display: flex; flex-wrap: wrap; align-items: center; gap: 20px; }
         .kpi-main-cards-container { display: flex; flex-grow: 1; flex-wrap: wrap; gap: 20px; }
         .kpi-main-card { flex: 1; min-width: 220px; display: flex; flex-direction: column; gap: 8px; border-left: 1px solid #30363D; padding-left: 20px; }
         .kpi-main-card:first-child { border-left: none; padding-left: 0; }
@@ -64,7 +63,6 @@
 
         <section class="kpi-container" id="kpi-section" style="display: none;">
             <div class="kpi-main-wrapper">
-                <div class="kpi-main-title">REALIZADO NO PERÍODO<br/>X<br/>META NO PERÍODO</div>
                 <div class="kpi-main-cards-container">
                     <div class="kpi-main-card">
                         <span class="kpi-card-title">REALIZADO TOTAL</span>
@@ -143,7 +141,7 @@
                 ...d, 
                 vl_plano: parseFloat(d.vl_plano) || 0, 
                 dt_cadastro_integrante: new Date(d.dt_cadastro_integrante), 
-                venda_posvenda: d.venda_posvenda || 'VENDA' // CORRIGIDO: Nome da coluna da API
+                venda_posvenda: d.venda_posvenda || 'VENDA'
             } 
         }).filter(Boolean); 
     }
@@ -161,8 +159,8 @@
             const unidadeIndex = headers.indexOf("nm_unidade");
             const anoIndex = headers.indexOf("ano");
             const mesIndex = headers.indexOf("mês");
-            const metaVendasIndex = headers.indexOf("meta vvr_venda"); // CORRIGIDO: Nome da coluna de meta
-            const metaPosvendasIndex = headers.indexOf("meta vvr_pos_venda"); // CORRIGIDO: Nome da coluna de meta
+            const metaVendasIndex = headers.indexOf("meta vvr_venda");
+            const metaPosvendasIndex = headers.indexOf("meta vvr_pos_venda");
             const metaAdesoesIndex = headers.indexOf("meta adesões");
 
             rows.slice(1).forEach(row => {
@@ -207,9 +205,11 @@
     }
 
     function updateMainKPIs(dataBruta, dataAgregadaComMetas) {
-        // CORRIGIDO: Usando a coluna 'venda_posvenda' para filtrar
-        const realizadoVendas = dataBruta.filter(d => d.venda_posvenda === 'VENDA').reduce((sum, d) => sum + d.vl_plano, 0);
-        const realizadoPosVendas = dataBruta.filter(d => d.venda_posvenda === 'POS VENDA').reduce((sum, d) => sum + d.vl_plano, 0);
+        // CORREÇÃO DEFINITIVA: Normaliza o texto para remover acentos antes de comparar, garantindo que "PÓS VENDA" seja encontrado.
+        const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+        const realizadoVendas = dataBruta.filter(d => normalizeText(d.venda_posvenda) === 'VENDA').reduce((sum, d) => sum + d.vl_plano, 0);
+        const realizadoPosVendas = dataBruta.filter(d => normalizeText(d.venda_posvenda) === 'POS VENDA').reduce((sum, d) => sum + d.vl_plano, 0);
         const realizadoTotal = realizadoVendas + realizadoPosVendas;
 
         const metaVendas = dataAgregadaComMetas.reduce((sum, d) => sum + d.meta_vvr_vendas, 0);
@@ -252,30 +252,8 @@
         updateDataTable(dataAgregadaFiltrada);
     }
     
-    function updateVvrVsMetaPorMesChart(data) {
-        const dataPorPeriodo = data.reduce((acc, d) => {
-            if (!acc[d.periodo]) acc[d.periodo] = { realizado: 0, meta: 0 };
-            acc[d.periodo].realizado += d.realizado_vvr;
-            acc[d.periodo].meta += d.meta_vvr_total;
-            return acc;
-        }, {});
-        const labels = Object.keys(dataPorPeriodo).sort();
-        const realizadoValues = labels.map(p => dataPorPeriodo[p].realizado);
-        const metaValues = labels.map(p => dataPorPeriodo[p].meta);
-        if (vvrVsMetaPorMesChart) vvrVsMetaPorMesChart.destroy();
-        Chart.register(ChartDataLabels);
-        vvrVsMetaPorMesChart = new Chart(document.getElementById('vvrVsMetaPorMesChart'), { type: 'bar', data: { labels: labels, datasets: [ { label: 'VVR Realizado', data: realizadoValues, backgroundColor: 'rgba(88, 166, 255, 0.7)', order: 1 }, { label: 'Meta VVR', data: metaValues, type: 'line', borderColor: 'rgb(255, 99, 132)', order: 0, datalabels: { display: false } } ] }, options: { plugins: { datalabels: { anchor: 'end', align: 'end', formatter: (value) => (value >= 1000 ? `${(value / 1000).toFixed(0)}k` : value.toFixed(0)), color: '#FAFAFA', font: { weight: 'bold' } } }, scales: { y: { beginAtZero: true } } } });
-    }
-
-    function updateDataTable(data) {
-        const tableData = data.sort((a,b) => a.periodo.localeCompare(b.periodo) || a.unidade.localeCompare(b.unidade)).map(d => {
-            const atingimentoVvr = d.meta_vvr_total > 0 ? d.realizado_vvr / d.meta_vvr_total : 0;
-            const atingimentoAdesoes = d.meta_adesoes > 0 ? d.realizado_adesoes / d.meta_adesoes : 0;
-            return [d.unidade, d.periodo, formatCurrency(d.realizado_vvr), formatCurrency(d.meta_vvr_total), formatPercent(atingimentoVvr), d.realizado_adesoes, d.meta_adesoes, formatPercent(atingimentoAdesoes)]
-        });
-        if (dataTable) { dataTable.clear().rows.add(tableData).draw(); } else { dataTable = $('#dados-table').DataTable({ data: tableData, pageLength: 10, language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json' }, destroy: true }); }
-    }
-
+    function updateVvrVsMetaPorMesChart(data) { const dataPorPeriodo = data.reduce((acc, d) => { if (!acc[d.periodo]) acc[d.periodo] = { realizado: 0, meta: 0 }; acc[d.periodo].realizado += d.realizado_vvr; acc[d.periodo].meta += d.meta_vvr_total; return acc; }, {}); const labels = Object.keys(dataPorPeriodo).sort(); const realizadoValues = labels.map(p => dataPorPeriodo[p].realizado); const metaValues = labels.map(p => dataPorPeriodo[p].meta); if (vvrVsMetaPorMesChart) vvrVsMetaPorMesChart.destroy(); Chart.register(ChartDataLabels); vvrVsMetaPorMesChart = new Chart(document.getElementById('vvrVsMetaPorMesChart'), { type: 'bar', data: { labels: labels, datasets: [ { label: 'VVR Realizado', data: realizadoValues, backgroundColor: 'rgba(88, 166, 255, 0.7)', order: 1 }, { label: 'Meta VVR', data: metaValues, type: 'line', borderColor: 'rgb(255, 99, 132)', order: 0, datalabels: { display: false } } ] }, options: { plugins: { datalabels: { anchor: 'end', align: 'end', formatter: (value) => (value >= 1000 ? `${(value / 1000).toFixed(0)}k` : value.toFixed(0)), color: '#FAFAFA', font: { weight: 'bold' } } }, scales: { y: { beginAtZero: true } } } }); }
+    function updateDataTable(data) { const tableData = data.sort((a,b) => a.periodo.localeCompare(b.periodo) || a.unidade.localeCompare(b.unidade)).map(d => { const atingimentoVvr = d.meta_vvr_total > 0 ? d.realizado_vvr / d.meta_vvr_total : 0; const atingimentoAdesoes = d.meta_adesoes > 0 ? d.realizado_adesoes / d.meta_adesoes : 0; return [d.unidade, d.periodo, formatCurrency(d.realizado_vvr), formatCurrency(d.meta_vvr_total), formatPercent(atingimentoVvr), d.realizado_adesoes, d.meta_adesoes, formatPercent(atingimentoAdesoes)] }); if (dataTable) { dataTable.clear().rows.add(tableData).draw(); } else { dataTable = $('#dados-table').DataTable({ data: tableData, pageLength: 10, language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json' }, destroy: true }); } }
     function populateFilters() { const unidades = [...new Set(allData.map(d => d.nm_unidade))].sort(); const unidadeFilter = $('#unidade-filter'); unidadeFilter.empty(); unidades.forEach(u => { unidadeFilter.append($('<option>', { value: u, text: u })); }); unidadeFilter.multiselect({ enableFiltering: true, includeSelectAllOption: true, selectAllText: 'Marcar todos', filterPlaceholder: 'Pesquisar...', nonSelectedText: 'Todas as unidades', nSelectedText: 'unidades', allSelectedText: 'Todas selecionadas', buttonWidth: '100%', maxHeight: 300, onChange: function(option, checked) { updateDashboard(); } }); const hoje = new Date(); const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1); const fimMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0); document.getElementById('start-date').value = inicioMes.toISOString().split('T')[0]; document.getElementById('end-date').value = fimMes.toISOString().split('T')[0]; }
     function addEventListeners() { document.getElementById('start-date').addEventListener('change', updateDashboard); document.getElementById('end-date').addEventListener('change', updateDashboard); }
 </script>
