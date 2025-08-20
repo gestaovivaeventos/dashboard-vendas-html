@@ -19,37 +19,52 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/1.1.2/js/bootstrap-multiselect.js"></script>
 
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #0E1117; color: #FAFAFA; margin: 0; padding: 0; }
+        /* --- NOVA PALETA DE CORES --- */
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #212529; color: #F8F9FA; margin: 0; padding: 0; }
         .container { display: grid; grid-template-columns: repeat(12, 1fr); grid-gap: 20px; padding: 20px; width: 100%; box-sizing: border-box; }
-        .header, .filters, .kpi-container, .chart-container, .table-container { grid-column: span 12; background-color: #161B22; padding: 20px; border-radius: 10px; border: 1px solid #30363D; }
-        h1, h2 { margin-top: 0; border-bottom: 2px solid #30363D; padding-bottom: 10px; }
+        .header, .filters, .kpi-container, .chart-container, .table-container { 
+            grid-column: span 12; 
+            background-color: #343A40; 
+            padding: 20px; 
+            border-radius: 10px; 
+            border: 1px solid #495057; 
+        }
+        h1, h2 { margin-top: 0; border-bottom: 2px solid #495057; padding-bottom: 10px; }
         .filters { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-end; }
         .filter-item { display: flex; flex-direction: column; }
-        label { margin-bottom: 5px; font-size: 0.9em; color: #8B949E; }
-        input[type="date"] { background-color: #010409; color: #FAFAFA; border: 1px solid #30363D; border-radius: 6px; padding: 8px; }
+        label { margin-bottom: 5px; font-size: 0.9em; color: #ADB5BD; }
+        input[type="date"] { background-color: #212529; color: #F8F9FA; border: 1px solid #495057; border-radius: 6px; padding: 8px; }
+        
+        /* Filtro Multiselect com novas cores */
         .filter-item-unidades { min-width: 300px; max-width: 500px; }
         .btn-group { width: 100%; }
-        .multiselect { width: 100% !important; background-color: #010409 !important; border: 1px solid #30363D !important; color: #FAFAFA !important; text-align: left; }
-        .multiselect-container { background-color: #161B22; border: 1px solid #30363D; box-shadow: none; }
-        .multiselect-container > li > a > label { color: #FAFAFA; padding: 8px 10px; }
-        .multiselect-container > li:not(.multiselect-group):not(.multiselect-filter):hover { background-color: #58A6FF; }
-        .multiselect-container .multiselect-filter .form-control { background-color: #010409; color: #FAFAFA; border: 1px solid #30363D; }
+        .multiselect { width: 100% !important; background-color: #212529 !important; border: 1px solid #495057 !important; color: #F8F9FA !important; text-align: left; }
+        .multiselect-container { background-color: #343A40; border: 1px solid #495057; box-shadow: none; }
+        .multiselect-container > li > a > label { color: #F8F9FA; padding: 8px 10px; }
+        .multiselect-container > li:not(.multiselect-group):not(.multiselect-filter):hover { background-color: #FFC107; color: #212529; }
+        .multiselect-container .multiselect-filter .form-control { background-color: #212529; color: #F8F9FA; border: 1px solid #495057; }
         .multiselect-container > li > a > label.checkbox input[type="checkbox"] { margin-right: 10px; }
+        
+        /* KPIs com novas cores */
         .kpi-main-wrapper { display: flex; flex-wrap: wrap; align-items: center; gap: 20px; }
         .kpi-main-cards-container { display: flex; flex-grow: 1; flex-wrap: wrap; gap: 20px; }
-        .kpi-main-card { flex: 1; min-width: 220px; display: flex; flex-direction: column; gap: 8px; border-left: 1px solid #30363D; padding-left: 20px; }
+        .kpi-main-card { flex: 1; min-width: 220px; display: flex; flex-direction: column; gap: 8px; border-left: 1px solid #495057; padding-left: 20px; }
         .kpi-main-card:first-child { border-left: none; padding-left: 0; }
-        .kpi-card-title { font-size: 0.9em; color: #8B949E; font-weight: bold; }
-        .kpi-card-value { font-size: 2.1em; font-weight: bold; color: #FAFAFA; }
-        .kpi-card-details { font-size: 0.8em; color: #8B949E; }
-        .kpi-card-details .percent { color: #58A6FF; font-weight: bold; }
-        .progress-bar-bg { width: 100%; height: 10px; background-color: #30363D; border-radius: 5px; overflow: hidden; }
-        .progress-bar-fg { height: 100%; background-color: #FFA500; border-radius: 5px; width: 0%; transition: width 0.5s ease-in-out; }
+        .kpi-card-title { font-size: 0.9em; color: #ADB5BD; font-weight: bold; }
+        .kpi-card-value { font-size: 2.1em; font-weight: bold; color: #F8F9FA; }
+        .kpi-card-details { font-size: 0.8em; color: #ADB5BD; }
+        .kpi-card-details .percent { color: #FFC107; font-weight: bold; }
+        .progress-bar-bg { width: 100%; height: 10px; background-color: #495057; border-radius: 5px; overflow: hidden; }
+        .progress-bar-fg { height: 100%; background-color: #FFC107; border-radius: 5px; width: 0%; transition: width 0.5s ease-in-out; }
+        
         .loader { text-align: center; font-size: 1.5em; padding: 50px; }
-        .dataTables_wrapper { color: #FAFAFA; }
-        .dataTables_wrapper .dataTables_length select, .dataTables_wrapper .dataTables_filter input { background-color: #010409; color: #FAFAFA; border: 1px solid #30363D; border-radius: 6px; padding: 5px; }
-        .dataTables_wrapper .dataTables_paginate .paginate_button { color: #FAFAFA !important; border: 1px solid #30363D; }
-        .dataTables_wrapper .dataTables_paginate .paginate_button.current { background: #58A6FF !important; border-color: #58A6FF !important; }
+        
+        /* Tabela com novas cores */
+        .dataTables_wrapper { color: #F8F9FA; }
+        .dataTables_wrapper .dataTables_length select, .dataTables_wrapper .dataTables_filter input { background-color: #212529; color: #F8F9FA; border: 1px solid #495057; border-radius: 6px; padding: 5px; }
+        .dataTables_wrapper .dataTables_paginate .paginate_button { color: #F8F9FA !important; border: 1px solid #495057; }
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current { background: #FFC107 !important; border-color: #FFC107 !important; color: #212529 !important; }
+        /* --- FIM DA NOVA PALETA --- */
     </style>
 </head>
 <body>
@@ -289,14 +304,14 @@
                     {
                         label: 'VVR Realizado',
                         data: realizadoValues,
-                        backgroundColor: 'rgba(88, 166, 255, 0.7)',
+                        backgroundColor: 'rgba(255, 193, 7, 0.7)', // COR ATUALIZADA
                         order: 1
                     },
                     {
                         label: 'Meta VVR',
                         data: metaValues,
                         type: 'line',
-                        borderColor: 'rgb(255, 99, 132)',
+                        borderColor: 'rgb(220, 53, 69)', // COR ATUALIZADA
                         order: 0,
                         datalabels: {
                             display: true,
@@ -311,7 +326,6 @@
                     }
                 ]
             },
-            // CORREÇÃO: Bloco 'options' com a sintaxe correta para o tooltip unificado.
             options: {
                 interaction: {
                     mode: 'index',
@@ -321,8 +335,8 @@
                     datalabels: {
                         anchor: 'end',
                         align: 'end',
-                        formatter: (value) => (value >= 1000 ? `${(value / 1000).toFixed(0)}k` : value.toFixed(0)),
-                        color: '#FAFAFA',
+                        formatter: (value) => (value >= 1000 ? `${(value / 1000).toFixed(0)}k` : ''),
+                        color: '#F8F9FA',
                         font: { weight: 'bold' }
                     },
                     tooltip: {
