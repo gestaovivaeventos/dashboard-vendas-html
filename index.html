@@ -10,17 +10,34 @@
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.css">
     <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.js"></script>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css"/>
+    <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+
     <style>
-        /* Seu CSS completo aqui, com um ajuste para o filtro múltiplo */
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #0E1117; color: #FAFAFA; margin: 0; padding: 20px; }
         .container { display: grid; grid-template-columns: repeat(12, 1fr); grid-gap: 20px; }
         .header, .filters, .kpi-container, .chart-container, .table-container { grid-column: span 12; background-color: #161B22; padding: 20px; border-radius: 10px; border: 1px solid #30363D; }
         h1, h2 { margin-top: 0; border-bottom: 2px solid #30363D; padding-bottom: 10px; }
-        .filters { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start; }
+        .filters { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-end; }
         .filter-item { display: flex; flex-direction: column; }
         label { margin-bottom: 5px; font-size: 0.9em; color: #8B949E; }
         select, input[type="date"] { background-color: #010409; color: #FAFAFA; border: 1px solid #30363D; border-radius: 6px; padding: 8px; }
-        select[multiple] { height: 120px; padding: 5px; } /* Ajuste de estilo para o multiselect */
+        
+        /* --- ESTILOS NOVOS E MODIFICADOS --- */
+        .filter-item-unidades { flex-grow: 1; min-width: 300px; max-width: 500px; }
+        .filter-actions { margin-top: 8px; display: flex; gap: 10px; }
+        .filter-actions button { background-color: #30363D; color: #FAFAFA; border: 1px solid #8B949E; border-radius: 6px; padding: 5px 10px; font-size: 0.8em; cursor: pointer; transition: background-color 0.2s; }
+        .filter-actions button:hover { background-color: #58A6FF; border-color: #58A6FF; }
+        .choices { width: 100%; }
+        .choices__inner { background-color: #010409; border: 1px solid #30363D; border-radius: 6px; padding: 3.5px 7.5px 4.5px; min-height: 40px; }
+        .choices__list--dropdown { background-color: #161B22; border: 1px solid #30363D; }
+        .choices__item--choice { color: #FAFAFA; }
+        .choices__input { background-color: #010409 !important; color: #FAFAFA !important; }
+        .choices__item--selectable.is-highlighted { background-color: #58A6FF; }
+        .choices[data-type*="select-multiple"] .choices__button, .choices[data-type*="text"] .choices__button { border-left: 1px solid #8B949E; }
+        /* --- FIM DOS ESTILOS NOVOS --- */
+
         .kpi-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
         .kpi-card { text-align: center; }
         .kpi-value { font-size: 2.5em; font-weight: bold; color: #58A6FF; }
@@ -38,10 +55,24 @@
         <section id="loader" class="filters"><div class="loader">Carregando dados da API e Planilha...</div></section>
         
         <section class="filters" id="filters-section" style="display: none;">
-            <div class="filter-item"><label for="unidade-filter">Filtrar por Unidade(s) (Ctrl+Click)</label><select id="unidade-filter" multiple></select></div>
-            <div class="filter-item"><label for="start-date">Data de Início</label><input type="date" id="start-date"></div>
-            <div class="filter-item"><label for="end-date">Data de Fim</label><input type="date" id="end-date"></div>
+            <div class="filter-item filter-item-unidades">
+                <label for="unidade-filter">Filtrar por Unidade(s)</label>
+                <select id="unidade-filter" multiple></select>
+                <div class="filter-actions">
+                    <button id="select-all-unidades">Marcar Todos</button>
+                    <button id="deselect-all-unidades">Desmarcar Todos</button>
+                </div>
+            </div>
+            <div class="filter-item">
+                <label for="start-date">Data de Início</label>
+                <input type="date" id="start-date">
+            </div>
+            <div class="filter-item">
+                <label for="end-date">Data de Fim</label>
+                <input type="date" id="end-date">
+            </div>
         </section>
+
         <section class="kpi-container" id="kpi-section" style="display: none;">
             <div class="kpi-card"><div class="kpi-value" id="kpi-vvr-total">R$ 0,00</div><div class="kpi-label">VVR Total Realizado</div></div>
             <div class="kpi-card"><div class="kpi-value" id="kpi-meta-vvr-total">R$ 0,00</div><div class="kpi-label">Meta VVR Total</div></div>
@@ -49,11 +80,11 @@
             <div class="kpi-card"><div class="kpi-value" id="kpi-adesoes">0</div><div class="kpi-label">Adesões Realizadas</div></div>
         </section>
         <section class="chart-container" id="chart-vvr-mes-section" style="display: none;">
-            <h2>VVR Realizado vs. Meta por Mês</h2>
+            <h2>VVR Realizado vs. Meta por Mês (Ano Vigente)</h2>
             <canvas id="vvrVsMetaPorMesChart"></canvas>
         </section>
         <section class="table-container" id="table-section" style="display: none;">
-            <h2>Dados Detalhados por Mês/Unidade</h2>
+            <h2>Dados Detalhados por Mês/Unidade (Período Selecionado)</h2>
             <table id="dados-table" class="display" style="width:100%">
                 <thead>
                     <tr>
@@ -65,279 +96,207 @@
         </section>
     </div>
 
-    <script>
-        // --- Configurações ---
-        const API_URL = "https://api-adesoes-comercial.vercel.app/dados";
-        const SPREADSHEET_ID = "1KywSOsTn7qUdVp2dLthWD3Y27RsE1aInk6hRJhp7BFw";
-        const SHEET_NAME = "metas";
-        
-        // [!!] ALERTA DE SEGURANÇA: A CHAVE DE API NÃO DEVE FICAR EXPOSTA NO CÓDIGO DO FRONTEND.
-        // Qualquer pessoa pode copiar esta chave e usá-la.
-        // O ideal é que a sua API na Vercel tenha um endpoint que busque os dados da planilha.
-        // Assim, a chave fica segura no servidor.
-        const API_KEY = "AIzaSyBuGRH91CnRuDtN5RGsb5DvHEfhTxJnWSs"; 
-        const GOOGLE_SHEETS_API_URL = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${SHEET_NAME}?key=${API_KEY}`;
+<script>
+    // --- Configurações ---
+    const API_URL = "https://api-adesoes-comercial.vercel.app/dados";
+    const SPREADSHEET_ID = "1KywSOsTn7qUdVp2dLthWD3Y27RsE1aInk6hRJhp7BFw";
+    const SHEET_NAME = "metas";
+    const API_KEY = "AIzaSyBuGRH91CnRuDtN5RGsb5DvHEfhTxJnWSs"; // Lembrete de segurança: Mover para o backend
+    const GOOGLE_SHEETS_API_URL = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${SHEET_NAME}?key=${API_KEY}`;
 
-        // --- Variáveis Globais ---
-        let allData = [], metasData = new Map(), dataTable;
-        let vvrVsMetaPorMesChart; 
-        
-        // --- Funções de Formatação ---
-        const formatCurrency = (value) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
-        const formatPercent = (value) => new Intl.NumberFormat('pt-BR', { style: 'percent', minimumFractionDigits: 1 }).format(value);
+    // --- Variáveis Globais ---
+    let allData = [], metasData = new Map(), dataTable;
+    let vvrVsMetaPorMesChart, choicesUnidades; // Adicionada variável para a instância do Choices.js
+    
+    // --- Funções de Formatação ---
+    const formatCurrency = (value) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+    const formatPercent = (value) => new Intl.NumberFormat('pt-BR', { style: 'percent', minimumFractionDigits: 1 }).format(value);
 
-        // --- Inicialização do Dashboard ---
-        document.addEventListener('DOMContentLoaded', async () => {
-            const loader = document.getElementById('loader');
-            try {
-                // Busca dados da API de vendas e da planilha de metas em paralelo para otimizar o tempo
-                const [apiData, sheetData] = await Promise.all([fetchAllApiData(), fetchMetasData()]);
+    // --- Inicialização do Dashboard ---
+    document.addEventListener('DOMContentLoaded', async () => {
+        const loader = document.getElementById('loader');
+        try {
+            const [apiData, sheetData] = await Promise.all([fetchAllApiData(), fetchMetasData()]);
+            allData = apiData;
+            metasData = sheetData;
+
+            if (allData && allData.length > 0) {
+                loader.style.display = 'none';
+                ['filters-section', 'kpi-section', 'chart-vvr-mes-section', 'table-section'].forEach(id => document.getElementById(id).style.display = 'block');
+                document.getElementById('filters-section').style.display = 'flex';
+                document.getElementById('kpi-section').style.display = 'grid';
                 
-                allData = apiData;
-                metasData = sheetData;
+                populateFilters();
+                addEventListeners();
+                updateDashboard();
+            } else {
+                loader.innerHTML = 'Nenhum dado encontrado na API.';
+            }
+        } catch (error) {
+            console.error("Erro fatal na inicialização:", error);
+            loader.innerHTML = `Erro ao carregar dados. Verifique o console.`;
+        }
+    });
 
-                if (allData && allData.length > 0) {
-                    loader.style.display = 'none';
-                    // Exibe todas as seções do dashboard
-                    ['filters-section', 'kpi-section', 'chart-vvr-mes-section', 'table-section'].forEach(id => document.getElementById(id).style.display = 'block');
-                    document.getElementById('filters-section').style.display = 'flex';
-                    document.getElementById('kpi-section').style.display = 'grid';
-                    
-                    // Prepara o dashboard para o primeiro uso
-                    populateFilters();
-                    addEventListeners();
-                    updateDashboard(); // Primeira renderização com filtros padrão
-                } else {
-                    loader.innerHTML = 'Nenhum dado encontrado na API.';
-                }
-            } catch (error) {
-                console.error("Erro fatal na inicialização:", error);
-                loader.innerHTML = `Erro ao carregar dados. Verifique o console.`;
+    // --- Funções de Busca de Dados (sem alteração) ---
+    async function fetchAllApiData() { let fetchedData = []; let offset = 0; const limit = 5000; while (true) { try { const response = await fetch(`${API_URL}?limit=${limit}&offset=${offset}`); if (!response.ok) { console.error('API Error:', response.statusText); break; } const dataObject = await response.json(); const pageData = dataObject.dados || []; if (pageData.length === 0) { break; } fetchedData.push(...pageData); offset += limit; } catch (error) { console.error('Fetch Error:', error); break; } } return fetchedData.map(d => { if (!d.dt_cadastro_integrante) return null; return { ...d, vl_plano: parseFloat(d.vl_plano) || 0, dt_cadastro_integrante: new Date(d.dt_cadastro_integrante) } }).filter(Boolean); }
+    async function fetchMetasData() { if (!API_KEY || !SPREADSHEET_ID || !SHEET_NAME) { console.error("Configurações da planilha incompletas."); return new Map(); } try { const response = await fetch(GOOGLE_SHEETS_API_URL); if (!response.ok) { const errorData = await response.json(); console.error("Erro API Google Sheets:", errorData); return new Map(); } const data = await response.json(); const rows = data.values || []; const metasMap = new Map(); const headers = rows[0].map(h => h.trim()); const unidadeIndex = headers.indexOf("nm_unidade"), anoIndex = headers.indexOf("ANO"), mesIndex = headers.indexOf("MÊS"), metaVvrIndex = headers.indexOf("meta vl_plano"), metaAdesoesIndex = headers.indexOf("META ADESÕES"); rows.slice(1).forEach(row => { if (row.length < headers.length) return; const unidade = row[unidadeIndex], ano = row[anoIndex], mes = String(row[mesIndex]).padStart(2, '0'), metaVvrString = String(row[metaVvrIndex] || "0"), metaVvr = parseFloat(metaVvrString.replace(/\./g, '').replace(',', '.')) || 0, metaAdesoes = parseInt(row[metaAdesoesIndex]) || 0; if (unidade && ano && mes) { const chave = `${unidade}-${ano}-${mes}`; metasMap.set(chave, { meta_vvr: metaVvr, meta_adesoes: metaAdesoes }); } }); return metasMap; } catch (error) { console.error("Erro CRÍTICO ao buscar metas:", error); return new Map(); } }
+
+    // --- Funções do Dashboard ---
+    
+    function populateFilters() {
+        const unidades = [...new Set(allData.map(d => d.nm_unidade))].sort();
+        const unidadeFilter = document.getElementById('unidade-filter');
+        unidadeFilter.innerHTML = '';
+        
+        // Mapeia para o formato que o Choices.js espera
+        const unidadesOptions = unidades.map(u => ({ value: u, label: u, selected: true }));
+
+        // Inicializa o Choices.js no filtro de unidades
+        choicesUnidades = new Choices(unidadeFilter, {
+            removeItemButton: true,
+            placeholder: true,
+            placeholderValue: 'Selecione as unidades',
+            allowHTML: false,
+        });
+        choicesUnidades.setChoices(unidadesOptions, 'value', 'label', false);
+
+        const hoje = new Date();
+        const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+        const fimMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
+        document.getElementById('start-date').value = inicioMes.toISOString().split('T')[0];
+        document.getElementById('end-date').value = fimMes.toISOString().split('T')[0];
+    }
+    
+    function addEventListeners() {
+        // Listener para o filtro de unidades (agora no Choices.js)
+        document.getElementById('unidade-filter').addEventListener('change', updateDashboard);
+        
+        // Listeners para os filtros de data
+        document.getElementById('start-date').addEventListener('change', updateDashboard);
+        document.getElementById('end-date').addEventListener('change', updateDashboard);
+
+        // Listeners para os botões de Marcar/Desmarcar Todos
+        document.getElementById('select-all-unidades').addEventListener('click', () => {
+            const allValues = choicesUnidades.config.choices.map(choice => choice.value);
+            choicesUnidades.setValue(allValues);
+        });
+        document.getElementById('deselect-all-unidades').addEventListener('click', () => {
+            choicesUnidades.removeActiveItems();
+        });
+    }
+
+    // NOVA FUNÇÃO REUTILIZÁVEL: Processa e cruza dados de vendas com metas
+    function processAndCrossReferenceData(salesData) {
+        // Agrega os dados da API por mês e unidade
+        const vendasPorMesUnidade = salesData.reduce((acc, d) => {
+            const periodo = d.dt_cadastro_integrante.toISOString().slice(0, 7); // "AAAA-MM"
+            const chave = `${d.nm_unidade}-${periodo}`;
+            if (!acc[chave]) {
+                acc[chave] = { unidade: d.nm_unidade, periodo: periodo, realizado_vvr: 0, realizado_adesoes: 0 };
+            }
+            acc[chave].realizado_vvr += d.vl_plano;
+            acc[chave].realizado_adesoes += 1;
+            return acc;
+        }, {});
+
+        // Cruza com as metas
+        return Object.values(vendasPorMesUnidade).map(item => {
+            const chaveMeta = `${item.unidade}-${item.periodo}`;
+            const meta = metasData.get(chaveMeta) || { meta_vvr: 0, meta_adesoes: 0 };
+            const atingimentoVvr = meta.meta_vvr > 0 ? item.realizado_vvr / meta.meta_vvr : 0;
+            const atingimentoAdesoes = meta.meta_adesoes > 0 ? item.realizado_adesoes / meta.meta_adesoes : 0;
+            return { ...item, ...meta, atingimento_vvr: atingimentoVvr, atingimento_adesoes: atingimentoAdesoes };
+        });
+    }
+
+    // FUNÇÃO PRINCIPAL ATUALIZADA
+    function updateDashboard() {
+        const selectedUnidades = choicesUnidades.getValue(true);
+
+        // --- 1. LÓGICA EXCLUSIVA PARA O GRÁFICO (ANO VIGENTE: 2025) ---
+        const anoVigente = 2025;
+        const dataParaGrafico = allData.filter(d => {
+            const isUnidadeMatch = selectedUnidades.length === 0 ? true : selectedUnidades.includes(d.nm_unidade);
+            const isAnoMatch = d.dt_cadastro_integrante.getFullYear() === anoVigente;
+            return isUnidadeMatch && isAnoMatch;
+        });
+        const finalDataGrafico = processAndCrossReferenceData(dataParaGrafico);
+        updateVvrVsMetaPorMesChart(finalDataGrafico);
+
+        // --- 2. LÓGICA PARA KPIs E TABELA (USA O FILTRO DE DATA) ---
+        const startDate = new Date(document.getElementById('start-date').value + 'T00:00:00');
+        const endDate = new Date(document.getElementById('end-date').value + 'T23:59:59');
+
+        const dataParaKpiTabela = allData.filter(d => {
+            const isUnidadeMatch = selectedUnidades.length === 0 ? true : selectedUnidades.includes(d.nm_unidade);
+            const isDateMatch = d.dt_cadastro_integrante >= startDate && d.dt_cadastro_integrante <= endDate;
+            return isUnidadeMatch && isDateMatch;
+        });
+        const finalDataKpiTabela = processAndCrossReferenceData(dataParaKpiTabela);
+
+        updateKPIs(finalDataKpiTabela, dataParaKpiTabela);
+        updateDataTable(finalDataKpiTabela);
+    }
+
+    // --- Funções de Atualização Visual ---
+    
+    function updateKPIs(dataAgregada, dataBruta) {
+        const vvrTotal = dataAgregada.reduce((sum, d) => sum + d.realizado_vvr, 0);
+        const metaVvrTotal = dataAgregada.reduce((sum, d) => sum + d.meta_vvr, 0);
+        const atingimentoVvrTotal = metaVvrTotal > 0 ? vvrTotal / metaVvrTotal : 0;
+        const adesoesTotal = dataBruta.length;
+        document.getElementById('kpi-vvr-total').textContent = formatCurrency(vvrTotal);
+        document.getElementById('kpi-meta-vvr-total').textContent = formatCurrency(metaVvrTotal);
+        document.getElementById('kpi-atingimento-vvr').textContent = formatPercent(atingimentoVvrTotal);
+        document.getElementById('kpi-adesoes').textContent = adesoesTotal.toLocaleString('pt-BR');
+    }
+
+    function updateVvrVsMetaPorMesChart(data) { // Sem alterações internas
+        const dataPorPeriodo = data.reduce((acc, d) => {
+            if (!acc[d.periodo]) acc[d.periodo] = { realizado: 0, meta: 0 };
+            acc[d.periodo].realizado += d.realizado_vvr;
+            acc[d.periodo].meta += d.meta_vvr;
+            return acc;
+        }, {});
+        
+        const labels = Object.keys(dataPorPeriodo).sort();
+        const realizadoValues = labels.map(p => dataPorPeriodo[p].realizado);
+        const metaValues = labels.map(p => dataPorPeriodo[p].meta);
+        
+        if (vvrVsMetaPorMesChart) vvrVsMetaPorMesChart.destroy();
+        Chart.register(ChartDataLabels);
+        
+        vvrVsMetaPorMesChart = new Chart(document.getElementById('vvrVsMetaPorMesChart'), {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    { label: 'VVR Realizado', data: realizadoValues, backgroundColor: 'rgba(88, 166, 255, 0.7)', order: 1 },
+                    { label: 'Meta VVR', data: metaValues, type: 'line', borderColor: 'rgb(255, 99, 132)', order: 0, datalabels: { display: false } }
+                ]
+            },
+            options: {
+                plugins: {
+                    datalabels: {
+                        anchor: 'end', align: 'end',
+                        formatter: (value) => (value >= 1000 ? `${(value / 1000).toFixed(0)}k` : value.toFixed(0)),
+                        color: '#FAFAFA', font: { weight: 'bold' }
+                    }
+                },
+                scales: { y: { beginAtZero: true } }
             }
         });
-
-        // --- Funções de Busca de Dados ---
-        
-        // Busca dados da API de vendas com paginação para lidar com grandes volumes
-        async function fetchAllApiData() { 
-            let fetchedData = []; let offset = 0; const limit = 5000; 
-            while (true) { 
-                try { 
-                    const response = await fetch(`${API_URL}?limit=${limit}&offset=${offset}`); 
-                    if (!response.ok) { console.error('API Error:', response.statusText); break; } 
-                    const dataObject = await response.json(); 
-                    const pageData = dataObject.dados || []; 
-                    if (pageData.length === 0) { break; } 
-                    fetchedData.push(...pageData); 
-                    offset += limit; 
-                } catch (error) { console.error('Fetch Error:', error); break; } 
-            } 
-            // Converte valores e datas para os formatos corretos
-            return fetchedData.map(d => { 
-                if (!d.dt_cadastro_integrante) return null; 
-                return { ...d, vl_plano: parseFloat(d.vl_plano) || 0, dt_cadastro_integrante: new Date(d.dt_cadastro_integrante) } 
-            }).filter(Boolean); 
+    }
+    
+    function updateDataTable(data) { // Sem alterações internas
+        const tableData = data.sort((a,b) => a.periodo.localeCompare(b.periodo) || a.unidade.localeCompare(b.unidade)).map(d => [d.unidade, d.periodo, formatCurrency(d.realizado_vvr), formatCurrency(d.meta_vvr), formatPercent(d.atingimento_vvr), d.realizado_adesoes, d.meta_adesoes, formatPercent(d.atingimento_adesoes)]);
+        if (dataTable) {
+            dataTable.clear().rows.add(tableData).draw();
+        } else {
+            dataTable = $('#dados-table').DataTable({ data: tableData, pageLength: 10, language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json' }, destroy: true });
         }
-
-        // Busca dados da planilha de metas e os organiza em um Map para acesso rápido
-        async function fetchMetasData() { 
-            if (!API_KEY || !SPREADSHEET_ID || !SHEET_NAME) { console.error("ID da Planilha, Nome da Aba ou Chave de API não configurados."); return new Map(); } 
-            try { 
-                const response = await fetch(GOOGLE_SHEETS_API_URL); 
-                if (!response.ok) { 
-                    const errorData = await response.json(); 
-                    console.error("Erro ao buscar da API do Google Sheets:", errorData); 
-                    alert("Erro ao buscar dados das metas. Verifique o Console (F12) para detalhes."); 
-                    return new Map(); 
-                } 
-                const data = await response.json(); 
-                const rows = data.values || []; 
-                const metasMap = new Map(); 
-                const headers = rows[0].map(h => h.trim()); 
-                const unidadeIndex = headers.indexOf("nm_unidade"); 
-                const anoIndex = headers.indexOf("ANO"); 
-                const mesIndex = headers.indexOf("MÊS"); 
-                const metaVvrIndex = headers.indexOf("meta vl_plano"); 
-                const metaAdesoesIndex = headers.indexOf("META ADESÕES"); 
-                rows.slice(1).forEach(row => { 
-                    if (row.length < headers.length) return; 
-                    const unidade = row[unidadeIndex]; 
-                    const ano = row[anoIndex]; 
-                    const mes = String(row[mesIndex]).padStart(2, '0'); 
-                    const metaVvrString = String(row[metaVvrIndex] || "0"); 
-                    const metaVvr = parseFloat(metaVvrString.replace(/\./g, '').replace(',', '.')) || 0; 
-                    const metaAdesoes = parseInt(row[metaAdesoesIndex]) || 0; 
-                    if (unidade && ano && mes) { 
-                        const chave = `${unidade}-${ano}-${mes}`; 
-                        metasMap.set(chave, { meta_vvr: metaVvr, meta_adesoes: metaAdesoes }); 
-                    } 
-                }); 
-                return metasMap; 
-            } catch (error) { 
-                console.error("Erro CRÍTICO ao buscar dados das metas:", error); 
-                return new Map(); 
-            } 
-        }
-
-        // --- Funções do Dashboard ---
-        
-        // Popula os filtros e define os valores padrão
-        function populateFilters() {
-            const unidades = [...new Set(allData.map(d => d.nm_unidade))].sort();
-            const unidadeFilter = document.getElementById('unidade-filter');
-            unidadeFilter.innerHTML = '';
-            unidades.forEach(u => {
-                const option = document.createElement('option');
-                option.value = u; option.textContent = u; 
-                option.selected = true; // Deixa todas as unidades pré-selecionadas
-                unidadeFilter.appendChild(option);
-            });
-            
-            // Define o período padrão para o mês atual
-            const hoje = new Date();
-            const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
-            const fimMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
-            document.getElementById('start-date').value = inicioMes.toISOString().split('T')[0];
-            document.getElementById('end-date').value = fimMes.toISOString().split('T')[0];
-        }
-        
-        // Adiciona os listeners que disparam a atualização do dashboard
-        function addEventListeners() { 
-            ['unidade-filter', 'start-date', 'end-date'].forEach(id => document.getElementById(id).addEventListener('change', updateDashboard)); 
-        }
-
-        // Função principal que orquestra todas as atualizações na tela
-        function updateDashboard() {
-            // 1. Obtém os valores atuais dos filtros
-            const selectedUnidades = Array.from(document.getElementById('unidade-filter').selectedOptions).map(option => option.value);
-            const startDate = new Date(document.getElementById('start-date').value + 'T00:00:00');
-            const endDate = new Date(document.getElementById('end-date').value + 'T23:59:59');
-
-            // 2. Filtra os dados de vendas com base na seleção
-            const filteredApiData = allData.filter(d => {
-                const isUnidadeMatch = selectedUnidades.length === 0 ? true : selectedUnidades.includes(d.nm_unidade);
-                const isDateMatch = d.dt_cadastro_integrante >= startDate && d.dt_cadastro_integrante <= endDate;
-                return isUnidadeMatch && isDateMatch;
-            });
-
-            // 3. Agrega os dados filtrados por unidade e mês para o cruzamento
-            const vendasPorMesUnidade = filteredApiData.reduce((acc, d) => {
-                const periodo = d.dt_cadastro_integrante.toISOString().slice(0, 7); // Formato "AAAA-MM"
-                const chave = `${d.nm_unidade}-${periodo}`;
-                if (!acc[chave]) {
-                    acc[chave] = { unidade: d.nm_unidade, periodo: periodo, realizado_vvr: 0, realizado_adesoes: 0 };
-                }
-                acc[chave].realizado_vvr += d.vl_plano;
-                acc[chave].realizado_adesoes += 1;
-                return acc;
-            }, {});
-
-            // 4. Cruza os dados de vendas agregados com as metas do Map
-            const finalData = Object.values(vendasPorMesUnidade).map(item => {
-                const chaveMeta = `${item.unidade}-${item.periodo}`;
-                const meta = metasData.get(chaveMeta) || { meta_vvr: 0, meta_adesoes: 0 };
-                const atingimentoVvr = meta.meta_vvr > 0 ? item.realizado_vvr / meta.meta_vvr : 0;
-                const atingimentoAdesoes = meta.meta_adesoes > 0 ? item.realizado_adesoes / meta.meta_adesoes : 0;
-                return { ...item, ...meta, atingimento_vvr: atingimentoVvr, atingimento_adesoes: atingimentoAdesoes };
-            });
-            
-            // 5. Chama as funções para atualizar cada componente visual do dashboard
-            updateKPIs(finalData, filteredApiData);
-            updateVvrVsMetaPorMesChart(finalData);
-            updateDataTable(finalData);
-        }
-
-        // Atualiza os cartões de KPI
-        function updateKPIs(dataAgregada, dataBruta) {
-            const vvrTotal = dataAgregada.reduce((sum, d) => sum + d.realizado_vvr, 0);
-            const metaVvrTotal = dataAgregada.reduce((sum, d) => sum + d.meta_vvr, 0);
-            const atingimentoVvrTotal = metaVvrTotal > 0 ? vvrTotal / metaVvrTotal : 0;
-            const adesoesTotal = dataBruta.length;
-            document.getElementById('kpi-vvr-total').textContent = formatCurrency(vvrTotal);
-            document.getElementById('kpi-meta-vvr-total').textContent = formatCurrency(metaVvrTotal);
-            document.getElementById('kpi-atingimento-vvr').textContent = formatPercent(atingimentoVvrTotal);
-            document.getElementById('kpi-adesoes').textContent = adesoesTotal.toLocaleString('pt-BR');
-        }
-
-        // Atualiza o gráfico combinado de VVR vs. Meta
-        function updateVvrVsMetaPorMesChart(data) {
-            const dataPorPeriodo = data.reduce((acc, d) => {
-                if (!acc[d.periodo]) acc[d.periodo] = { realizado: 0, meta: 0 };
-                acc[d.periodo].realizado += d.realizado_vvr;
-                acc[d.periodo].meta += d.meta_vvr;
-                return acc;
-            }, {});
-            
-            const labels = Object.keys(dataPorPeriodo).sort();
-            const realizadoValues = labels.map(p => dataPorPeriodo[p].realizado);
-            const metaValues = labels.map(p => dataPorPeriodo[p].meta);
-            
-            if (vvrVsMetaPorMesChart) vvrVsMetaPorMesChart.destroy(); // Destrói o gráfico antigo para evitar sobreposição
-            
-            Chart.register(ChartDataLabels);
-            
-            vvrVsMetaPorMesChart = new Chart(document.getElementById('vvrVsMetaPorMesChart'), {
-                type: 'bar', // Tipo base do gráfico
-                data: {
-                    labels: labels,
-                    datasets: [
-                        {
-                            label: 'VVR Realizado',
-                            data: realizadoValues,
-                            backgroundColor: 'rgba(88, 166, 255, 0.7)',
-                            order: 1 // Garante que as barras fiquem atrás da linha
-                        },
-                        {
-                            label: 'Meta VVR',
-                            data: metaValues,
-                            type: 'line', // Sobrescreve o tipo para este dataset
-                            borderColor: 'rgb(255, 99, 132)',
-                            order: 0, // Garante que a linha fique na frente
-                            datalabels: { display: false } // Não mostra rótulos na linha de meta
-                        }
-                    ]
-                },
-                options: {
-                    plugins: {
-                        datalabels: {
-                            anchor: 'end', align: 'end',
-                            formatter: (value) => {
-                                if (value >= 1000) return `${(value / 1000).toFixed(0)}k`;
-                                return value.toFixed(0);
-                            },
-                            color: '#FAFAFA', font: { weight: 'bold' }
-                        }
-                    },
-                    scales: { y: { beginAtZero: true } }
-                }
-            });
-        }
-        
-        // Atualiza a tabela de dados detalhados
-        function updateDataTable(data) {
-            const tableData = data.sort((a,b) => a.periodo.localeCompare(b.periodo) || a.unidade.localeCompare(b.unidade)).map(d => [ 
-                d.unidade, 
-                d.periodo, 
-                formatCurrency(d.realizado_vvr), 
-                formatCurrency(d.meta_vvr), 
-                formatPercent(d.atingimento_vvr), 
-                d.realizado_adesoes, 
-                d.meta_adesoes, 
-                formatPercent(d.atingimento_adesoes) 
-            ]);
-            
-            // Reutiliza a instância da DataTable para melhor performance
-            if (dataTable) { 
-                dataTable.clear().rows.add(tableData).draw(); 
-            } else { 
-                dataTable = $('#dados-table').DataTable({ 
-                    data: tableData, 
-                    pageLength: 10, 
-                    language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json' }, 
-                    destroy: true 
-                }); 
-            } 
-        }
-    </script>
+    }
+</script>
 </body>
 </html>
