@@ -11,8 +11,10 @@
     <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.js"></script>
     
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css"/>
-    <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/1.1.2/css/bootstrap-multiselect.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.2/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/1.1.2/js/bootstrap-multiselect.js"></script>
 
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #0E1117; color: #FAFAFA; margin: 0; padding: 20px; }
@@ -22,20 +24,38 @@
         .filters { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-end; }
         .filter-item { display: flex; flex-direction: column; }
         label { margin-bottom: 5px; font-size: 0.9em; color: #8B949E; }
-        select, input[type="date"] { background-color: #010409; color: #FAFAFA; border: 1px solid #30363D; border-radius: 6px; padding: 8px; }
+        input[type="date"] { background-color: #010409; color: #FAFAFA; border: 1px solid #30363D; border-radius: 6px; padding: 8px; }
         
-        /* --- ESTILOS NOVOS E MODIFICADOS --- */
-        .filter-item-unidades { flex-grow: 1; min-width: 300px; max-width: 500px; }
-        .filter-actions { margin-top: 8px; display: flex; gap: 10px; }
-        .filter-actions button { background-color: #30363D; color: #FAFAFA; border: 1px solid #8B949E; border-radius: 6px; padding: 5px 10px; font-size: 0.8em; cursor: pointer; transition: background-color 0.2s; }
-        .filter-actions button:hover { background-color: #58A6FF; border-color: #58A6FF; }
-        .choices { width: 100%; }
-        .choices__inner { background-color: #010409; border: 1px solid #30363D; border-radius: 6px; padding: 3.5px 7.5px 4.5px; min-height: 40px; }
-        .choices__list--dropdown { background-color: #161B22; border: 1px solid #30363D; }
-        .choices__item--choice { color: #FAFAFA; }
-        .choices__input { background-color: #010409 !important; color: #FAFAFA !important; }
-        .choices__item--selectable.is-highlighted { background-color: #58A6FF; }
-        .choices[data-type*="select-multiple"] .choices__button, .choices[data-type*="text"] .choices__button { border-left: 1px solid #8B949E; }
+        /* --- ESTILOS PARA O NOVO FILTRO BOOTSTRAP MULTISELECT --- */
+        .filter-item-unidades { min-width: 300px; max-width: 500px; }
+        .btn-group { width: 100%; }
+        .multiselect {
+            width: 100% !important;
+            background-color: #010409 !important;
+            border: 1px solid #30363D !important;
+            color: #FAFAFA !important;
+            text-align: left;
+        }
+        .multiselect-container {
+            background-color: #161B22;
+            border: 1px solid #30363D;
+            box-shadow: none;
+        }
+        .multiselect-container > li > a > label {
+            color: #FAFAFA;
+            padding: 8px 10px;
+        }
+        .multiselect-container > li:not(.multiselect-group):not(.multiselect-filter):hover {
+             background-color: #58A6FF;
+        }
+        .multiselect-container .multiselect-filter .form-control {
+            background-color: #010409;
+            color: #FAFAFA;
+            border: 1px solid #30363D;
+        }
+        .multiselect-container > li > a > label.checkbox input[type="checkbox"] {
+            margin-right: 10px;
+        }
         /* --- FIM DOS ESTILOS NOVOS --- */
 
         .kpi-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
@@ -57,11 +77,7 @@
         <section class="filters" id="filters-section" style="display: none;">
             <div class="filter-item filter-item-unidades">
                 <label for="unidade-filter">Filtrar por Unidade(s)</label>
-                <select id="unidade-filter" multiple></select>
-                <div class="filter-actions">
-                    <button id="select-all-unidades">Marcar Todos</button>
-                    <button id="deselect-all-unidades">Desmarcar Todos</button>
-                </div>
+                <select id="unidade-filter" multiple="multiple"></select>
             </div>
             <div class="filter-item">
                 <label for="start-date">Data de Início</label>
@@ -86,11 +102,7 @@
         <section class="table-container" id="table-section" style="display: none;">
             <h2>Dados Detalhados por Mês/Unidade (Período Selecionado)</h2>
             <table id="dados-table" class="display" style="width:100%">
-                <thead>
-                    <tr>
-                        <th>Unidade</th><th>Período</th><th>VVR Realizado</th><th>Meta VVR</th><th>Atingimento VVR</th><th>Adesões Realizadas</th><th>Meta Adesões</th><th>Atingimento Adesões</th>
-                    </tr>
-                </thead>
+                <thead> <tr> <th>Unidade</th><th>Período</th><th>VVR Realizado</th><th>Meta VVR</th><th>Atingimento VVR</th><th>Adesões Realizadas</th><th>Meta Adesões</th><th>Atingimento Adesões</th> </tr> </thead>
                 <tbody></tbody>
             </table>
         </section>
@@ -105,12 +117,11 @@
     const GOOGLE_SHEETS_API_URL = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${SHEET_NAME}?key=${API_KEY}`;
 
     // --- Variáveis Globais ---
-    let allData = [], metasData = new Map(), dataTable;
-    let vvrVsMetaPorMesChart, choicesUnidades; // Adicionada variável para a instância do Choices.js
+    let allData = [], metasData = new Map(), dataTable, vvrVsMetaPorMesChart;
     
     // --- Funções de Formatação ---
-    const formatCurrency = (value) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
-    const formatPercent = (value) => new Intl.NumberFormat('pt-BR', { style: 'percent', minimumFractionDigits: 1 }).format(value);
+    const formatCurrency = (value) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
+    const formatPercent = (value) => new Intl.NumberFormat('pt-BR', { style: 'percent', minimumFractionDigits: 1 }).format(value || 0);
 
     // --- Inicialização do Dashboard ---
     document.addEventListener('DOMContentLoaded', async () => {
@@ -129,13 +140,8 @@
                 populateFilters();
                 addEventListeners();
                 updateDashboard();
-            } else {
-                loader.innerHTML = 'Nenhum dado encontrado na API.';
-            }
-        } catch (error) {
-            console.error("Erro fatal na inicialização:", error);
-            loader.innerHTML = `Erro ao carregar dados. Verifique o console.`;
-        }
+            } else { loader.innerHTML = 'Nenhum dado encontrado na API.'; }
+        } catch (error) { console.error("Erro fatal na inicialização:", error); loader.innerHTML = `Erro ao carregar dados. Verifique o console.`; }
     });
 
     // --- Funções de Busca de Dados (sem alteração) ---
@@ -144,22 +150,31 @@
 
     // --- Funções do Dashboard ---
     
+    // ATUALIZADO: Usando Bootstrap Multiselect
     function populateFilters() {
         const unidades = [...new Set(allData.map(d => d.nm_unidade))].sort();
-        const unidadeFilter = document.getElementById('unidade-filter');
-        unidadeFilter.innerHTML = '';
-        
-        // Mapeia para o formato que o Choices.js espera
-        const unidadesOptions = unidades.map(u => ({ value: u, label: u, selected: true }));
+        const unidadeFilter = $('#unidade-filter'); // Usando seletor jQuery
+        unidadeFilter.empty();
 
-        // Inicializa o Choices.js no filtro de unidades
-        choicesUnidades = new Choices(unidadeFilter, {
-            removeItemButton: true,
-            placeholder: true,
-            placeholderValue: 'Selecione as unidades',
-            allowHTML: false,
+        unidades.forEach(u => {
+            unidadeFilter.append($('<option>', { value: u, text: u }));
         });
-        choicesUnidades.setChoices(unidadesOptions, 'value', 'label', false);
+
+        // Inicializa o Bootstrap Multiselect
+        unidadeFilter.multiselect({
+            enableFiltering: true,
+            includeSelectAllOption: true,
+            selectAllText: 'Marcar todos',
+            filterPlaceholder: 'Pesquisar unidades...',
+            nonSelectedText: 'Todas as unidades',
+            nSelectedText: 'unidades selecionadas',
+            allSelectedText: 'Todas as unidades selecionadas',
+            buttonWidth: '100%',
+            maxHeight: 300,
+            onChange: function(option, checked) {
+                updateDashboard(); // Dispara a atualização a cada mudança
+            }
+        });
 
         const hoje = new Date();
         const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
@@ -168,39 +183,22 @@
         document.getElementById('end-date').value = fimMes.toISOString().split('T')[0];
     }
     
+    // ATUALIZADO: Listeners simplificados
     function addEventListeners() {
-        // Listener para o filtro de unidades (agora no Choices.js)
-        document.getElementById('unidade-filter').addEventListener('change', updateDashboard);
-        
-        // Listeners para os filtros de data
+        // O listener do filtro de unidade agora é configurado dentro do próprio plugin .multiselect()
         document.getElementById('start-date').addEventListener('change', updateDashboard);
         document.getElementById('end-date').addEventListener('change', updateDashboard);
-
-        // Listeners para os botões de Marcar/Desmarcar Todos
-        document.getElementById('select-all-unidades').addEventListener('click', () => {
-            const allValues = choicesUnidades.config.choices.map(choice => choice.value);
-            choicesUnidades.setValue(allValues);
-        });
-        document.getElementById('deselect-all-unidades').addEventListener('click', () => {
-            choicesUnidades.removeActiveItems();
-        });
     }
-
-    // NOVA FUNÇÃO REUTILIZÁVEL: Processa e cruza dados de vendas com metas
+    
     function processAndCrossReferenceData(salesData) {
-        // Agrega os dados da API por mês e unidade
         const vendasPorMesUnidade = salesData.reduce((acc, d) => {
-            const periodo = d.dt_cadastro_integrante.toISOString().slice(0, 7); // "AAAA-MM"
+            const periodo = d.dt_cadastro_integrante.toISOString().slice(0, 7);
             const chave = `${d.nm_unidade}-${periodo}`;
-            if (!acc[chave]) {
-                acc[chave] = { unidade: d.nm_unidade, periodo: periodo, realizado_vvr: 0, realizado_adesoes: 0 };
-            }
+            if (!acc[chave]) { acc[chave] = { unidade: d.nm_unidade, periodo: periodo, realizado_vvr: 0, realizado_adesoes: 0 }; }
             acc[chave].realizado_vvr += d.vl_plano;
             acc[chave].realizado_adesoes += 1;
             return acc;
         }, {});
-
-        // Cruza com as metas
         return Object.values(vendasPorMesUnidade).map(item => {
             const chaveMeta = `${item.unidade}-${item.periodo}`;
             const meta = metasData.get(chaveMeta) || { meta_vvr: 0, meta_adesoes: 0 };
@@ -210,11 +208,12 @@
         });
     }
 
-    // FUNÇÃO PRINCIPAL ATUALIZADA
+    // ATUALIZADO: Lendo valores do Bootstrap Multiselect
     function updateDashboard() {
-        const selectedUnidades = choicesUnidades.getValue(true);
+        // O .val() do jQuery em um multiselect retorna um array dos selecionados, ou null se nenhum for selecionado.
+        const selectedUnidades = $('#unidade-filter').val() || [];
 
-        // --- 1. LÓGICA EXCLUSIVA PARA O GRÁFICO (ANO VIGENTE: 2025) ---
+        // --- 1. LÓGICA PARA O GRÁFICO (ANO VIGENTE: 2025) ---
         const anoVigente = 2025;
         const dataParaGrafico = allData.filter(d => {
             const isUnidadeMatch = selectedUnidades.length === 0 ? true : selectedUnidades.includes(d.nm_unidade);
@@ -234,69 +233,14 @@
             return isUnidadeMatch && isDateMatch;
         });
         const finalDataKpiTabela = processAndCrossReferenceData(dataParaKpiTabela);
-
         updateKPIs(finalDataKpiTabela, dataParaKpiTabela);
         updateDataTable(finalDataKpiTabela);
     }
 
-    // --- Funções de Atualização Visual ---
-    
-    function updateKPIs(dataAgregada, dataBruta) {
-        const vvrTotal = dataAgregada.reduce((sum, d) => sum + d.realizado_vvr, 0);
-        const metaVvrTotal = dataAgregada.reduce((sum, d) => sum + d.meta_vvr, 0);
-        const atingimentoVvrTotal = metaVvrTotal > 0 ? vvrTotal / metaVvrTotal : 0;
-        const adesoesTotal = dataBruta.length;
-        document.getElementById('kpi-vvr-total').textContent = formatCurrency(vvrTotal);
-        document.getElementById('kpi-meta-vvr-total').textContent = formatCurrency(metaVvrTotal);
-        document.getElementById('kpi-atingimento-vvr').textContent = formatPercent(atingimentoVvrTotal);
-        document.getElementById('kpi-adesoes').textContent = adesoesTotal.toLocaleString('pt-BR');
-    }
-
-    function updateVvrVsMetaPorMesChart(data) { // Sem alterações internas
-        const dataPorPeriodo = data.reduce((acc, d) => {
-            if (!acc[d.periodo]) acc[d.periodo] = { realizado: 0, meta: 0 };
-            acc[d.periodo].realizado += d.realizado_vvr;
-            acc[d.periodo].meta += d.meta_vvr;
-            return acc;
-        }, {});
-        
-        const labels = Object.keys(dataPorPeriodo).sort();
-        const realizadoValues = labels.map(p => dataPorPeriodo[p].realizado);
-        const metaValues = labels.map(p => dataPorPeriodo[p].meta);
-        
-        if (vvrVsMetaPorMesChart) vvrVsMetaPorMesChart.destroy();
-        Chart.register(ChartDataLabels);
-        
-        vvrVsMetaPorMesChart = new Chart(document.getElementById('vvrVsMetaPorMesChart'), {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [
-                    { label: 'VVR Realizado', data: realizadoValues, backgroundColor: 'rgba(88, 166, 255, 0.7)', order: 1 },
-                    { label: 'Meta VVR', data: metaValues, type: 'line', borderColor: 'rgb(255, 99, 132)', order: 0, datalabels: { display: false } }
-                ]
-            },
-            options: {
-                plugins: {
-                    datalabels: {
-                        anchor: 'end', align: 'end',
-                        formatter: (value) => (value >= 1000 ? `${(value / 1000).toFixed(0)}k` : value.toFixed(0)),
-                        color: '#FAFAFA', font: { weight: 'bold' }
-                    }
-                },
-                scales: { y: { beginAtZero: true } }
-            }
-        });
-    }
-    
-    function updateDataTable(data) { // Sem alterações internas
-        const tableData = data.sort((a,b) => a.periodo.localeCompare(b.periodo) || a.unidade.localeCompare(b.unidade)).map(d => [d.unidade, d.periodo, formatCurrency(d.realizado_vvr), formatCurrency(d.meta_vvr), formatPercent(d.atingimento_vvr), d.realizado_adesoes, d.meta_adesoes, formatPercent(d.atingimento_adesoes)]);
-        if (dataTable) {
-            dataTable.clear().rows.add(tableData).draw();
-        } else {
-            dataTable = $('#dados-table').DataTable({ data: tableData, pageLength: 10, language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json' }, destroy: true });
-        }
-    }
+    // --- Funções de Atualização Visual (sem alteração) ---
+    function updateKPIs(dataAgregada, dataBruta) { const vvrTotal = dataAgregada.reduce((sum, d) => sum + d.realizado_vvr, 0); const metaVvrTotal = dataAgregada.reduce((sum, d) => sum + d.meta_vvr, 0); const atingimentoVvrTotal = metaVvrTotal > 0 ? vvrTotal / metaVvrTotal : 0; const adesoesTotal = dataBruta.length; document.getElementById('kpi-vvr-total').textContent = formatCurrency(vvrTotal); document.getElementById('kpi-meta-vvr-total').textContent = formatCurrency(metaVvrTotal); document.getElementById('kpi-atingimento-vvr').textContent = formatPercent(atingimentoVvrTotal); document.getElementById('kpi-adesoes').textContent = adesoesTotal.toLocaleString('pt-BR'); }
+    function updateVvrVsMetaPorMesChart(data) { const dataPorPeriodo = data.reduce((acc, d) => { if (!acc[d.periodo]) acc[d.periodo] = { realizado: 0, meta: 0 }; acc[d.periodo].realizado += d.realizado_vvr; acc[d.periodo].meta += d.meta_vvr; return acc; }, {}); const labels = Object.keys(dataPorPeriodo).sort(); const realizadoValues = labels.map(p => dataPorPeriodo[p].realizado); const metaValues = labels.map(p => dataPorPeriodo[p].meta); if (vvrVsMetaPorMesChart) vvrVsMetaPorMesChart.destroy(); Chart.register(ChartDataLabels); vvrVsMetaPorMesChart = new Chart(document.getElementById('vvrVsMetaPorMesChart'), { type: 'bar', data: { labels: labels, datasets: [ { label: 'VVR Realizado', data: realizadoValues, backgroundColor: 'rgba(88, 166, 255, 0.7)', order: 1 }, { label: 'Meta VVR', data: metaValues, type: 'line', borderColor: 'rgb(255, 99, 132)', order: 0, datalabels: { display: false } } ] }, options: { plugins: { datalabels: { anchor: 'end', align: 'end', formatter: (value) => (value >= 1000 ? `${(value / 1000).toFixed(0)}k` : value.toFixed(0)), color: '#FAFAFA', font: { weight: 'bold' } } }, scales: { y: { beginAtZero: true } } } }); }
+    function updateDataTable(data) { const tableData = data.sort((a,b) => a.periodo.localeCompare(b.periodo) || a.unidade.localeCompare(b.unidade)).map(d => [d.unidade, d.periodo, formatCurrency(d.realizado_vvr), formatCurrency(d.meta_vvr), formatPercent(d.atingimento_vvr), d.realizado_adesoes, d.meta_adesoes, formatPercent(d.atingimento_adesoes)]); if (dataTable) { dataTable.clear().rows.add(tableData).draw(); } else { dataTable = $('#dados-table').DataTable({ data: tableData, pageLength: 10, language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json' }, destroy: true }); } }
 </script>
 </body>
 </html>
