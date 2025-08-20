@@ -229,7 +229,6 @@
         const selectedUnidades = $('#unidade-filter').val() || [];
         const anoVigente = 2025;
         const dataParaGrafico = allData.filter(d => (selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade)) && d.dt_cadastro_integrante.getFullYear() === anoVigente);
-        // Não precisamos cruzar com metas aqui, a função do gráfico fará isso
         updateVvrVsMetaPorMesChart(dataParaGrafico, anoVigente);
 
         const startDate = new Date(document.getElementById('start-date').value + 'T00:00:00');
@@ -241,20 +240,13 @@
         updateDataTable(dataAgregadaFiltrada);
     }
     
-    // ======================================================================================
-    // FUNÇÃO DO GRÁFICO TOTALMENTE ATUALIZADA
-    // ======================================================================================
     function updateVvrVsMetaPorMesChart(salesDataForYear, anoVigente) {
-        // 1. Gera uma lista com todos os meses do ano no formato 'AAAA-MM'
         const allYearPeriodos = Array.from({ length: 12 }, (_, i) => `${anoVigente}-${String(i + 1).padStart(2, '0')}`);
-
-        // 2. Cria uma estrutura de dados (Map) para os 12 meses, para preenchimento
         const chartDataMap = new Map();
         allYearPeriodos.forEach(periodo => {
             chartDataMap.set(periodo, { realizado: 0, meta: 0 });
         });
 
-        // 3. Popula a estrutura com os dados de VENDAS REALIZADAS do ano
         salesDataForYear.forEach(d => {
             const periodo = d.dt_cadastro_integrante.toISOString().slice(0, 7);
             if (chartDataMap.has(periodo)) {
@@ -262,12 +254,10 @@
             }
         });
 
-        // 4. Popula a estrutura com os dados de METAS para o ano inteiro
-        const selectedUnidades = $('#unidade-filter').val() || [...new Set(allData.map(d => d.nm_unidade))]; // Pega unidades selecionadas ou todas
+        const selectedUnidades = $('#unidade-filter').val() || [...new Set(allData.map(d => d.nm_unidade))];
         metasData.forEach((metaInfo, key) => {
             const [unidade, ano, mes] = key.split('-');
             const periodo = `${ano}-${mes}`;
-            // Verifica se a meta pertence ao ano vigente, ao período mapeado e às unidades selecionadas
             if (ano == anoVigente && chartDataMap.has(periodo)) {
                 if (selectedUnidades.length === 0 || selectedUnidades.includes(unidade)) {
                     chartDataMap.get(periodo).meta += metaInfo.meta_vvr_total;
@@ -275,11 +265,9 @@
             }
         });
 
-        // 5. Extrai os valores finais a partir do mapa completo de 12 meses
         const realizadoValues = allYearPeriodos.map(p => chartDataMap.get(p).realizado);
         const metaValues = allYearPeriodos.map(p => chartDataMap.get(p).meta);
 
-        // 6. Formata os rótulos do eixo X para o formato "mes-ano" (ex: "jan-25")
         const formattedLabels = allYearPeriodos.map(periodo => {
             const [year, month] = periodo.split('-');
             const date = new Date(year, month - 1);
@@ -288,11 +276,9 @@
             return `${monthName}-${shortYear}`;
         });
         
-        // Destrói o gráfico anterior para redesenhar
         if (vvrVsMetaPorMesChart) vvrVsMetaPorMesChart.destroy();
         Chart.register(ChartDataLabels);
 
-        // 7. Cria o novo gráfico com todas as configurações
         vvrVsMetaPorMesChart = new Chart(document.getElementById('vvrVsMetaPorMesChart'), {
             type: 'bar',
             data: {
@@ -310,7 +296,6 @@
                         type: 'line',
                         borderColor: 'rgb(255, 99, 132)',
                         order: 0,
-                        // Configuração dos rótulos de dados para a linha de meta
                         datalabels: {
                             display: true,
                             align: 'bottom',
@@ -326,7 +311,6 @@
             },
             options: {
                 plugins: {
-                    // Configuração padrão dos rótulos (para as barras)
                     datalabels: {
                         anchor: 'end',
                         align: 'end',
@@ -338,12 +322,8 @@
                         callbacks: {
                             label: function(context) {
                                 let label = context.dataset.label || '';
-                                if (label) {
-                                    label += ': ';
-                                }
-                                if (context.parsed.y !== null) {
-                                    label += formatCurrency(context.parsed.y);
-                                }
+                                if (label) { label += ': '; }
+                                if (context.parsed.y !== null) { label += formatCurrency(context.parsed.y); }
                                 return label;
                             }
                         }
@@ -355,11 +335,8 @@
             }
         });
     }
-    // ======================================================================================
-    // FIM DA FUNÇÃO DO GRÁFICO
-    // ======================================================================================
 
-    function updateDataTable(data) { const tableData = data.sort((a,b) => a.periodo.localeCompare(b.periodo) || a.unidade.localeCompare(b.unidade)).map(d => { const atingimentoVvr = d.meta_vvr_total > 0 ? d.realizado_vvr / d.meta_vvr_total : 0; const atingimentoAdesoes = d.meta_adesoes > 0 ? d.realizado_adesoes / d.meta_adesoes : 0; return [d.unidade, d.periodo, formatCurrency(d.realizado_vvr), formatCurrency(d.meta_vvr_total), formatPercent(atingimentoVvr), d.realizado_adesoes, d.meta_adesoes, formatPercent(atingimentoAdesoes)] }); if (dataTable) { dataTable.clear().rows.add(tableData).draw(); } else { dataTable = $('#dados-table').DataTable({ data: tableLength: 10, language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json' }, destroy: true }); } }
+    function updateDataTable(data) { const tableData = data.sort((a,b) => a.periodo.localeCompare(b.periodo) || a.unidade.localeCompare(b.unidade)).map(d => { const atingimentoVvr = d.meta_vvr_total > 0 ? d.realizado_vvr / d.meta_vvr_total : 0; const atingimentoAdesoes = d.meta_adesoes > 0 ? d.realizado_adesoes / d.meta_adesoes : 0; return [d.unidade, d.periodo, formatCurrency(d.realizado_vvr), formatCurrency(d.meta_vvr_total), formatPercent(atingimentoVvr), d.realizado_adesoes, d.meta_adesoes, formatPercent(atingimentoAdesoes)] }); if (dataTable) { dataTable.clear().rows.add(tableData).draw(); } else { dataTable = $('#dados-table').DataTable({ data: tableData, pageLength: 10, language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json' }, destroy: true }); } }
     function populateFilters() { const unidades = [...new Set(allData.map(d => d.nm_unidade))].sort(); const unidadeFilter = $('#unidade-filter'); unidadeFilter.empty(); unidades.forEach(u => { unidadeFilter.append($('<option>', { value: u, text: u })); }); unidadeFilter.multiselect({ enableFiltering: true, includeSelectAllOption: true, selectAllText: 'Marcar todos', filterPlaceholder: 'Pesquisar...', nonSelectedText: 'Todas as unidades', nSelectedText: 'unidades', allSelectedText: 'Todas selecionadas', buttonWidth: '100%', maxHeight: 300, onChange: function(option, checked) { updateDashboard(); } }); const hoje = new Date(); const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1); const fimMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0); document.getElementById('start-date').value = inicioMes.toISOString().split('T')[0]; document.getElementById('end-date').value = fimMes.toISOString().split('T')[0]; }
     function addEventListeners() { document.getElementById('start-date').addEventListener('change', updateDashboard); document.getElementById('end-date').addEventListener('change', updateDashboard); }
 </script>
