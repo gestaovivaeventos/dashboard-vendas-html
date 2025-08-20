@@ -309,32 +309,44 @@
                     }
                 ]
             },
-            options: {
-                plugins: {
-                    datalabels: {
-                        anchor: 'end',
-                        align: 'end',
-                        formatter: (value) => (value >= 1000 ? `${(value / 1000).toFixed(0)}k` : value.toFixed(0)),
-                        color: '#FAFAFA',
-                        font: { weight: 'bold' }
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                let label = context.dataset.label || '';
-                                if (label) { label += ': '; }
-                                if (context.parsed.y !== null) { label += formatCurrency(context.parsed.y); }
-                                return label;
-                            }
-                        }
+            // COLE ESTE NOVO BLOCO NO LUGAR DO ANTIGO
+options: {
+    // NOVO: Define como o mouse interage com o gráfico
+    interaction: {
+        mode: 'index',      // Mostra todos os datasets no mesmo índice (mês)
+        intersect: false,   // Ativa o tooltip ao passar em qualquer lugar da coluna
+    },
+    plugins: {
+        // A configuração dos datalabels permanece a mesma
+        datalabels: {
+            anchor: 'end',
+            align: 'end',
+            formatter: (value) => (value >= 1000 ? `${(value / 1000).toFixed(0)}k` : value.toFixed(0)),
+            color: '#FAFAFA',
+            font: { weight: 'bold' }
+        },
+        // A configuração dos tooltips permanece a mesma, pois já formata para moeda
+        tooltip: {
+            callbacks: {
+                label: function(context) {
+                    let label = context.dataset.label || '';
+                    if (label) {
+                        label += ': ';
                     }
-                },
-                scales: {
-                    y: { beginAtZero: true }
+                    if (context.parsed.y !== null) {
+                        label += formatCurrency(context.parsed.y);
+                    }
+                    return label;
                 }
             }
-        });
+        }
+    },
+    scales: {
+        y: {
+            beginAtZero: true
+        }
     }
+}
 
     function updateDataTable(data) { const tableData = data.sort((a,b) => a.periodo.localeCompare(b.periodo) || a.unidade.localeCompare(b.unidade)).map(d => { const atingimentoVvr = d.meta_vvr_total > 0 ? d.realizado_vvr / d.meta_vvr_total : 0; const atingimentoAdesoes = d.meta_adesoes > 0 ? d.realizado_adesoes / d.meta_adesoes : 0; return [d.unidade, d.periodo, formatCurrency(d.realizado_vvr), formatCurrency(d.meta_vvr_total), formatPercent(atingimentoVvr), d.realizado_adesoes, d.meta_adesoes, formatPercent(atingimentoAdesoes)] }); if (dataTable) { dataTable.clear().rows.add(tableData).draw(); } else { dataTable = $('#dados-table').DataTable({ data: tableData, pageLength: 10, language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json' }, destroy: true }); } }
     function populateFilters() { const unidades = [...new Set(allData.map(d => d.nm_unidade))].sort(); const unidadeFilter = $('#unidade-filter'); unidadeFilter.empty(); unidades.forEach(u => { unidadeFilter.append($('<option>', { value: u, text: u })); }); unidadeFilter.multiselect({ enableFiltering: true, includeSelectAllOption: true, selectAllText: 'Marcar todos', filterPlaceholder: 'Pesquisar...', nonSelectedText: 'Todas as unidades', nSelectedText: 'unidades', allSelectedText: 'Todas selecionadas', buttonWidth: '100%', maxHeight: 300, onChange: function(option, checked) { updateDashboard(); } }); const hoje = new Date(); const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1); const fimMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0); document.getElementById('start-date').value = inicioMes.toISOString().split('T')[0]; document.getElementById('end-date').value = fimMes.toISOString().split('T')[0]; }
