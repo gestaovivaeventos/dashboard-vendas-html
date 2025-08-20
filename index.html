@@ -19,7 +19,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/1.1.2/js/bootstrap-multiselect.js"></script>
 
     <style>
-        /* --- NOVA PALETA DE CORES --- */
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #212529; color: #F8F9FA; margin: 0; padding: 0; }
         .container { display: grid; grid-template-columns: repeat(12, 1fr); grid-gap: 20px; padding: 20px; width: 100%; box-sizing: border-box; }
         .header, .filters, .kpi-container, .chart-container, .table-container { 
@@ -35,7 +34,6 @@
         label { margin-bottom: 5px; font-size: 0.9em; color: #ADB5BD; }
         input[type="date"] { background-color: #212529; color: #F8F9FA; border: 1px solid #495057; border-radius: 6px; padding: 8px; }
         
-        /* Filtro Multiselect com novas cores */
         .filter-item-unidades { min-width: 300px; max-width: 500px; }
         .btn-group { width: 100%; }
         .multiselect { width: 100% !important; background-color: #212529 !important; border: 1px solid #495057 !important; color: #F8F9FA !important; text-align: left; }
@@ -45,7 +43,6 @@
         .multiselect-container .multiselect-filter .form-control { background-color: #212529; color: #F8F9FA; border: 1px solid #495057; }
         .multiselect-container > li > a > label.checkbox input[type="checkbox"] { margin-right: 10px; }
         
-        /* KPIs com novas cores */
         .kpi-main-wrapper { display: flex; flex-wrap: wrap; align-items: center; gap: 20px; }
         .kpi-main-cards-container { display: flex; flex-grow: 1; flex-wrap: wrap; gap: 20px; }
         .kpi-main-card { flex: 1; min-width: 220px; display: flex; flex-direction: column; gap: 8px; border-left: 1px solid #495057; padding-left: 20px; }
@@ -53,18 +50,27 @@
         .kpi-card-title { font-size: 0.9em; color: #ADB5BD; font-weight: bold; }
         .kpi-card-value { font-size: 2.1em; font-weight: bold; color: #F8F9FA; }
         .kpi-card-details { font-size: 0.8em; color: #ADB5BD; }
-        .kpi-card-details .percent { color: #FFC107; font-weight: bold; }
+
+        /* --- ALTERAÇÃO CSS --- */
+        .kpi-card-details .percent { 
+            font-weight: bold; /* Cor removida para ser controlada via JS */
+            transition: color 0.5s ease-in-out;
+        }
         .progress-bar-bg { width: 100%; height: 10px; background-color: #495057; border-radius: 5px; overflow: hidden; }
-        .progress-bar-fg { height: 100%; background-color: #FFC107; border-radius: 5px; width: 0%; transition: width 0.5s ease-in-out; }
+        .progress-bar-fg { 
+            height: 100%; 
+            border-radius: 5px; 
+            width: 0%; 
+            /* Cor de fundo removida e transição adicionada */
+            transition: width 0.5s ease-in-out, background-color 0.5s ease-in-out; 
+        }
+        /* --- FIM DA ALTERAÇÃO --- */
         
         .loader { text-align: center; font-size: 1.5em; padding: 50px; }
-        
-        /* Tabela com novas cores */
         .dataTables_wrapper { color: #F8F9FA; }
         .dataTables_wrapper .dataTables_length select, .dataTables_wrapper .dataTables_filter input { background-color: #212529; color: #F8F9FA; border: 1px solid #495057; border-radius: 6px; padding: 5px; }
         .dataTables_wrapper .dataTables_paginate .paginate_button { color: #F8F9FA !important; border: 1px solid #495057; }
         .dataTables_wrapper .dataTables_paginate .paginate_button.current { background: #FFC107 !important; border-color: #FFC107 !important; color: #212529 !important; }
-        /* --- FIM DA NOVA PALETA --- */
     </style>
 </head>
 <body>
@@ -216,7 +222,15 @@
         });
     }
 
+    // --- ALTERAÇÃO JAVASCRIPT ---
     function updateMainKPIs(dataBruta, dataAgregadaComMetas) {
+        // Função auxiliar para definir a cor com base no percentual
+        const getColorForPercentage = (percent) => {
+            if (percent >= 1) return '#28a745'; // Verde para 100% ou mais
+            if (percent >= 0.5) return '#ffc107'; // Amarelo para 50% a 99.9%
+            return '#dc3545'; // Vermelho para menos de 50%
+        };
+
         const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
         const realizadoVendas = dataBruta.filter(d => normalizeText(d.venda_posvenda) === 'VENDA').reduce((sum, d) => sum + d.vl_plano, 0);
         const realizadoPosVendas = dataBruta.filter(d => normalizeText(d.venda_posvenda) === 'POS VENDA').reduce((sum, d) => sum + d.vl_plano, 0);
@@ -228,19 +242,37 @@
         const percentVendas = metaVendas > 0 ? realizadoVendas / metaVendas : 0;
         const percentPosVendas = metaPosVendas > 0 ? realizadoPosVendas / metaPosVendas : 0;
         
+        // Aplica os valores e as cores dinâmicas para o KPI TOTAL
+        const totalColor = getColorForPercentage(percentTotal);
         document.getElementById('kpi-total-realizado').textContent = formatCurrency(realizadoTotal);
         document.getElementById('kpi-total-meta').textContent = formatCurrency(metaTotal);
-        document.getElementById('kpi-total-percent').textContent = formatPercent(percentTotal);
+        const totalPercentEl = document.getElementById('kpi-total-percent');
+        totalPercentEl.textContent = formatPercent(percentTotal);
+        totalPercentEl.style.color = totalColor;
+        document.getElementById('kpi-total-progress').style.backgroundColor = totalColor;
         document.getElementById('kpi-total-progress').style.width = `${Math.min(percentTotal * 100, 100)}%`;
+
+        // Aplica os valores e as cores dinâmicas para o KPI VENDAS
+        const vendasColor = getColorForPercentage(percentVendas);
         document.getElementById('kpi-vendas-realizado').textContent = formatCurrency(realizadoVendas);
         document.getElementById('kpi-vendas-meta').textContent = formatCurrency(metaVendas);
-        document.getElementById('kpi-vendas-percent').textContent = formatPercent(percentVendas);
+        const vendasPercentEl = document.getElementById('kpi-vendas-percent');
+        vendasPercentEl.textContent = formatPercent(percentVendas);
+        vendasPercentEl.style.color = vendasColor;
+        document.getElementById('kpi-vendas-progress').style.backgroundColor = vendasColor;
         document.getElementById('kpi-vendas-progress').style.width = `${Math.min(percentVendas * 100, 100)}%`;
+        
+        // Aplica os valores e as cores dinâmicas para o KPI PÓS VENDAS
+        const posVendasColor = getColorForPercentage(percentPosVendas);
         document.getElementById('kpi-posvendas-realizado').textContent = formatCurrency(realizadoPosVendas);
         document.getElementById('kpi-posvendas-meta').textContent = formatCurrency(metaPosVendas);
-        document.getElementById('kpi-posvendas-percent').textContent = formatPercent(percentPosVendas);
+        const posVendasPercentEl = document.getElementById('kpi-posvendas-percent');
+        posVendasPercentEl.textContent = formatPercent(percentPosVendas);
+        posVendasPercentEl.style.color = posVendasColor;
+        document.getElementById('kpi-posvendas-progress').style.backgroundColor = posVendasColor;
         document.getElementById('kpi-posvendas-progress').style.width = `${Math.min(percentPosVendas * 100, 100)}%`;
     }
+    // --- FIM DA ALTERAÇÃO ---
 
     function updateDashboard() {
         const selectedUnidades = $('#unidade-filter').val() || [];
@@ -304,14 +336,14 @@
                     {
                         label: 'VVR Realizado',
                         data: realizadoValues,
-                        backgroundColor: 'rgba(255, 193, 7, 0.7)', // COR ATUALIZADA
+                        backgroundColor: 'rgba(255, 193, 7, 0.7)',
                         order: 1
                     },
                     {
                         label: 'Meta VVR',
                         data: metaValues,
                         type: 'line',
-                        borderColor: 'rgb(220, 53, 69)', // COR ATUALIZADA
+                        borderColor: 'rgb(220, 53, 69)',
                         order: 0,
                         datalabels: {
                             display: true,
