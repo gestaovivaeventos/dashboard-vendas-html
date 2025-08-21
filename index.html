@@ -31,7 +31,7 @@
             border: 1px solid #495057; 
         }
         .header { display: flex; justify-content: space-between; align-items: center; }
-        #company-logo { height: 100px; width: auto; }
+        #company-logo { height: 95px; width: auto; }
         h1, h2 { margin-top: 0; border-bottom: 2px solid #495057; padding-bottom: 10px; }
         .filters { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-end; }
         .filter-item { display: flex; flex-direction: column; }
@@ -282,18 +282,50 @@
         document.getElementById('kpi-posvendas-progress-py').style.width = `${Math.min(percentPosVendas * 100, 100)}%`;
     }
 
+    // === FUNÇÃO ATUALIZADA ===
     function updateDashboard() {
         const selectedUnidades = $('#unidade-filter').val() || [];
         const anoVigente = 2025;
         const dataParaGrafico = allData.filter(d => (selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade)) && d.dt_cadastro_integrante.getFullYear() === anoVigente);
+        
         updateVvrVsMetaPorMesChart(dataParaGrafico, anoVigente);
         updateStackedBarChart(dataParaGrafico, anoVigente);
+
+        // --- Lógica para o Período Selecionado (Atual) ---
         const startDate = new Date(document.getElementById('start-date').value + 'T00:00:00');
         const endDate = new Date(document.getElementById('end-date').value + 'T23:59:59');
         const dataBrutaFiltrada = allData.filter(d => (selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade)) && d.dt_cadastro_integrante >= startDate && d.dt_cadastro_integrante <= endDate);
+        
         updateMainKPIs(dataBrutaFiltrada, selectedUnidades, startDate, endDate);
-        const dataAgregadaFiltrada = processAndCrossReferenceData(dataBrutaFiltrada);
-        updateDataTable(dataAgregadaFiltrada);
+        
+        // --- LÓGICA DA TABELA CORRIGIDA ---
+        const dataAgregadaComVendas = processAndCrossReferenceData(dataBrutaFiltrada);
+        const combinedDataMap = new Map();
+        dataAgregadaComVendas.forEach(item => {
+            const key = `${item.unidade}-${item.periodo}`;
+            combinedDataMap.set(key, item);
+        });
+        const unitsToConsider = selectedUnidades.length > 0 ? selectedUnidades : [...new Set(allData.map(d => d.nm_unidade))];
+        metasData.forEach((metaInfo, key) => {
+            const [unidade, ano, mes] = key.split('-');
+            const metaDate = new Date(ano, parseInt(mes) - 1, 15);
+            const periodo = `${ano}-${mes}`;
+            const mapKey = `${unidade}-${periodo}`;
+            if (unitsToConsider.includes(unidade) && metaDate >= startDate && metaDate <= endDate && !combinedDataMap.has(mapKey)) {
+                combinedDataMap.set(mapKey, {
+                    unidade: unidade,
+                    periodo: periodo,
+                    realizado_vvr: 0,
+                    realizado_adesoes: 0,
+                    ...metaInfo
+                });
+            }
+        });
+        const finalTableData = Array.from(combinedDataMap.values());
+        updateDataTable(finalTableData);
+        // --- FIM DA LÓGICA DA TABELA ---
+
+        // --- Lógica para o Período Anterior ---
         const startDatePY = new Date(startDate);
         startDatePY.setFullYear(startDatePY.getFullYear() - 1);
         const endDatePY = new Date(endDate);
