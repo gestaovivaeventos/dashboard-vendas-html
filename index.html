@@ -31,7 +31,7 @@
             border: 1px solid #495057; 
         }
         .header { display: flex; justify-content: space-between; align-items: center; }
-        #company-logo { height: 90px; width: auto; }
+        #company-logo { height: 100px; width: auto; }
         h1, h2 { margin-top: 0; border-bottom: 2px solid #495057; padding-bottom: 10px; }
         .filters { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-end; }
         .filter-item { display: flex; flex-direction: column; }
@@ -66,7 +66,6 @@
 
         .dt-button { background-color: #495057 !important; color: #F8F9FA !important; border: 1px solid #ADB5BD !important; border-radius: 6px !important; padding: 5px 15px !important; margin-bottom: 15px !important; }
         .dt-button:hover { background-color: #ADB5BD !important; color: #212529 !important; }
-
     </style>
 </head>
 <body>
@@ -109,9 +108,7 @@
             </div>
         </section>
 
-        <!-- === PASSO 1: ADICIONE ESTE NOVO BLOCO HTML ABAIXO DA SECÇÃO DE KPIs EXISTENTE === -->
         <section class="kpi-container" id="kpi-section-py" style="display: none;">
-            <!-- Adicionamos um título para a nova secção -->
             <h2 style="grid-column: span 12; font-size: 1.2em; border-bottom: none; padding-bottom: 0;">Desempenho no Período Anterior</h2>
             <div class="kpi-main-wrapper" style="width: 100%; grid-column: span 12;">
                 <div class="kpi-main-cards-container">
@@ -136,7 +133,6 @@
                 </div>
             </div>
         </section>
-        <!-- === FIM DO NOVO BLOCO === -->
 
         <section class="chart-container" id="chart-vvr-mes-section" style="display: none;">
             <h2>VVR Realizado vs. Meta por Mês (Ano Vigente)</h2>
@@ -147,6 +143,7 @@
             <h2>Valor de Venda Realizada por Mês (Ano Vigente)</h2>
             <canvas id="stackedBarChart"></canvas>
         </section>
+        
         <section class="table-container" id="table-section" style="display: none;">
             <h2>Dados Detalhados por Mês/Unidade (Período Selecionado)</h2>
             <table id="dados-table" class="display" style="width:100%">
@@ -163,7 +160,6 @@
     const METAS_SHEET_NAME = "metas";
     const API_KEY = "AIzaSyBuGRH91CnRuDtN5RGsb5DvHEfhTxJnWSs"; 
     
-    // === ADICIONAR NOVA VARIÁVEL GLOBAL PARA O GRÁFICO ===
     let allData = [], metasData = new Map(), dataTable, vvrVsMetaPorMesChart, stackedBarChart;
     
     const formatCurrency = (value) => new Intl.NumberFormat('pt-br', { style: 'currency', currency: 'BRL' }).format(value || 0);
@@ -178,7 +174,6 @@
 
             if (allData && allData.length > 0) {
                 loader.style.display = 'none';
-                // Adiciona o novo ID do gráfico para ser exibido
                 ['filters-section', 'kpi-section', 'chart-vvr-mes-section', 'chart-stacked-bar-section', 'table-section'].forEach(id => document.getElementById(id).style.display = 'block');
                 document.getElementById('filters-section').style.display = 'flex';
                 
@@ -189,42 +184,31 @@
         } catch (error) { console.error("Erro fatal na inicialização:", error); loader.innerHTML = `Erro ao carregar dados. Verifique o console.`; }
     });
 
-    // Demais funções de busca e processamento de dados permanecem as mesmas
     async function fetchAllSalesDataFromSheet() { if (!SALES_SPREADSHEET_ID || !SALES_SHEET_NAME || !API_KEY) { console.error("ID da Planilha de Vendas, Nome da Aba ou Chave de API não configurados."); return []; } const url = `https://sheets.googleapis.com/v4/spreadsheets/${SALES_SPREADSHEET_ID}/values/${SALES_SHEET_NAME}?key=${API_KEY}`; try { const response = await fetch(url); if (!response.ok) { console.error("Erro ao buscar dados de vendas da planilha:", await response.json()); return []; } const data = await response.json(); const rows = data.values || []; if (rows.length < 2) return []; const headers = rows[0].map(h => h.trim().toLowerCase()); const unidadeIndex = headers.indexOf("nm_unidade"), dataIndex = headers.indexOf("dt_cadastro_integrante"), valorIndex = headers.indexOf("vl_plano"), tipoVendaIndex = headers.indexOf("venda_posvenda"); if (unidadeIndex === -1 || dataIndex === -1 || valorIndex === -1) { console.error("Colunas necessárias (nm_unidade, dt_cadastro_integrante, vl_plano) não foram encontradas."); return []; } return rows.slice(1).map(row => { const dataString = row[dataIndex]; if (!dataString) return null; return { nm_unidade: row[unidadeIndex] || 'N/A', dt_cadastro_integrante: new Date(dataString), vl_plano: parseFloat(String(row[valorIndex] || '0').replace(',', '.')) || 0, venda_posvenda: row[tipoVendaIndex] || 'VENDA' }; }).filter(Boolean); } catch (error) { console.error("Erro CRÍTICO ao buscar dados de vendas:", error); return []; } }
     async function fetchMetasData() { if (!METAS_SPREADSHEET_ID || !METAS_SHEET_NAME || !API_KEY) { console.error("Configurações da planilha de metas incompletas."); return new Map(); } const url = `https://sheets.googleapis.com/v4/spreadsheets/${METAS_SPREADSHEET_ID}/values/${METAS_SHEET_NAME}?key=${API_KEY}`; try { const response = await fetch(url); if (!response.ok) { console.error("Erro API Google Sheets:", await response.json()); return new Map(); } const data = await response.json(); const rows = data.values || []; const metasMap = new Map(); const headers = rows[0].map(h => h.trim().toLowerCase()); const unidadeIndex = headers.indexOf("nm_unidade"), anoIndex = headers.indexOf("ano"), mesIndex = headers.indexOf("mês"), metaVendasIndex = headers.indexOf("meta vvr_venda"), metaPosvendasIndex = headers.indexOf("meta vvr_pos_venda"), metaAdesoesIndex = headers.indexOf("meta adesões"); rows.slice(1).forEach(row => { const unidade = row[unidadeIndex], ano = row[anoIndex], mes = String(row[mesIndex]).padStart(2, '0'); const parseMetaValue = (index) => parseFloat(String(row[index] || "0").replace(/\./g, '').replace(',', '.')) || 0; const metaVendas = parseMetaValue(metaVendasIndex), metaPosvendas = parseMetaValue(metaPosvendasIndex), metaAdesoes = parseInt(row[metaAdesoesIndex]) || 0; if (unidade && ano && mes) { const chave = `${unidade}-${ano}-${mes}`; metasMap.set(chave, { meta_vvr_vendas: metaVendas, meta_vvr_posvendas: metaPosvendas, meta_vvr_total: metaVendas + metaPosvendas, meta_adesoes: metaAdesoes }); } }); return metasMap; } catch (error) { console.error("Erro CRÍTICO ao buscar metas:", error); return new Map(); } }
     function processAndCrossReferenceData(salesData) { const vendasPorMesUnidade = salesData.reduce((acc, d) => { const periodo = d.dt_cadastro_integrante.toISOString().slice(0, 7); const chave = `${d.nm_unidade}-${periodo}`; if (!acc[chave]) { acc[chave] = { unidade: d.nm_unidade, periodo: periodo, realizado_vvr: 0, realizado_adesoes: 0 }; } acc[chave].realizado_vvr += d.vl_plano; acc[chave].realizado_adesoes += 1; return acc; }, {}); return Object.values(vendasPorMesUnidade).map(item => { const chaveMeta = `${item.unidade}-${item.periodo}`; const meta = metasData.get(chaveMeta) || { meta_vvr_total: 0, meta_vvr_vendas: 0, meta_vvr_posvendas: 0, meta_adesoes: 0 }; return { ...item, ...meta }; }); }
-    // === SUBSTITUA ESTA FUNÇÃO ===
+    
     function updateMainKPIs(dataBruta, selectedUnidades, startDate, endDate) {
         const getColorForPercentage = (percent) => { if (percent >= 1) return '#28a745'; if (percent >= 0.5) return '#ffc107'; return '#dc3545'; };
         const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-
-        // O cálculo do REALIZADO continua o mesmo, pois depende das vendas
         const realizadoVendas = dataBruta.filter(d => normalizeText(d.venda_posvenda) === 'VENDA').reduce((sum, d) => sum + d.vl_plano, 0);
         const realizadoPosVendas = dataBruta.filter(d => normalizeText(d.venda_posvenda) === 'POS VENDA').reduce((sum, d) => sum + d.vl_plano, 0);
         const realizadoTotal = realizadoVendas + realizadoPosVendas;
-
-        // --- NOVA LÓGICA PARA CÁLCULO DAS METAS ---
         let metaVendas = 0;
         let metaPosVendas = 0;
         const unitsToConsider = selectedUnidades.length > 0 ? selectedUnidades : [...new Set(allData.map(d => d.nm_unidade))];
-
         metasData.forEach((metaInfo, key) => {
             const [unidade, ano, mes] = key.split('-');
-            const metaDate = new Date(ano, parseInt(mes) - 1, 15); // Data no meio do mês para evitar erros de fuso horário
-
-            // Verifica se a meta pertence às unidades selecionadas e ao período de datas
+            const metaDate = new Date(ano, parseInt(mes) - 1, 15);
             if (unitsToConsider.includes(unidade) && metaDate >= startDate && metaDate <= endDate) {
                 metaVendas += metaInfo.meta_vvr_vendas;
                 metaPosVendas += metaInfo.meta_vvr_posvendas;
             }
         });
         const metaTotal = metaVendas + metaPosVendas;
-        // --- FIM DA NOVA LÓGICA ---
-
         const percentTotal = metaTotal > 0 ? realizadoTotal / metaTotal : 0;
         const percentVendas = metaVendas > 0 ? realizadoVendas / metaVendas : 0;
         const percentPosVendas = metaPosVendas > 0 ? realizadoPosVendas / metaPosVendas : 0;
-        
         const totalColor = getColorForPercentage(percentTotal);
         document.getElementById('kpi-total-realizado').textContent = formatCurrency(realizadoTotal);
         document.getElementById('kpi-total-meta').textContent = formatCurrency(metaTotal);
@@ -233,7 +217,6 @@
         totalPercentEl.style.color = totalColor;
         document.getElementById('kpi-total-progress').style.backgroundColor = totalColor;
         document.getElementById('kpi-total-progress').style.width = `${Math.min(percentTotal * 100, 100)}%`;
-
         const vendasColor = getColorForPercentage(percentVendas);
         document.getElementById('kpi-vendas-realizado').textContent = formatCurrency(realizadoVendas);
         document.getElementById('kpi-vendas-meta').textContent = formatCurrency(metaVendas);
@@ -242,7 +225,6 @@
         vendasPercentEl.style.color = vendasColor;
         document.getElementById('kpi-vendas-progress').style.backgroundColor = vendasColor;
         document.getElementById('kpi-vendas-progress').style.width = `${Math.min(percentVendas * 100, 100)}%`;
-        
         const posVendasColor = getColorForPercentage(percentPosVendas);
         document.getElementById('kpi-posvendas-realizado').textContent = formatCurrency(realizadoPosVendas);
         document.getElementById('kpi-posvendas-meta').textContent = formatCurrency(metaPosVendas);
@@ -252,36 +234,28 @@
         document.getElementById('kpi-posvendas-progress').style.backgroundColor = posVendasColor;
         document.getElementById('kpi-posvendas-progress').style.width = `${Math.min(percentPosVendas * 100, 100)}%`;
     }
-    // === PASSO 2A: ADICIONE ESTA NOVA FUNÇÃO AO SEU SCRIPT ===
-    // === SUBSTITUA ESTA FUNÇÃO ===
+
     function updatePreviousYearKPIs(dataBruta, selectedUnidades, startDate, endDate) {
         const getColorForPercentage = (percent) => { if (percent >= 1) return '#28a745'; if (percent >= 0.5) return '#ffc107'; return '#dc3545'; };
         const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
         const realizadoVendas = dataBruta.filter(d => normalizeText(d.venda_posvenda) === 'VENDA').reduce((sum, d) => sum + d.vl_plano, 0);
         const realizadoPosVendas = dataBruta.filter(d => normalizeText(d.venda_posvenda) === 'POS VENDA').reduce((sum, d) => sum + d.vl_plano, 0);
         const realizadoTotal = realizadoVendas + realizadoPosVendas;
-
-        // --- NOVA LÓGICA PARA CÁLCULO DAS METAS ---
         let metaVendas = 0;
         let metaPosVendas = 0;
         const unitsToConsider = selectedUnidades.length > 0 ? selectedUnidades : [...new Set(allData.map(d => d.nm_unidade))];
-
         metasData.forEach((metaInfo, key) => {
             const [unidade, ano, mes] = key.split('-');
             const metaDate = new Date(ano, parseInt(mes) - 1, 15);
-
             if (unitsToConsider.includes(unidade) && metaDate >= startDate && metaDate <= endDate) {
                 metaVendas += metaInfo.meta_vvr_vendas;
                 metaPosVendas += metaInfo.meta_vvr_posvendas;
             }
         });
         const metaTotal = metaVendas + metaPosVendas;
-        // --- FIM DA NOVA LÓGICA ---
-
         const percentTotal = metaTotal > 0 ? realizadoTotal / metaTotal : 0;
         const percentVendas = metaVendas > 0 ? realizadoVendas / metaVendas : 0;
         const percentPosVendas = metaPosVendas > 0 ? realizadoPosVendas / metaPosVendas : 0;
-        
         const totalColor = getColorForPercentage(percentTotal);
         document.getElementById('kpi-total-realizado-py').textContent = formatCurrency(realizadoTotal);
         document.getElementById('kpi-total-meta-py').textContent = formatCurrency(metaTotal);
@@ -290,7 +264,6 @@
         totalPercentEl.style.color = totalColor;
         document.getElementById('kpi-total-progress-py').style.backgroundColor = totalColor;
         document.getElementById('kpi-total-progress-py').style.width = `${Math.min(percentTotal * 100, 100)}%`;
-
         const vendasColor = getColorForPercentage(percentVendas);
         document.getElementById('kpi-vendas-realizado-py').textContent = formatCurrency(realizadoVendas);
         document.getElementById('kpi-vendas-meta-py').textContent = formatCurrency(metaVendas);
@@ -299,7 +272,6 @@
         vendasPercentEl.style.color = vendasColor;
         document.getElementById('kpi-vendas-progress-py').style.backgroundColor = vendasColor;
         document.getElementById('kpi-vendas-progress-py').style.width = `${Math.min(percentVendas * 100, 100)}%`;
-        
         const posVendasColor = getColorForPercentage(percentPosVendas);
         document.getElementById('kpi-posvendas-realizado-py').textContent = formatCurrency(realizadoPosVendas);
         document.getElementById('kpi-posvendas-meta-py').textContent = formatCurrency(metaPosVendas);
@@ -309,224 +281,31 @@
         document.getElementById('kpi-posvendas-progress-py').style.backgroundColor = posVendasColor;
         document.getElementById('kpi-posvendas-progress-py').style.width = `${Math.min(percentPosVendas * 100, 100)}%`;
     }
-   // === PASSO 2B: SUBSTITUA SUA FUNÇÃO updateDashboard POR ESTA ===
-    // === SUBSTITUA ESTA FUNÇÃO ===
-    // === SUBSTITUA A SUA FUNÇÃO updateDashboard POR ESTA VERSÃO CORRIGIDA ===
+
     function updateDashboard() {
         const selectedUnidades = $('#unidade-filter').val() || [];
         const anoVigente = 2025;
         const dataParaGrafico = allData.filter(d => (selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade)) && d.dt_cadastro_integrante.getFullYear() === anoVigente);
-        
         updateVvrVsMetaPorMesChart(dataParaGrafico, anoVigente);
         updateStackedBarChart(dataParaGrafico, anoVigente);
-
-        // --- Lógica para o Período Selecionado (Atual) ---
         const startDate = new Date(document.getElementById('start-date').value + 'T00:00:00');
         const endDate = new Date(document.getElementById('end-date').value + 'T23:59:59');
         const dataBrutaFiltrada = allData.filter(d => (selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade)) && d.dt_cadastro_integrante >= startDate && d.dt_cadastro_integrante <= endDate);
-        
         updateMainKPIs(dataBrutaFiltrada, selectedUnidades, startDate, endDate);
-        
-        // --- LÓGICA DA TABELA CORRIGIDA ---
-        // 1. Processa os dados de vendas existentes
-        const dataAgregadaComVendas = processAndCrossReferenceData(dataBrutaFiltrada);
-        
-        // 2. Cria um mapa para garantir que cada combinação "unidade-período" apareça apenas uma vez.
-        const combinedDataMap = new Map();
-
-        // 3. Adiciona todos os dados que já têm vendas.
-        dataAgregadaComVendas.forEach(item => {
-            const key = `${item.unidade}-${item.periodo}`;
-            combinedDataMap.set(key, item);
-        });
-
-        // 4. Adiciona as metas de unidades que não tiveram vendas no período.
-        const unitsToConsider = selectedUnidades.length > 0 ? selectedUnidades : [...new Set(allData.map(d => d.nm_unidade))];
-        metasData.forEach((metaInfo, key) => {
-            const [unidade, ano, mes] = key.split('-');
-            const metaDate = new Date(ano, parseInt(mes) - 1, 15);
-            const periodo = `${ano}-${mes}`;
-            const mapKey = `${unidade}-${periodo}`;
-
-            // Se a meta está nos filtros E ainda não foi adicionada (porque não teve vendas), adiciona-a agora com valores zerados.
-            if (unitsToConsider.includes(unidade) && metaDate >= startDate && metaDate <= endDate && !combinedDataMap.has(mapKey)) {
-                combinedDataMap.set(mapKey, {
-                    unidade: unidade,
-                    periodo: periodo,
-                    realizado_vvr: 0,
-                    realizado_adesoes: 0,
-                    ...metaInfo
-                });
-            }
-        });
-
-        // 5. Converte o mapa de volta para um array para a tabela.
-        const finalTableData = Array.from(combinedDataMap.values());
-        updateDataTable(finalTableData);
-        // --- FIM DA LÓGICA DA TABELA ---
-
-        // --- Lógica para o Período Anterior ---
+        const dataAgregadaFiltrada = processAndCrossReferenceData(dataBrutaFiltrada);
+        updateDataTable(dataAgregadaFiltrada);
         const startDatePY = new Date(startDate);
         startDatePY.setFullYear(startDatePY.getFullYear() - 1);
         const endDatePY = new Date(endDate);
         endDatePY.setFullYear(endDatePY.getFullYear() - 1);
-
         const dataBrutaFiltradaPY = allData.filter(d => (selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade)) && d.dt_cadastro_integrante >= startDatePY && d.dt_cadastro_integrante <= endDatePY);
-        
         document.getElementById('kpi-section-py').style.display = 'block';
         updatePreviousYearKPIs(dataBrutaFiltradaPY, selectedUnidades, startDatePY, endDatePY);
     }
-    }
-    // === PASSO 2: ADICIONAR A NOVA FUNÇÃO PARA O GRÁFICO DE BARRAS EMPILHADAS ===
-// === FUNÇÃO DO GRÁFICO EMPILHADO ATUALIZADA COM TOOLTIP PERSONALIZADO ===
-    function updateStackedBarChart(salesDataForYear, anoVigente) {
-        const allYearPeriodos = Array.from({ length: 12 }, (_, i) => `${anoVigente}-${String(i + 1).padStart(2, '0')}`);
-
-        const chartDataMap = new Map();
-        allYearPeriodos.forEach(periodo => {
-            chartDataMap.set(periodo, { vendas: 0, posVendas: 0 });
-        });
-
-        salesDataForYear.forEach(d => {
-            const periodo = d.dt_cadastro_integrante.toISOString().slice(0, 7);
-            if (chartDataMap.has(periodo)) {
-                const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-                if (normalizeText(d.venda_posvenda) === 'VENDA') {
-                    chartDataMap.get(periodo).vendas += d.vl_plano;
-                } else if (normalizeText(d.venda_posvenda) === 'POS VENDA') {
-                    chartDataMap.get(periodo).posVendas += d.vl_plano;
-                }
-            }
-        });
-
-        const vendasValues = allYearPeriodos.map(p => chartDataMap.get(p).vendas);
-        const posVendasValues = allYearPeriodos.map(p => chartDataMap.get(p).posVendas);
-
-        const formattedLabels = allYearPeriodos.map(periodo => {
-            const [year, month] = periodo.split('-');
-            const date = new Date(year, month - 1);
-            const monthName = date.toLocaleString('pt-BR', { month: 'short' }).replace('.', '');
-            const shortYear = year.slice(2);
-            return `${monthName}-${shortYear}`;
-        });
-        
-        if (stackedBarChart) stackedBarChart.destroy();
-
-        stackedBarChart = new Chart(document.getElementById('stackedBarChart'), {
-            type: 'bar',
-            data: {
-                labels: formattedLabels,
-                datasets: [
-                    {
-                        label: 'PÓS VENDA',
-                        data: posVendasValues,
-                        backgroundColor: '#6c757d', // Cinza
-                    },
-                    {
-                        label: 'VENDA',
-                        data: vendasValues,
-                        backgroundColor: '#007bff', // Azul
-                    }
-                ]
-            },
-            // --- BLOCO DE OPÇÕES MODIFICADO ---
-            options: {
-                // Define o modo de interação para mostrar todos os valores do mês
-                interaction: {
-                    mode: 'index',
-                    intersect: false,
-                },
-                plugins: {
-                    title: { display: false },
-                    tooltip: {
-                        // Adiciona um rodapé para calcular e mostrar o total
-                        callbacks: {
-                            label: function(context) {
-                                let label = context.dataset.label || '';
-                                if (label) { label += ': '; }
-                                if (context.parsed.y !== null) { label += formatCurrency(context.parsed.y); }
-                                return label;
-                            },
-                            footer: function(tooltipItems) {
-                                let sum = 0;
-                                tooltipItems.forEach(function(tooltipItem) {
-                                    sum += tooltipItem.parsed.y;
-                                });
-                                return 'Total: ' + formatCurrency(sum);
-                            }
-                        }
-                    },
-                    datalabels: {
-                        color: 'white',
-                        font: { weight: 'bold' },
-                        formatter: (value) => (value > 0 ? `${(value / 1000).toFixed(0)}k` : '')
-                    }
-                },
-                responsive: true,
-                scales: {
-                    x: { stacked: true },
-                    y: { stacked: true }
-                }
-            }
-            // --- FIM DO BLOCO DE OPÇÕES ---
-        });
-    }
-    // === FIM DA NOVA FUNÇÃO ===
-
-    function updateVvrVsMetaPorMesChart(salesDataForYear, anoVigente) {
-        const allYearPeriodos = Array.from({ length: 12 }, (_, i) => `${anoVigente}-${String(i + 1).padStart(2, '0')}`);
-        const chartDataMap = new Map();
-        allYearPeriodos.forEach(periodo => { chartDataMap.set(periodo, { realizado: 0, meta: 0 }); });
-        salesDataForYear.forEach(d => {
-            const periodo = d.dt_cadastro_integrante.toISOString().slice(0, 7);
-            if (chartDataMap.has(periodo)) { chartDataMap.get(periodo).realizado += d.vl_plano; }
-        });
-        const selectedUnidades = $('#unidade-filter').val() || [...new Set(allData.map(d => d.nm_unidade))];
-        metasData.forEach((metaInfo, key) => {
-            const [unidade, ano, mes] = key.split('-');
-            const periodo = `${ano}-${mes}`;
-            if (ano == anoVigente && chartDataMap.has(periodo)) {
-                if (selectedUnidades.length === 0 || selectedUnidades.includes(unidade)) { chartDataMap.get(periodo).meta += metaInfo.meta_vvr_total; }
-            }
-        });
-        const realizadoValues = allYearPeriodos.map(p => chartDataMap.get(p).realizado);
-        const metaValues = allYearPeriodos.map(p => chartDataMap.get(p).meta);
-        const formattedLabels = allYearPeriodos.map(periodo => {
-            const [year, month] = periodo.split('-');
-            const date = new Date(year, month - 1);
-            const monthName = date.toLocaleString('pt-BR', { month: 'short' }).replace('.', '');
-            const shortYear = year.slice(2);
-            return `${monthName}-${shortYear}`;
-        });
-        if (vvrVsMetaPorMesChart) vvrVsMetaPorMesChart.destroy();
-        Chart.register(ChartDataLabels);
-        vvrVsMetaPorMesChart = new Chart(document.getElementById('vvrVsMetaPorMesChart'), {
-            type: 'bar',
-            data: {
-                labels: formattedLabels,
-                datasets: [ { label: 'VVR Realizado', data: realizadoValues, backgroundColor: 'rgba(255, 193, 7, 0.7)', order: 1 }, { label: 'Meta VVR', data: metaValues, type: 'line', borderColor: 'rgb(220, 53, 69)', order: 0, datalabels: { display: true, align: 'bottom', backgroundColor: 'rgba(0, 0, 0, 0.6)', borderRadius: 4, color: 'white', font: { size: 9 }, padding: 4, formatter: (value) => (value > 0 ? `${(value / 1000).toFixed(0)}k` : '') } } ]
-            },
-            options: {
-                interaction: { mode: 'index', intersect: false, },
-                plugins: {
-                    datalabels: { anchor: 'end', align: 'end', formatter: (value) => (value >= 1000 ? `${(value / 1000).toFixed(0)}k` : ''), color: '#F8F9FA', font: { weight: 'bold' } },
-                    tooltip: { callbacks: { label: function(context) { let label = context.dataset.label || ''; if (label) { label += ': '; } if (context.parsed.y !== null) { label += formatCurrency(context.parsed.y); } return label; } } }
-                },
-                scales: { y: { beginAtZero: true } }
-            }
-        });
-    }
-
-    function updateDataTable(data) {
-        const tableData = data.sort((a,b) => a.periodo.localeCompare(b.periodo) || a.unidade.localeCompare(b.unidade)).map(d => {
-            const atingimentoVvr = d.meta_vvr_total > 0 ? d.realizado_vvr / d.meta_vvr_total : 0;
-            const atingimentoAdesoes = d.meta_adesoes > 0 ? d.realizado_adesoes / d.meta_adesoes : 0;
-            return [d.unidade, d.periodo, formatCurrency(d.realizado_vvr), formatCurrency(d.meta_vvr_total), formatPercent(atingimentoVvr), d.realizado_adesoes, d.meta_adesoes, formatPercent(atingimentoAdesoes)]
-        });
-        if (dataTable) { dataTable.clear().rows.add(tableData).draw(); } 
-        else { dataTable = $('#dados-table').DataTable({ data: tableData, pageLength: 10, language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json' }, destroy: true, dom: 'Bfrtip', buttons: [ { extend: 'excelHtml5', text: 'Exportar para Excel', title: `Relatorio_Vendas_${new Date().toLocaleDateString('pt-BR')}`, className: 'excel-button' } ] }); }
-    }
     
+    function updateVvrVsMetaPorMesChart(salesDataForYear, anoVigente) { const allYearPeriodos = Array.from({ length: 12 }, (_, i) => `${anoVigente}-${String(i + 1).padStart(2, '0')}`); const chartDataMap = new Map(); allYearPeriodos.forEach(periodo => { chartDataMap.set(periodo, { realizado: 0, meta: 0 }); }); salesDataForYear.forEach(d => { const periodo = d.dt_cadastro_integrante.toISOString().slice(0, 7); if (chartDataMap.has(periodo)) { chartDataMap.get(periodo).realizado += d.vl_plano; } }); const selectedUnidades = $('#unidade-filter').val() || [...new Set(allData.map(d => d.nm_unidade))]; metasData.forEach((metaInfo, key) => { const [unidade, ano, mes] = key.split('-'); const periodo = `${ano}-${mes}`; if (ano == anoVigente && chartDataMap.has(periodo)) { if (selectedUnidades.length === 0 || selectedUnidades.includes(unidade)) { chartDataMap.get(periodo).meta += metaInfo.meta_vvr_total; } } }); const realizadoValues = allYearPeriodos.map(p => chartDataMap.get(p).realizado); const metaValues = allYearPeriodos.map(p => chartDataMap.get(p).meta); const formattedLabels = allYearPeriodos.map(periodo => { const [year, month] = periodo.split('-'); const date = new Date(year, month - 1); const monthName = date.toLocaleString('pt-BR', { month: 'short' }).replace('.', ''); const shortYear = year.slice(2); return `${monthName}-${shortYear}`; }); if (vvrVsMetaPorMesChart) vvrVsMetaPorMesChart.destroy(); Chart.register(ChartDataLabels); vvrVsMetaPorMesChart = new Chart(document.getElementById('vvrVsMetaPorMesChart'), { type: 'bar', data: { labels: formattedLabels, datasets: [ { label: 'VVR Realizado', data: realizadoValues, backgroundColor: 'rgba(255, 193, 7, 0.7)', order: 1 }, { label: 'Meta VVR', data: metaValues, type: 'line', borderColor: 'rgb(220, 53, 69)', order: 0, datalabels: { display: true, align: 'bottom', backgroundColor: 'rgba(0, 0, 0, 0.6)', borderRadius: 4, color: 'white', font: { size: 9 }, padding: 4, formatter: (value) => (value > 0 ? `${(value / 1000).toFixed(0)}k` : '') } } ] }, options: { interaction: { mode: 'index', intersect: false, }, plugins: { datalabels: { anchor: 'end', align: 'end', formatter: (value) => (value >= 1000 ? `${(value / 1000).toFixed(0)}k` : ''), color: '#F8F9FA', font: { weight: 'bold' } }, tooltip: { callbacks: { label: function(context) { let label = context.dataset.label || ''; if (label) { label += ': '; } if (context.parsed.y !== null) { label += formatCurrency(context.parsed.y); } return label; } } } }, scales: { y: { beginAtZero: true } } } }); }
+    function updateStackedBarChart(salesDataForYear, anoVigente) { const allYearPeriodos = Array.from({ length: 12 }, (_, i) => `${anoVigente}-${String(i + 1).padStart(2, '0')}`); const chartDataMap = new Map(); allYearPeriodos.forEach(periodo => { chartDataMap.set(periodo, { vendas: 0, posVendas: 0 }); }); salesDataForYear.forEach(d => { const periodo = d.dt_cadastro_integrante.toISOString().slice(0, 7); if (chartDataMap.has(periodo)) { const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); if (normalizeText(d.venda_posvenda) === 'VENDA') { chartDataMap.get(periodo).vendas += d.vl_plano; } else if (normalizeText(d.venda_posvenda) === 'POS VENDA') { chartDataMap.get(periodo).posVendas += d.vl_plano; } } }); const vendasValues = allYearPeriodos.map(p => chartDataMap.get(p).vendas); const posVendasValues = allYearPeriodos.map(p => chartDataMap.get(p).posVendas); const formattedLabels = allYearPeriodos.map(periodo => { const [year, month] = periodo.split('-'); const date = new Date(year, month - 1); const monthName = date.toLocaleString('pt-BR', { month: 'short' }).replace('.', ''); const shortYear = year.slice(2); return `${monthName}-${shortYear}`; }); if (stackedBarChart) stackedBarChart.destroy(); stackedBarChart = new Chart(document.getElementById('stackedBarChart'), { type: 'bar', data: { labels: formattedLabels, datasets: [ { label: 'PÓS VENDA', data: posVendasValues, backgroundColor: '#6c757d', }, { label: 'VENDA', data: vendasValues, backgroundColor: '#007bff', } ] }, options: { interaction: { mode: 'index', intersect: false, }, plugins: { title: { display: false }, tooltip: { callbacks: { label: function(context) { let label = context.dataset.label || ''; if (label) { label += ': '; } if (context.parsed.y !== null) { label += formatCurrency(context.parsed.y); } return label; }, footer: function(tooltipItems) { let sum = 0; tooltipItems.forEach(function(tooltipItem) { sum += tooltipItem.parsed.y; }); return 'Total: ' + formatCurrency(sum); } } }, datalabels: { color: 'white', font: { weight: 'bold' }, formatter: (value) => (value > 0 ? `${(value / 1000).toFixed(0)}k` : '') } }, responsive: true, scales: { x: { stacked: true }, y: { stacked: true } } } }); }
+    function updateDataTable(data) { const tableData = data.sort((a,b) => a.periodo.localeCompare(b.periodo) || a.unidade.localeCompare(b.unidade)).map(d => { const atingimentoVvr = d.meta_vvr_total > 0 ? d.realizado_vvr / d.meta_vvr_total : 0; const atingimentoAdesoes = d.meta_adesoes > 0 ? d.realizado_adesoes / d.meta_adesoes : 0; return [d.unidade, d.periodo, formatCurrency(d.realizado_vvr), formatCurrency(d.meta_vvr_total), formatPercent(atingimentoVvr), d.realizado_adesoes, d.meta_adesoes, formatPercent(atingimentoAdesoes)] }); if (dataTable) { dataTable.clear().rows.add(tableData).draw(); } else { dataTable = $('#dados-table').DataTable({ data: tableData, pageLength: 10, language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json' }, destroy: true, dom: 'Bfrtip', buttons: [ { extend: 'excelHtml5', text: 'Exportar para Excel', title: `Relatorio_Vendas_${new Date().toLocaleDateString('pt-BR')}`, className: 'excel-button' } ] }); } }
     function populateFilters() { const unidades = [...new Set(allData.map(d => d.nm_unidade))].sort(); const unidadeFilter = $('#unidade-filter'); unidadeFilter.empty(); unidades.forEach(u => { unidadeFilter.append($('<option>', { value: u, text: u })); }); unidadeFilter.multiselect({ enableFiltering: true, includeSelectAllOption: true, selectAllText: 'Marcar todos', filterPlaceholder: 'Pesquisar...', nonSelectedText: 'Todas as unidades', nSelectedText: 'unidades', allSelectedText: 'Todas selecionadas', buttonWidth: '100%', maxHeight: 300, onChange: function(option, checked) { updateDashboard(); } }); const hoje = new Date(); const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1); const fimMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0); document.getElementById('start-date').value = inicioMes.toISOString().split('T')[0]; document.getElementById('end-date').value = fimMes.toISOString().split('T')[0]; }
     function addEventListeners() { document.getElementById('start-date').addEventListener('change', updateDashboard); document.getElementById('end-date').addEventListener('change', updateDashboard); }
 </script>
