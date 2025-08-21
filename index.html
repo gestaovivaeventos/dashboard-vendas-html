@@ -265,8 +265,39 @@
             });
         });
     }
-    
-    function populateFilters() { const unidades = [...new Set(allData.map(d => d.nm_unidade))].sort(); const unidadeFilter = $('#unidade-filter'); unidadeFilter.empty(); unidades.forEach(u => { unidadeFilter.append($('<option>', { value: u, text: u })); }); unidadeFilter.multiselect({ enableFiltering: true, includeSelectAllOption: true, selectAllText: 'Marcar todos', filterPlaceholder: 'Pesquisar...', nonSelectedText: 'Todas as unidades', nSelectedText: 'unidades', allSelectedText: 'Todas selecionadas', buttonWidth: '100%', maxHeight: 300, onChange: function(option, checked) { updateDashboard(); } }); const hoje = new Date(); const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1); const fimMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0); document.getElementById('start-date').value = inicioMes.toISOString().split('T')[0]; document.getElementById('end-date').value = fimMes.toISOString().split('T')[0]; }
-</script>
+    // === SUBSTITUA A SUA FUNÇÃO populateFilters POR ESTA VERSÃO CORRIGIDA ===
+    function populateFilters() {
+        const unidades = [...new Set(allData.map(d => d.nm_unidade))].sort();
+        const unidadeFilter = $('#unidade-filter');
+        unidadeFilter.empty();
+        unidades.forEach(u => {
+            unidadeFilter.append($('<option>', { value: u, text: u }));
+        });
+        unidadeFilter.multiselect({
+            enableFiltering: true,
+            includeSelectAllOption: true,
+            selectAllText: 'Marcar todos',
+            filterPlaceholder: 'Pesquisar...',
+            nonSelectedText: 'Todas as unidades',
+            nSelectedText: 'unidades',
+            allSelectedText: 'Todas selecionadas',
+            buttonWidth: '100%',
+            maxHeight: 300,
+            onChange: function(option, checked) {
+                updateDashboard();
+            },
+            // --- NOVA OPÇÃO ADICIONADA AQUI ---
+            onSelectAll: function() {
+                updateDashboard();
+            }
+            // --- FIM DA NOVA OPÇÃO ---
+        });
+        const hoje = new Date();
+        const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+        const fimMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
+        document.getElementById('start-date').value = inicioMes.toISOString().split('T')[0];
+        document.getElementById('end-date').value = fimMes.toISOString().split('T')[0];
+    }
+    </script>
 </body>
 </html>
