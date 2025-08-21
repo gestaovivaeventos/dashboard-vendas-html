@@ -311,6 +311,7 @@
     }
    // === PASSO 2B: SUBSTITUA SUA FUNÇÃO updateDashboard POR ESTA ===
     // === SUBSTITUA ESTA FUNÇÃO ===
+    // === SUBSTITUA A SUA FUNÇÃO updateDashboard POR ESTA VERSÃO CORRIGIDA ===
     function updateDashboard() {
         const selectedUnidades = $('#unidade-filter').val() || [];
         const anoVigente = 2025;
@@ -326,8 +327,43 @@
         
         updateMainKPIs(dataBrutaFiltrada, selectedUnidades, startDate, endDate);
         
-        const dataAgregadaFiltrada = processAndCrossReferenceData(dataBrutaFiltrada);
-        updateDataTable(dataAgregadaFiltrada);
+        // --- LÓGICA DA TABELA CORRIGIDA ---
+        // 1. Processa os dados de vendas existentes
+        const dataAgregadaComVendas = processAndCrossReferenceData(dataBrutaFiltrada);
+        
+        // 2. Cria um mapa para garantir que cada combinação "unidade-período" apareça apenas uma vez.
+        const combinedDataMap = new Map();
+
+        // 3. Adiciona todos os dados que já têm vendas.
+        dataAgregadaComVendas.forEach(item => {
+            const key = `${item.unidade}-${item.periodo}`;
+            combinedDataMap.set(key, item);
+        });
+
+        // 4. Adiciona as metas de unidades que não tiveram vendas no período.
+        const unitsToConsider = selectedUnidades.length > 0 ? selectedUnidades : [...new Set(allData.map(d => d.nm_unidade))];
+        metasData.forEach((metaInfo, key) => {
+            const [unidade, ano, mes] = key.split('-');
+            const metaDate = new Date(ano, parseInt(mes) - 1, 15);
+            const periodo = `${ano}-${mes}`;
+            const mapKey = `${unidade}-${periodo}`;
+
+            // Se a meta está nos filtros E ainda não foi adicionada (porque não teve vendas), adiciona-a agora com valores zerados.
+            if (unitsToConsider.includes(unidade) && metaDate >= startDate && metaDate <= endDate && !combinedDataMap.has(mapKey)) {
+                combinedDataMap.set(mapKey, {
+                    unidade: unidade,
+                    periodo: periodo,
+                    realizado_vvr: 0,
+                    realizado_adesoes: 0,
+                    ...metaInfo
+                });
+            }
+        });
+
+        // 5. Converte o mapa de volta para um array para a tabela.
+        const finalTableData = Array.from(combinedDataMap.values());
+        updateDataTable(finalTableData);
+        // --- FIM DA LÓGICA DA TABELA ---
 
         // --- Lógica para o Período Anterior ---
         const startDatePY = new Date(startDate);
@@ -339,6 +375,7 @@
         
         document.getElementById('kpi-section-py').style.display = 'block';
         updatePreviousYearKPIs(dataBrutaFiltradaPY, selectedUnidades, startDatePY, endDatePY);
+    }
     }
     // === PASSO 2: ADICIONAR A NOVA FUNÇÃO PARA O GRÁFICO DE BARRAS EMPILHADAS ===
 // === FUNÇÃO DO GRÁFICO EMPILHADO ATUALIZADA COM TOOLTIP PERSONALIZADO ===
