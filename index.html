@@ -313,11 +313,12 @@
         else { dataTable = $('#dados-table').DataTable({ data: tableData, pageLength: 10, language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json' }, destroy: true, dom: 'Bfrtip', buttons: [ { extend: 'excelHtml5', text: 'Exportar para Excel', title: `Relatorio_Vendas_${new Date().toLocaleDateString('pt-BR')}`, className: 'excel-button', exportOptions: { format: { body: function ( data, row, column, node ) { if (column === 2 || column === 3) { return parseFloat(data.replace('R$', '').replace(/\./g, '').replace(',', '.').trim()); } if (column === 4 || column === 7) { return parseFloat(data.replace('%', '').replace(',', '.').trim()) / 100; } return data; } } } } ] }); }
     }    
     // === SUBSTITUA ESTA FUNÇÃO ===
+    // === SUBSTITUA A SUA FUNÇÃO addEventListeners POR ESTA VERSÃO CORRIGIDA ===
     function addEventListeners() { 
         document.getElementById('start-date').addEventListener('change', updateDashboard); 
         document.getElementById('end-date').addEventListener('change', updateDashboard); 
         
-        // Listeners para os botões do seletor do GRÁFICO (já existente)
+        // Listeners para os botões do seletor do GRÁFICO (sem alteração)
         document.querySelectorAll('#chart-vvr-mes-section .chart-selector button').forEach(button => {
             button.addEventListener('click', () => {
                 document.querySelectorAll('#chart-vvr-mes-section .chart-selector button').forEach(btn => btn.classList.remove('active'));
@@ -327,13 +328,22 @@
             });
         });
 
-        // NOVOS Listeners para os botões do seletor da TABELA
+        // Listeners para os botões do seletor da TABELA (LÓGICA DE SCROLL ADICIONADA)
         document.querySelectorAll('#table-section .chart-selector button').forEach(button => {
             button.addEventListener('click', () => {
+                // --- NOVA LÓGICA PARA MANTER A POSIÇÃO DA ROLAGEM ---
+                // 1. Guarda a posição vertical atual da página
+                const scrollPosition = window.scrollY;
+
+                // 2. Atualiza a interface como antes
                 document.querySelectorAll('#table-section .chart-selector button').forEach(btn => btn.classList.remove('active'));
                 button.classList.add('active');
                 currentTableDataType = button.dataset.type;
                 updateDashboard();
+
+                // 3. Força a página a voltar para a posição guardada
+                window.scrollTo(0, scrollPosition);
+                // --- FIM DA NOVA LÓGICA ---
             });
         });
     }
