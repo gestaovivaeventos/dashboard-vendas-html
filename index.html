@@ -67,28 +67,9 @@
         .dt-button { background-color: #495057 !important; color: #F8F9FA !important; border: 1px solid #ADB5BD !important; border-radius: 6px !important; padding: 5px 15px !important; margin-bottom: 15px !important; }
         .dt-button:hover { background-color: #ADB5BD !important; color: #212529 !important; }
 
-        /* === CSS PARA O SELETOR DO GRÁFICO === */
-        .chart-selector {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        .chart-selector button {
-            background-color: #495057;
-            color: #F8F9FA;
-            border: 1px solid #ADB5BD;
-            border-radius: 6px;
-            padding: 5px 15px;
-            cursor: pointer;
-            transition: all 0.2s ease-in-out;
-        }
-        .chart-selector button.active {
-            background-color: #FFC107;
-            color: #212529;
-            border-color: #FFC107;
-            font-weight: bold;
-        }
-        /* === FIM DO CSS === */
+        .chart-selector { display: flex; gap: 10px; margin-bottom: 20px; }
+        .chart-selector button { background-color: #495057; color: #F8F9FA; border: 1px solid #ADB5BD; border-radius: 6px; padding: 5px 15px; cursor: pointer; transition: all 0.2s ease-in-out; }
+        .chart-selector button.active { background-color: #FFC107; color: #212529; border-color: #FFC107; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -157,7 +138,6 @@
             </div>
         </section>
 
-        <!-- === HTML DO GRÁFICO ATUALIZADO COM O SELETOR === -->
         <section class="chart-container" id="chart-vvr-mes-section" style="display: none;">
             <h2>VVR Realizado vs. Meta por Mês (Ano Vigente)</h2>
             <div class="chart-selector">
@@ -167,12 +147,8 @@
             </div>
             <canvas id="vvrVsMetaPorMesChart"></canvas>
         </section>
-        <!-- === FIM DA ATUALIZAÇÃO === -->
 
-        <section class="chart-container" id="chart-stacked-bar-section" style="display: none;">
-            <h2>Valor de Venda Realizada por Mês (Ano Vigente)</h2>
-            <canvas id="stackedBarChart"></canvas>
-        </section>
+        <!-- GRÁFICO EMPILHADO REMOVIDO DAQUI -->
         
         <section class="table-container" id="table-section" style="display: none;">
             <h2>Dados Detalhados por Mês/Unidade (Período Selecionado)</h2>
@@ -190,9 +166,9 @@
     const METAS_SHEET_NAME = "metas";
     const API_KEY = "AIzaSyBuGRH91CnRuDtN5RGsb5DvHEfhTxJnWSs"; 
     
-    // === ADICIONAR NOVA VARIÁVEL GLOBAL PARA O TIPO DE GRÁFICO ===
-    let allData = [], metasData = new Map(), dataTable, vvrVsMetaPorMesChart, stackedBarChart;
-    let currentVvrChartType = 'total'; // Valor inicial
+    // VARIÁVEL DO GRÁFICO EMPILHADO REMOVIDA
+    let allData = [], metasData = new Map(), dataTable, vvrVsMetaPorMesChart;
+    let currentVvrChartType = 'total';
     
     const formatCurrency = (value) => new Intl.NumberFormat('pt-br', { style: 'currency', currency: 'BRL' }).format(value || 0);
     const formatPercent = (value) => new Intl.NumberFormat('pt-br', { style: 'percent', minimumFractionDigits: 1 }).format(value || 0);
@@ -206,7 +182,8 @@
 
             if (allData && allData.length > 0) {
                 loader.style.display = 'none';
-                ['filters-section', 'kpi-section', 'chart-vvr-mes-section', 'chart-stacked-bar-section', 'table-section'].forEach(id => document.getElementById(id).style.display = 'block');
+                // ID DO GRÁFICO EMPILHADO REMOVIDO DO ARRAY
+                ['filters-section', 'kpi-section', 'chart-vvr-mes-section', 'table-section'].forEach(id => document.getElementById(id).style.display = 'block');
                 document.getElementById('filters-section').style.display = 'flex';
                 
                 populateFilters();
@@ -229,7 +206,9 @@
         const dataParaGrafico = allData.filter(d => (selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade)) && d.dt_cadastro_integrante.getFullYear() === anoVigente);
         
         updateVvrVsMetaPorMesChart(dataParaGrafico, anoVigente);
-        updateStackedBarChart(dataParaGrafico, anoVigente);
+        
+        // CHAMADA DA FUNÇÃO DO GRÁFICO EMPILHADO REMOVIDA
+        // updateStackedBarChart(dataParaGrafico, anoVigente);
 
         const startDateString = document.getElementById('start-date').value;
         const startParts = startDateString.split('-');
@@ -267,100 +246,21 @@
         updatePreviousYearKPIs(dataBrutaFiltradaPY, selectedUnidades, startDatePY, endDatePY);
     }
     
-    // === FUNÇÃO DO GRÁFICO VVR vs META ATUALIZADA ===
-    function updateVvrVsMetaPorMesChart(salesDataForYear, anoVigente) {
-        const allYearPeriodos = Array.from({ length: 12 }, (_, i) => `${anoVigente}-${String(i + 1).padStart(2, '0')}`);
-        const chartDataMap = new Map();
-        allYearPeriodos.forEach(periodo => {
-            chartDataMap.set(periodo, { realizado_vendas: 0, realizado_posvendas: 0, meta_vendas: 0, meta_posvendas: 0, meta_total: 0 });
-        });
-
-        const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-        salesDataForYear.forEach(d => {
-            const year = d.dt_cadastro_integrante.getFullYear();
-            const month = String(d.dt_cadastro_integrante.getMonth() + 1).padStart(2, '0');
-            const periodo = `${year}-${month}`;
-            if (chartDataMap.has(periodo)) {
-                if (normalizeText(d.venda_posvenda) === 'VENDA') {
-                    chartDataMap.get(periodo).realizado_vendas += d.vl_plano;
-                } else if (normalizeText(d.venda_posvenda) === 'POS VENDA') {
-                    chartDataMap.get(periodo).realizado_posvendas += d.vl_plano;
-                }
-            }
-        });
-
-        const selectedUnidades = $('#unidade-filter').val() || [...new Set(allData.map(d => d.nm_unidade))];
-        metasData.forEach((metaInfo, key) => {
-            const [unidade, ano, mes] = key.split('-');
-            const periodo = `${ano}-${mes}`;
-            if (ano == anoVigente && chartDataMap.has(periodo)) {
-                if (selectedUnidades.length === 0 || selectedUnidades.includes(unidade)) {
-                    chartDataMap.get(periodo).meta_vendas += metaInfo.meta_vvr_vendas;
-                    chartDataMap.get(periodo).meta_posvendas += metaInfo.meta_vvr_posvendas;
-                    chartDataMap.get(periodo).meta_total += metaInfo.meta_vvr_total;
-                }
-            }
-        });
-
-        // Define quais dados mostrar com base na seleção atual
-        let realizadoValues, metaValues;
-        if (currentVvrChartType === 'vendas') {
-            realizadoValues = allYearPeriodos.map(p => chartDataMap.get(p).realizado_vendas);
-            metaValues = allYearPeriodos.map(p => chartDataMap.get(p).meta_vendas);
-        } else if (currentVvrChartType === 'posvendas') {
-            realizadoValues = allYearPeriodos.map(p => chartDataMap.get(p).realizado_posvendas);
-            metaValues = allYearPeriodos.map(p => chartDataMap.get(p).meta_posvendas);
-        } else { // 'total'
-            realizadoValues = allYearPeriodos.map(p => chartDataMap.get(p).realizado_vendas + chartDataMap.get(p).realizado_posvendas);
-            metaValues = allYearPeriodos.map(p => chartDataMap.get(p).meta_total);
-        }
-
-        const formattedLabels = allYearPeriodos.map(periodo => {
-            const [year, month] = periodo.split('-');
-            const date = new Date(year, month - 1);
-            const monthName = date.toLocaleString('pt-BR', { month: 'short' }).replace('.', '');
-            const shortYear = year.slice(2);
-            return `${monthName}-${shortYear}`;
-        });
-        
-        if (vvrVsMetaPorMesChart) vvrVsMetaPorMesChart.destroy();
-        Chart.register(ChartDataLabels);
-
-        vvrVsMetaPorMesChart = new Chart(document.getElementById('vvrVsMetaPorMesChart'), {
-            type: 'bar',
-            data: {
-                labels: formattedLabels,
-                datasets: [ { label: 'VVR Realizado', data: realizadoValues, backgroundColor: 'rgba(255, 193, 7, 0.7)', order: 1 }, { label: 'Meta VVR', data: metaValues, type: 'line', borderColor: 'rgb(220, 53, 69)', order: 0, datalabels: { display: true, align: 'bottom', backgroundColor: 'rgba(0, 0, 0, 0.6)', borderRadius: 4, color: 'white', font: { size: 9 }, padding: 4, formatter: (value) => (value > 0 ? `${(value / 1000).toFixed(0)}k` : '') } } ]
-            },
-            options: {
-                interaction: { mode: 'index', intersect: false, },
-                plugins: {
-                    datalabels: { anchor: 'end', align: 'end', formatter: (value) => (value >= 1000 ? `${(value / 1000).toFixed(0)}k` : ''), color: '#F8F9FA', font: { weight: 'bold' } },
-                    tooltip: { callbacks: { label: function(context) { let label = context.dataset.label || ''; if (label) { label += ': '; } if (context.parsed.y !== null) { label += formatCurrency(context.parsed.y); } return label; } } }
-                },
-                scales: { y: { beginAtZero: true } }
-            }
-        });
-    }
-
-    function updateStackedBarChart(salesDataForYear, anoVigente) { const allYearPeriodos = Array.from({ length: 12 }, (_, i) => `${anoVigente}-${String(i + 1).padStart(2, '0')}`); const chartDataMap = new Map(); allYearPeriodos.forEach(periodo => { chartDataMap.set(periodo, { vendas: 0, posVendas: 0 }); }); salesDataForYear.forEach(d => { const year = d.dt_cadastro_integrante.getFullYear(); const month = String(d.dt_cadastro_integrante.getMonth() + 1).padStart(2, '0'); const periodo = `${year}-${month}`; if (chartDataMap.has(periodo)) { const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); if (normalizeText(d.venda_posvenda) === 'VENDA') { chartDataMap.get(periodo).vendas += d.vl_plano; } else if (normalizeText(d.venda_posvenda) === 'POS VENDA') { chartDataMap.get(periodo).posVendas += d.vl_plano; } } }); const vendasValues = allYearPeriodos.map(p => chartDataMap.get(p).vendas); const posVendasValues = allYearPeriodos.map(p => chartDataMap.get(p).posVendas); const formattedLabels = allYearPeriodos.map(periodo => { const [year, month] = periodo.split('-'); const date = new Date(year, month - 1); const monthName = date.toLocaleString('pt-BR', { month: 'short' }).replace('.', ''); const shortYear = year.slice(2); return `${monthName}-${shortYear}`; }); if (stackedBarChart) stackedBarChart.destroy(); stackedBarChart = new Chart(document.getElementById('stackedBarChart'), { type: 'bar', data: { labels: formattedLabels, datasets: [ { label: 'PÓS VENDA', data: posVendasValues, backgroundColor: '#6c757d', }, { label: 'VENDA', data: vendasValues, backgroundColor: '#007bff', } ] }, options: { interaction: { mode: 'index', intersect: false, }, plugins: { title: { display: false }, tooltip: { callbacks: { label: function(context) { let label = context.dataset.label || ''; if (label) { label += ': '; } if (context.parsed.y !== null) { label += formatCurrency(context.parsed.y); } return label; }, footer: function(tooltipItems) { let sum = 0; tooltipItems.forEach(function(tooltipItem) { sum += tooltipItem.parsed.y; }); return 'Total: ' + formatCurrency(sum); } } }, datalabels: { color: 'white', font: { weight: 'bold' }, formatter: (value) => (value > 0 ? `${(value / 1000).toFixed(0)}k` : '') } }, responsive: true, scales: { x: { stacked: true }, y: { stacked: true } } } }); }
+    function updateVvrVsMetaPorMesChart(salesDataForYear, anoVigente) { const allYearPeriodos = Array.from({ length: 12 }, (_, i) => `${anoVigente}-${String(i + 1).padStart(2, '0')}`); const chartDataMap = new Map(); allYearPeriodos.forEach(periodo => { chartDataMap.set(periodo, { realizado_vendas: 0, realizado_posvendas: 0, meta_vendas: 0, meta_posvendas: 0, meta_total: 0 }); }); const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); salesDataForYear.forEach(d => { const year = d.dt_cadastro_integrante.getFullYear(); const month = String(d.dt_cadastro_integrante.getMonth() + 1).padStart(2, '0'); const periodo = `${year}-${month}`; if (chartDataMap.has(periodo)) { if (normalizeText(d.venda_posvenda) === 'VENDA') { chartDataMap.get(periodo).realizado_vendas += d.vl_plano; } else if (normalizeText(d.venda_posvenda) === 'POS VENDA') { chartDataMap.get(periodo).realizado_posvendas += d.vl_plano; } } }); const selectedUnidades = $('#unidade-filter').val() || [...new Set(allData.map(d => d.nm_unidade))]; metasData.forEach((metaInfo, key) => { const [unidade, ano, mes] = key.split('-'); const periodo = `${ano}-${mes}`; if (ano == anoVigente && chartDataMap.has(periodo)) { if (selectedUnidades.length === 0 || selectedUnidades.includes(unidade)) { chartDataMap.get(periodo).meta_vendas += metaInfo.meta_vvr_vendas; chartDataMap.get(periodo).meta_posvendas += metaInfo.meta_vvr_posvendas; chartDataMap.get(periodo).meta_total += metaInfo.meta_vvr_total; } } }); let realizadoValues, metaValues; if (currentVvrChartType === 'vendas') { realizadoValues = allYearPeriodos.map(p => chartDataMap.get(p).realizado_vendas); metaValues = allYearPeriodos.map(p => chartDataMap.get(p).meta_vendas); } else if (currentVvrChartType === 'posvendas') { realizadoValues = allYearPeriodos.map(p => chartDataMap.get(p).realizado_posvendas); metaValues = allYearPeriodos.map(p => chartDataMap.get(p).meta_posvendas); } else { realizadoValues = allYearPeriodos.map(p => chartDataMap.get(p).realizado_vendas + chartDataMap.get(p).realizado_posvendas); metaValues = allYearPeriodos.map(p => chartDataMap.get(p).meta_total); } const formattedLabels = allYearPeriodos.map(periodo => { const [year, month] = periodo.split('-'); const date = new Date(year, month - 1); const monthName = date.toLocaleString('pt-BR', { month: 'short' }).replace('.', ''); const shortYear = year.slice(2); return `${monthName}-${shortYear}`; }); if (vvrVsMetaPorMesChart) vvrVsMetaPorMesChart.destroy(); Chart.register(ChartDataLabels); vvrVsMetaPorMesChart = new Chart(document.getElementById('vvrVsMetaPorMesChart'), { type: 'bar', data: { labels: formattedLabels, datasets: [ { label: 'VVR Realizado', data: realizadoValues, backgroundColor: 'rgba(255, 193, 7, 0.7)', order: 1 }, { label: 'Meta VVR', data: metaValues, type: 'line', borderColor: 'rgb(220, 53, 69)', order: 0, datalabels: { display: true, align: 'bottom', backgroundColor: 'rgba(0, 0, 0, 0.6)', borderRadius: 4, color: 'white', font: { size: 9 }, padding: 4, formatter: (value) => (value > 0 ? `${(value / 1000).toFixed(0)}k` : '') } } ] }, options: { interaction: { mode: 'index', intersect: false, }, plugins: { datalabels: { anchor: 'end', align: 'end', formatter: (value) => (value >= 1000 ? `${(value / 1000).toFixed(0)}k` : ''), color: '#F8F9FA', font: { weight: 'bold' } }, tooltip: { callbacks: { label: function(context) { let label = context.dataset.label || ''; if (label) { label += ': '; } if (context.parsed.y !== null) { label += formatCurrency(context.parsed.y); } return label; } } } }, scales: { y: { beginAtZero: true } } } }); }
+    
+    // FUNÇÃO DO GRÁFICO EMPILHADO REMOVIDA
+    
     function updateDataTable(data) { const tableData = data.sort((a,b) => a.periodo.localeCompare(b.periodo) || a.unidade.localeCompare(b.unidade)).map(d => { const atingimentoVvr = d.meta_vvr_total > 0 ? d.realizado_vvr / d.meta_vvr_total : 0; const atingimentoAdesoes = d.meta_adesoes > 0 ? d.realizado_adesoes / d.meta_adesoes : 0; return [d.unidade, d.periodo, formatCurrency(d.realizado_vvr), formatCurrency(d.meta_vvr_total), formatPercent(atingimentoVvr), d.realizado_adesoes, d.meta_adesoes, formatPercent(atingimentoAdesoes)] }); if (dataTable) { dataTable.clear().rows.add(tableData).draw(); } else { dataTable = $('#dados-table').DataTable({ data: tableData, pageLength: 10, language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json' }, destroy: true, dom: 'Bfrtip', buttons: [ { extend: 'excelHtml5', text: 'Exportar para Excel', title: `Relatorio_Vendas_${new Date().toLocaleDateString('pt-BR')}`, className: 'excel-button', exportOptions: { format: { body: function ( data, row, column, node ) { if (column === 2 || column === 3) { return parseFloat(data.replace('R$', '').replace(/\./g, '').replace(',', '.').trim()); } if (column === 4 || column === 7) { return parseFloat(data.replace('%', '').replace(',', '.').trim()) / 100; } return data; } } } } ] }); } }
     
-    // === FUNÇÃO DE LISTENERS ATUALIZADA ===
     function addEventListeners() { 
         document.getElementById('start-date').addEventListener('change', updateDashboard); 
         document.getElementById('end-date').addEventListener('change', updateDashboard); 
         
-        // Adiciona listeners para os botões do seletor do gráfico
         document.querySelectorAll('.chart-selector button').forEach(button => {
             button.addEventListener('click', () => {
-                // Remove a classe 'active' de todos os botões
                 document.querySelectorAll('.chart-selector button').forEach(btn => btn.classList.remove('active'));
-                // Adiciona a classe 'active' ao botão clicado
                 button.classList.add('active');
-                // Atualiza a variável global com o tipo selecionado
                 currentVvrChartType = button.dataset.type;
-                // Redesenha o dashboard para refletir a mudança
                 updateDashboard();
             });
         });
