@@ -799,7 +799,9 @@
     }
     
     function populateFilters() { 
-        const unidades = [...new Set(allData.map(d => d.nm_unidade))].sort(); 
+        const unidadesVendas = allData.map(d => d.nm_unidade);
+const unidadesFundos = fundosData.map(d => d.nm_unidade);
+const unidades = [...new Set([...unidadesVendas, ...unidadesFundos])].sort();
         const unidadeFilter = $('#unidade-filter'); 
         unidadeFilter.empty(); 
         unidades.forEach(u => { unidadeFilter.append($('<option>', { value: u, text: u })); }); 
