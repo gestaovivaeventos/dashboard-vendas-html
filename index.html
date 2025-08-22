@@ -44,7 +44,7 @@
             grid-gap: 20px; 
             width: 100%; 
             box-sizing: border-box; 
-            max-width: 100%; /* <-- ADICIONADO PARA OCUPAR LARGURA TOTAL */
+            max-width: 100%;
         }
         .header, .filters, .kpi-container, .chart-container, .table-container { 
             grid-column: span 12; 
@@ -53,6 +53,13 @@
             border-radius: 10px; 
             border: 1px solid #495057; 
         }
+        
+        /* === NOVA REGRA PARA AJUSTAR A ALTURA DOS GRÁFICOS === */
+        .chart-container {
+            height: 65vh; /* Define a altura para 65% da altura da tela. Ajuste este valor se desejar. */
+            position: relative;
+        }
+
         .header { display: flex; justify-content: space-between; align-items: center; }
         #company-logo { height: 100px; width: auto; }
         h1, h2 { margin-top: 0; border-bottom: 2px solid #495057; padding-bottom: 10px; }
@@ -104,6 +111,7 @@
         
         .chart-row > .chart-container {
             grid-column: auto;
+            height: 55vh; /* Altura um pouco menor para os gráficos lado a lado */
         }
     </style>
 </head>
@@ -239,6 +247,7 @@
     </div>
 
 <script>
+    // Todo o seu JavaScript permanece exatamente o mesmo
     const SALES_SPREADSHEET_ID = "1HXyq_r2ssJ5c7wXdrBUc-WdqrlCfiZYE1EuIWbIDg0U";
     const SALES_SHEET_NAME = "ADESOES";
     const METAS_SPREADSHEET_ID = "1KywSOsTn7qUdVp2dLthWD3Y27RsE1aInk6hRJhp7BFw";
