@@ -88,12 +88,16 @@
         .chart-selector button:not(.active):hover { background-color: #6c757d; border-color: #dee2e6; }
         .chart-selector button.active { background-color: #FFC107; color: #212529; border-color: #FFC107; font-weight: bold; }
 
-        /* === ESTILO PARA OS GRÁFICOS LADO A LADO === */
         .chart-row {
             display: grid;
-            grid-template-columns: 1fr 1fr; /* Duas colunas de tamanho igual */
+            grid-template-columns: 1fr 1fr;
             gap: 20px;
             grid-column: span 12;
+        }
+        
+        /* === NOVA REGRA PARA CORRIGIR O LAYOUT LADO A LADO === */
+        .chart-row > .chart-container {
+            grid-column: auto;
         }
     </style>
 </head>
@@ -235,7 +239,6 @@
     const METAS_SHEET_NAME = "metas";
     const API_KEY = "AIzaSyBuGRH91CnRuDtN5RGsb5DvHEfhTxJnWSs"; 
     
-    // === NOVAS VARIÁVEIS GLOBAIS ===
     let allData = [], metasData = new Map(), dataTable, vvrVsMetaPorMesChart, cumulativeVvrChart, monthlyVvrChart, yearlyStackedChart, monthlyStackedChart;
     let currentVvrChartType = 'total';
     let currentTableDataType = 'total';
@@ -282,7 +285,7 @@
         updateVvrVsMetaPorMesChart(dataParaGrafico, anoVigente);
         updateCumulativeVvrChart(allData, selectedUnidades);
         updateMonthlyVvrChart(allData, selectedUnidades);
-        updateDrillDownCharts(allData, selectedUnidades); // Chama a nova função
+        updateDrillDownCharts(allData, selectedUnidades);
         const startDateString = document.getElementById('start-date').value;
         const startParts = startDateString.split('-');
         const startDate = new Date(startParts[0], startParts[1] - 1, startParts[2]);
@@ -327,7 +330,6 @@
         const filteredHistoricalData = historicalData.filter(d => unitsToConsider.includes(d.nm_unidade));
         const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
-        // Agrega dados por ano
         const salesByYear = {};
         filteredHistoricalData.forEach(d => {
             const year = d.dt_cadastro_integrante.getFullYear();
@@ -351,20 +353,19 @@
             data: {
                 labels: years,
                 datasets: [
-                    { label: 'Pós Venda', data: posVendasAnual, backgroundColor: '#6c757d' },
-                    { label: 'Venda', data: vendasAnual, backgroundColor: '#007bff' }
+                    { label: 'Pós Venda', data: posVendasAnual, backgroundColor: '#007bff' }, // Cor azul
+                    { label: 'Venda', data: vendasAnual, backgroundColor: '#6c757d' } // Cor cinza
                 ]
             },
             options: {
-                // indexAxis: 'y', // <-- LINHA REMOVIDA PARA TORNAR O GRÁFICO VERTICAL
+                indexAxis: 'y', // <-- ADICIONADO DE VOLTA para o gráfico ficar na horizontal
                 scales: { x: { stacked: true }, y: { stacked: true } },
                 plugins: {
-                    datalabels: { color: 'white', font: { weight: 'bold' }, formatter: (value) => (value > 0 ? `${(value / 1000000).toFixed(1)} mi` : '') },
+                    datalabels: { color: 'white', font: { weight: 'bold' }, formatter: (value) => (value > 1000 ? `${(value / 1000).toFixed(1)} mi` : '') },
                     tooltip: { callbacks: {
-                        // AJUSTADO de context.parsed.x para context.parsed.y
-                        label: function(context) { let label = context.dataset.label || ''; if (label) { label += ': '; } if (context.parsed.y !== null) { label += formatCurrency(context.parsed.y); } return label; },
-                        // AJUSTADO de item.parsed.x para item.parsed.y
-                        footer: function(tooltipItems) { let sum = 0; tooltipItems.forEach(item => { sum += item.parsed.y; }); return 'Total: ' + formatCurrency(sum); }
+                        // AJUSTADO de volta para .x por causa do indexAxis: 'y'
+                        label: function(context) { let label = context.dataset.label || ''; if (label) { label += ': '; } if (context.parsed.x !== null) { label += formatCurrency(context.parsed.x); } return label; },
+                        footer: function(tooltipItems) { let sum = 0; tooltipItems.forEach(item => { sum += item.parsed.x; }); return 'Total: ' + formatCurrency(sum); }
                     }}
                 },
                 onClick: (event, elements) => {
@@ -376,8 +377,10 @@
             }
         });
 
-        // Desenha o gráfico mensal para o ano mais recente por defeito
-        drawMonthlyDetailChart(filteredHistoricalData, years[years.length - 1]);
+        // Desenha o gráfico mensal para o ano mais recente por defeito, se houver anos
+        if (years.length > 0) {
+            drawMonthlyDetailChart(filteredHistoricalData, years[years.length - 1]);
+        }
     }
 
     function drawMonthlyDetailChart(data, year) {
@@ -406,14 +409,14 @@
             data: {
                 labels: monthLabels,
                 datasets: [
-                    { label: 'Pós Venda', data: posVendasMensal, backgroundColor: '#6c757d' },
-                    { label: 'Venda', data: vendasMensal, backgroundColor: '#007bff' }
+                    { label: 'Pós Venda', data: posVendasMensal, backgroundColor: '#007bff' }, // Cor azul
+                    { label: 'Venda', data: vendasMensal, backgroundColor: '#6c757d' } // Cor cinza
                 ]
             },
             options: {
                 scales: { x: { stacked: true }, y: { stacked: true } },
                 plugins: {
-                    datalabels: { color: 'white', font: { weight: 'bold' }, formatter: (value) => (value > 0 ? `${(value / 1000).toFixed(0)}k` : '') },
+                    datalabels: { color: 'white', font: { weight: 'bold' }, formatter: (value) => (value > 1000 ? `${(value / 1000).toFixed(0)}k` : '') },
                     tooltip: { callbacks: {
                         label: function(context) { let label = context.dataset.label || ''; if (label) { label += ': '; } if (context.parsed.y !== null) { label += formatCurrency(context.parsed.y); } return label; },
                         footer: function(tooltipItems) { let sum = 0; tooltipItems.forEach(item => { sum += item.parsed.y; }); return 'Total: ' + formatCurrency(sum); }
