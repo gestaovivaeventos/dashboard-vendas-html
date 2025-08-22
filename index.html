@@ -37,11 +37,11 @@
 
         .page-content { display: none; }
         .page-content.active {
-    display: grid; /* Alterado de 'contents' para 'grid' */
-    grid-template-columns: repeat(12, 1fr); /* Cria um grid interno de 12 colunas */
-    grid-gap: 20px; /* Mantém o mesmo espaçamento do contêiner pai */
-    grid-column: span 12; /* Faz esta página ocupar toda a largura */
-}
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            grid-gap: 20px;
+            grid-column: span 12;
+        }
 
         .container { 
             display: grid; 
@@ -98,13 +98,20 @@
 
         .chart-row {
             display: grid;
-            grid-template-columns: 1fr 2fr;
+            grid-template-columns: 1fr 1fr; /* Alterado para colunas iguais */
             gap: 20px;
             grid-column: span 12;
         }
         
         .chart-row > .chart-container {
             grid-column: auto;
+        }
+
+        /* Media Query para responsividade */
+        @media (max-width: 1200px) {
+            .chart-row {
+                grid-template-columns: 1fr; /* Força uma única coluna em telas menores */
+            }
         }
     </style>
 </head>
@@ -247,6 +254,20 @@
                             </div>
                         </div>
                     </div>
+                    <div class="chart-row">
+                        <div class="chart-container" id="chart-yearly-contracts-section" style="display: none;">
+                            <h2>Contratos Realizados Total Anual</h2>
+                            <div class="chart-wrapper">
+                                <canvas id="yearlyContractsChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="chart-container" id="chart-monthly-contracts-section" style="display: none;">
+                            <h2 id="monthly-contracts-title">Contratos Realizados Total Mensal</h2>
+                            <div class="chart-wrapper">
+                                <canvas id="monthlyContractsChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -255,11 +276,13 @@
 <script>
     const SALES_SPREADSHEET_ID = "1HXyq_r2ssJ5c7wXdrBUc-WdqrlCfiZYE1EuIWbIDg0U";
     const SALES_SHEET_NAME = "ADESOES";
+    const FUNDOS_SHEET_NAME = "FUNDOS"; // Nova constante
     const METAS_SPREADSHEET_ID = "1KywSOsTn7qUdVp2dLthWD3Y27RsE1aInk6hRJhp7BFw";
     const METAS_SHEET_NAME = "metas";
     const API_KEY = "AIzaSyBuGRH91CnRuDtN5RGsb5DvHEfhTxJnWSs"; 
     
-    let allData = [], metasData = new Map(), dataTable, vvrVsMetaPorMesChart, cumulativeVvrChart, monthlyVvrChart, yearlyStackedChart, monthlyStackedChart, yearlyTicketChart, monthlyTicketChart;
+    // Novas variáveis adicionadas
+    let allData = [], fundosData = [], metasData = new Map(), dataTable, vvrVsMetaPorMesChart, cumulativeVvrChart, monthlyVvrChart, yearlyStackedChart, monthlyStackedChart, yearlyTicketChart, monthlyTicketChart, yearlyContractsChart, monthlyContractsChart;
     let currentVvrChartType = 'total';
     let currentTableDataType = 'total';
     let currentFilteredDataForTable = [];
@@ -270,15 +293,20 @@
     document.addEventListener('DOMContentLoaded', async () => {
         const loader = document.getElementById('loader');
         try {
-            const [salesData, sheetData] = await Promise.all([fetchAllSalesDataFromSheet(), fetchMetasData()]);
+            // Carregamento de dados atualizado
+            const [salesData, sheetData, novosFundosData] = await Promise.all([fetchAllSalesDataFromSheet(), fetchMetasData(), fetchFundosData()]);
+            
             allData = salesData;
             metasData = sheetData;
+            fundosData = novosFundosData; // Armazena os novos dados
 
             if (allData && allData.length > 0) {
                 loader.style.display = 'none';
+                // IDs das novas seções adicionados à lista
                 ['filters-section', 'kpi-section', 'chart-vvr-mes-section', 'chart-cumulative-section', 'table-section', 
                  'chart-monthly-vvr-section', 'chart-yearly-stacked-section', 'chart-monthly-stacked-section',
-                 'chart-yearly-ticket-section', 'chart-monthly-ticket-section'
+                 'chart-yearly-ticket-section', 'chart-monthly-ticket-section',
+                 'chart-yearly-contracts-section', 'chart-monthly-contracts-section'
                 ].forEach(id => {
                     const el = document.getElementById(id);
                     if (el) el.style.display = 'block';
@@ -297,7 +325,7 @@
         document.getElementById('main-content').classList.toggle('full-width');
         this.classList.toggle('collapsed');
 
-        // Adicionado: Força TODOS os gráficos a se redimensionarem após a animação
+        // Redimensionamento dos novos gráficos adicionado
         setTimeout(() => {
             if (vvrVsMetaPorMesChart) vvrVsMetaPorMesChart.resize();
             if (cumulativeVvrChart) cumulativeVvrChart.resize();
@@ -306,8 +334,53 @@
             if (monthlyStackedChart) monthlyStackedChart.resize();
             if (yearlyTicketChart) yearlyTicketChart.resize();
             if (monthlyTicketChart) monthlyTicketChart.resize();
-        }, 300); // 300ms é a duração da sua animação da sidebar
+            if (yearlyContractsChart) yearlyContractsChart.resize();
+            if (monthlyContractsChart) monthlyContractsChart.resize();
+        }, 300);
     });
+    
+    // NOVA FUNÇÃO PARA BUSCAR DADOS DOS FUNDOS
+    async function fetchFundosData() {
+        if (!SALES_SPREADSHEET_ID || !FUNDOS_SHEET_NAME || !API_KEY) {
+            console.error("ID da Planilha, Nome da Aba FUNDOS ou Chave de API não configurados.");
+            return [];
+        }
+        const url = `https://sheets.googleapis.com/v4/spreadsheets/${SALES_SPREADSHEET_ID}/values/${FUNDOS_SHEET_NAME}?key=${API_KEY}`;
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                console.error("Erro ao buscar dados de fundos da planilha:", await response.json());
+                return [];
+            }
+            const data = await response.json();
+            const rows = data.values || [];
+            if (rows.length < 2) return [];
+
+            const headers = rows[0].map(h => h.trim().toLowerCase());
+            const unidadeIndex = headers.indexOf("nm_unidade");
+            const dataIndex = headers.indexOf("dt_contrato");
+            const fundoIdIndex = headers.indexOf("id_fundo");
+
+            if (unidadeIndex === -1 || dataIndex === -1 || fundoIdIndex === -1) {
+                console.error("Colunas necessárias (nm_unidade, dt_contrato, id_fundo) não foram encontradas na aba FUNDOS.");
+                return [];
+            }
+
+            return rows.slice(1).map(row => {
+                const dataString = row[dataIndex];
+                if (!dataString || !row[fundoIdIndex]) return null; 
+                
+                return {
+                    nm_unidade: row[unidadeIndex] || 'N/A',
+                    dt_contrato: new Date(dataString),
+                    id_fundo: row[fundoIdIndex]
+                };
+            }).filter(Boolean);
+        } catch (error) {
+            console.error("Erro CRÍTICO ao buscar dados de fundos:", error);
+            return [];
+        }
+    }
 
     async function fetchAllSalesDataFromSheet() { if (!SALES_SPREADSHEET_ID || !SALES_SHEET_NAME || !API_KEY) { console.error("ID da Planilha de Vendas, Nome da Aba ou Chave de API não configurados."); return []; } const url = `https://sheets.googleapis.com/v4/spreadsheets/${SALES_SPREADSHEET_ID}/values/${SALES_SHEET_NAME}?key=${API_KEY}`; try { const response = await fetch(url); if (!response.ok) { console.error("Erro ao buscar dados de vendas da planilha:", await response.json()); return []; } const data = await response.json(); const rows = data.values || []; if (rows.length < 2) return []; const headers = rows[0].map(h => h.trim().toLowerCase()); const unidadeIndex = headers.indexOf("nm_unidade"), dataIndex = headers.indexOf("dt_cadastro_integrante"), valorIndex = headers.indexOf("vl_plano"), tipoVendaIndex = headers.indexOf("venda_posvenda"); if (unidadeIndex === -1 || dataIndex === -1 || valorIndex === -1) { console.error("Colunas necessárias (nm_unidade, dt_cadastro_integrante, vl_plano) não foram encontradas."); return []; } return rows.slice(1).map(row => { const dataString = row[dataIndex]; if (!dataString) return null; return { nm_unidade: row[unidadeIndex] || 'N/A', dt_cadastro_integrante: new Date(dataString), vl_plano: parseFloat(String(row[valorIndex] || '0').replace(',', '.')) || 0, venda_posvenda: row[tipoVendaIndex] || 'VENDA' }; }).filter(Boolean); } catch (error) { console.error("Erro CRÍTICO ao buscar dados de vendas:", error); return []; } }
     async function fetchMetasData() { if (!METAS_SPREADSHEET_ID || !METAS_SHEET_NAME || !API_KEY) { console.error("Configurações da planilha de metas incompletas."); return new Map(); } const url = `https://sheets.googleapis.com/v4/spreadsheets/${METAS_SPREADSHEET_ID}/values/${METAS_SHEET_NAME}?key=${API_KEY}`; try { const response = await fetch(url); if (!response.ok) { console.error("Erro API Google Sheets:", await response.json()); return new Map(); } const data = await response.json(); const rows = data.values || []; const metasMap = new Map(); const headers = rows[0].map(h => h.trim().toLowerCase()); const unidadeIndex = headers.indexOf("nm_unidade"), anoIndex = headers.indexOf("ano"), mesIndex = headers.indexOf("mês"), metaVendasIndex = headers.indexOf("meta vvr_venda"), metaPosvendasIndex = headers.indexOf("meta vvr_pos_venda"), metaAdesoesIndex = headers.indexOf("meta adesões"); rows.slice(1).forEach(row => { const unidade = row[unidadeIndex], ano = row[anoIndex], mes = String(row[mesIndex]).padStart(2, '0'); const parseMetaValue = (index) => parseFloat(String(row[index] || "0").replace(/\./g, '').replace(',', '.')) || 0; const metaVendas = parseMetaValue(metaVendasIndex), metaPosvendas = parseMetaValue(metaPosvendasIndex), metaAdesoes = parseInt(row[metaAdesoesIndex]) || 0; if (unidade && ano && mes) { const chave = `${unidade}-${ano}-${mes}`; metasMap.set(chave, { meta_vvr_vendas: metaVendas, meta_vvr_posvendas: metaPosvendas, meta_vvr_total: metaVendas + metaPosvendas, meta_adesoes: metaAdesoes }); } }); return metasMap; } catch (error) { console.error("Erro CRÍTICO ao buscar metas:", error); return new Map(); } }
@@ -324,6 +397,8 @@
         updateMonthlyVvrChart(allData, selectedUnidades);
         updateDrillDownCharts(allData, selectedUnidades);
         updateTicketCharts(allData, selectedUnidades);
+        updateContractsCharts(fundosData, selectedUnidades); // Chamada para a nova função
+        
         const startDateString = document.getElementById('start-date').value;
         const startParts = startDateString.split('-');
         const startDate = new Date(startParts[0], startParts[1] - 1, startParts[2]);
@@ -574,6 +649,115 @@
                     tooltip: {
                         callbacks: {
                             label: (context) => `Ticket Médio: ${formatCurrency(context.parsed.y)}`
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+    
+    // NOVAS FUNÇÕES PARA OS GRÁFICOS DE CONTRATOS
+    function updateContractsCharts(historicalData, selectedUnidades) {
+        const unitsToConsider = selectedUnidades.length > 0 ? selectedUnidades : [...new Set(allData.map(d => d.nm_unidade))];
+        const filteredHistoricalData = historicalData.filter(d => unitsToConsider.includes(d.nm_unidade));
+
+        const contractsByYear = {};
+        filteredHistoricalData.forEach(d => {
+            const year = d.dt_contrato.getFullYear();
+            if (!contractsByYear[year]) {
+                contractsByYear[year] = 0;
+            }
+            contractsByYear[year]++;
+        });
+
+        const years = Object.keys(contractsByYear).sort();
+        const annualContractsData = years.map(year => contractsByYear[year]);
+
+        if (yearlyContractsChart) yearlyContractsChart.destroy();
+        yearlyContractsChart = new Chart(document.getElementById('yearlyContractsChart'), {
+            type: 'bar',
+            data: {
+                labels: years,
+                datasets: [{
+                    label: 'Contratos',
+                    data: annualContractsData,
+                    backgroundColor: '#28a745'
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                plugins: {
+                    datalabels: {
+                        anchor: 'end',
+                        align: 'end',
+                        color: 'white',
+                        font: { weight: 'bold' },
+                        formatter: (value) => value.toLocaleString('pt-BR')
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: (context) => `Contratos: ${context.parsed.x.toLocaleString('pt-BR')}`
+                        }
+                    }
+                },
+                onClick: (event, elements) => {
+                    if (elements.length > 0) {
+                        const clickedYear = years[elements[0].index];
+                        drawMonthlyContractsChart(filteredHistoricalData, clickedYear);
+                    }
+                }
+            }
+        });
+
+        if (years.length > 0) {
+            drawMonthlyContractsChart(filteredHistoricalData, years[years.length - 1]);
+        }
+    }
+
+    function drawMonthlyContractsChart(data, year) {
+        document.getElementById('monthly-contracts-title').textContent = `Contratos Realizados Total Mensal (${year})`;
+        
+        const contractsByMonth = Array(12).fill(0);
+
+        data.forEach(d => {
+            if (d.dt_contrato.getFullYear() === parseInt(year)) {
+                const month = d.dt_contrato.getMonth();
+                contractsByMonth[month]++;
+            }
+        });
+        
+        const monthLabels = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+
+        if (monthlyContractsChart) monthlyContractsChart.destroy();
+        monthlyContractsChart = new Chart(document.getElementById('monthlyContractsChart'), {
+            type: 'bar',
+            data: {
+                labels: monthLabels,
+                datasets: [{
+                    label: 'Contratos',
+                    data: contractsByMonth,
+                    backgroundColor: '#28a745'
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                plugins: {
+                    datalabels: {
+                        anchor: 'end',
+                        align: 'end',
+                        color: 'white',
+                        font: { weight: 'bold' },
+                        formatter: (value) => value > 0 ? value.toLocaleString('pt-BR') : ''
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: (context) => `Contratos: ${context.parsed.y.toLocaleString('pt-BR')}`
                         }
                     }
                 },
