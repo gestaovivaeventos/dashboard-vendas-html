@@ -98,14 +98,18 @@
 
         .chart-row {
             display: grid;
-            grid-template-columns:  1fr 2fr;
+            grid-template-columns: repeat(2, 1fr);
             gap: 20px;
             grid-column: span 12;
         }
         
         .chart-row > .chart-container {
             grid-column: auto;
-            min-width: 0; /* <-- ADICIONE ESTA LINHA AQUI */
+            min-width: 0;
+        }
+
+        .chart-row .chart-wrapper {
+            height: 35vh;
         }
 
         @media (max-width: 1200px) {
@@ -219,6 +223,13 @@
                     </section>
                 </div>
                 <div id="page2" class="page-content">
+                    <section class="chart-container" id="chart-monthly-adesoes-section" style="display: none;">
+                        <h2>Comparativo Mensal de Adesões</h2>
+                        <div class="chart-selector" id="adesoes-chart-selector"></div>
+                        <div class="chart-wrapper">
+                           <canvas id="monthlyAdesoesChart"></canvas>
+                        </div>
+                    </section>
                     <section class="chart-container" id="chart-monthly-vvr-section" style="display: none;">
                         <h2>Comparativo de VVR Mensal</h2>
                         <div class="chart-selector" id="monthly-chart-selector"></div>
@@ -281,7 +292,7 @@
     const METAS_SHEET_NAME = "metas";
     const API_KEY = "AIzaSyBuGRH91CnRuDtN5RGsb5DvHEfhTxJnWSs"; 
     
-    let allData = [], fundosData = [], metasData = new Map(), dataTable, vvrVsMetaPorMesChart, cumulativeVvrChart, monthlyVvrChart, yearlyStackedChart, monthlyStackedChart, yearlyTicketChart, monthlyTicketChart, yearlyContractsChart, monthlyContractsChart;
+    let allData = [], fundosData = [], metasData = new Map(), dataTable, vvrVsMetaPorMesChart, cumulativeVvrChart, monthlyVvrChart, yearlyStackedChart, monthlyStackedChart, yearlyTicketChart, monthlyTicketChart, yearlyContractsChart, monthlyContractsChart, monthlyAdesoesChart;
     let currentVvrChartType = 'total';
     let currentTableDataType = 'total';
     let currentFilteredDataForTable = [];
@@ -303,7 +314,8 @@
                 ['filters-section', 'kpi-section', 'chart-vvr-mes-section', 'chart-cumulative-section', 'table-section', 
                  'chart-monthly-vvr-section', 'chart-yearly-stacked-section', 'chart-monthly-stacked-section',
                  'chart-yearly-ticket-section', 'chart-monthly-ticket-section',
-                 'chart-yearly-contracts-section', 'chart-monthly-contracts-section'
+                 'chart-yearly-contracts-section', 'chart-monthly-contracts-section',
+                 'chart-monthly-adesoes-section'
                 ].forEach(id => {
                     const el = document.getElementById(id);
                     if (el) el.style.display = 'block';
@@ -332,6 +344,7 @@
             if (monthlyTicketChart) monthlyTicketChart.resize();
             if (yearlyContractsChart) yearlyContractsChart.resize();
             if (monthlyContractsChart) monthlyContractsChart.resize();
+            if (monthlyAdesoesChart) monthlyAdesoesChart.resize();
         }, 300);
     });
     
@@ -393,6 +406,7 @@
         updateDrillDownCharts(allData, selectedUnidades);
         updateTicketCharts(allData, selectedUnidades);
         updateContractsCharts(fundosData, selectedUnidades);
+        updateMonthlyAdesoesChart(allData, selectedUnidades);
         
         const startDateString = document.getElementById('start-date').value;
         const startParts = startDateString.split('-');
@@ -669,9 +683,9 @@
             contractsByYear[year]++;
         });
 
-       const years = Object.keys(contractsByYear)
-                        .sort()
-                        .filter(year => parseInt(year) >= 2019);
+        const years = Object.keys(contractsByYear)
+                            .sort()
+                            .filter(year => parseInt(year) >= 2019);
         const annualContractsData = years.map(year => contractsByYear[year]);
 
         if (yearlyContractsChart) yearlyContractsChart.destroy();
@@ -803,8 +817,8 @@
     
     function populateFilters() { 
         const unidadesVendas = allData.map(d => d.nm_unidade);
-const unidadesFundos = fundosData.map(d => d.nm_unidade);
-const unidades = [...new Set([...unidadesVendas, ...unidadesFundos])].sort();
+        const unidadesFundos = fundosData.map(d => d.nm_unidade);
+        const unidades = [...new Set([...unidadesVendas, ...unidadesFundos])].sort();
         const unidadeFilter = $('#unidade-filter'); 
         unidadeFilter.empty(); 
         unidades.forEach(u => { unidadeFilter.append($('<option>', { value: u, text: u })); }); 
@@ -833,6 +847,120 @@ const unidades = [...new Set([...unidadesVendas, ...unidadesFundos])].sort();
         const fimMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0); 
         document.getElementById('start-date').value = inicioMes.toISOString().split('T')[0]; 
         document.getElementById('end-date').value = fimMes.toISOString().split('T')[0]; 
+    }
+
+    // NOVA FUNÇÃO PARA O GRÁFICO DE ADESÕES
+    function updateMonthlyAdesoesChart(historicalData, selectedUnidades) {
+        const selectorContainer = document.getElementById('adesoes-chart-selector');
+        const unitsToConsider = selectedUnidades.length > 0 ? selectedUnidades : [...new Set(allData.map(d => d.nm_unidade))];
+        const filteredHistoricalData = historicalData.filter(d => unitsToConsider.includes(d.nm_unidade));
+
+        // Agrupa o NÚMERO de adesões por ano e mês
+        const adesoesByYearMonth = {};
+        filteredHistoricalData.forEach(d => {
+            const year = d.dt_cadastro_integrante.getFullYear();
+            const month = d.dt_cadastro_integrante.getMonth();
+            if (!adesoesByYearMonth[year]) {
+                adesoesByYearMonth[year] = Array(12).fill(0);
+            }
+            adesoesByYearMonth[year][month]++; // Incrementa o contador em vez de somar valor
+        });
+
+        const uniqueYears = Object.keys(adesoesByYearMonth).sort();
+
+        // Cria os botões de ano (lógica reaproveitada do seu outro gráfico)
+        if (selectorContainer.children.length === 0) {
+            uniqueYears.forEach(year => {
+                const button = document.createElement('button');
+                button.dataset.year = year;
+                button.textContent = year;
+                // Deixa os dois últimos anos ativos por padrão
+                if (year >= uniqueYears[uniqueYears.length - 2]) {
+                    button.classList.add('active');
+                }
+                selectorContainer.appendChild(button);
+            });
+
+            selectorContainer.querySelectorAll('button').forEach(button => {
+                button.addEventListener('click', () => {
+                    button.classList.toggle('active');
+                    updateDashboard(); // Redesenha tudo ao clicar
+                });
+            });
+        }
+
+        const activeYears = Array.from(selectorContainer.querySelectorAll('button.active')).map(btn => parseInt(btn.dataset.year));
+        const colors = ['#6c757d', '#28a745', '#dc3545', '#ffc107', '#007bff', '#17a2b8', '#fd7e14'];
+
+        // Monta os datasets para o gráfico de barras
+        const datasets = [];
+        uniqueYears.forEach((year, index) => {
+            const monthlyData = adesoesByYearMonth[year] || Array(12).fill(0);
+            datasets.push({
+                label: `Adesões ${year}`,
+                data: monthlyData,
+                backgroundColor: colors[index % colors.length],
+                hidden: !activeYears.includes(parseInt(year)) // Esconde/mostra a barra do ano
+            });
+        });
+
+        const monthLabels = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+
+        if (monthlyAdesoesChart) monthlyAdesoesChart.destroy();
+        monthlyAdesoesChart = new Chart(document.getElementById('monthlyAdesoesChart'), {
+            type: 'bar', // Gráfico de barras
+            data: {
+                labels: monthLabels,
+                datasets: datasets
+            },
+            options: {
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    label += context.parsed.y;
+                                }
+                                return label;
+                            }
+                        }
+                    },
+                    datalabels: { // Configuração dos rótulos de dados
+                        display: true,
+                        align: 'end',
+                        anchor: 'end',
+                        color: '#F8F9FA',
+                        font: {
+                            size: 9,
+                            weight: 'bold'
+                        },
+                        formatter: (value) => value > 0 ? value : '' // Só mostra o rótulo se for maior que 0
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                           callback: function(value) {
+                               if (value >= 1000) {
+                                   return (value / 1000) + ' mil';
+                               }
+                               return value;
+                           }
+                        }
+                    }
+                }
+            }
+        });
     }
 </script>
 </body>
