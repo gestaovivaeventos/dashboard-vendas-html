@@ -399,6 +399,11 @@
             options: {
                 maintainAspectRatio: false,
                 indexAxis: 'y',
+                // ADICIONADO DE VOLTA: Configuração para empilhar as barras
+                scales: { 
+                    x: { stacked: true }, 
+                    y: { stacked: true } 
+                },
                 plugins: {
                     datalabels: { color: 'white', font: { weight: 'bold' }, formatter: (value) => (value > 1000 ? `${(value / 1000).toFixed(1)} mi` : '') },
                     tooltip: { callbacks: {
