@@ -36,7 +36,12 @@
         .page-navigation button.active { background-color: #FFC107; color: #212529; border-color: #FFC107; font-weight: bold; }
 
         .page-content { display: none; }
-        .page-content.active { display: contents; }
+        .page-content.active {
+    display: grid; /* Alterado de 'contents' para 'grid' */
+    grid-template-columns: repeat(12, 1fr); /* Cria um grid interno de 12 colunas */
+    grid-gap: 20px; /* Mantém o mesmo espaçamento do contêiner pai */
+    grid-column: span 12; /* Faz esta página ocupar toda a largura */
+}
 
         .container { 
             display: grid; 
