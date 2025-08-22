@@ -669,7 +669,9 @@
             contractsByYear[year]++;
         });
 
-        const years = Object.keys(contractsByYear).sort();
+       const years = Object.keys(contractsByYear)
+                        .sort()
+                        .filter(year => parseInt(year) >= 2019);
         const annualContractsData = years.map(year => contractsByYear[year]);
 
         if (yearlyContractsChart) yearlyContractsChart.destroy();
