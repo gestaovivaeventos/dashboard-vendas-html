@@ -275,7 +275,7 @@
     const formatPercent = (value) => new Intl.NumberFormat('pt-br', { style: 'percent', minimumFractionDigits: 1 }).format(value || 0);
 
     document.addEventListener('DOMContentLoaded', async () => {
-        const loader = document.getElementById('loader');
+        const loader = ('loader');
         try {
             const [salesData, sheetData] = await Promise.all([fetchAllSalesDataFromSheet(), fetchMetasData()]);
             allData = salesData;
@@ -287,7 +287,7 @@
                  'chart-monthly-vvr-section', 'chart-yearly-stacked-section', 'chart-monthly-stacked-section',
                  'chart-yearly-ticket-section', 'chart-monthly-ticket-section'
                 ].forEach(id => {
-                    const el = document.getElementById(id);
+                    const el = (id);
                     if (el) el.style.display = 'block';
                 });
                 document.getElementById('filters-section').style.display = 'flex';
@@ -303,6 +303,16 @@
         document.getElementById('sidebar').classList.toggle('collapsed');
         document.getElementById('main-content').classList.toggle('full-width');
         this.classList.toggle('collapsed');
+setTimeout(() => {
+            if (vvrVsMetaPorMesChart) vvrVsMetaPorMesChart.resize();
+            if (cumulativeVvrChart) cumulativeVvrChart.resize();
+            if (monthlyVvrChart) monthlyVvrChart.resize();
+            if (yearlyStackedChart) yearlyStackedChart.resize();
+            if (monthlyStackedChart) monthlyStackedChart.resize();
+            if (yearlyTicketChart) yearlyTicketChart.resize();
+            if (monthlyTicketChart) monthlyTicketChart.resize();
+        }, 300); // 300ms é a duração da sua animação da sidebar
+
     });
 
     async function fetchAllSalesDataFromSheet() { if (!SALES_SPREADSHEET_ID || !SALES_SHEET_NAME || !API_KEY) { console.error("ID da Planilha de Vendas, Nome da Aba ou Chave de API não configurados."); return []; } const url = `https://sheets.googleapis.com/v4/spreadsheets/${SALES_SPREADSHEET_ID}/values/${SALES_SHEET_NAME}?key=${API_KEY}`; try { const response = await fetch(url); if (!response.ok) { console.error("Erro ao buscar dados de vendas da planilha:", await response.json()); return []; } const data = await response.json(); const rows = data.values || []; if (rows.length < 2) return []; const headers = rows[0].map(h => h.trim().toLowerCase()); const unidadeIndex = headers.indexOf("nm_unidade"), dataIndex = headers.indexOf("dt_cadastro_integrante"), valorIndex = headers.indexOf("vl_plano"), tipoVendaIndex = headers.indexOf("venda_posvenda"); if (unidadeIndex === -1 || dataIndex === -1 || valorIndex === -1) { console.error("Colunas necessárias (nm_unidade, dt_cadastro_integrante, vl_plano) não foram encontradas."); return []; } return rows.slice(1).map(row => { const dataString = row[dataIndex]; if (!dataString) return null; return { nm_unidade: row[unidadeIndex] || 'N/A', dt_cadastro_integrante: new Date(dataString), vl_plano: parseFloat(String(row[valorIndex] || '0').replace(',', '.')) || 0, venda_posvenda: row[tipoVendaIndex] || 'VENDA' }; }).filter(Boolean); } catch (error) { console.error("Erro CRÍTICO ao buscar dados de vendas:", error); return []; } }
