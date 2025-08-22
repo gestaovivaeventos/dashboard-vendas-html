@@ -63,13 +63,8 @@
         
         .chart-wrapper {
             position: relative;
-            height: 45vh;
-            flex-grow: 1; 
+            height: 45vh; 
         }
-        
-        /* Regras para dividir os gráficos em colunas */
-        .col-4 { grid-column: span 4 !important; }
-        .col-8 { grid-column: span 8 !important; }
         
         .kpi-main-wrapper { display: flex; flex-wrap: wrap; align-items: center; gap: 20px; }
         .kpi-main-cards-container { display: flex; flex-grow: 1; flex-wrap: wrap; gap: 20px; }
@@ -95,6 +90,17 @@
         .chart-selector button { background-color: #495057; color: #F8F9FA; border: 1px solid #ADB5BD; border-radius: 6px; padding: 5px 15px; cursor: pointer; transition: all 0.2s ease-in-out; }
         .chart-selector button:not(.active):hover { background-color: #6c757d; border-color: #dee2e6; }
         .chart-selector button.active { background-color: #FFC107; color: #212529; border-color: #FFC107; font-weight: bold; }
+
+        .chart-row {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+            grid-column: span 12;
+        }
+        
+        .chart-row > .chart-container {
+            grid-column: auto;
+        }
     </style>
 </head>
 <body>
@@ -119,7 +125,87 @@
                     <img id="company-logo" src="Rockets2.png" alt="Logo da Empresa">
                 </header>
                 <div id="page1" class="page-content active">
-                    </div>
+                    <section class="kpi-container" id="kpi-section" style="display: none;">
+                        <div class="kpi-main-wrapper">
+                            <div class="kpi-main-cards-container">
+                                <div class="kpi-main-card">
+                                    <span class="kpi-card-title">REALIZADO TOTAL</span>
+                                    <span class="kpi-card-value" id="kpi-total-realizado">R$ 0,00</span>
+                                    <span class="kpi-card-details"><span class="percent" id="kpi-total-percent">0,0%</span> de <span id="kpi-total-meta">R$ 0,00</span> META TOTAL</span>
+                                    <div class="progress-bar-bg"><div class="progress-bar-fg" id="kpi-total-progress"></div></div>
+                                </div>
+                                <div class="kpi-main-card">
+                                    <span class="kpi-card-title">REALIZADO VENDAS</span>
+                                    <span class="kpi-card-value" id="kpi-vendas-realizado">R$ 0,00</span>
+                                    <span class="kpi-card-details"><span class="percent" id="kpi-vendas-percent">0,0%</span> de <span id="kpi-vendas-meta">R$ 0,00</span> META VENDAS</span>
+                                    <div class="progress-bar-bg"><div class="progress-bar-fg" id="kpi-vendas-progress"></div></div>
+                                </div>
+                                <div class="kpi-main-card">
+                                    <span class="kpi-card-title">REALIZADO PÓS VENDAS</span>
+                                    <span class="kpi-card-value" id="kpi-posvendas-realizado">R$ 0,00</span>
+                                    <span class="kpi-card-details"><span class="percent" id="kpi-posvendas-percent">0,0%</span> de <span id="kpi-posvendas-meta">R$ 0,00</span> META PÓS VENDAS</span>
+                                    <div class="progress-bar-bg"><div class="progress-bar-fg" id="kpi-posvendas-progress"></div></div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                    <section class="kpi-container" id="kpi-section-py" style="display: none;">
+                        <h2 style="grid-column: span 12; font-size: 1.2em; border-bottom: none; padding-bottom: 0;">Desempenho no Período Anterior</h2>
+                        <div class="kpi-main-wrapper" style="width: 100%; grid-column: span 12;">
+                            <div class="kpi-main-cards-container">
+                                <div class="kpi-main-card">
+                                    <span class="kpi-card-title">REALIZADO TOTAL</span>
+                                    <span class="kpi-card-value" id="kpi-total-realizado-py">R$ 0,00</span>
+                                    <span class="kpi-card-details"><span class="percent" id="kpi-total-percent-py">0,0%</span> de <span id="kpi-total-meta-py">R$ 0,00</span> META TOTAL</span>
+                                    <div class="progress-bar-bg"><div class="progress-bar-fg" id="kpi-total-progress-py"></div></div>
+                                </div>
+                                <div class="kpi-main-card">
+                                    <span class="kpi-card-title">REALIZADO VENDAS</span>
+                                    <span class="kpi-card-value" id="kpi-vendas-realizado-py">R$ 0,00</span>
+                                    <span class="kpi-card-details"><span class="percent" id="kpi-vendas-percent-py">0,0%</span> de <span id="kpi-vendas-meta-py">R$ 0,00</span> META VENDAS</span>
+                                    <div class="progress-bar-bg"><div class="progress-bar-fg" id="kpi-vendas-progress-py"></div></div>
+                                </div>
+                                <div class="kpi-main-card">
+                                    <span class="kpi-card-title">REALIZADO PÓS VENDAS</span>
+                                    <span class="kpi-card-value" id="kpi-posvendas-realizado-py">R$ 0,00</span>
+                                    <span class="kpi-card-details"><span class="percent" id="kpi-posvendas-percent-py">0,0%</span> de <span id="kpi-posvendas-meta-py">R$ 0,00</span> META PÓS VENDAS</span>
+                                    <div class="progress-bar-bg"><div class="progress-bar-fg" id="kpi-posvendas-progress-py"></div></div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                    <section class="chart-container" id="chart-vvr-mes-section" style="display: none;">
+                        <h2>VVR Realizado vs. Meta por Mês (Ano Vigente)</h2>
+                        <div class="chart-selector">
+                            <button id="btn-total" class="active" data-type="total">Total</button>
+                            <button id="btn-vendas" data-type="vendas">Vendas</button>
+                            <button id="btn-posvendas" data-type="posvendas">Pós Venda</button>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="vvrVsMetaPorMesChart"></canvas>
+                        </div>
+                    </section>
+                    <section class="chart-container" id="chart-cumulative-section" style="display: none;">
+                        <h2>VVR Acumulado Anual (Comparativo)</h2>
+                        <div class="chart-selector" id="cumulative-chart-selector"></div>
+                        <div class="chart-wrapper">
+                            <canvas id="cumulativeVvrChart"></canvas>
+                        </div>
+                    </section>
+                    <section class="table-container" id="table-section" style="display: none;">
+                        <h2>Dados Detalhados por Mês/Unidade (Período Selecionado)</h2>
+                        <div class="chart-selector">
+                            <button class="active" data-type="total">Total</button>
+                            <button data-type="vendas">Vendas</button>
+                            <button data-type="posvendas">Pós Venda</button>
+                        </div>
+                        <table id="dados-table" class="display" style="width:100%">
+                            <thead><tr><th>Unidade</th><th>Período</th><th>VVR Realizado</th><th>Meta VVR</th><th>Atingimento VVR</th></tr></thead>
+                            <tbody></tbody>
+                            <tfoot></tfoot>
+                        </table>
+                    </section>
+                </div>
                 <div id="page2" class="page-content">
                     <section class="chart-container" id="chart-monthly-vvr-section" style="display: none;">
                         <h2>Comparativo de VVR Mensal</h2>
@@ -128,30 +214,32 @@
                            <canvas id="monthlyVvrChart"></canvas>
                         </div>
                     </section>
-
-                    <div class="chart-container col-4" id="chart-yearly-stacked-section" style="display: none;">
-                        <h2>Venda Realizada Total Anual</h2>
-                        <div class="chart-wrapper">
-                            <canvas id="yearlyStackedChart"></canvas>
+                    <div class="chart-row">
+                        <div class="chart-container" id="chart-yearly-stacked-section" style="display: none;">
+                            <h2>Venda Realizada Total Anual</h2>
+                            <div class="chart-wrapper">
+                                <canvas id="yearlyStackedChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="chart-container" id="chart-monthly-stacked-section" style="display: none;">
+                            <h2 id="monthly-stacked-title">Venda Realizada Total Mensal</h2>
+                            <div class="chart-wrapper">
+                                <canvas id="monthlyStackedChart"></canvas>
+                            </div>
                         </div>
                     </div>
-                    <div class="chart-container col-8" id="chart-monthly-stacked-section" style="display: none;">
-                        <h2 id="monthly-stacked-title">Venda Realizada Total Mensal</h2>
-                        <div class="chart-wrapper">
-                            <canvas id="monthlyStackedChart"></canvas>
+                    <div class="chart-row">
+                        <div class="chart-container" id="chart-yearly-ticket-section" style="display: none;">
+                            <h2>Ticket Médio Anual</h2>
+                            <div class="chart-wrapper">
+                                <canvas id="yearlyTicketChart"></canvas>
+                            </div>
                         </div>
-                    </div>
-                    
-                    <div class="chart-container col-4" id="chart-yearly-ticket-section" style="display: none;">
-                        <h2>Ticket Médio Anual</h2>
-                        <div class="chart-wrapper">
-                            <canvas id="yearlyTicketChart"></canvas>
-                        </div>
-                    </div>
-                    <div class="chart-container col-8" id="chart-monthly-ticket-section" style="display: none;">
-                        <h2 id="monthly-ticket-title">Ticket Médio Mensal</h2>
-                        <div class="chart-wrapper">
-                            <canvas id="monthlyTicketChart"></canvas>
+                        <div class="chart-container" id="chart-monthly-ticket-section" style="display: none;">
+                            <h2 id="monthly-ticket-title">Ticket Médio Mensal</h2>
+                            <div class="chart-wrapper">
+                                <canvas id="monthlyTicketChart"></canvas>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -204,6 +292,7 @@
         document.getElementById('main-content').classList.toggle('full-width');
         this.classList.toggle('collapsed');
 
+        // Adicionado: Força TODOS os gráficos a se redimensionarem após a animação
         setTimeout(() => {
             if (vvrVsMetaPorMesChart) vvrVsMetaPorMesChart.resize();
             if (cumulativeVvrChart) cumulativeVvrChart.resize();
@@ -212,10 +301,8 @@
             if (monthlyStackedChart) monthlyStackedChart.resize();
             if (yearlyTicketChart) yearlyTicketChart.resize();
             if (monthlyTicketChart) monthlyTicketChart.resize();
-        }, 300);
+        }, 300); // 300ms é a duração da sua animação da sidebar
     });
-
-    // ... (O restante do seu JavaScript permanece o mesmo daqui para baixo)
 
     async function fetchAllSalesDataFromSheet() { if (!SALES_SPREADSHEET_ID || !SALES_SHEET_NAME || !API_KEY) { console.error("ID da Planilha de Vendas, Nome da Aba ou Chave de API não configurados."); return []; } const url = `https://sheets.googleapis.com/v4/spreadsheets/${SALES_SPREADSHEET_ID}/values/${SALES_SHEET_NAME}?key=${API_KEY}`; try { const response = await fetch(url); if (!response.ok) { console.error("Erro ao buscar dados de vendas da planilha:", await response.json()); return []; } const data = await response.json(); const rows = data.values || []; if (rows.length < 2) return []; const headers = rows[0].map(h => h.trim().toLowerCase()); const unidadeIndex = headers.indexOf("nm_unidade"), dataIndex = headers.indexOf("dt_cadastro_integrante"), valorIndex = headers.indexOf("vl_plano"), tipoVendaIndex = headers.indexOf("venda_posvenda"); if (unidadeIndex === -1 || dataIndex === -1 || valorIndex === -1) { console.error("Colunas necessárias (nm_unidade, dt_cadastro_integrante, vl_plano) não foram encontradas."); return []; } return rows.slice(1).map(row => { const dataString = row[dataIndex]; if (!dataString) return null; return { nm_unidade: row[unidadeIndex] || 'N/A', dt_cadastro_integrante: new Date(dataString), vl_plano: parseFloat(String(row[valorIndex] || '0').replace(',', '.')) || 0, venda_posvenda: row[tipoVendaIndex] || 'VENDA' }; }).filter(Boolean); } catch (error) { console.error("Erro CRÍTICO ao buscar dados de vendas:", error); return []; } }
     async function fetchMetasData() { if (!METAS_SPREADSHEET_ID || !METAS_SHEET_NAME || !API_KEY) { console.error("Configurações da planilha de metas incompletas."); return new Map(); } const url = `https://sheets.googleapis.com/v4/spreadsheets/${METAS_SPREADSHEET_ID}/values/${METAS_SHEET_NAME}?key=${API_KEY}`; try { const response = await fetch(url); if (!response.ok) { console.error("Erro API Google Sheets:", await response.json()); return new Map(); } const data = await response.json(); const rows = data.values || []; const metasMap = new Map(); const headers = rows[0].map(h => h.trim().toLowerCase()); const unidadeIndex = headers.indexOf("nm_unidade"), anoIndex = headers.indexOf("ano"), mesIndex = headers.indexOf("mês"), metaVendasIndex = headers.indexOf("meta vvr_venda"), metaPosvendasIndex = headers.indexOf("meta vvr_pos_venda"), metaAdesoesIndex = headers.indexOf("meta adesões"); rows.slice(1).forEach(row => { const unidade = row[unidadeIndex], ano = row[anoIndex], mes = String(row[mesIndex]).padStart(2, '0'); const parseMetaValue = (index) => parseFloat(String(row[index] || "0").replace(/\./g, '').replace(',', '.')) || 0; const metaVendas = parseMetaValue(metaVendasIndex), metaPosvendas = parseMetaValue(metaPosvendasIndex), metaAdesoes = parseInt(row[metaAdesoesIndex]) || 0; if (unidade && ano && mes) { const chave = `${unidade}-${ano}-${mes}`; metasMap.set(chave, { meta_vvr_vendas: metaVendas, meta_vvr_posvendas: metaPosvendas, meta_vvr_total: metaVendas + metaPosvendas, meta_adesoes: metaAdesoes }); } }); return metasMap; } catch (error) { console.error("Erro CRÍTICO ao buscar metas:", error); return new Map(); } }
