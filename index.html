@@ -112,8 +112,15 @@
             height: 35vh;
         }
 
+        .chart-row-adesoes {
+            display: grid;
+            grid-template-columns: 1fr 2fr; /* Proporção 1/3 e 2/3 */
+            gap: 20px;
+            grid-column: span 12;
+        }
+
         @media (max-width: 1200px) {
-            .chart-row {
+            .chart-row, .chart-row-adesoes {
                 grid-template-columns: 1fr;
             }
         }
@@ -272,13 +279,27 @@
                             </div>
                         </div>
                     </div>
-  <section class="chart-container" id="chart-monthly-adesoes-section" style="display: none;">
+                    <section class="chart-container" id="chart-monthly-adesoes-section" style="display: block;">
                         <h2>Comparativo Mensal de Adesões</h2>
                         <div class="chart-selector" id="adesoes-chart-selector"></div>
                         <div class="chart-wrapper">
                            <canvas id="monthlyAdesoesChart"></canvas>
                         </div>
                     </section>
+                    <div class="chart-row-adesoes">
+                        <div class="chart-container" id="chart-yearly-adesoes-stacked-section" style="display: none;">
+                            <h2>Adesões por Tipo (Anual)</h2>
+                            <div class="chart-wrapper">
+                                <canvas id="yearlyAdesoesStackedChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="chart-container" id="chart-monthly-adesoes-stacked-section" style="display: none;">
+                            <h2 id="monthly-adesoes-stacked-title">Adesões por Tipo (Mensal)</h2>
+                            <div class="chart-wrapper">
+                                <canvas id="monthlyAdesoesStackedChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -292,7 +313,7 @@
     const METAS_SHEET_NAME = "metas";
     const API_KEY = "AIzaSyBuGRH91CnRuDtN5RGsb5DvHEfhTxJnWSs"; 
     
-    let allData = [], fundosData = [], metasData = new Map(), dataTable, vvrVsMetaPorMesChart, cumulativeVvrChart, monthlyVvrChart, yearlyStackedChart, monthlyStackedChart, yearlyTicketChart, monthlyTicketChart, yearlyContractsChart, monthlyContractsChart, monthlyAdesoesChart;
+    let allData = [], fundosData = [], metasData = new Map(), dataTable, vvrVsMetaPorMesChart, cumulativeVvrChart, monthlyVvrChart, yearlyStackedChart, monthlyStackedChart, yearlyTicketChart, monthlyTicketChart, yearlyContractsChart, monthlyContractsChart, monthlyAdesoesChart, yearlyAdesoesStackedChart, monthlyAdesoesStackedChart;
     let currentVvrChartType = 'total';
     let currentTableDataType = 'total';
     let currentFilteredDataForTable = [];
@@ -315,7 +336,9 @@
                  'chart-monthly-vvr-section', 'chart-yearly-stacked-section', 'chart-monthly-stacked-section',
                  'chart-yearly-ticket-section', 'chart-monthly-ticket-section',
                  'chart-yearly-contracts-section', 'chart-monthly-contracts-section',
-                 'chart-monthly-adesoes-section'
+                 'chart-monthly-adesoes-section',
+                 'chart-yearly-adesoes-stacked-section',
+                 'chart-monthly-adesoes-stacked-section'
                 ].forEach(id => {
                     const el = document.getElementById(id);
                     if (el) el.style.display = 'block';
@@ -345,6 +368,8 @@
             if (yearlyContractsChart) yearlyContractsChart.resize();
             if (monthlyContractsChart) monthlyContractsChart.resize();
             if (monthlyAdesoesChart) monthlyAdesoesChart.resize();
+            if (yearlyAdesoesStackedChart) yearlyAdesoesStackedChart.resize();
+            if (monthlyAdesoesStackedChart) monthlyAdesoesStackedChart.resize();
         }, 300);
     });
     
@@ -407,6 +432,7 @@
         updateTicketCharts(allData, selectedUnidades);
         updateContractsCharts(fundosData, selectedUnidades);
         updateMonthlyAdesoesChart(allData, selectedUnidades);
+        updateAdesoesDrillDownCharts(allData, selectedUnidades);
         
         const startDateString = document.getElementById('start-date').value;
         const startParts = startDateString.split('-');
@@ -849,13 +875,11 @@
         document.getElementById('end-date').value = fimMes.toISOString().split('T')[0]; 
     }
 
-    // NOVA FUNÇÃO PARA O GRÁFICO DE ADESÕES
     function updateMonthlyAdesoesChart(historicalData, selectedUnidades) {
         const selectorContainer = document.getElementById('adesoes-chart-selector');
         const unitsToConsider = selectedUnidades.length > 0 ? selectedUnidades : [...new Set(allData.map(d => d.nm_unidade))];
         const filteredHistoricalData = historicalData.filter(d => unitsToConsider.includes(d.nm_unidade));
 
-        // Agrupa o NÚMERO de adesões por ano e mês
         const adesoesByYearMonth = {};
         filteredHistoricalData.forEach(d => {
             const year = d.dt_cadastro_integrante.getFullYear();
@@ -863,18 +887,16 @@
             if (!adesoesByYearMonth[year]) {
                 adesoesByYearMonth[year] = Array(12).fill(0);
             }
-            adesoesByYearMonth[year][month]++; // Incrementa o contador em vez de somar valor
+            adesoesByYearMonth[year][month]++; 
         });
 
         const uniqueYears = Object.keys(adesoesByYearMonth).sort();
 
-        // Cria os botões de ano (lógica reaproveitada do seu outro gráfico)
         if (selectorContainer.children.length === 0) {
             uniqueYears.forEach(year => {
                 const button = document.createElement('button');
                 button.dataset.year = year;
                 button.textContent = year;
-                // Deixa os dois últimos anos ativos por padrão
                 if (year >= uniqueYears[uniqueYears.length - 2]) {
                     button.classList.add('active');
                 }
@@ -884,7 +906,7 @@
             selectorContainer.querySelectorAll('button').forEach(button => {
                 button.addEventListener('click', () => {
                     button.classList.toggle('active');
-                    updateDashboard(); // Redesenha tudo ao clicar
+                    updateDashboard();
                 });
             });
         }
@@ -892,7 +914,6 @@
         const activeYears = Array.from(selectorContainer.querySelectorAll('button.active')).map(btn => parseInt(btn.dataset.year));
         const colors = ['#6c757d', '#28a745', '#dc3545', '#ffc107', '#007bff', '#17a2b8', '#fd7e14'];
 
-        // Monta os datasets para o gráfico de barras
         const datasets = [];
         uniqueYears.forEach((year, index) => {
             const monthlyData = adesoesByYearMonth[year] || Array(12).fill(0);
@@ -900,7 +921,7 @@
                 label: `Adesões ${year}`,
                 data: monthlyData,
                 backgroundColor: colors[index % colors.length],
-                hidden: !activeYears.includes(parseInt(year)) // Esconde/mostra a barra do ano
+                hidden: !activeYears.includes(parseInt(year))
             });
         });
 
@@ -908,7 +929,7 @@
 
         if (monthlyAdesoesChart) monthlyAdesoesChart.destroy();
         monthlyAdesoesChart = new Chart(document.getElementById('monthlyAdesoesChart'), {
-            type: 'bar', // Gráfico de barras
+            type: 'bar',
             data: {
                 labels: monthLabels,
                 datasets: datasets
@@ -934,7 +955,7 @@
                             }
                         }
                     },
-                    datalabels: { // Configuração dos rótulos de dados
+                    datalabels: {
                         display: true,
                         align: 'end',
                         anchor: 'end',
@@ -943,7 +964,7 @@
                             size: 9,
                             weight: 'bold'
                         },
-                        formatter: (value) => value > 0 ? value : '' // Só mostra o rótulo se for maior que 0
+                        formatter: (value) => value > 0 ? value : ''
                     }
                 },
                 scales: {
@@ -958,6 +979,107 @@
                            }
                         }
                     }
+                }
+            }
+        });
+    }
+
+    function updateAdesoesDrillDownCharts(historicalData, selectedUnidades) {
+        const unitsToConsider = selectedUnidades.length > 0 ? selectedUnidades : [...new Set(allData.map(d => d.nm_unidade))];
+        const filteredHistoricalData = historicalData.filter(d => unitsToConsider.includes(d.nm_unidade));
+        const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+        const adesoesByYear = {};
+        filteredHistoricalData.forEach(d => {
+            const year = d.dt_cadastro_integrante.getFullYear();
+            if (!adesoesByYear[year]) {
+                adesoesByYear[year] = { vendas: 0, posVendas: 0 };
+            }
+            if (normalizeText(d.venda_posvenda) === 'VENDA') {
+                adesoesByYear[year].vendas++; // Conta +1
+            } else if (normalizeText(d.venda_posvenda) === 'POS VENDA') {
+                adesoesByYear[year].posVendas++; // Conta +1
+            }
+        });
+
+        const years = Object.keys(adesoesByYear).sort();
+        const adesoesVendasAnual = years.map(year => adesoesByYear[year].vendas);
+        const adesoesPosVendasAnual = years.map(year => adesoesByYear[year].posVendas);
+
+        if (yearlyAdesoesStackedChart) yearlyAdesoesStackedChart.destroy();
+        yearlyAdesoesStackedChart = new Chart(document.getElementById('yearlyAdesoesStackedChart'), {
+            type: 'bar',
+            data: {
+                labels: years,
+                datasets: [
+                    { label: 'Pós Venda', data: adesoesPosVendasAnual, backgroundColor: '#007bff' },
+                    { label: 'Venda', data: adesoesVendasAnual, backgroundColor: '#6c757d' }
+                ]
+            },
+            options: {
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                scales: { x: { stacked: true }, y: { stacked: true } },
+                plugins: {
+                    datalabels: { color: 'white', font: { weight: 'bold' }, formatter: (value) => value > 0 ? value : '' },
+                    tooltip: { callbacks: {
+                        label: function(context) { let label = context.dataset.label || ''; if (label) { label += ': '; } if (context.parsed.x !== null) { label += context.parsed.x; } return label; },
+                        footer: function(tooltipItems) { let sum = 0; tooltipItems.forEach(item => { sum += item.parsed.x; }); return 'Total: ' + sum; }
+                    }}
+                },
+                onClick: (event, elements) => {
+                    if (elements.length > 0) {
+                        const clickedYear = years[elements[0].index];
+                        drawMonthlyAdesoesDetailChart(filteredHistoricalData, clickedYear);
+                    }
+                }
+            }
+        });
+
+        if (years.length > 0) {
+            drawMonthlyAdesoesDetailChart(filteredHistoricalData, years[years.length - 1]);
+        }
+    }
+
+    function drawMonthlyAdesoesDetailChart(data, year) {
+        document.getElementById('monthly-adesoes-stacked-title').textContent = `Adesões por Tipo (Mensal ${year})`;
+        const adesoesByMonth = Array(12).fill(0).map(() => ({ vendas: 0, posVendas: 0 }));
+        const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        
+        data.forEach(d => {
+            if (d.dt_cadastro_integrante.getFullYear() === parseInt(year)) {
+                const month = d.dt_cadastro_integrante.getMonth();
+                if (normalizeText(d.venda_posvenda) === 'VENDA') {
+                    adesoesByMonth[month].vendas++;
+                } else if (normalizeText(d.venda_posvenda) === 'POS VENDA') {
+                    adesoesByMonth[month].posVendas++;
+                }
+            }
+        });
+
+        const adesoesVendasMensal = adesoesByMonth.map(m => m.vendas);
+        const adesoesPosVendasMensal = adesoesByMonth.map(m => m.posVendas);
+        const monthLabels = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+
+        if (monthlyAdesoesStackedChart) monthlyAdesoesStackedChart.destroy();
+        monthlyAdesoesStackedChart = new Chart(document.getElementById('monthlyAdesoesStackedChart'), {
+            type: 'bar',
+            data: {
+                labels: monthLabels,
+                datasets: [
+                    { label: 'Pós Venda', data: adesoesPosVendasMensal, backgroundColor: '#007bff' },
+                    { label: 'Venda', data: adesoesVendasMensal, backgroundColor: '#6c757d' }
+                ]
+            },
+            options: {
+                maintainAspectRatio: false,
+                scales: { x: { stacked: true }, y: { stacked: true } },
+                plugins: {
+                    datalabels: { color: 'white', font: { weight: 'bold' }, formatter: (value) => value > 0 ? value : '' },
+                    tooltip: { callbacks: {
+                        label: function(context) { let label = context.dataset.label || ''; if (label) { label += ': '; } if (context.parsed.y !== null) { label += context.parsed.y; } return label; },
+                        footer: function(tooltipItems) { let sum = 0; tooltipItems.forEach(item => { sum += item.parsed.y; }); return 'Total: ' + sum; }
+                    }}
                 }
             }
         });
