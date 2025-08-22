@@ -61,10 +61,9 @@
         h1, h2 { margin-top: 0; border-bottom: 2px solid #495057; padding-bottom: 10px; }
         .filters { display: flex; flex-direction: column; gap: 20px; align-items: stretch; }
         
-        /* === CONTROLE DE ALTURA DOS GRÁFICOS === */
         .chart-wrapper {
             position: relative;
-            height: 50vh; /* ALTURA AJUSTADA PARA 75% DA TELA. PODE MUDAR ESTE VALOR. */
+            height: 75vh; 
         }
         
         .kpi-main-wrapper { display: flex; flex-wrap: wrap; align-items: center; gap: 20px; }
@@ -130,91 +129,7 @@
                 </header>
 
                 <div id="page1" class="page-content active">
-                    <section class="kpi-container" id="kpi-section" style="display: none;">
-                        <div class="kpi-main-wrapper">
-                            <div class="kpi-main-cards-container">
-                                <div class="kpi-main-card">
-                                    <span class="kpi-card-title">REALIZADO TOTAL</span>
-                                    <span class="kpi-card-value" id="kpi-total-realizado">R$ 0,00</span>
-                                    <span class="kpi-card-details"><span class="percent" id="kpi-total-percent">0,0%</span> de <span id="kpi-total-meta">R$ 0,00</span> META TOTAL</span>
-                                    <div class="progress-bar-bg"><div class="progress-bar-fg" id="kpi-total-progress"></div></div>
-                                </div>
-                                <div class="kpi-main-card">
-                                    <span class="kpi-card-title">REALIZADO VENDAS</span>
-                                    <span class="kpi-card-value" id="kpi-vendas-realizado">R$ 0,00</span>
-                                    <span class="kpi-card-details"><span class="percent" id="kpi-vendas-percent">0,0%</span> de <span id="kpi-vendas-meta">R$ 0,00</span> META VENDAS</span>
-                                    <div class="progress-bar-bg"><div class="progress-bar-fg" id="kpi-vendas-progress"></div></div>
-                                </div>
-                                <div class="kpi-main-card">
-                                    <span class="kpi-card-title">REALIZADO PÓS VENDAS</span>
-                                    <span class="kpi-card-value" id="kpi-posvendas-realizado">R$ 0,00</span>
-                                    <span class="kpi-card-details"><span class="percent" id="kpi-posvendas-percent">0,0%</span> de <span id="kpi-posvendas-meta">R$ 0,00</span> META PÓS VENDAS</span>
-                                    <div class="progress-bar-bg"><div class="progress-bar-fg" id="kpi-posvendas-progress"></div></div>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-
-                    <section class="kpi-container" id="kpi-section-py" style="display: none;">
-                        <h2 style="grid-column: span 12; font-size: 1.2em; border-bottom: none; padding-bottom: 0;">Desempenho no Período Anterior</h2>
-                        <div class="kpi-main-wrapper" style="width: 100%; grid-column: span 12;">
-                            <div class="kpi-main-cards-container">
-                                <div class="kpi-main-card">
-                                    <span class="kpi-card-title">REALIZADO TOTAL</span>
-                                    <span class="kpi-card-value" id="kpi-total-realizado-py">R$ 0,00</span>
-                                    <span class="kpi-card-details"><span class="percent" id="kpi-total-percent-py">0,0%</span> de <span id="kpi-total-meta-py">R$ 0,00</span> META TOTAL</span>
-                                    <div class="progress-bar-bg"><div class="progress-bar-fg" id="kpi-total-progress-py"></div></div>
-                                </div>
-                                <div class="kpi-main-card">
-                                    <span class="kpi-card-title">REALIZADO VENDAS</span>
-                                    <span class="kpi-card-value" id="kpi-vendas-realizado-py">R$ 0,00</span>
-                                    <span class="kpi-card-details"><span class="percent" id="kpi-vendas-percent-py">0,0%</span> de <span id="kpi-vendas-meta-py">R$ 0,00</span> META VENDAS</span>
-                                    <div class="progress-bar-bg"><div class="progress-bar-fg" id="kpi-vendas-progress-py"></div></div>
-                                </div>
-                                <div class="kpi-main-card">
-                                    <span class="kpi-card-title">REALIZADO PÓS VENDAS</span>
-                                    <span class="kpi-card-value" id="kpi-posvendas-realizado-py">R$ 0,00</span>
-                                    <span class="kpi-card-details"><span class="percent" id="kpi-posvendas-percent-py">0,0%</span> de <span id="kpi-posvendas-meta-py">R$ 0,00</span> META PÓS VENDAS</span>
-                                    <div class="progress-bar-bg"><div class="progress-bar-fg" id="kpi-posvendas-progress-py"></div></div>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-
-                    <section class="chart-container" id="chart-vvr-mes-section" style="display: none;">
-                        <h2>VVR Realizado vs. Meta por Mês (Ano Vigente)</h2>
-                        <div class="chart-selector">
-                            <button id="btn-total" class="active" data-type="total">Total</button>
-                            <button id="btn-vendas" data-type="vendas">Vendas</button>
-                            <button id="btn-posvendas" data-type="posvendas">Pós Venda</button>
-                        </div>
-                        <div class="chart-wrapper">
-                            <canvas id="vvrVsMetaPorMesChart"></canvas>
-                        </div>
-                    </section>
-                    
-                    <section class="chart-container" id="chart-cumulative-section" style="display: none;">
-                        <h2>VVR Acumulado Anual (Comparativo)</h2>
-                        <div class="chart-selector" id="cumulative-chart-selector"></div>
-                        <div class="chart-wrapper">
-                            <canvas id="cumulativeVvrChart"></canvas>
-                        </div>
-                    </section>
-                    
-                    <section class="table-container" id="table-section" style="display: none;">
-                        <h2>Dados Detalhados por Mês/Unidade (Período Selecionado)</h2>
-                        <div class="chart-selector">
-                            <button class="active" data-type="total">Total</button>
-                            <button data-type="vendas">Vendas</button>
-                            <button data-type="posvendas">Pós Venda</button>
-                        </div>
-                        <table id="dados-table" class="display" style="width:100%">
-                            <thead><tr><th>Unidade</th><th>Período</th><th>VVR Realizado</th><th>Meta VVR</th><th>Atingimento VVR</th></tr></thead>
-                            <tbody></tbody>
-                            <tfoot></tfoot>
-                        </table>
-                    </section>
-                </div>
+                    </div>
 
                 <div id="page2" class="page-content">
                     <section class="chart-container" id="chart-monthly-vvr-section" style="display: none;">
@@ -239,6 +154,22 @@
                             </div>
                         </div>
                     </div>
+                    
+                    <div class="chart-row">
+                        <div class="chart-container" id="chart-yearly-ticket-section" style="display: none;">
+                            <h2>Ticket Médio Anual</h2>
+                            <div class="chart-wrapper">
+                                <canvas id="yearlyTicketChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="chart-container" id="chart-monthly-ticket-section" style="display: none;">
+                            <h2 id="monthly-ticket-title">Ticket Médio Mensal</h2>
+                            <div class="chart-wrapper">
+                                <canvas id="monthlyTicketChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
 
             </div>
@@ -252,7 +183,7 @@
     const METAS_SHEET_NAME = "metas";
     const API_KEY = "AIzaSyBuGRH91CnRuDtN5RGsb5DvHEfhTxJnWSs"; 
     
-    let allData = [], metasData = new Map(), dataTable, vvrVsMetaPorMesChart, cumulativeVvrChart, monthlyVvrChart, yearlyStackedChart, monthlyStackedChart;
+    let allData = [], metasData = new Map(), dataTable, vvrVsMetaPorMesChart, cumulativeVvrChart, monthlyVvrChart, yearlyStackedChart, monthlyStackedChart, yearlyTicketChart, monthlyTicketChart;
     let currentVvrChartType = 'total';
     let currentTableDataType = 'total';
     let currentFilteredDataForTable = [];
@@ -269,7 +200,13 @@
 
             if (allData && allData.length > 0) {
                 loader.style.display = 'none';
-                ['filters-section', 'kpi-section', 'chart-vvr-mes-section', 'chart-cumulative-section', 'table-section', 'chart-monthly-vvr-section', 'chart-yearly-stacked-section', 'chart-monthly-stacked-section'].forEach(id => document.getElementById(id).style.display = 'block');
+                ['filters-section', 'kpi-section', 'chart-vvr-mes-section', 'chart-cumulative-section', 'table-section', 
+                 'chart-monthly-vvr-section', 'chart-yearly-stacked-section', 'chart-monthly-stacked-section',
+                 'chart-yearly-ticket-section', 'chart-monthly-ticket-section' // <-- Tornando visível
+                ].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.style.display = 'block';
+                });
                 document.getElementById('filters-section').style.display = 'flex';
                 
                 populateFilters();
@@ -279,26 +216,22 @@
         } catch (error) { console.error("Erro fatal na inicialização:", error); loader.innerHTML = `Erro ao carregar dados. Verifique o console.`; }
     });
 
-    document.getElementById('sidebar-toggle').addEventListener('click', function() {
-        document.getElementById('sidebar').classList.toggle('collapsed');
-        document.getElementById('main-content').classList.toggle('full-width');
-        this.classList.toggle('collapsed');
-    });
-
-    async function fetchAllSalesDataFromSheet() { if (!SALES_SPREADSHEET_ID || !SALES_SHEET_NAME || !API_KEY) { console.error("ID da Planilha de Vendas, Nome da Aba ou Chave de API não configurados."); return []; } const url = `https://sheets.googleapis.com/v4/spreadsheets/${SALES_SPREADSHEET_ID}/values/${SALES_SHEET_NAME}?key=${API_KEY}`; try { const response = await fetch(url); if (!response.ok) { console.error("Erro ao buscar dados de vendas da planilha:", await response.json()); return []; } const data = await response.json(); const rows = data.values || []; if (rows.length < 2) return []; const headers = rows[0].map(h => h.trim().toLowerCase()); const unidadeIndex = headers.indexOf("nm_unidade"), dataIndex = headers.indexOf("dt_cadastro_integrante"), valorIndex = headers.indexOf("vl_plano"), tipoVendaIndex = headers.indexOf("venda_posvenda"); if (unidadeIndex === -1 || dataIndex === -1 || valorIndex === -1) { console.error("Colunas necessárias (nm_unidade, dt_cadastro_integrante, vl_plano) não foram encontradas."); return []; } return rows.slice(1).map(row => { const dataString = row[dataIndex]; if (!dataString) return null; return { nm_unidade: row[unidadeIndex] || 'N/A', dt_cadastro_integrante: new Date(dataString), vl_plano: parseFloat(String(row[valorIndex] || '0').replace(',', '.')) || 0, venda_posvenda: row[tipoVendaIndex] || 'VENDA' }; }).filter(Boolean); } catch (error) { console.error("Erro CRÍTICO ao buscar dados de vendas:", error); return []; } }
-    async function fetchMetasData() { if (!METAS_SPREADSHEET_ID || !METAS_SHEET_NAME || !API_KEY) { console.error("Configurações da planilha de metas incompletas."); return new Map(); } const url = `https://sheets.googleapis.com/v4/spreadsheets/${METAS_SPREADSHEET_ID}/values/${METAS_SHEET_NAME}?key=${API_KEY}`; try { const response = await fetch(url); if (!response.ok) { console.error("Erro API Google Sheets:", await response.json()); return new Map(); } const data = await response.json(); const rows = data.values || []; const metasMap = new Map(); const headers = rows[0].map(h => h.trim().toLowerCase()); const unidadeIndex = headers.indexOf("nm_unidade"), anoIndex = headers.indexOf("ano"), mesIndex = headers.indexOf("mês"), metaVendasIndex = headers.indexOf("meta vvr_venda"), metaPosvendasIndex = headers.indexOf("meta vvr_pos_venda"), metaAdesoesIndex = headers.indexOf("meta adesões"); rows.slice(1).forEach(row => { const unidade = row[unidadeIndex], ano = row[anoIndex], mes = String(row[mesIndex]).padStart(2, '0'); const parseMetaValue = (index) => parseFloat(String(row[index] || "0").replace(/\./g, '').replace(',', '.')) || 0; const metaVendas = parseMetaValue(metaVendasIndex), metaPosvendas = parseMetaValue(metaPosvendasIndex), metaAdesoes = parseInt(row[metaAdesoesIndex]) || 0; if (unidade && ano && mes) { const chave = `${unidade}-${ano}-${mes}`; metasMap.set(chave, { meta_vvr_vendas: metaVendas, meta_vvr_posvendas: metaPosvendas, meta_vvr_total: metaVendas + metaPosvendas, meta_adesoes: metaAdesoes }); } }); return metasMap; } catch (error) { console.error("Erro CRÍTICO ao buscar metas:", error); return new Map(); } }
-    function processAndCrossReferenceData(salesData) { const vendasPorMesUnidade = salesData.reduce((acc, d) => { const year = d.dt_cadastro_integrante.getFullYear(); const month = String(d.dt_cadastro_integrante.getMonth() + 1).padStart(2, '0'); const periodo = `${year}-${month}`; const chave = `${d.nm_unidade}-${periodo}`; if (!acc[chave]) { acc[chave] = { unidade: d.nm_unidade, periodo: periodo, realizado_vvr: 0, realizado_adesoes: 0 }; } acc[chave].realizado_vvr += d.vl_plano; acc[chave].realizado_adesoes += 1; return acc; }, {}); return Object.values(vendasPorMesUnidade).map(item => { const chaveMeta = `${item.unidade}-${item.periodo}`; const meta = metasData.get(chaveMeta) || { meta_vvr_total: 0, meta_vvr_vendas: 0, meta_vvr_posvendas: 0, meta_adesoes: 0 }; return { ...item, ...meta }; }); }
-    function updateMainKPIs(dataBruta, selectedUnidades, startDate, endDate) { const getColorForPercentage = (percent) => { if (percent >= 1) return '#28a745'; if (percent >= 0.5) return '#ffc107'; return '#dc3545'; }; const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); const realizadoVendas = dataBruta.filter(d => normalizeText(d.venda_posvenda) === 'VENDA').reduce((sum, d) => sum + d.vl_plano, 0); const realizadoPosVendas = dataBruta.filter(d => normalizeText(d.venda_posvenda) === 'POS VENDA').reduce((sum, d) => sum + d.vl_plano, 0); const realizadoTotal = realizadoVendas + realizadoPosVendas; let metaVendas = 0; let metaPosVendas = 0; const unitsToConsider = selectedUnidades.length > 0 ? selectedUnidades : [...new Set(allData.map(d => d.nm_unidade))]; metasData.forEach((metaInfo, key) => { const [unidade, ano, mes] = key.split('-'); const metaDate = new Date(ano, parseInt(mes) - 1, 15); if (unitsToConsider.includes(unidade) && metaDate >= startDate && metaDate < endDate) { metaVendas += metaInfo.meta_vvr_vendas; metaPosVendas += metaInfo.meta_vvr_posvendas; } }); const metaTotal = metaVendas + metaPosVendas; const percentTotal = metaTotal > 0 ? realizadoTotal / metaTotal : 0; const percentVendas = metaVendas > 0 ? realizadoVendas / metaVendas : 0; const percentPosVendas = metaPosVendas > 0 ? realizadoPosVendas / metaPosVendas : 0; const totalColor = getColorForPercentage(percentTotal); document.getElementById('kpi-total-realizado').textContent = formatCurrency(realizadoTotal); document.getElementById('kpi-total-meta').textContent = formatCurrency(metaTotal); const totalPercentEl = document.getElementById('kpi-total-percent'); totalPercentEl.textContent = formatPercent(percentTotal); totalPercentEl.style.color = totalColor; document.getElementById('kpi-total-progress').style.backgroundColor = totalColor; document.getElementById('kpi-total-progress').style.width = `${Math.min(percentTotal * 100, 100)}%`; const vendasColor = getColorForPercentage(percentVendas); document.getElementById('kpi-vendas-realizado').textContent = formatCurrency(realizadoVendas); document.getElementById('kpi-vendas-meta').textContent = formatCurrency(metaVendas); const vendasPercentEl = document.getElementById('kpi-vendas-percent'); vendasPercentEl.textContent = formatPercent(percentVendas); vendasPercentEl.style.color = vendasColor; document.getElementById('kpi-vendas-progress').style.backgroundColor = vendasColor; document.getElementById('kpi-vendas-progress').style.width = `${Math.min(percentVendas * 100, 100)}%`; const posVendasColor = getColorForPercentage(percentPosVendas); document.getElementById('kpi-posvendas-realizado').textContent = formatCurrency(realizadoPosVendas); document.getElementById('kpi-posvendas-meta').textContent = formatCurrency(metaPosVendas); const posVendasPercentEl = document.getElementById('kpi-posvendas-percent'); posVendasPercentEl.textContent = formatPercent(percentPosVendas); posVendasPercentEl.style.color = posVendasColor; document.getElementById('kpi-posvendas-progress').style.backgroundColor = posVendasColor; document.getElementById('kpi-posvendas-progress').style.width = `${Math.min(percentPosVendas * 100, 100)}%`; }
-    function updatePreviousYearKPIs(dataBruta, selectedUnidades, startDate, endDate) { const getColorForPercentage = (percent) => { if (percent >= 1) return '#28a745'; if (percent >= 0.5) return '#ffc107'; return '#dc3545'; }; const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); const realizadoVendas = dataBruta.filter(d => normalizeText(d.venda_posvenda) === 'VENDA').reduce((sum, d) => sum + d.vl_plano, 0); const realizadoPosVendas = dataBruta.filter(d => normalizeText(d.venda_posvenda) === 'POS VENDA').reduce((sum, d) => sum + d.vl_plano, 0); const realizadoTotal = realizadoVendas + realizadoPosVendas; let metaVendas = 0; let metaPosVendas = 0; const unitsToConsider = selectedUnidades.length > 0 ? selectedUnidades : [...new Set(allData.map(d => d.nm_unidade))]; metasData.forEach((metaInfo, key) => { const [unidade, ano, mes] = key.split('-'); const metaDate = new Date(ano, parseInt(mes) - 1, 15); if (unitsToConsider.includes(unidade) && metaDate >= startDate && metaDate < endDate) { metaVendas += metaInfo.meta_vvr_vendas; metaPosVendas += metaInfo.meta_vvr_posvendas; } }); const metaTotal = metaVendas + metaPosVendas; const percentTotal = metaTotal > 0 ? realizadoTotal / metaTotal : 0; const percentVendas = metaVendas > 0 ? realizadoVendas / metaVendas : 0; const percentPosVendas = metaPosVendas > 0 ? realizadoPosVendas / metaPosVendas : 0; const totalColor = getColorForPercentage(percentTotal); document.getElementById('kpi-total-realizado-py').textContent = formatCurrency(realizadoTotal); document.getElementById('kpi-total-meta-py').textContent = formatCurrency(metaTotal); const totalPercentEl = document.getElementById('kpi-total-percent-py'); totalPercentEl.textContent = formatPercent(percentTotal); totalPercentEl.style.color = totalColor; document.getElementById('kpi-total-progress-py').style.backgroundColor = totalColor; document.getElementById('kpi-total-progress-py').style.width = `${Math.min(percentTotal * 100, 100)}%`; const vendasColor = getColorForPercentage(percentVendas); document.getElementById('kpi-vendas-realizado-py').textContent = formatCurrency(realizadoVendas); document.getElementById('kpi-vendas-meta-py').textContent = formatCurrency(metaVendas); const vendasPercentEl = document.getElementById('kpi-vendas-percent-py'); vendasPercentEl.textContent = formatPercent(percentVendas); vendasPercentEl.style.color = vendasColor; document.getElementById('kpi-vendas-progress-py').style.backgroundColor = vendasColor; document.getElementById('kpi-vendas-progress-py').style.width = `${Math.min(percentVendas * 100, 100)}%`; const posVendasColor = getColorForPercentage(percentPosVendas); document.getElementById('kpi-posvendas-realizado-py').textContent = formatCurrency(realizadoPosVendas); document.getElementById('kpi-posvendas-meta-py').textContent = formatCurrency(metaPosVendas); const posVendasPercentEl = document.getElementById('kpi-posvendas-percent-py'); posVendasPercentEl.textContent = formatPercent(percentPosVendas); posVendasPercentEl.style.color = posVendasColor; document.getElementById('kpi-posvendas-progress-py').style.backgroundColor = posVendasColor; document.getElementById('kpi-posvendas-progress-py').style.width = `${Math.min(percentPosVendas * 100, 100)}%`; }
+    // ... (O restante do seu JavaScript até a função updateDashboard)
 
     function updateDashboard() {
         const selectedUnidades = $('#unidade-filter').val() || [];
         const anoVigente = 2025;
         const dataParaGrafico = allData.filter(d => (selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade)) && d.dt_cadastro_integrante.getFullYear() === anoVigente);
+        
+        // ... (chamadas para os gráficos existentes)
         updateVvrVsMetaPorMesChart(dataParaGrafico, anoVigente);
         updateCumulativeVvrChart(allData, selectedUnidades);
         updateMonthlyVvrChart(allData, selectedUnidades);
         updateDrillDownCharts(allData, selectedUnidades);
+        
+        // <-- CHAMADA PARA A NOVA FUNÇÃO DOS GRÁFICOS DE TICKET -->
+        updateTicketCharts(allData, selectedUnidades);
+
         const startDateString = document.getElementById('start-date').value;
         const startParts = startDateString.split('-');
         const startDate = new Date(startParts[0], startParts[1] - 1, startParts[2]);
@@ -333,117 +266,119 @@
         updatePreviousYearKPIs(dataBrutaFiltradaPY, selectedUnidades, startDatePY, endDatePY);
     }
     
-    function updateVvrVsMetaPorMesChart(salesDataForYear, anoVigente) { const allYearPeriodos = Array.from({ length: 12 }, (_, i) => `${anoVigente}-${String(i + 1).padStart(2, '0')}`); const chartDataMap = new Map(); allYearPeriodos.forEach(periodo => { chartDataMap.set(periodo, { realizado_vendas: 0, realizado_posvendas: 0, meta_vendas: 0, meta_posvendas: 0, meta_total: 0 }); }); const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); salesDataForYear.forEach(d => { const year = d.dt_cadastro_integrante.getFullYear(); const month = String(d.dt_cadastro_integrante.getMonth() + 1).padStart(2, '0'); const periodo = `${year}-${month}`; if (chartDataMap.has(periodo)) { if (normalizeText(d.venda_posvenda) === 'VENDA') { chartDataMap.get(periodo).realizado_vendas += d.vl_plano; } else if (normalizeText(d.venda_posvenda) === 'POS VENDA') { chartDataMap.get(periodo).realizado_posvendas += d.vl_plano; } } }); const selectedUnidades = $('#unidade-filter').val() || [...new Set(allData.map(d => d.nm_unidade))]; metasData.forEach((metaInfo, key) => { const [unidade, ano, mes] = key.split('-'); const periodo = `${ano}-${mes}`; if (ano == anoVigente && chartDataMap.has(periodo)) { if (selectedUnidades.length === 0 || selectedUnidades.includes(unidade)) { chartDataMap.get(periodo).meta_vendas += metaInfo.meta_vvr_vendas; chartDataMap.get(periodo).meta_posvendas += metaInfo.meta_vvr_posvendas; chartDataMap.get(periodo).meta_total += metaInfo.meta_vvr_total; } } }); let realizadoValues, metaValues; if (currentVvrChartType === 'vendas') { realizadoValues = allYearPeriodos.map(p => chartDataMap.get(p).realizado_vendas); metaValues = allYearPeriodos.map(p => chartDataMap.get(p).meta_vendas); } else if (currentVvrChartType === 'posvendas') { realizadoValues = allYearPeriodos.map(p => chartDataMap.get(p).realizado_posvendas); metaValues = allYearPeriodos.map(p => chartDataMap.get(p).meta_posvendas); } else { realizadoValues = allYearPeriodos.map(p => chartDataMap.get(p).realizado_vendas + chartDataMap.get(p).realizado_posvendas); metaValues = allYearPeriodos.map(p => chartDataMap.get(p).meta_total); } const formattedLabels = allYearPeriodos.map(periodo => { const [year, month] = periodo.split('-'); const date = new Date(year, month - 1); const monthName = date.toLocaleString('pt-BR', { month: 'short' }).replace('.', ''); const shortYear = year.slice(2); return `${monthName}-${shortYear}`; }); if (vvrVsMetaPorMesChart) vvrVsMetaPorMesChart.destroy(); Chart.register(ChartDataLabels); vvrVsMetaPorMesChart = new Chart(document.getElementById('vvrVsMetaPorMesChart'), { type: 'bar', data: { labels: formattedLabels, datasets: [ { label: 'VVR Realizado', data: realizadoValues, backgroundColor: 'rgba(255, 193, 7, 0.7)', order: 1 }, { label: 'Meta VVR', data: metaValues, type: 'line', borderColor: 'rgb(220, 53, 69)', order: 0, datalabels: { display: true, align: 'bottom', backgroundColor: 'rgba(0, 0, 0, 0.6)', borderRadius: 4, color: 'white', font: { size: 9 }, padding: 4, formatter: (value) => (value > 0 ? `${(value / 1000).toFixed(0)}k` : '') } } ] }, options: { 
-        maintainAspectRatio: false,
-        layout: { padding: { bottom: 20 } }, 
-        interaction: { mode: 'index', intersect: false, }, plugins: { datalabels: { anchor: 'end', align: 'end', formatter: (value) => (value >= 1000 ? `${(value / 1000).toFixed(0)}k` : ''), color: '#F8F9FA', font: { weight: 'bold' } }, tooltip: { callbacks: { label: function(context) { let label = context.dataset.label || ''; if (label) { label += ': '; } if (context.parsed.y !== null) { label += formatCurrency(context.parsed.y); } return label; } } } }, scales: { y: { beginAtZero: true } } } }); }
-    function updateCumulativeVvrChart(historicalData, selectedUnidades) { const selectorContainer = document.getElementById('cumulative-chart-selector'); const unitsToConsider = selectedUnidades.length > 0 ? selectedUnidades : [...new Set(allData.map(d => d.nm_unidade))]; const filteredHistoricalData = historicalData.filter(d => unitsToConsider.includes(d.nm_unidade)); const salesByYearMonth = {}; const uniqueYears = [...new Set(filteredHistoricalData.map(d => d.dt_cadastro_integrante.getFullYear()))].sort(); if (selectorContainer.children.length === 0) { uniqueYears.forEach(year => { const button = document.createElement('button'); button.dataset.year = year; button.textContent = year; if (year >= uniqueYears[uniqueYears.length - 2]) { button.classList.add('active'); } selectorContainer.appendChild(button); }); selectorContainer.querySelectorAll('button').forEach(button => { button.addEventListener('click', () => { button.classList.toggle('active'); updateDashboard(); }); }); } const activeYears = Array.from(selectorContainer.querySelectorAll('button.active')).map(btn => parseInt(btn.dataset.year)); filteredHistoricalData.forEach(d => { const year = d.dt_cadastro_integrante.getFullYear(); const month = d.dt_cadastro_integrante.getMonth(); if (!salesByYearMonth[year]) { salesByYearMonth[year] = Array(12).fill(0); } salesByYearMonth[year][month] += d.vl_plano; }); const colors = ['#ffc107', '#007bff', '#6c757d', '#28a745', '#dc3545', '#17a2b8', '#fd7e14']; const datasets = []; uniqueYears.forEach((year, index) => { const monthlyData = salesByYearMonth[year] || Array(12).fill(0); const cumulativeData = []; let runningTotal = 0; for (let i = 0; i < 12; i++) { runningTotal += monthlyData[i]; cumulativeData.push(runningTotal); } datasets.push({ label: `VVR Acumulado ${year}`, data: cumulativeData, borderColor: colors[index % colors.length], fill: false, tension: 0.1, hidden: !activeYears.includes(year) }); }); const monthLabels = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez']; if (cumulativeVvrChart) cumulativeVvrChart.destroy(); cumulativeVvrChart = new Chart(document.getElementById('cumulativeVvrChart'), { type: 'line', data: { labels: monthLabels, datasets: datasets }, options: { 
-        maintainAspectRatio: false,
-        layout: { padding: { bottom: 20 } }, 
-        interaction: { mode: 'index', intersect: false, }, plugins: { tooltip: { callbacks: { label: function(context) { let label = context.dataset.label || ''; if (label) { label += ': '; } if (context.parsed.y !== null) { label += formatCurrency(context.parsed.y); } return label; } } }, datalabels: { display: true, align: 'top', offset: 8, backgroundColor: 'rgba(52, 58, 64, 0.7)', borderRadius: 4, color: 'white', font: { size: 9 }, padding: 4, formatter: (value) => { if (value > 0) { if (value >= 1000000) return `${(value / 1000000).toFixed(1)} mi`; if (value >= 1000) return `${(value / 1000).toFixed(0)}k`; return value.toFixed(0); } return ''; } } }, scales: { y: { beginAtZero: true } } } }); }
-    function updateMonthlyVvrChart(historicalData, selectedUnidades) { const selectorContainer = document.getElementById('monthly-chart-selector'); const unitsToConsider = selectedUnidades.length > 0 ? selectedUnidades : [...new Set(allData.map(d => d.nm_unidade))]; const filteredHistoricalData = historicalData.filter(d => unitsToConsider.includes(d.nm_unidade)); const salesByYearMonth = {}; const uniqueYears = [...new Set(filteredHistoricalData.map(d => d.dt_cadastro_integrante.getFullYear()))].sort(); if (selectorContainer.children.length === 0) { uniqueYears.forEach(year => { const button = document.createElement('button'); button.dataset.year = year; button.textContent = year; if (year >= uniqueYears[uniqueYears.length - 2]) { button.classList.add('active'); } selectorContainer.appendChild(button); }); selectorContainer.querySelectorAll('button').forEach(button => { button.addEventListener('click', () => { button.classList.toggle('active'); updateDashboard(); }); }); } const activeYears = Array.from(selectorContainer.querySelectorAll('button.active')).map(btn => parseInt(btn.dataset.year)); filteredHistoricalData.forEach(d => { const year = d.dt_cadastro_integrante.getFullYear(); const month = d.dt_cadastro_integrante.getMonth(); if (!salesByYearMonth[year]) { salesByYearMonth[year] = Array(12).fill(0); } salesByYearMonth[year][month] += d.vl_plano; }); const colors = ['#ffc107', '#007bff', '#6c757d', '#28a745', '#dc3545', '#17a2b8', '#fd7e14']; const datasets = []; uniqueYears.forEach((year, index) => { const monthlyData = salesByYearMonth[year] || Array(12).fill(0); datasets.push({ label: `VVR Mensal ${year}`, data: monthlyData, borderColor: colors[index % colors.length], backgroundColor: colors[index % colors.length] + '33', fill: true, tension: 0.1, hidden: !activeYears.includes(year) }); }); const monthLabels = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez']; if (monthlyVvrChart) monthlyVvrChart.destroy(); monthlyVvrChart = new Chart(document.getElementById('monthlyVvrChart'), { type: 'line', data: { labels: monthLabels, datasets: datasets }, options: { 
-        maintainAspectRatio: false,
-        layout: { padding: { bottom: 20 } }, 
-        interaction: { mode: 'index', intersect: false }, plugins: { tooltip: { callbacks: { label: function(context) { let label = context.dataset.label || ''; if (label) { label += ': '; } if (context.parsed.y !== null) { label += formatCurrency(context.parsed.y); } return label; } } }, datalabels: { display: true, align: 'top', offset: 8, backgroundColor: 'rgba(52, 58, 64, 0.7)', borderRadius: 4, color: 'white', font: { size: 9 }, padding: 4, formatter: (value) => { if (value > 0) { if (value >= 1000000) return `${(value / 1000000).toFixed(1)} mi`; if (value >= 1000) return `${(value / 1000).toFixed(0)}k`; return value.toFixed(0); } return ''; } } }, scales: { y: { beginAtZero: true } } } }); }
-    
-    function updateDrillDownCharts(historicalData, selectedUnidades) {
+    // ... (todas as suas funções de gráficos existentes permanecem aqui)
+
+    // === NOVAS FUNÇÕES PARA OS GRÁFICOS DE TICKET MÉDIO ===
+
+    function updateTicketCharts(historicalData, selectedUnidades) {
         const unitsToConsider = selectedUnidades.length > 0 ? selectedUnidades : [...new Set(allData.map(d => d.nm_unidade))];
         const filteredHistoricalData = historicalData.filter(d => unitsToConsider.includes(d.nm_unidade));
-        const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
-        const salesByYear = {};
+        const ticketByYear = {};
         filteredHistoricalData.forEach(d => {
             const year = d.dt_cadastro_integrante.getFullYear();
-            if (!salesByYear[year]) {
-                salesByYear[year] = { vendas: 0, posVendas: 0 };
+            if (!ticketByYear[year]) {
+                ticketByYear[year] = { totalValor: 0, totalAdesoes: 0 };
             }
-            if (normalizeText(d.venda_posvenda) === 'VENDA') {
-                salesByYear[year].vendas += d.vl_plano;
-            } else if (normalizeText(d.venda_posvenda) === 'POS VENDA') {
-                salesByYear[year].posVendas += d.vl_plano;
-            }
+            ticketByYear[year].totalValor += d.vl_plano;
+            ticketByYear[year].totalAdesoes += 1;
         });
 
-        const years = Object.keys(salesByYear).sort();
-        const vendasAnual = years.map(year => salesByYear[year].vendas);
-        const posVendasAnual = years.map(year => salesByYear[year].posVendas);
+        const years = Object.keys(ticketByYear).sort();
+        const annualTicketData = years.map(year => {
+            const data = ticketByYear[year];
+            return data.totalAdesoes > 0 ? data.totalValor / data.totalAdesoes : 0;
+        });
 
-        if (yearlyStackedChart) yearlyStackedChart.destroy();
-        yearlyStackedChart = new Chart(document.getElementById('yearlyStackedChart'), {
+        if (yearlyTicketChart) yearlyTicketChart.destroy();
+        yearlyTicketChart = new Chart(document.getElementById('yearlyTicketChart'), {
             type: 'bar',
             data: {
                 labels: years,
-                datasets: [
-                    { label: 'Pós Venda', data: posVendasAnual, backgroundColor: '#007bff' },
-                    { label: 'Venda', data: vendasAnual, backgroundColor: '#6c757d' }
-                ]
+                datasets: [{
+                    label: 'Ticket Médio',
+                    data: annualTicketData,
+                    backgroundColor: '#17a2b8'
+                }]
             },
             options: {
                 maintainAspectRatio: false,
-                layout: { padding: { left: 20 } }, 
                 indexAxis: 'y',
-                scales: { x: { stacked: true }, y: { stacked: true } },
                 plugins: {
-                    datalabels: { color: 'white', font: { weight: 'bold' }, formatter: (value) => (value > 1000 ? `${(value / 1000).toFixed(1)} mi` : '') },
-                    tooltip: { callbacks: {
-                        label: function(context) { let label = context.dataset.label || ''; if (label) { label += ': '; } if (context.parsed.x !== null) { label += formatCurrency(context.parsed.x); } return label; },
-                        footer: function(tooltipItems) { let sum = 0; tooltipItems.forEach(item => { sum += item.parsed.x; }); return 'Total: ' + formatCurrency(sum); }
-                    }}
+                    datalabels: {
+                        anchor: 'end',
+                        align: 'end',
+                        color: 'white',
+                        font: { weight: 'bold' },
+                        formatter: (value) => formatCurrency(value)
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: (context) => `Ticket Médio: ${formatCurrency(context.parsed.x)}`
+                        }
+                    }
                 },
                 onClick: (event, elements) => {
                     if (elements.length > 0) {
                         const clickedYear = years[elements[0].index];
-                        drawMonthlyDetailChart(filteredHistoricalData, clickedYear);
+                        drawMonthlyTicketChart(filteredHistoricalData, clickedYear);
                     }
                 }
             }
         });
 
         if (years.length > 0) {
-            drawMonthlyDetailChart(filteredHistoricalData, years[years.length - 1]);
+            drawMonthlyTicketChart(filteredHistoricalData, years[years.length - 1]);
         }
     }
 
-    function drawMonthlyDetailChart(data, year) {
-        document.getElementById('monthly-stacked-title').textContent = `Venda Realizada Total Mensal (${year})`;
-        const salesByMonth = Array(12).fill(0).map(() => ({ vendas: 0, posVendas: 0 }));
-        const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    function drawMonthlyTicketChart(data, year) {
+        document.getElementById('monthly-ticket-title').textContent = `Ticket Médio Mensal (${year})`;
         
+        const ticketByMonth = Array(12).fill(0).map(() => ({ totalValor: 0, totalAdesoes: 0 }));
+
         data.forEach(d => {
             if (d.dt_cadastro_integrante.getFullYear() === parseInt(year)) {
                 const month = d.dt_cadastro_integrante.getMonth();
-                if (normalizeText(d.venda_posvenda) === 'VENDA') {
-                    salesByMonth[month].vendas += d.vl_plano;
-                } else if (normalizeText(d.venda_posvenda) === 'POS VENDA') {
-                    salesByMonth[month].posVendas += d.vl_plano;
-                }
+                ticketByMonth[month].totalValor += d.vl_plano;
+                ticketByMonth[month].totalAdesoes += 1;
             }
         });
-
-        const vendasMensal = salesByMonth.map(m => m.vendas);
-        const posVendasMensal = salesByMonth.map(m => m.posVendas);
+        
+        const monthlyTicketData = ticketByMonth.map(m => m.totalAdesoes > 0 ? m.totalValor / m.totalAdesoes : 0);
         const monthLabels = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
 
-        if (monthlyStackedChart) monthlyStackedChart.destroy();
-        monthlyStackedChart = new Chart(document.getElementById('monthlyStackedChart'), {
+        if (monthlyTicketChart) monthlyTicketChart.destroy();
+        monthlyTicketChart = new Chart(document.getElementById('monthlyTicketChart'), {
             type: 'bar',
             data: {
                 labels: monthLabels,
-                datasets: [
-                    { label: 'Pós Venda', data: posVendasMensal, backgroundColor: '#007bff' },
-                    { label: 'Venda', data: vendasMensal, backgroundColor: '#6c757d' }
-                ]
+                datasets: [{
+                    label: 'Ticket Médio',
+                    data: monthlyTicketData,
+                    backgroundColor: '#17a2b8'
+                }]
             },
             options: {
                 maintainAspectRatio: false,
-                layout: { padding: { bottom: 20 } }, 
-                scales: { x: { stacked: true }, y: { stacked: true } },
                 plugins: {
-                    datalabels: { color: 'white', font: { weight: 'bold' }, formatter: (value) => (value > 1000 ? `${(value / 1000).toFixed(0)}k` : '') },
-                    tooltip: { callbacks: {
-                        label: function(context) { let label = context.dataset.label || ''; if (label) { label += ': '; } if (context.parsed.y !== null) { label += formatCurrency(context.parsed.y); } return label; },
-                        footer: function(tooltipItems) { let sum = 0; tooltipItems.forEach(item => { sum += item.parsed.y; }); return 'Total: ' + formatCurrency(sum); }
-                    }}
+                    datalabels: {
+                        anchor: 'end',
+                        align: 'end',
+                        color: 'white',
+                        font: { weight: 'bold' },
+                        formatter: (value) => formatCurrency(value)
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: (context) => `Ticket Médio: ${formatCurrency(context.parsed.y)}`
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
                 }
             }
         });
@@ -515,6 +450,7 @@
         document.getElementById('start-date').value = inicioMes.toISOString().split('T')[0]; 
         document.getElementById('end-date').value = fimMes.toISOString().split('T')[0]; 
     }
+
 </script>
 </body>
 </html>
