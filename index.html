@@ -67,9 +67,29 @@
         .dt-button { background-color: #495057 !important; color: #F8F9FA !important; border: 1px solid #ADB5BD !important; border-radius: 6px !important; padding: 5px 15px !important; margin-bottom: 15px !important; }
         .dt-button:hover { background-color: #ADB5BD !important; color: #212529 !important; }
 
+        /* === CSS DO SELETOR ATUALIZADO COM EFEITO HOVER === */
         .chart-selector { display: flex; gap: 10px; margin-bottom: 20px; }
-        .chart-selector button { background-color: #495057; color: #F8F9FA; border: 1px solid #ADB5BD; border-radius: 6px; padding: 5px 15px; cursor: pointer; transition: all 0.2s ease-in-out; }
-        .chart-selector button.active { background-color: #FFC107; color: #212529; border-color: #FFC107; font-weight: bold; }
+        .chart-selector button {
+            background-color: #495057;
+            color: #F8F9FA;
+            border: 1px solid #ADB5BD;
+            border-radius: 6px;
+            padding: 5px 15px;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+        }
+        /* Adiciona o efeito de destaque ao passar o rato, similar ao botão de exportar */
+        .chart-selector button:not(.active):hover {
+            background-color: #6c757d; /* Um cinzento um pouco mais claro */
+            border-color: #dee2e6;
+        }
+        .chart-selector button.active {
+            background-color: #FFC107;
+            color: #212529;
+            border-color: #FFC107;
+            font-weight: bold;
+        }
+        /* === FIM DA ATUALIZAÇÃO === */
     </style>
 </head>
 <body>
