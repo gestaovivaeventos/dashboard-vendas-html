@@ -106,13 +106,11 @@
 <body>
     <div class="dashboard-wrapper">
         <button id="sidebar-toggle">&#9776;</button>
-
         <div id="sidebar">
             <div class="page-navigation">
                 <button id="btn-page1" class="active" data-page="page1">Metas e Resultados</button>
                 <button id="btn-page2" data-page="page2">Indicadores Secundários</button>
             </div>
-
             <section id="loader" class="filters"><div class="loader">Carregando dados...</div></section>
             <section class="filters" id="filters-section" style="display: none;">
                 <div class="filter-item filter-item-unidades"><label for="unidade-filter">Filtrar por Unidade(s)</label><select id="unidade-filter" multiple="multiple"></select></div>
@@ -120,14 +118,12 @@
                 <div class="filter-item"><label for="end-date">Data de Fim</label><input type="date" id="end-date"></div>
             </section>
         </div>
-
         <div id="main-content">
             <div class="container">
                 <header class="header">
                     <h1>Dashboard de Vendas e Metas</h1>
                     <img id="company-logo" src="Rockets2.png" alt="Logo da Empresa">
                 </header>
-
                 <div id="page1" class="page-content active">
                     <section class="kpi-container" id="kpi-section" style="display: none;">
                         <div class="kpi-main-wrapper">
@@ -153,7 +149,6 @@
                             </div>
                         </div>
                     </section>
-
                     <section class="kpi-container" id="kpi-section-py" style="display: none;">
                         <h2 style="grid-column: span 12; font-size: 1.2em; border-bottom: none; padding-bottom: 0;">Desempenho no Período Anterior</h2>
                         <div class="kpi-main-wrapper" style="width: 100%; grid-column: span 12;">
@@ -179,7 +174,6 @@
                             </div>
                         </div>
                     </section>
-
                     <section class="chart-container" id="chart-vvr-mes-section" style="display: none;">
                         <h2>VVR Realizado vs. Meta por Mês (Ano Vigente)</h2>
                         <div class="chart-selector">
@@ -191,7 +185,6 @@
                             <canvas id="vvrVsMetaPorMesChart"></canvas>
                         </div>
                     </section>
-                    
                     <section class="chart-container" id="chart-cumulative-section" style="display: none;">
                         <h2>VVR Acumulado Anual (Comparativo)</h2>
                         <div class="chart-selector" id="cumulative-chart-selector"></div>
@@ -199,7 +192,6 @@
                             <canvas id="cumulativeVvrChart"></canvas>
                         </div>
                     </section>
-                    
                     <section class="table-container" id="table-section" style="display: none;">
                         <h2>Dados Detalhados por Mês/Unidade (Período Selecionado)</h2>
                         <div class="chart-selector">
@@ -214,7 +206,6 @@
                         </table>
                     </section>
                 </div>
-
                 <div id="page2" class="page-content">
                     <section class="chart-container" id="chart-monthly-vvr-section" style="display: none;">
                         <h2>Comparativo de VVR Mensal</h2>
@@ -223,7 +214,6 @@
                            <canvas id="monthlyVvrChart"></canvas>
                         </div>
                     </section>
-
                     <div class="chart-row">
                         <div class="chart-container" id="chart-yearly-stacked-section" style="display: none;">
                             <h2>Venda Realizada Total Anual</h2>
@@ -238,7 +228,6 @@
                             </div>
                         </div>
                     </div>
-                    
                     <div class="chart-row">
                         <div class="chart-container" id="chart-yearly-ticket-section" style="display: none;">
                             <h2>Ticket Médio Anual</h2>
@@ -254,7 +243,6 @@
                         </div>
                     </div>
                 </div>
-
             </div>
         </div>
     </div>
@@ -399,6 +387,7 @@
             options: {
                 maintainAspectRatio: false,
                 indexAxis: 'y',
+                scales: { x: { stacked: true }, y: { stacked: true } },
                 plugins: {
                     datalabels: { color: 'white', font: { weight: 'bold' }, formatter: (value) => (value > 1000 ? `${(value / 1000).toFixed(1)} mi` : '') },
                     tooltip: { callbacks: {
@@ -644,6 +633,3 @@
         document.getElementById('start-date').value = inicioMes.toISOString().split('T')[0]; 
         document.getElementById('end-date').value = fimMes.toISOString().split('T')[0]; 
     }
-</script>
-</body>
-</html>
