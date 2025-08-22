@@ -61,10 +61,10 @@
         h1, h2 { margin-top: 0; border-bottom: 2px solid #495057; padding-bottom: 10px; }
         .filters { display: flex; flex-direction: column; gap: 20px; align-items: stretch; }
         
-        /* === NOVA ESTRUTURA PARA CONTROLAR O TAMANHO DO GRÁFICO === */
+        /* === CONTROLE DE ALTURA DOS GRÁFICOS === */
         .chart-wrapper {
             position: relative;
-            flex-grow: 1; /* Faz o wrapper ocupar o espaço disponível no container */
+            height: 75vh; /* ALTURA AJUSTADA PARA 75% DA TELA. PODE MUDAR ESTE VALOR. */
         }
         
         .kpi-main-wrapper { display: flex; flex-wrap: wrap; align-items: center; gap: 20px; }
@@ -380,7 +380,7 @@
             },
             options: {
                 maintainAspectRatio: false,
-                layout: { padding: { left: 20 } }, // ADICIONADO: Espaçamento para o eixo Y não vazar
+                layout: { padding: { left: 20 } }, 
                 indexAxis: 'y',
                 scales: { x: { stacked: true }, y: { stacked: true } },
                 plugins: {
