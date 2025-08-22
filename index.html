@@ -64,11 +64,7 @@
         .chart-wrapper {
             position: relative;
             height: 45vh; 
-            flex-grow: 1;
         }
-
-        .col-4 { grid-column: span 4 !important; }
-        .col-8 { grid-column: span 8 !important; }
         
         .kpi-main-wrapper { display: flex; flex-wrap: wrap; align-items: center; gap: 20px; }
         .kpi-main-cards-container { display: flex; flex-grow: 1; flex-wrap: wrap; gap: 20px; }
@@ -94,6 +90,17 @@
         .chart-selector button { background-color: #495057; color: #F8F9FA; border: 1px solid #ADB5BD; border-radius: 6px; padding: 5px 15px; cursor: pointer; transition: all 0.2s ease-in-out; }
         .chart-selector button:not(.active):hover { background-color: #6c757d; border-color: #dee2e6; }
         .chart-selector button.active { background-color: #FFC107; color: #212529; border-color: #FFC107; font-weight: bold; }
+
+        .chart-row {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+            grid-column: span 12;
+        }
+        
+        .chart-row > .chart-container {
+            grid-column: auto;
+        }
     </style>
 </head>
 <body>
@@ -207,30 +214,32 @@
                            <canvas id="monthlyVvrChart"></canvas>
                         </div>
                     </section>
-                    
-                    <div class="chart-container col-4" id="chart-yearly-stacked-section" style="display: none;">
-                        <h2>Venda Realizada Total Anual</h2>
-                        <div class="chart-wrapper">
-                            <canvas id="yearlyStackedChart"></canvas>
+                    <div class="chart-row">
+                        <div class="chart-container" id="chart-yearly-stacked-section" style="display: none;">
+                            <h2>Venda Realizada Total Anual</h2>
+                            <div class="chart-wrapper">
+                                <canvas id="yearlyStackedChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="chart-container" id="chart-monthly-stacked-section" style="display: none;">
+                            <h2 id="monthly-stacked-title">Venda Realizada Total Mensal</h2>
+                            <div class="chart-wrapper">
+                                <canvas id="monthlyStackedChart"></canvas>
+                            </div>
                         </div>
                     </div>
-                    <div class="chart-container col-8" id="chart-monthly-stacked-section" style="display: none;">
-                        <h2 id="monthly-stacked-title">Venda Realizada Total Mensal</h2>
-                        <div class="chart-wrapper">
-                            <canvas id="monthlyStackedChart"></canvas>
+                    <div class="chart-row">
+                        <div class="chart-container" id="chart-yearly-ticket-section" style="display: none;">
+                            <h2>Ticket Médio Anual</h2>
+                            <div class="chart-wrapper">
+                                <canvas id="yearlyTicketChart"></canvas>
+                            </div>
                         </div>
-                    </div>
-                    
-                    <div class="chart-container col-4" id="chart-yearly-ticket-section" style="display: none;">
-                        <h2>Ticket Médio Anual</h2>
-                        <div class="chart-wrapper">
-                            <canvas id="yearlyTicketChart"></canvas>
-                        </div>
-                    </div>
-                    <div class="chart-container col-8" id="chart-monthly-ticket-section" style="display: none;">
-                        <h2 id="monthly-ticket-title">Ticket Médio Mensal</h2>
-                        <div class="chart-wrapper">
-                            <canvas id="monthlyTicketChart"></canvas>
+                        <div class="chart-container" id="chart-monthly-ticket-section" style="display: none;">
+                            <h2 id="monthly-ticket-title">Ticket Médio Mensal</h2>
+                            <div class="chart-wrapper">
+                                <canvas id="monthlyTicketChart"></canvas>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -283,6 +292,7 @@
         document.getElementById('main-content').classList.toggle('full-width');
         this.classList.toggle('collapsed');
 
+        // Adicionado: Força TODOS os gráficos a se redimensionarem após a animação
         setTimeout(() => {
             if (vvrVsMetaPorMesChart) vvrVsMetaPorMesChart.resize();
             if (cumulativeVvrChart) cumulativeVvrChart.resize();
@@ -291,7 +301,7 @@
             if (monthlyStackedChart) monthlyStackedChart.resize();
             if (yearlyTicketChart) yearlyTicketChart.resize();
             if (monthlyTicketChart) monthlyTicketChart.resize();
-        }, 300);
+        }, 300); // 300ms é a duração da sua animação da sidebar
     });
 
     async function fetchAllSalesDataFromSheet() { if (!SALES_SPREADSHEET_ID || !SALES_SHEET_NAME || !API_KEY) { console.error("ID da Planilha de Vendas, Nome da Aba ou Chave de API não configurados."); return []; } const url = `https://sheets.googleapis.com/v4/spreadsheets/${SALES_SPREADSHEET_ID}/values/${SALES_SHEET_NAME}?key=${API_KEY}`; try { const response = await fetch(url); if (!response.ok) { console.error("Erro ao buscar dados de vendas da planilha:", await response.json()); return []; } const data = await response.json(); const rows = data.values || []; if (rows.length < 2) return []; const headers = rows[0].map(h => h.trim().toLowerCase()); const unidadeIndex = headers.indexOf("nm_unidade"), dataIndex = headers.indexOf("dt_cadastro_integrante"), valorIndex = headers.indexOf("vl_plano"), tipoVendaIndex = headers.indexOf("venda_posvenda"); if (unidadeIndex === -1 || dataIndex === -1 || valorIndex === -1) { console.error("Colunas necessárias (nm_unidade, dt_cadastro_integrante, vl_plano) não foram encontradas."); return []; } return rows.slice(1).map(row => { const dataString = row[dataIndex]; if (!dataString) return null; return { nm_unidade: row[unidadeIndex] || 'N/A', dt_cadastro_integrante: new Date(dataString), vl_plano: parseFloat(String(row[valorIndex] || '0').replace(',', '.')) || 0, venda_posvenda: row[tipoVendaIndex] || 'VENDA' }; }).filter(Boolean); } catch (error) { console.error("Erro CRÍTICO ao buscar dados de vendas:", error); return []; } }
