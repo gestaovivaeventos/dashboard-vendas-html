@@ -506,16 +506,16 @@ async function fetchFundosData() {
 
         const headers = rows[0].map(h => String(h).trim().toLowerCase());
         const unidadeIndex = headers.indexOf("nm_unidade");
-        const idFundoIndex = headers.indexOf("id fundo");
-        const fundoIndex = headers.indexOf("fundo");
-        const dtContratoIndex = headers.indexOf("dt contrato");
-        const dtCadastroIndex = headers.indexOf("dt cadastro");
-        const tipoServicoIndex = headers.indexOf("tipo de serviço");
-        const instituicaoIndex = headers.indexOf("instituição");
-        const dtBaileIndex = headers.indexOf("dt baile");
+        const idFundoIndex = headers.indexOf("id_fundo");
+        const fundoIndex = headers.indexOf("nm_fundo");
+        const dtContratoIndex = headers.indexOf("dt_contrato");
+        const dtCadastroIndex = headers.indexOf("dt_cadastro");
+        const tipoServicoIndex = headers.indexOf("tp_servico");
+        const instituicaoIndex = headers.indexOf("nm_instituicao");
+        const dtBaileIndex = headers.indexOf("dt_baile");
 
         if (unidadeIndex === -1 || idFundoIndex === -1 || dtContratoIndex === -1) {
-             console.error("Colunas essenciais (nm_unidade, id fundo, dt contrato) não foram encontradas na planilha FUNDOS.");
+             console.error("Colunas essenciais (nm_unidade, id_fundo, dt_contrato) não foram encontradas na planilha FUNDOS.");
              return [];
         }
 
