@@ -296,6 +296,9 @@ function updateDrillDownCharts(historicalData, selectedUnidades) {
             ]
         },
         options: {
+            // --- AJUSTE ADICIONADO AQUI ---
+            devicePixelRatio: window.devicePixelRatio,
+
             maintainAspectRatio: false,
             indexAxis: 'y',
             interaction: {
@@ -310,22 +313,18 @@ function updateDrillDownCharts(historicalData, selectedUnidades) {
                 datalabels: {
                     color: 'white',
                     font: { weight: 'bold' },
-                    // --- INÍCIO DA ALTERAÇÃO ---
                     formatter: function(value) {
                         if (value === 0) {
-                            return ''; // Não mostra nada se o valor for zero
+                            return '';
                         }
                         if (value >= 1000000) {
-                            // Se for maior ou igual a 1 milhão, formata como "121.5 M"
                             return (value / 1000000).toFixed(1).replace('.0', '') + ' M';
                         }
                         if (value >= 1000) {
-                            // Se for maior que mil, formata como "500k"
                             return (value / 1000).toFixed(1).replace('.0', '') + 'k';
                         }
-                        return value; // Se for menor que mil, mostra o número inteiro
+                        return value;
                     }
-                    // --- FIM DA ALTERAÇÃO ---
                 },
                 tooltip: {
                     callbacks: {
@@ -348,7 +347,7 @@ function updateDrillDownCharts(historicalData, selectedUnidades) {
     }
 }
 
-   function drawMonthlyDetailChart(data, year) {
+  function drawMonthlyDetailChart(data, year) {
     document.getElementById('monthly-stacked-title').textContent = `Venda Realizada Total Mensal (${year})`;
     const salesByMonth = Array(12).fill(0).map(() => ({ vendas: 0, posVendas: 0 }));
     const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -379,28 +378,25 @@ function updateDrillDownCharts(historicalData, selectedUnidades) {
             ]
         },
         options: {
-            maintainAspectRatio: false,
+            // --- CORREÇÃO ADICIONADA AQUI ---
+            devicePixelRatio: window.devicePixelRatio,
 
-            // --- 1. ALTERAÇÃO DO TOOLTIP ---
+            maintainAspectRatio: false,
             interaction: {
                 mode: 'index',
                 intersect: false,
             },
-
             scales: { x: { stacked: true }, y: { stacked: true } },
             plugins: {
                 datalabels: {
                     color: 'white',
                     font: { weight: 'bold' },
-                    // --- 2. ALTERAÇÃO DOS RÓTULOS (FORMATTER) ---
                     formatter: function(value) {
                         if (value === 0) return '';
                         if (value >= 1000000) {
-                            // Formata para Milhões. Ex: 21.355.146 -> "21.4 M"
                             return (value / 1000000).toFixed(1).replace('.0', '') + ' M';
                         }
                         if (value >= 1000) {
-                             // Formata para milhares. Ex: 9637 -> "10k"
                             return (value / 1000).toFixed(0) + 'k';
                         }
                         return value;
