@@ -31,35 +31,50 @@
         #sidebar-toggle.collapsed { left: 10px; }
 
         .page-navigation { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #495057; padding-bottom: 20px; }
-       .page-navigation button {
-    background-image: linear-gradient(to bottom, #6c757d, #495057);
-    color: #F8F9FA;
-    border: 1px solid #343a40;
-    border-bottom: 3px solid #343a40; /* Borda inferior para efeito 3D */
-    padding: 10px 20px;
-    cursor: pointer;
-    transition: all 0.1s ease-in-out;
-    width: 100%;
-    text-align: left;
-    border-radius: 6px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
-}
-.page-navigation button:hover {
-    background-image: linear-gradient(to bottom, #8a9198, #5a6268);
-}
-.page-navigation button:active { /* Efeito de pressionar */
-    transform: translateY(2px);
-    border-bottom-width: 1px;
-    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.2);
-}
-.page-navigation button.active {
-    background-image: linear-gradient(to bottom, #ffca2c, #ffc107);
-    color: #212529;
-    border-color: #b38600;
-    font-weight: bold;
-    text-shadow: none;
-}
+        .page-navigation button {
+            background-image: linear-gradient(to bottom, #6c757d, #495057);
+            color: #F8F9FA;
+            border: 1px solid #343a40;
+            border-bottom: 3px solid #343a40;
+            padding: 10px 20px;
+            cursor: pointer;
+            transition: all 0.1s ease-in-out;
+            width: 100%;
+            text-align: left;
+            border-radius: 6px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
+        }
+        .page-navigation-button button {
+            background-image: linear-gradient(to bottom, #0d6efd, #0a58ca);
+            border-color: #0a53be;
+            font-weight: bold;
+        }
+        .page-navigation button:hover {
+            background-image: linear-gradient(to bottom, #8a9198, #5a6268);
+        }
+        .page-navigation-button button:hover {
+            background-image: linear-gradient(to bottom, #2e81f7, #0b5ed7) !important;
+        }
+        .page-navigation button:active {
+            transform: translateY(2px);
+            border-bottom-width: 1px;
+            box-shadow: 0 2px 3px rgba(0, 0, 0, 0.2);
+        }
+        .page-navigation button.active {
+            background-image: linear-gradient(to bottom, #ffca2c, #ffc107);
+            color: #212529;
+            border-color: #b38600;
+            font-weight: bold;
+            text-shadow: none;
+        }
+
+        .page-navigation hr {
+            border: none;
+            height: 1px;
+            background-color: #495057;
+            margin: 10px 0;
+        }
 
         .page-content { display: none; }
         .page-content.active {
@@ -118,46 +133,44 @@
         .dt-button:hover { background-color: #ADB5BD !important; color: #212529 !important; }
 
         .chart-selector { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
-       .chart-selector button {
-    background-image: linear-gradient(to bottom, #6c757d, #495057);
-    color: #F8F9FA;
-    border: 1px solid #343a40;
-    border-bottom: 3px solid #343a40;
-    padding: 5px 15px;
-    cursor: pointer;
-    transition: all 0.1s ease-in-out;
-    border-radius: 6px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
-}
-.chart-selector button:hover {
-    background-image: linear-gradient(to bottom, #8a9198, #5a6268);
-}
-.chart-selector button:active { /* Efeito de pressionar */
-    transform: translateY(2px);
-    border-bottom-width: 1px;
-    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.2);
-}
-.chart-selector button.active {
-    background-image: linear-gradient(to bottom, #ffca2c, #ffc107);
-    color: #212529;
-    border-color: #b38600;
-    font-weight: bold;
-    text-shadow: none;
-}
+        .chart-selector button {
+            background-image: linear-gradient(to bottom, #6c757d, #495057);
+            color: #F8F9FA;
+            border: 1px solid #343a40;
+            border-bottom: 3px solid #343a40;
+            padding: 5px 15px;
+            cursor: pointer;
+            transition: all 0.1s ease-in-out;
+            border-radius: 6px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
+        }
+        .chart-selector button:hover {
+            background-image: linear-gradient(to bottom, #8a9198, #5a6268);
+        }
+        .chart-selector button:active {
+            transform: translateY(2px);
+            border-bottom-width: 1px;
+            box-shadow: 0 2px 3px rgba(0, 0, 0, 0.2);
+        }
+        .chart-selector button.active {
+            background-image: linear-gradient(to bottom, #ffca2c, #ffc107);
+            color: #212529;
+            border-color: #b38600;
+            font-weight: bold;
+            text-shadow: none;
+        }
 
-        .chart-row {
+        .chart-row, .chart-row-adesoes {
             display: grid;
-            grid-template-columns: repeat(2, 1fr); /* Proporção 50% / 50% */
             gap: 20px;
             grid-column: span 12;
         }
-
+        .chart-row {
+            grid-template-columns: repeat(2, 1fr);
+        }
         .chart-row-adesoes {
-            display: grid;
-            grid-template-columns: 1fr 2fr; /* Proporção 1/3 e 2/3 */
-            gap: 20px;
-            grid-column: span 12;
+            grid-template-columns: 1fr 2fr;
         }
         
         .chart-row > .chart-container,
@@ -173,15 +186,9 @@
 
         @media (max-width: 1200px) {
             .chart-row, .chart-row-adesoes {
-                grid-template-columns: 1fr; /* Em telas pequenas, ambos viram uma única coluna */
+                grid-template-columns: 1fr;
             }
         }
-.page-navigation hr {
-    border: none;
-    height: 1px;
-    background-color: #495057; /* Mesma cor das outras bordas do menu */
-    margin: 10px 0; /* Espaçamento vertical para a linha respirar */
-}
     </style>
 </head>
 <body>
@@ -189,15 +196,26 @@
         <button id="sidebar-toggle">&#9776;</button>
         <div id="sidebar">
             <div class="page-navigation">
- <a href="https://central-dashs-viva-html.vercel.app/" class="page-navigation-button"><button>Central de Dashboards VIVA Eventos</button></a>
-               <hr> <button id="btn-page1" class="active" data-page="page1">Metas e Resultados</button>
+                <a href="URL_DA_SUA_PAGINA_CENTRAL_AQUI" class="page-navigation-button"><button>CENTRAL DE DASHS</button></a>
+                <hr>
+                <button id="btn-page1" class="active" data-page="page1">Metas e Resultados</button>
                 <button id="btn-page2" data-page="page2">Indicadores Secundários</button>
             </div>
-            <section id="loader" class="filters"><div class="loader">Carregando informações...</div></section>
-            <section class="filters" id="filters-section" style="display: none;">
+            <section id="loader" class="filters"><div class="loader">Carregando dados...</div></section>
+            <section class="filters" id="filters-section" style="display: flex;">
                 <div class="filter-item filter-item-unidades"><label for="unidade-filter">Filtrar por Unidade(s)</label><select id="unidade-filter" multiple="multiple"></select></div>
                 <div class="filter-item"><label for="start-date">Data de Início</label><input type="date" id="start-date"></div>
                 <div class="filter-item"><label for="end-date">Data de Fim</label><input type="date" id="end-date"></div>
+            </section>
+            <section class="filters" id="filters-section-page2" style="display: none;">
+                <div class="filter-item"><label for="fundo-filter">Filtrar por Fundo(s)</label><select id="fundo-filter" multiple="multiple"></select></div>
+                <div class="filter-item"><label for="tipo-adesao-filter">Filtrar por Tipo de Adesão</label><select id="tipo-adesao-filter" multiple="multiple"></select></div>
+                <div class="filter-item"><label for="tipo-servico-filter">Filtrar por Tipo de Serviço</label><select id="tipo-servico-filter" multiple="multiple"></select></div>
+                <div class="filter-item"><label for="instituicao-filter">Filtrar por Instituição</label><select id="instituicao-filter" multiple="multiple"></select></div>
+                <div class="filter-item"><label for="curso-filter">Filtrar por Curso</label><select id="curso-filter" multiple="multiple"></select></div>
+                <div class="filter-item"><label for="pre-evento-filter">Filtrar por Pré-Evento</label><select id="pre-evento-filter" multiple="multiple"></select></div>
+                <div class="filter-item"><label for="consultor-filter">Filtrar por Consultor</label><select id="consultor-filter" multiple="multiple"></select></div>
+                <div class="filter-item"><label for="indicacao-filter">Filtrar por Indicação</label><select id="indicacao-filter" multiple="multiple"></select></div>
             </section>
         </div>
         <div id="main-content">
@@ -391,24 +409,24 @@
                             <tbody></tbody>
                         </table>
                     </section>
-<section class="table-container" id="fundos-detalhados-table-section" style="display: none;">
-    <h2>Fundos Detalhados no Período</h2>
-    <table id="fundos-detalhados-table" class="display" style="width:100%">
-        <thead>
-            <tr>
-                <th>Unidade</th>
-                <th>ID Fundo</th>
-                <th>Fundo</th>
-                <th>DT Contrato</th>
-                <th>DT Cadastro</th>
-                <th>Tipo de Serviço</th>
-                <th>Instituição</th>
-                <th>DT Baile</th>
-            </tr>
-        </thead>
-        <tbody></tbody>
-    </table>
-</section>
+                    <section class="table-container" id="fundos-detalhados-table-section" style="display: none;">
+                        <h2>Fundos Detalhados no Período</h2>
+                        <table id="fundos-detalhados-table" class="display" style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th>Unidade</th>
+                                    <th>ID Fundo</th>
+                                    <th>Fundo</th>
+                                    <th>DT Contrato</th>
+                                    <th>DT Cadastro</th>
+                                    <th>Tipo de Serviço</th>
+                                    <th>Instituição</th>
+                                    <th>DT Baile</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </section>
                 </div>
             </div>
         </div>
@@ -416,200 +434,75 @@
 
 <script>
     const SALES_SPREADSHEET_ID = "1HXyq_r2ssJ5c7wXdrBUc-WdqrlCfiZYE1EuIWbIDg0U";
-    const SALES_SHEET_NAME = "ADESOES";
-    const FUNDOS_SHEET_NAME = "FUNDOS";
-    const METAS_SPREADSHEET_ID = "1KywSOsTn7qUdVp2dLthWD3Y27RsE1aInk6hRJhp7BFw";
-    const METAS_SHEET_NAME = "metas";
-    const API_KEY = "AIzaSyBuGRH91CnRuDtN5RGsb5DvHEfhTxJnWSs"; 
-    
-    let allData = [], fundosData = [], metasData = new Map(), dataTable, vvrVsMetaPorMesChart, cumulativeVvrChart, monthlyVvrChart, yearlyStackedChart, monthlyStackedChart, yearlyTicketChart, monthlyTicketChart, yearlyContractsChart, monthlyContractsChart, monthlyAdesoesChart, yearlyAdesoesStackedChart, monthlyAdesoesStackedChart, consultorDataTable, detalhadaAdesoesDataTable, fundosDetalhadosDataTable;
-    let currentVvrChartType = 'total';
-    let currentTableDataType = 'total';
-    let currentFilteredDataForTable = [];
-    const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
-    const date = new Date(dateString);
-    if (isNaN(date)) return 'N/A';
-    return date.toLocaleDateString('pt-BR', { timeZone: 'UTC' });
-};
-    
-    const formatCurrency = (value) => new Intl.NumberFormat('pt-br', { style: 'currency', currency: 'BRL' }).format(value || 0);
-    const formatPercent = (value) => new Intl.NumberFormat('pt-br', { style: 'percent', minimumFractionDigits: 1 }).format(value || 0);
-
-    document.addEventListener('DOMContentLoaded', async () => {
-        const loader = document.getElementById('loader');
-        try {
-            const [salesData, sheetData, novosFundosData] = await Promise.all([fetchAllSalesDataFromSheet(), fetchMetasData(), fetchFundosData()]);
-            
-            allData = salesData;
-            metasData = sheetData;
-            fundosData = novosFundosData;
-
-            if (allData && allData.length > 0) {
-                loader.style.display = 'none';
-                [
-                 'filters-section', 'kpi-section', 'kpi-section-py', 'chart-vvr-mes-section', 
-                 'chart-cumulative-section', 'table-section', 'chart-monthly-vvr-section', 
-                 'chart-yearly-stacked-section', 'chart-monthly-stacked-section', 'chart-yearly-ticket-section', 
-                 'chart-monthly-ticket-section', 'chart-yearly-contracts-section', 'chart-monthly-contracts-section',
-                 'chart-monthly-adesoes-section', 'chart-yearly-adesoes-stacked-section', 'chart-monthly-adesoes-stacked-section',
-                 'consultor-table-section', 'detalhada-adesoes-table-section', 'fundos-detalhados-table-section'
-                ].forEach(id => {
-                    const el = document.getElementById(id);
-                    if (el) el.style.display = 'block';
-                });
-                document.getElementById('filters-section').style.display = 'flex';
-                
-                populateFilters();
-                addEventListeners();
-                updateDashboard();
-            } else { 
-                loader.innerHTML = 'Nenhum dado de vendas encontrado ou falha ao carregar. Verifique o console (F12) para mais detalhes.'; 
-            }
-        } catch (error) { 
-            console.error("Erro fatal na inicialização:", error); 
-            loader.innerHTML = `Erro ao carregar dados. Verifique o console (F12).`; 
-        }
-    });
-
-    document.getElementById('sidebar-toggle').addEventListener('click', function() {
-        document.getElementById('sidebar').classList.toggle('collapsed');
-        document.getElementById('main-content').classList.toggle('full-width');
-        this.classList.toggle('collapsed');
-
-        setTimeout(() => {
-            if (vvrVsMetaPorMesChart) vvrVsMetaPorMesChart.resize();
-            if (cumulativeVvrChart) cumulativeVvrChart.resize();
-            if (monthlyVvrChart) monthlyVvrChart.resize();
-            if (yearlyStackedChart) yearlyStackedChart.resize();
-            if (monthlyStackedChart) monthlyStackedChart.resize();
-            if (yearlyTicketChart) yearlyTicketChart.resize();
-            if (monthlyTicketChart) monthlyTicketChart.resize();
-            if (yearlyContractsChart) yearlyContractsChart.resize();
-            if (monthlyContractsChart) monthlyContractsChart.resize();
-            if (monthlyAdesoesChart) monthlyAdesoesChart.resize();
-            if (yearlyAdesoesStackedChart) yearlyAdesoesStackedChart.resize();
-            if (monthlyAdesoesStackedChart) monthlyAdesoesStackedChart.resize();
-        }, 300);
-    });
-    
-    async function fetchAllSalesDataFromSheet() {
-        if (!SALES_SPREADSHEET_ID || !SALES_SHEET_NAME || !API_KEY) {
-            console.error("ID da Planilha de Vendas, Nome da Aba ou Chave de API não configurados.");
+async function fetchFundosData() {
+        if (!SALES_SPREADSHEET_ID || !FUNDOS_SHEET_NAME || !API_KEY) {
+            console.error("ID da Planilha, Nome da Aba FUNDOS ou Chave de API não configurados.");
             return [];
         }
-        const url = `https://sheets.googleapis.com/v4/spreadsheets/${SALES_SPREADSHEET_ID}/values/${SALES_SHEET_NAME}?key=${API_KEY}`;
+        const url = `https://sheets.googleapis.com/v4/spreadsheets/${SALES_SPREADSHEET_ID}/values/${FUNDOS_SHEET_NAME}?key=${API_KEY}`;
         try {
             const response = await fetch(url);
             if (!response.ok) {
-                console.error("Erro ao buscar dados de vendas da planilha:", await response.json());
+                console.error("Erro ao buscar dados de fundos da planilha:", await response.json());
                 return [];
             }
             const data = await response.json();
             const rows = data.values || [];
             if (rows.length < 2) return [];
 
-            const headers = rows[0].map(h => h.trim().toLowerCase());
+            const headers = rows[0].map(h => String(h).trim().toLowerCase());
             const unidadeIndex = headers.indexOf("nm_unidade");
-            const dataIndex = headers.indexOf("dt_cadastro_integrante");
-            const valorIndex = headers.indexOf("vl_plano");
-            
-            if (unidadeIndex === -1 || dataIndex === -1 || valorIndex === -1) {
-                console.error("Colunas essenciais (nm_unidade, dt_cadastro_integrante, vl_plano) não foram encontradas.");
-                return [];
-            }
-
-            const tipoVendaIndex = headers.indexOf("venda_posvenda");
-            const indicadoPorIndex = headers.indexOf("indicado_por");
-            const codigoIntegranteIndex = headers.indexOf("codigo_integrante");
-            const nomeIntegranteIndex = headers.indexOf("nm_integrante");
             const idFundoIndex = headers.indexOf("id_fundo");
+            const fundoIndex = headers.indexOf("fundo");
+            const dtContratoIndex = headers.indexOf("dt_contrato");
+            const dtCadastroIndex = headers.indexOf("dt_cadastro");
+            const tipoServicoIndex = headers.indexOf("tipo de serviço");
+            const instituicaoIndex = headers.indexOf("instituição");
+            const dtBaileIndex = headers.indexOf("dt baile");
+
+            if (unidadeIndex === -1 || idFundoIndex === -1 || dtContratoIndex === -1) {
+                 console.error("Colunas essenciais (nm_unidade, id_fundo, dt_contrato) não foram encontradas na planilha FUNDOS.");
+                 return [];
+            }
+            
+            const parsePtBrDate = (dateString) => {
+                if (!dateString || typeof dateString !== 'string') return null;
+                const parts = dateString.split('/');
+                if (parts.length === 3) {
+                    const day = parseInt(parts[0], 10);
+                    const month = parseInt(parts[1], 10) - 1; // Mês no JavaScript é 0-indexado
+                    const year = parseInt(parts[2], 10);
+                    if (!isNaN(day) && !isNaN(month) && !isNaN(year)) {
+                        return new Date(Date.UTC(year, month, day));
+                    }
+                }
+                const date = new Date(dateString);
+                return isNaN(date.getTime()) ? null : date;
+            };
 
             return rows.slice(1).map(row => {
-                const dataString = row[dataIndex];
-                if (!dataString) return null;
+                const dtContratoString = row[dtContratoIndex];
+                if (!dtContratoString) return null; 
+                
+                const dtContrato = parsePtBrDate(dtContratoString);
+                if (!dtContrato) return null;
+
                 return {
                     nm_unidade: row[unidadeIndex] || 'N/A',
-                    dt_cadastro_integrante: new Date(dataString),
-                    vl_plano: parseFloat(String(row[valorIndex] || '0').replace(',', '.')) || 0,
-                    venda_posvenda: tipoVendaIndex !== -1 ? row[tipoVendaIndex] || 'VENDA' : 'N/A',
-                    indicado_por: indicadoPorIndex !== -1 ? row[indicadoPorIndex] || 'N/A' : 'N/A',
-                    codigo_integrante: codigoIntegranteIndex !== -1 ? row[codigoIntegranteIndex] || 'N/A' : 'N/A',
-                    nm_integrante: nomeIntegranteIndex !== -1 ? row[nomeIntegranteIndex] || 'N/A' : 'N/A',
-                    id_fundo: idFundoIndex !== -1 ? row[idFundoIndex] || 'N/A' : 'N/A'
+                    id_fundo: row[idFundoIndex] || 'N/A',
+                    fundo: fundoIndex !== -1 ? row[fundoIndex] || 'N/A' : 'N/A',
+                    dt_contrato: dtContrato,
+                    dt_cadastro: dtCadastroIndex !== -1 ? parsePtBrDate(row[dtCadastroIndex]) : null,
+                    tipo_servico: tipoServicoIndex !== -1 ? row[tipoServicoIndex] || 'N/A' : 'N/A',
+                    instituicao: instituicaoIndex !== -1 ? row[instituicaoIndex] || 'N/A' : 'N/A',
+                    dt_baile: dtBaileIndex !== -1 ? parsePtBrDate(row[dtBaileIndex]) : null,
                 };
             }).filter(Boolean);
         } catch (error) {
-            console.error("Erro CRÍTICO ao buscar dados de vendas:", error);
+            console.error("Erro CRÍTICO ao buscar dados de fundos:", error);
             return [];
         }
     }
-
-async function fetchFundosData() {
-    if (!SALES_SPREADSHEET_ID || !FUNDOS_SHEET_NAME || !API_KEY) {
-        console.error("ID da Planilha, Nome da Aba FUNDOS ou Chave de API não configurados.");
-        return [];
-    }
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SALES_SPREADSHEET_ID}/values/${FUNDOS_SHEET_NAME}?key=${API_KEY}`;
-    try {
-        const response = await fetch(url);
-        if (!response.ok) {
-            console.error("Erro ao buscar dados de fundos da planilha:", await response.json());
-            return [];
-        }
-        const data = await response.json();
-        const rows = data.values || [];
-        if (rows.length < 2) return [];
-
-        const headers = rows[0].map(h => String(h).trim().toLowerCase());
-        const unidadeIndex = headers.indexOf("nm_unidade");
-        const idFundoIndex = headers.indexOf("id_fundo");
-        const fundoIndex = headers.indexOf("nm_fundo");
-        const dtContratoIndex = headers.indexOf("dt_contrato");
-        const dtCadastroIndex = headers.indexOf("dt_cadastro_fundo");
-        const tipoServicoIndex = headers.indexOf("tp_servico");
-        const instituicaoIndex = headers.indexOf("nm_instituicao");
-        const dtBaileIndex = headers.indexOf("dt_baile");
-
-        if (unidadeIndex === -1 || idFundoIndex === -1 || dtContratoIndex === -1) {
-             console.error("Colunas essenciais (nm_unidade, id_fundo, dt_contrato) não foram encontradas na planilha FUNDOS.");
-             return [];
-        }
-
-        // Função interna para converter datas no formato DD/MM/YYYY
-        const parsePtBrDate = (dateString) => {
-            if (!dateString || typeof dateString !== 'string') return null;
-            const parts = dateString.split('/');
-            if (parts.length === 3) {
-                // Formato DD/MM/YYYY -> MM/DD/YYYY para o construtor Date
-                return new Date(`${parts[1]}/${parts[0]}/${parts[2]}`);
-            }
-            return new Date(dateString); // Tenta o formato padrão
-        };
-
-        return rows.slice(1).map(row => {
-            const dtContratoString = row[dtContratoIndex];
-            if (!dtContratoString) return null; 
-            
-            const dtContrato = parsePtBrDate(dtContratoString);
-            if (isNaN(dtContrato)) return null; // Pula a linha se a data do contrato for inválida
-
-            return {
-                nm_unidade: row[unidadeIndex] || 'N/A',
-                id_fundo: row[idFundoIndex] || 'N/A',
-                fundo: fundoIndex !== -1 ? row[fundoIndex] || 'N/A' : 'N/A',
-                dt_contrato: dtContrato,
-                dt_cadastro: dtCadastroIndex !== -1 ? parsePtBrDate(row[dtCadastroIndex]) : null,
-                tipo_servico: tipoServicoIndex !== -1 ? row[tipoServicoIndex] || 'N/A' : 'N/A',
-                instituicao: instituicaoIndex !== -1 ? row[instituicaoIndex] || 'N/A' : 'N/A',
-                dt_baile: dtBaileIndex !== -1 ? parsePtBrDate(row[dtBaileIndex]) : null,
-            };
-        }).filter(Boolean);
-    } catch (error) {
-        console.error("Erro CRÍTICO ao buscar dados de fundos:", error);
-        return [];
-    }
-}
     
     async function fetchMetasData() { if (!METAS_SPREADSHEET_ID || !METAS_SHEET_NAME || !API_KEY) { console.error("Configurações da planilha de metas incompletas."); return new Map(); } const url = `https://sheets.googleapis.com/v4/spreadsheets/${METAS_SPREADSHEET_ID}/values/${METAS_SHEET_NAME}?key=${API_KEY}`; try { const response = await fetch(url); if (!response.ok) { console.error("Erro API Google Sheets:", await response.json()); return new Map(); } const data = await response.json(); const rows = data.values || []; const metasMap = new Map(); const headers = rows[0].map(h => h.trim().toLowerCase()); const unidadeIndex = headers.indexOf("nm_unidade"), anoIndex = headers.indexOf("ano"), mesIndex = headers.indexOf("mês"), metaVendasIndex = headers.indexOf("meta vvr_venda"), metaPosvendasIndex = headers.indexOf("meta vvr_pos_venda"), metaAdesoesIndex = headers.indexOf("meta adesões"); rows.slice(1).forEach(row => { const unidade = row[unidadeIndex], ano = row[anoIndex], mes = String(row[mesIndex]).padStart(2, '0'); const parseMetaValue = (index) => parseFloat(String(row[index] || "0").replace(/\./g, '').replace(',', '.')) || 0; const metaVendas = parseMetaValue(metaVendasIndex), metaPosvendas = parseMetaValue(metaPosvendasIndex), metaAdesoes = parseInt(row[metaAdesoesIndex]) || 0; if (unidade && ano && mes) { const chave = `${unidade}-${ano}-${mes}`; metasMap.set(chave, { meta_vvr_vendas: metaVendas, meta_vvr_posvendas: metaPosvendas, meta_vvr_total: metaVendas + metaPosvendas, meta_adesoes: metaAdesoes }); } }); return metasMap; } catch (error) { console.error("Erro CRÍTICO ao buscar metas:", error); return new Map(); } }
     function processAndCrossReferenceData(salesData) { const vendasPorMesUnidade = salesData.reduce((acc, d) => { const year = d.dt_cadastro_integrante.getFullYear(); const month = String(d.dt_cadastro_integrante.getMonth() + 1).padStart(2, '0'); const periodo = `${year}-${month}`; const chave = `${d.nm_unidade}-${periodo}`; if (!acc[chave]) { acc[chave] = { unidade: d.nm_unidade, periodo: periodo, realizado_vvr: 0, realizado_adesoes: 0 }; } acc[chave].realizado_vvr += d.vl_plano; acc[chave].realizado_adesoes += 1; return acc; }, {}); return Object.values(vendasPorMesUnidade).map(item => { const chaveMeta = `${item.unidade}-${item.periodo}`; const meta = metasData.get(chaveMeta) || { meta_vvr_total: 0, meta_vvr_vendas: 0, meta_vvr_posvendas: 0, meta_adesoes: 0 }; return { ...item, ...meta }; }); }
@@ -617,10 +510,8 @@ async function fetchFundosData() {
     function updatePreviousYearKPIs(dataBruta, selectedUnidades, startDate, endDate) { const getColorForPercentage = (percent) => { if (percent >= 1) return '#28a745'; if (percent >= 0.5) return '#ffc107'; return '#dc3545'; }; const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); const realizadoVendas = dataBruta.filter(d => normalizeText(d.venda_posvenda) === 'VENDA').reduce((sum, d) => sum + d.vl_plano, 0); const realizadoPosVendas = dataBruta.filter(d => normalizeText(d.venda_posvenda) === 'POS VENDA').reduce((sum, d) => sum + d.vl_plano, 0); const realizadoTotal = realizadoVendas + realizadoPosVendas; let metaVendas = 0; let metaPosVendas = 0; const unitsToConsider = selectedUnidades.length > 0 ? selectedUnidades : [...new Set(allData.map(d => d.nm_unidade))]; metasData.forEach((metaInfo, key) => { const [unidade, ano, mes] = key.split('-'); const metaDate = new Date(ano, parseInt(mes) - 1, 15); if (unitsToConsider.includes(unidade) && metaDate >= startDate && metaDate < endDate) { metaVendas += metaInfo.meta_vvr_vendas; metaPosVendas += metaInfo.meta_vvr_posvendas; } }); const metaTotal = metaVendas + metaPosVendas; const percentTotal = metaTotal > 0 ? realizadoTotal / metaTotal : 0; const percentVendas = metaVendas > 0 ? realizadoVendas / metaVendas : 0; const percentPosVendas = metaPosVendas > 0 ? realizadoPosVendas / metaPosVendas : 0; const totalColor = getColorForPercentage(percentTotal); document.getElementById('kpi-total-realizado-py').textContent = formatCurrency(realizadoTotal); document.getElementById('kpi-total-meta-py').textContent = formatCurrency(metaTotal); const totalPercentEl = document.getElementById('kpi-total-percent-py'); totalPercentEl.textContent = formatPercent(percentTotal); totalPercentEl.style.color = totalColor; document.getElementById('kpi-total-progress-py').style.backgroundColor = totalColor; document.getElementById('kpi-total-progress-py').style.width = `${Math.min(percentTotal * 100, 100)}%`; const vendasColor = getColorForPercentage(percentVendas); document.getElementById('kpi-vendas-realizado-py').textContent = formatCurrency(realizadoVendas); document.getElementById('kpi-vendas-meta-py').textContent = formatCurrency(metaVendas); const vendasPercentEl = document.getElementById('kpi-vendas-percent-py'); vendasPercentEl.textContent = formatPercent(percentVendas); vendasPercentEl.style.color = vendasColor; document.getElementById('kpi-vendas-progress-py').style.backgroundColor = vendasColor; document.getElementById('kpi-vendas-progress-py').style.width = `${Math.min(percentVendas * 100, 100)}%`; const posVendasColor = getColorForPercentage(percentPosVendas); document.getElementById('kpi-posvendas-realizado-py').textContent = formatCurrency(realizadoPosVendas); document.getElementById('kpi-posvendas-meta-py').textContent = formatCurrency(metaPosVendas); const posVendasPercentEl = document.getElementById('kpi-posvendas-percent-py'); posVendasPercentEl.textContent = formatPercent(percentPosVendas); posVendasPercentEl.style.color = posVendasColor; document.getElementById('kpi-posvendas-progress-py').style.backgroundColor = posVendasColor; document.getElementById('kpi-posvendas-progress-py').style.width = `${Math.min(percentPosVendas * 100, 100)}%`; }
 
     function updateDashboard() {
+        // Pega valores dos filtros GLOBAIS
         const selectedUnidades = $('#unidade-filter').val() || [];
-        const anoVigente = 2025;
-        const dataParaGrafico = allData.filter(d => (selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade)) && d.dt_cadastro_integrante.getFullYear() === anoVigente);
-        
         const startDateString = document.getElementById('start-date').value;
         const startParts = startDateString.split('-');
         const startDate = new Date(startParts[0], startParts[1] - 1, startParts[2]);
@@ -629,63 +520,323 @@ async function fetchFundosData() {
         const endDate = new Date(endParts[0], endParts[1] - 1, endParts[2]);
         endDate.setDate(endDate.getDate() + 1);
         
-        const dataBrutaFiltrada = allData.filter(d => (selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade)) && d.dt_cadastro_integrante >= startDate && d.dt_cadastro_integrante < endDate);
-        
-        updateVvrVsMetaPorMesChart(dataParaGrafico, anoVigente);
-        updateCumulativeVvrChart(allData, selectedUnidades);
-        updateMonthlyVvrChart(allData, selectedUnidades);
-        updateDrillDownCharts(allData, selectedUnidades);
-        updateTicketCharts(allData, selectedUnidades);
-        updateContractsCharts(fundosData, selectedUnidades);
-        updateMonthlyAdesoesChart(allData, selectedUnidades);
-        updateAdesoesDrillDownCharts(allData, selectedUnidades);
-        updateConsultorTable(dataBrutaFiltrada);
-        updateDetalhadaAdesoesTable(dataBrutaFiltrada);
-updateFundosDetalhadosTable(fundosData, selectedUnidades, startDate, endDate);
-        updateMainKPIs(dataBrutaFiltrada, selectedUnidades, startDate, endDate);
+        // Pega valores dos filtros SÓ DA PÁGINA 2
+        const selectedFundos = $('#fundo-filter').val() || [];
+        const selectedTiposAdesao = $('#tipo-adesao-filter').val() || [];
+        const selectedTiposServico = $('#tipo-servico-filter').val() || [];
+        const selectedInstituicoes = $('#instituicao-filter').val() || [];
+        const selectedCursos = $('#curso-filter').val() || [];
+        const selectedPreEventos = $('#pre-evento-filter').val() || [];
+        const selectedConsultores = $('#consultor-filter').val() || [];
+        const selectedIndicacoes = $('#indicacao-filter').val() || [];
 
-        const dataAgregadaComVendas = processAndCrossReferenceData(dataBrutaFiltrada);
-        const combinedDataMap = new Map();
-        dataAgregadaComVendas.forEach(item => { const key = `${item.unidade}-${item.periodo}`; combinedDataMap.set(key, item); });
-        const unitsToConsider = selectedUnidades.length > 0 ? selectedUnidades : [...new Set(allData.map(d => d.nm_unidade))];
-        metasData.forEach((metaInfo, key) => {
-            const [unidade, ano, mes] = key.split('-');
-            const metaDate = new Date(ano, parseInt(mes) - 1, 15);
-            const periodo = `${ano}-${mes}`;
-            const mapKey = `${unidade}-${periodo}`;
-            if (unitsToConsider.includes(unidade) && metaDate >= startDate && metaDate < endDate && !combinedDataMap.has(mapKey)) {
-                combinedDataMap.set(mapKey, { unidade: unidade, periodo: periodo, realizado_vvr: 0, realizado_adesoes: 0, ...metaInfo });
-            }
+        // Filtra os dados para a Página 1 (apenas filtros globais)
+        const dataFiltradaPage1 = allData.filter(d => 
+            (selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade)) && 
+            d.dt_cadastro_integrante >= startDate && d.dt_cadastro_integrante < endDate
+        );
+
+        // Filtra os dados para a Página 2 (filtros globais + filtros específicos)
+        const dataFiltradaPage2 = allData.filter(d => {
+            const isUnitMatch = selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade);
+            const isDateMatch = d.dt_cadastro_integrante >= startDate && d.dt_cadastro_integrante < endDate;
+            const isFundoMatch = selectedFundos.length === 0 || selectedFundos.includes(d.nm_fundo);
+            const isTipoAdesaoMatch = selectedTiposAdesao.length === 0 || selectedTiposAdesao.includes(d.venda_posvenda);
+            const isTipoServicoMatch = selectedTiposServico.length === 0 || selectedTiposServico.includes(d.tp_servico);
+            const isInstituicaoMatch = selectedInstituicoes.length === 0 || selectedInstituicoes.includes(d.nm_instituicao);
+            const isCursoMatch = selectedCursos.length === 0 || selectedCursos.includes(d.curso_fundo);
+            const isPreEventoMatch = selectedPreEventos.length === 0 || selectedPreEventos.includes(d.tipo_cliente);
+            const isConsultorMatch = selectedConsultores.length === 0 || selectedConsultores.includes(d.consultor_comercial);
+            const isIndicacaoMatch = selectedIndicacoes.length === 0 || selectedIndicacoes.includes(d.indicado_por);
+            
+            return isUnitMatch && isDateMatch && isFundoMatch && isTipoAdesaoMatch && isTipoServicoMatch && isInstituicaoMatch && isCursoMatch && isPreEventoMatch && isConsultorMatch && isIndicacaoMatch;
         });
-        const finalTableData = Array.from(combinedDataMap.values());
-        currentFilteredDataForTable = finalTableData;
-        updateDataTable(finalTableData);
+        
+        // ATUALIZA OS ELEMENTOS DA PÁGINA 1
+        const anoVigente = 2025;
+        const dataParaGraficoVigente = allData.filter(d => (selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade)) && d.dt_cadastro_integrante.getFullYear() === anoVigente);
+        updateVvrVsMetaPorMesChart(dataParaGraficoVigente, anoVigente);
+        updateCumulativeVvrChart(allData, selectedUnidades);
+        updateMainKPIs(dataFiltradaPage1, selectedUnidades, startDate, endDate);
+        updateDataTable(processAndCrossReferenceData(dataFiltradaPage1));
+        
+        // ATUALIZA OS ELEMENTOS DA PÁGINA 2
+        updateMonthlyVvrChart(dataFiltradaPage2, selectedUnidades);
+        updateDrillDownCharts(dataFiltradaPage2, selectedUnidades);
+        updateTicketCharts(dataFiltradaPage2, selectedUnidades);
+        updateContractsCharts(fundosData, selectedUnidades);
+        updateMonthlyAdesoesChart(dataFiltradaPage2, selectedUnidades);
+        updateAdesoesDrillDownCharts(dataFiltradaPage2, selectedUnidades);
+        updateConsultorTable(dataFiltradaPage2);
+        updateDetalhadaAdesoesTable(dataFiltradaPage2);
+        updateFundosDetalhadosTable(fundosData, selectedUnidades, startDate, endDate);
+
         const startDatePY = new Date(startDate);
         startDatePY.setFullYear(startDatePY.getFullYear() - 1);
         const endDatePY = new Date(endDate);
         endDatePY.setFullYear(endDatePY.getFullYear() - 1);
         const dataBrutaFiltradaPY = allData.filter(d => (selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade)) && d.dt_cadastro_integrante >= startDatePY && d.dt_cadastro_integrante < endDatePY);
-        document.getElementById('kpi-section-py').style.display = 'block';
         updatePreviousYearKPIs(dataBrutaFiltradaPY, selectedUnidades, startDatePY, endDatePY);
     }
     
-    function updateVvrVsMetaPorMesChart(salesDataForYear, anoVigente) { const allYearPeriodos = Array.from({ length: 12 }, (_, i) => `${anoVigente}-${String(i + 1).padStart(2, '0')}`); const chartDataMap = new Map(); allYearPeriodos.forEach(periodo => { chartDataMap.set(periodo, { realizado_vendas: 0, realizado_posvendas: 0, meta_vendas: 0, meta_posvendas: 0, meta_total: 0 }); }); const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); salesDataForYear.forEach(d => { const year = d.dt_cadastro_integrante.getFullYear(); const month = String(d.dt_cadastro_integrante.getMonth() + 1).padStart(2, '0'); const periodo = `${year}-${month}`; if (chartDataMap.has(periodo)) { if (normalizeText(d.venda_posvenda) === 'VENDA') { chartDataMap.get(periodo).realizado_vendas += d.vl_plano; } else if (normalizeText(d.venda_posvenda) === 'POS VENDA') { chartDataMap.get(periodo).realizado_posvendas += d.vl_plano; } } }); const selectedUnidades = $('#unidade-filter').val() || [...new Set(allData.map(d => d.nm_unidade))]; metasData.forEach((metaInfo, key) => { const [unidade, ano, mes] = key.split('-'); const periodo = `${ano}-${mes}`; if (ano == anoVigente && chartDataMap.has(periodo)) { if (selectedUnidades.length === 0 || selectedUnidades.includes(unidade)) { chartDataMap.get(periodo).meta_vendas += metaInfo.meta_vvr_vendas; chartDataMap.get(periodo).meta_posvendas += metaInfo.meta_vvr_posvendas; chartDataMap.get(periodo).meta_total += metaInfo.meta_vvr_total; } } }); let realizadoValues, metaValues; if (currentVvrChartType === 'vendas') { realizadoValues = allYearPeriodos.map(p => chartDataMap.get(p).realizado_vendas); metaValues = allYearPeriodos.map(p => chartDataMap.get(p).meta_vendas); } else if (currentVvrChartType === 'posvendas') { realizadoValues = allYearPeriodos.map(p => chartDataMap.get(p).realizado_posvendas); metaValues = allYearPeriodos.map(p => chartDataMap.get(p).meta_posvendas); } else { realizadoValues = allYearPeriodos.map(p => chartDataMap.get(p).realizado_vendas + chartDataMap.get(p).realizado_posvendas); metaValues = allYearPeriodos.map(p => chartDataMap.get(p).meta_total); } const formattedLabels = allYearPeriodos.map(periodo => { const [year, month] = periodo.split('-'); const date = new Date(year, month - 1); const monthName = date.toLocaleString('pt-BR', { month: 'short' }).replace('.', ''); const shortYear = year.slice(2); return `${monthName}-${shortYear}`; }); if (vvrVsMetaPorMesChart) vvrVsMetaPorMesChart.destroy(); Chart.register(ChartDataLabels); vvrVsMetaPorMesChart = new Chart(document.getElementById('vvrVsMetaPorMesChart'), { type: 'bar', data: { labels: formattedLabels, datasets: [ { label: 'VVR Realizado', data: realizadoValues, backgroundColor: 'rgba(255, 193, 7, 0.7)', order: 1 }, { label: 'Meta VVR', data: metaValues, type: 'line', borderColor: 'rgb(220, 53, 69)', order: 0, datalabels: { display: true, align: 'bottom', backgroundColor: 'rgba(0, 0, 0, 0.6)', borderRadius: 4, color: 'white', font: { size: 15 }, padding: 4, formatter: (value) => (value > 0 ? `${(value / 1000).toFixed(0)}k` : '') } } ] }, options: { 
-        maintainAspectRatio: false,
-        interaction: { mode: 'index', intersect: false, }, plugins: { datalabels: { anchor: 'end', align: 'end', formatter: (value) => (value >= 1000 ? `${(value / 1000).toFixed(0)}k` : ''), color: '#F8F9FA', font: { weight: 'bold' } }, tooltip: { callbacks: { label: function(context) { let label = context.dataset.label || ''; if (label) { label += ': '; } if (context.parsed.y !== null) { label += formatCurrency(context.parsed.y); } return label; } } } }, scales: { y: { beginAtZero: true } } } }); }
-    function updateCumulativeVvrChart(historicalData, selectedUnidades) { const selectorContainer = document.getElementById('cumulative-chart-selector'); const unitsToConsider = selectedUnidades.length > 0 ? selectedUnidades : [...new Set(allData.map(d => d.nm_unidade))]; const filteredHistoricalData = historicalData.filter(d => unitsToConsider.includes(d.nm_unidade)); const salesByYearMonth = {}; const uniqueYears = [...new Set(filteredHistoricalData.map(d => d.dt_cadastro_integrante.getFullYear()))].sort(); if (selectorContainer.children.length === 0) { uniqueYears.forEach(year => { const button = document.createElement('button'); button.dataset.year = year; button.textContent = year; if (year >= uniqueYears[uniqueYears.length - 2]) { button.classList.add('active'); } selectorContainer.appendChild(button); }); selectorContainer.querySelectorAll('button').forEach(button => { button.addEventListener('click', () => { button.classList.toggle('active'); updateDashboard(); }); }); } const activeYears = Array.from(selectorContainer.querySelectorAll('button.active')).map(btn => parseInt(btn.dataset.year)); filteredHistoricalData.forEach(d => { const year = d.dt_cadastro_integrante.getFullYear(); const month = d.dt_cadastro_integrante.getMonth(); if (!salesByYearMonth[year]) { salesByYearMonth[year] = Array(12).fill(0); } salesByYearMonth[year][month] += d.vl_plano; }); const colors = ['#ffc107', '#007bff', '#6c757d', '#28a745', '#dc3545', '#17a2b8', '#fd7e14']; const datasets = []; uniqueYears.forEach((year, index) => { const monthlyData = salesByYearMonth[year] || Array(12).fill(0); const cumulativeData = []; let runningTotal = 0; for (let i = 0; i < 12; i++) { runningTotal += monthlyData[i]; cumulativeData.push(runningTotal); } datasets.push({ label: year, data: cumulativeData, borderColor: colors[index % colors.length], fill: false, tension: 0.1, hidden: !activeYears.includes(year) }); }); const monthLabels = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez']; if (cumulativeVvrChart) cumulativeVvrChart.destroy(); cumulativeVvrChart = new Chart(document.getElementById('cumulativeVvrChart'), { type: 'line', data: { labels: monthLabels, datasets: datasets }, options: { 
-        maintainAspectRatio: false,
-        interaction: { mode: 'index', intersect: false, }, plugins: { tooltip: { callbacks: { label: function(context) { let label = context.dataset.label || ''; if (label) { label += ': '; } if (context.parsed.y !== null) { label += formatCurrency(context.parsed.y); } return label; } } }, datalabels: { display: true, align: 'top', offset: 8, backgroundColor: 'rgba(52, 58, 64, 0.7)', borderRadius: 4, color: 'white', font: { size: 9 }, padding: 4, formatter: (value) => { if (value > 0) { if (value >= 1000000) return `${(value / 1000000).toFixed(1)} mi`; if (value >= 1000) return `${(value / 1000).toFixed(0)}k`; return value.toFixed(0); } return ''; } } }, scales: { y: { beginAtZero: true } } } }); }
-    function updateMonthlyVvrChart(historicalData, selectedUnidades) { const selectorContainer = document.getElementById('monthly-chart-selector'); const unitsToConsider = selectedUnidades.length > 0 ? selectedUnidades : [...new Set(allData.map(d => d.nm_unidade))]; const filteredHistoricalData = historicalData.filter(d => unitsToConsider.includes(d.nm_unidade)); const salesByYearMonth = {}; const uniqueYears = [...new Set(filteredHistoricalData.map(d => d.dt_cadastro_integrante.getFullYear()))].sort(); if (selectorContainer.children.length === 0) { uniqueYears.forEach(year => { const button = document.createElement('button'); button.dataset.year = year; button.textContent = year; if (year >= uniqueYears[uniqueYears.length - 2]) { button.classList.add('active'); } selectorContainer.appendChild(button); }); selectorContainer.querySelectorAll('button').forEach(button => { button.addEventListener('click', () => { button.classList.toggle('active'); updateDashboard(); }); }); } const activeYears = Array.from(selectorContainer.querySelectorAll('button.active')).map(btn => parseInt(btn.dataset.year)); filteredHistoricalData.forEach(d => { const year = d.dt_cadastro_integrante.getFullYear(); const month = d.dt_cadastro_integrante.getMonth(); if (!salesByYearMonth[year]) { salesByYearMonth[year] = Array(12).fill(0); } salesByYearMonth[year][month] += d.vl_plano; }); const colors = ['#ffc107', '#007bff', '#6c757d', '#28a745', '#dc3545', '#17a2b8', '#fd7e14']; const datasets = []; uniqueYears.forEach((year, index) => { const monthlyData = salesByYearMonth[year] || Array(12).fill(0); datasets.push({ label: year, data: monthlyData, borderColor: colors[index % colors.length], backgroundColor: colors[index % colors.length] + '33', fill: true, tension: 0.1, hidden: !activeYears.includes(year) }); }); const monthLabels = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez']; if (monthlyVvrChart) monthlyVvrChart.destroy(); monthlyVvrChart = new Chart(document.getElementById('monthlyVvrChart'), { type: 'line', data: { labels: monthLabels, datasets: datasets }, options: { 
-        maintainAspectRatio: false,
-        interaction: { mode: 'index', intersect: false }, plugins: { tooltip: { callbacks: { label: function(context) { let label = context.dataset.label || ''; if (label) { label += ': '; } if (context.parsed.y !== null) { label += formatCurrency(context.parsed.y); } return label; } } }, datalabels: { display: true, align: 'top', offset: 8, backgroundColor: 'rgba(52, 58, 64, 0.7)', borderRadius: 4, color: 'white', font: { size: 9 }, padding: 4, formatter: (value) => { if (value > 0) { if (value >= 1000000) return `${(value / 1000000).toFixed(1)} mi`; if (value >= 1000) return `${(value / 1000).toFixed(0)}k`; return value.toFixed(0); } return ''; } } }, scales: { y: { beginAtZero: true } } } }); }
-    
-    function updateDrillDownCharts(historicalData, selectedUnidades) {
+    function updateVvrVsMetaPorMesChart(salesDataForYear, anoVigente) {
+        const allYearPeriodos = Array.from({ length: 12 }, (_, i) => `${anoVigente}-${String(i + 1).padStart(2, '0')}`);
+        const chartDataMap = new Map();
+        allYearPeriodos.forEach(periodo => {
+            chartDataMap.set(periodo, { realizado_vendas: 0, realizado_posvendas: 0, meta_vendas: 0, meta_posvendas: 0, meta_total: 0 });
+        });
+        const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        salesDataForYear.forEach(d => {
+            const year = d.dt_cadastro_integrante.getFullYear();
+            const month = String(d.dt_cadastro_integrante.getMonth() + 1).padStart(2, '0');
+            const periodo = `${year}-${month}`;
+            if (chartDataMap.has(periodo)) {
+                if (normalizeText(d.venda_posvenda) === 'VENDA') {
+                    chartDataMap.get(periodo).realizado_vendas += d.vl_plano;
+                } else if (normalizeText(d.venda_posvenda) === 'POS VENDA') {
+                    chartDataMap.get(periodo).realizado_posvendas += d.vl_plano;
+                }
+            }
+        });
+        const selectedUnidades = $('#unidade-filter').val() || [...new Set(allData.map(d => d.nm_unidade))];
+        metasData.forEach((metaInfo, key) => {
+            const [unidade, ano, mes] = key.split('-');
+            const periodo = `${ano}-${mes}`;
+            if (ano == anoVigente && chartDataMap.has(periodo)) {
+                if (selectedUnidades.length === 0 || selectedUnidades.includes(unidade)) {
+                    chartDataMap.get(periodo).meta_vendas += metaInfo.meta_vvr_vendas;
+                    chartDataMap.get(periodo).meta_posvendas += metaInfo.meta_vvr_posvendas;
+                    chartDataMap.get(periodo).meta_total += metaInfo.meta_vvr_total;
+                }
+            }
+        });
+        let realizadoValues, metaValues;
+        if (currentVvrChartType === 'vendas') {
+            realizadoValues = allYearPeriodos.map(p => chartDataMap.get(p).realizado_vendas);
+            metaValues = allYearPeriodos.map(p => chartDataMap.get(p).meta_vendas);
+        } else if (currentVvrChartType === 'posvendas') {
+            realizadoValues = allYearPeriodos.map(p => chartDataMap.get(p).realizado_posvendas);
+            metaValues = allYearPeriodos.map(p => chartDataMap.get(p).meta_posvendas);
+        } else {
+            realizadoValues = allYearPeriodos.map(p => chartDataMap.get(p).realizado_vendas + chartDataMap.get(p).realizado_posvendas);
+            metaValues = allYearPeriodos.map(p => chartDataMap.get(p).meta_total);
+        }
+        const formattedLabels = allYearPeriodos.map(periodo => {
+            const [year, month] = periodo.split('-');
+            const date = new Date(year, month - 1);
+            const monthName = date.toLocaleString('pt-BR', { month: 'short' }).replace('.', '');
+            const shortYear = year.slice(2);
+            return `${monthName}-${shortYear}`;
+        });
+        if (vvrVsMetaPorMesChart) vvrVsMetaPorMesChart.destroy();
+        Chart.register(ChartDataLabels);
+        vvrVsMetaPorMesChart = new Chart(document.getElementById('vvrVsMetaPorMesChart'), {
+            type: 'bar',
+            data: {
+                labels: formattedLabels,
+                datasets: [
+                    {
+                        label: 'VVR Realizado',
+                        data: realizadoValues,
+                        backgroundColor: 'rgba(255, 193, 7, 0.7)',
+                        order: 1
+                    },
+                    {
+                        label: 'Meta VVR',
+                        data: metaValues,
+                        type: 'line',
+                        borderColor: 'rgb(220, 53, 69)',
+                        order: 0,
+                        datalabels: {
+                            display: true,
+                            align: 'bottom',
+                            backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                            borderRadius: 4,
+                            color: 'white',
+                            font: { size: 9 },
+                            padding: 4,
+                            formatter: (value) => (value > 0 ? `${(value / 1000).toFixed(0)}k` : '')
+                        }
+                    }
+                ]
+            },
+            options: {
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false, },
+                plugins: {
+                    datalabels: {
+                        anchor: 'end',
+                        align: 'end',
+                        formatter: (value) => (value >= 1000 ? `${(value / 1000).toFixed(0)}k` : ''),
+                        color: '#F8F9FA',
+                        font: { weight: 'bold', size: 11 }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) { label += ': '; }
+                                if (context.parsed.y !== null) { label += formatCurrency(context.parsed.y); }
+                                return label;
+                            }
+                        }
+                    }
+                },
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+    }
+    function updateCumulativeVvrChart(historicalData, selectedUnidades) {
+        const selectorContainer = document.getElementById('cumulative-chart-selector');
         const unitsToConsider = selectedUnidades.length > 0 ? selectedUnidades : [...new Set(allData.map(d => d.nm_unidade))];
         const filteredHistoricalData = historicalData.filter(d => unitsToConsider.includes(d.nm_unidade));
-        const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-
-        const salesByYear = {};
+        const salesByYearMonth = {};
+        const uniqueYears = [...new Set(filteredHistoricalData.map(d => d.dt_cadastro_integrante.getFullYear()))].sort();
+        if (selectorContainer.children.length === 0) {
+            uniqueYears.forEach(year => {
+                const button = document.createElement('button');
+                button.dataset.year = year;
+                button.textContent = year;
+                if (year >= uniqueYears[uniqueYears.length - 2]) { button.classList.add('active'); }
+                selectorContainer.appendChild(button);
+            });
+            selectorContainer.querySelectorAll('button').forEach(button => {
+                button.addEventListener('click', () => {
+                    button.classList.toggle('active');
+                    updateDashboard();
+                });
+            });
+        }
+        const activeYears = Array.from(selectorContainer.querySelectorAll('button.active')).map(btn => parseInt(btn.dataset.year));
         filteredHistoricalData.forEach(d => {
+            const year = d.dt_cadastro_integrante.getFullYear();
+            const month = d.dt_cadastro_integrante.getMonth();
+            if (!salesByYearMonth[year]) {
+                salesByYearMonth[year] = Array(12).fill(0);
+            }
+            salesByYearMonth[year][month] += d.vl_plano;
+        });
+        const colors = ['#ffc107', '#007bff', '#6c757d', '#28a745', '#dc3545', '#17a2b8', '#fd7e14'];
+        const datasets = [];
+        uniqueYears.forEach((year, index) => {
+            const monthlyData = salesByYearMonth[year] || Array(12).fill(0);
+            const cumulativeData = [];
+            let runningTotal = 0;
+            for (let i = 0; i < 12; i++) {
+                runningTotal += monthlyData[i];
+                cumulativeData.push(runningTotal);
+            }
+            datasets.push({ label: year, data: cumulativeData, borderColor: colors[index % colors.length], fill: false, tension: 0.1, hidden: !activeYears.includes(year) });
+        });
+        const monthLabels = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+        if (cumulativeVvrChart) cumulativeVvrChart.destroy();
+        cumulativeVvrChart = new Chart(document.getElementById('cumulativeVvrChart'), {
+            type: 'line',
+            data: { labels: monthLabels, datasets: datasets },
+            options: {
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false, },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) { label += ': '; }
+                                if (context.parsed.y !== null) { label += formatCurrency(context.parsed.y); }
+                                return label;
+                            }
+                        }
+                    },
+                    datalabels: {
+                        display: true,
+                        align: 'top',
+                        offset: 8,
+                        backgroundColor: 'rgba(52, 58, 64, 0.7)',
+                        borderRadius: 4,
+                        color: 'white',
+                        font: { size: 9 },
+                        padding: 4,
+                        formatter: (value) => { if (value > 0) { if (value >= 1000000) return `${(value / 1000000).toFixed(1)} mi`; if (value >= 1000) return `${(value / 1000).toFixed(0)}k`; return value.toFixed(0); } return ''; }
+                    }
+                },
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+    }
+    function updateMonthlyVvrChart(filteredData, selectedUnidades) {
+        const selectorContainer = document.getElementById('monthly-chart-selector');
+        const salesByYearMonth = {};
+        const uniqueYears = [...new Set(filteredData.map(d => d.dt_cadastro_integrante.getFullYear()))].sort();
+        if (selectorContainer.children.length === 0) {
+            uniqueYears.forEach(year => {
+                const button = document.createElement('button');
+                button.dataset.year = year;
+                button.textContent = year;
+                if (year >= uniqueYears[uniqueYears.length - 2]) { button.classList.add('active'); }
+                selectorContainer.appendChild(button);
+            });
+            selectorContainer.querySelectorAll('button').forEach(button => {
+                button.addEventListener('click', () => {
+                    button.classList.toggle('active');
+                    updateDashboard();
+                });
+            });
+        }
+        const activeYears = Array.from(selectorContainer.querySelectorAll('button.active')).map(btn => parseInt(btn.dataset.year));
+        filteredData.forEach(d => {
+            const year = d.dt_cadastro_integrante.getFullYear();
+            const month = d.dt_cadastro_integrante.getMonth();
+            if (!salesByYearMonth[year]) {
+                salesByYearMonth[year] = Array(12).fill(0);
+            }
+            salesByYearMonth[year][month] += d.vl_plano;
+        });
+        const colors = ['#ffc107', '#007bff', '#6c757d', '#28a745', '#dc3545', '#17a2b8', '#fd7e14'];
+        const datasets = [];
+        uniqueYears.forEach((year, index) => {
+            const monthlyData = salesByYearMonth[year] || Array(12).fill(0);
+            datasets.push({ label: year, data: monthlyData, borderColor: colors[index % colors.length], backgroundColor: colors[index % colors.length] + '33', fill: true, tension: 0.1, hidden: !activeYears.includes(year) });
+        });
+        const monthLabels = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+        if (monthlyVvrChart) monthlyVvrChart.destroy();
+        monthlyVvrChart = new Chart(document.getElementById('monthlyVvrChart'), {
+            type: 'line',
+            data: { labels: monthLabels, datasets: datasets },
+            options: {
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) { label += ': '; }
+                                if (context.parsed.y !== null) { label += formatCurrency(context.parsed.y); }
+                                return label;
+                            }
+                        }
+                    },
+                    datalabels: {
+                        display: true,
+                        align: 'top',
+                        offset: 8,
+                        backgroundColor: 'rgba(52, 58, 64, 0.7)',
+                        borderRadius: 4,
+                        color: 'white',
+                        font: { size: 9 },
+                        padding: 4,
+                        formatter: (value) => { if (value > 0) { if (value >= 1000000) return `${(value / 1000000).toFixed(1)} mi`; if (value >= 1000) return `${(value / 1000).toFixed(0)}k`; return value.toFixed(0); } return ''; }
+                    }
+                },
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+    }
+    
+    function updateDrillDownCharts(filteredData, selectedUnidades) {
+        const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        const salesByYear = {};
+        filteredData.forEach(d => {
             const year = d.dt_cadastro_integrante.getFullYear();
             if (!salesByYear[year]) {
                 salesByYear[year] = { vendas: 0, posVendas: 0 };
@@ -719,23 +870,38 @@ updateFundosDetalhadosTable(fundosData, selectedUnidades, startDate, endDate);
                     y: { stacked: true } 
                 },
                 plugins: {
-                    datalabels: { color: 'white', font: { weight: 'bold' }, formatter: (value) => (value > 1000 ? `${(value / 1000).toFixed(1)} mi` : '') },
-                    tooltip: { callbacks: {
-                        label: function(context) { let label = context.dataset.label || ''; if (label) { label += ': '; } if (context.parsed.x !== null) { label += formatCurrency(context.parsed.x); } return label; },
-                        footer: function(tooltipItems) { let sum = 0; tooltipItems.forEach(item => { sum += item.parsed.x; }); return 'Total: ' + formatCurrency(sum); }
-                    }}
+                    datalabels: { color: 'white', font: { weight: 'bold' }, formatter: (value) => (value > 1000 ? `${(value / 1000000).toFixed(1)} mi` : '') },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label || '';
+                            },
+                            footer: function(tooltipItems) {
+                                let sum = 0;
+                                const lines = [];
+                                tooltipItems.slice().reverse().forEach(function(tooltipItem) {
+                                    sum += tooltipItem.parsed.x;
+                                    const value = formatCurrency(tooltipItem.parsed.x);
+                                    lines.push(`${tooltipItem.dataset.label}: ${value}`);
+                                });
+                                lines.push('');
+                                lines.push(`Total: ${formatCurrency(sum)}`);
+                                return lines;
+                            }
+                        }
+                    }
                 },
                 onClick: (event, elements) => {
                     if (elements.length > 0) {
                         const clickedYear = years[elements[0].index];
-                        drawMonthlyDetailChart(filteredHistoricalData, clickedYear);
+                        drawMonthlyDetailChart(filteredData, clickedYear);
                     }
                 }
             }
         });
 
         if (years.length > 0) {
-            drawMonthlyDetailChart(filteredHistoricalData, years[years.length - 1]);
+            drawMonthlyDetailChart(filteredData, years[years.length - 1]);
         }
     }
 
@@ -774,21 +940,33 @@ updateFundosDetalhadosTable(fundosData, selectedUnidades, startDate, endDate);
                 scales: { x: { stacked: true }, y: { stacked: true } },
                 plugins: {
                     datalabels: { color: 'white', font: { weight: 'bold' }, formatter: (value) => (value > 1000 ? `${(value / 1000).toFixed(0)}k` : '') },
-                    tooltip: { callbacks: {
-                        label: function(context) { let label = context.dataset.label || ''; if (label) { label += ': '; } if (context.parsed.y !== null) { label += formatCurrency(context.parsed.y); } return label; },
-                        footer: function(tooltipItems) { let sum = 0; tooltipItems.forEach(item => { sum += item.parsed.y; }); return 'Total: ' + formatCurrency(sum); }
-                    }}
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label || '';
+                            },
+                            footer: function(tooltipItems) {
+                                let sum = 0;
+                                const lines = [];
+                                tooltipItems.slice().reverse().forEach(function(tooltipItem) {
+                                    sum += tooltipItem.parsed.y;
+                                    const value = formatCurrency(tooltipItem.parsed.y);
+                                    lines.push(`${tooltipItem.dataset.label}: ${value}`);
+                                });
+                                lines.push('');
+                                lines.push(`Total: ${formatCurrency(sum)}`);
+                                return lines;
+                            }
+                        }
+                    }
                 }
             }
         });
     }
 
-    function updateTicketCharts(historicalData, selectedUnidades) {
-        const unitsToConsider = selectedUnidades.length > 0 ? selectedUnidades : [...new Set(allData.map(d => d.nm_unidade))];
-        const filteredHistoricalData = historicalData.filter(d => unitsToConsider.includes(d.nm_unidade));
-
+    function updateTicketCharts(filteredData, selectedUnidades) {
         const ticketByYear = {};
-        filteredHistoricalData.forEach(d => {
+        filteredData.forEach(d => {
             const year = d.dt_cadastro_integrante.getFullYear();
             if (!ticketByYear[year]) {
                 ticketByYear[year] = { totalValor: 0, totalAdesoes: 0 };
@@ -814,107 +992,103 @@ updateFundosDetalhadosTable(fundosData, selectedUnidades, startDate, endDate);
                     backgroundColor: '#17a2b8'
                 }]
             },
-         options: {
-    maintainAspectRatio: false,
-    indexAxis: 'y',
-    plugins: {
-        datalabels: {
-            anchor: 'end',
-            align: 'end',
-            color: 'white',
-            font: { weight: 'bold' },
-            formatter: (value) => value > 0 ? formatCurrency(value) : ''
-        },
-        tooltip: {
-            callbacks: {
-                label: (context) => `Ticket Médio: ${formatCurrency(context.parsed.x)}`
+            options: {
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                plugins: {
+                    datalabels: {
+                        anchor: 'end',
+                        align: 'end',
+                        color: 'white',
+                        font: { weight: 'bold' },
+                        formatter: (value) => value > 0 ? formatCurrency(value) : ''
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: (context) => `Ticket Médio: ${formatCurrency(context.parsed.x)}`
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        afterDataLimits: (scale) => {
+                            scale.max *= 1.25;
+                        }
+                    }
+                },
+                onClick: (event, elements) => {
+                    if (elements.length > 0) {
+                        const clickedYear = years[elements[0].index];
+                        drawMonthlyTicketChart(filteredData, clickedYear);
+                    }
+                }
             }
-        }
-    },
-    scales: { // Adicionamos a configuração de escalas
-        x: {
-            beginAtZero: true,
-            // Lógica para adicionar espaço extra no eixo X (horizontal)
-            afterDataLimits: (scale) => {
-                scale.max *= 1.2;
-            }
-        }
-    },
-    onClick: (event, elements) => {
-        if (elements.length > 0) {
-            const clickedYear = years[elements[0].index];
-            drawMonthlyTicketChart(filteredHistoricalData, clickedYear);
-        }
-    }
-}
         });
 
         if (years.length > 0) {
-            drawMonthlyTicketChart(filteredHistoricalData, years[years.length - 1]);
+            drawMonthlyTicketChart(filteredData, years[years.length - 1]);
         }
     }
 
-function drawMonthlyTicketChart(data, year) {
-    document.getElementById('monthly-ticket-title').textContent = `Ticket Médio Mensal (${year})`;
-    
-    const ticketByMonth = Array(12).fill(0).map(() => ({ totalValor: 0, totalAdesoes: 0 }));
+    function drawMonthlyTicketChart(data, year) {
+        document.getElementById('monthly-ticket-title').textContent = `Ticket Médio Mensal (${year})`;
+        
+        const ticketByMonth = Array(12).fill(0).map(() => ({ totalValor: 0, totalAdesoes: 0 }));
 
-    data.forEach(d => {
-        if (d.dt_cadastro_integrante.getFullYear() === parseInt(year)) {
-            const month = d.dt_cadastro_integrante.getMonth();
-            ticketByMonth[month].totalValor += d.vl_plano;
-            ticketByMonth[month].totalAdesoes += 1;
-        }
-    });
-    
-    const monthlyTicketData = ticketByMonth.map(m => m.totalAdesoes > 0 ? m.totalValor / m.totalAdesoes : 0);
-    const monthLabels = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+        data.forEach(d => {
+            if (d.dt_cadastro_integrante.getFullYear() === parseInt(year)) {
+                const month = d.dt_cadastro_integrante.getMonth();
+                ticketByMonth[month].totalValor += d.vl_plano;
+                ticketByMonth[month].totalAdesoes += 1;
+            }
+        });
+        
+        const monthlyTicketData = ticketByMonth.map(m => m.totalAdesoes > 0 ? m.totalValor / m.totalAdesoes : 0);
+        const monthLabels = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
 
-    // 1. Encontra o valor máximo nos dados do gráfico
-    const maxValue = Math.max(...monthlyTicketData);
+        const maxValue = Math.max(...monthlyTicketData);
 
-    if (monthlyTicketChart) monthlyTicketChart.destroy();
-    monthlyTicketChart = new Chart(document.getElementById('monthlyTicketChart'), {
-        type: 'bar',
-        data: {
-            labels: monthLabels,
-            datasets: [{
-                label: 'Ticket Médio',
-                data: monthlyTicketData,
-                backgroundColor: '#17a2b8'
-            }]
-        },
-        options: {
-            maintainAspectRatio: false,
-            plugins: {
-                datalabels: {
-                    anchor: 'end',
-                    align: 'end',
-                    color: 'white',
-                    font: { weight: 'bold' },
-                    formatter: (value) => value > 0 ? formatCurrency(value) : '' // Formata apenas valores maiores que zero
+        if (monthlyTicketChart) monthlyTicketChart.destroy();
+        monthlyTicketChart = new Chart(document.getElementById('monthlyTicketChart'), {
+            type: 'bar',
+            data: {
+                labels: monthLabels,
+                datasets: [{
+                    label: 'Ticket Médio',
+                    data: monthlyTicketData,
+                    backgroundColor: '#17a2b8'
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                plugins: {
+                    datalabels: {
+                        anchor: 'end',
+                        align: 'end',
+                        color: 'white',
+                        font: { weight: 'bold' },
+                        formatter: (value) => value > 0 ? formatCurrency(value) : ''
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: (context) => `Ticket Médio: ${formatCurrency(context.parsed.y)}`
+                        }
+                    }
                 },
-                tooltip: {
-                    callbacks: {
-                        label: (context) => `Ticket Médio: ${formatCurrency(context.parsed.y)}`
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: maxValue > 0 ? maxValue * 1.20 : undefined 
                     }
                 }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    // 2. Define o valor máximo do eixo Y com uma folga de 20%
-                    // Se o valor máximo for 0, o gráfico se ajusta automaticamente
-                    max: maxValue > 0 ? maxValue * 1.20 : undefined 
-                }
             }
-        }
-    });
-}
+        });
+    }
     
-    function updateContractsCharts(historicalData, selectedUnidades) {
-        const unitsToConsider = selectedUnidades.length > 0 ? selectedUnidades : [...new Set(allData.map(d => d.nm_unidade))];
-        const filteredHistoricalData = historicalData.filter(d => unitsToConsider.includes(d.nm_unidade));
+    function updateContractsCharts(fundosData, selectedUnidades) {
+        const unitsToConsider = selectedUnidades.length > 0 ? selectedUnidades : [...new Set(fundosData.map(d => d.nm_unidade))];
+        const filteredHistoricalData = fundosData.filter(d => unitsToConsider.includes(d.nm_unidade));
 
         const contractsByYear = {};
         filteredHistoricalData.forEach(d => {
@@ -1034,6 +1208,13 @@ function drawMonthlyTicketChart(data, year) {
                 this.classList.add('active');
                 document.querySelectorAll('.page-content').forEach(page => page.classList.remove('active'));
                 document.getElementById(this.dataset.page).classList.add('active');
+
+                const page2Filters = document.getElementById('filters-section-page2');
+                if (this.dataset.page === 'page2') {
+                    page2Filters.style.display = 'flex';
+                } else {
+                    page2Filters.style.display = 'none';
+                }
             });
         });
 
@@ -1089,24 +1270,44 @@ function drawMonthlyTicketChart(data, year) {
         const fimMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0); 
         document.getElementById('start-date').value = inicioMes.toISOString().split('T')[0]; 
         document.getElementById('end-date').value = fimMes.toISOString().split('T')[0]; 
+
+        const createMultiSelect = (elementId, data, dataField, placeholder) => {
+            const uniqueValues = [...new Set(data.map(item => item[dataField]).filter(Boolean))].sort();
+            const filterElement = $(`#${elementId}`);
+            filterElement.empty();
+            uniqueValues.forEach(val => {
+                filterElement.append($('<option>', { value: val, text: val }));
+            });
+            filterElement.multiselect({
+                enableFiltering: true,
+                includeSelectAllOption: true,
+                selectAllText: 'Marcar todos',
+                filterPlaceholder: 'Pesquisar...',
+                nonSelectedText: placeholder,
+                nSelectedText: 'selecionados',
+                allSelectedText: 'Todos selecionados',
+                buttonWidth: '100%',
+                maxHeight: 300,
+                onChange: updateDashboard,
+                onSelectAll: updateDashboard,
+                onDeselectAll: updateDashboard
+            });
+        };
+
+        createMultiSelect('fundo-filter', allData, 'nm_fundo', 'Todos os Fundos');
+        createMultiSelect('tipo-adesao-filter', allData, 'venda_posvenda', 'Todos os Tipos de Adesão');
+        createMultiSelect('tipo-servico-filter', allData, 'tp_servico', 'Todos os Tipos de Serviço');
+        createMultiSelect('instituicao-filter', allData, 'nm_instituicao', 'Todas as Instituições');
+        createMultiSelect('curso-filter', allData, 'curso_fundo', 'Todos os Cursos');
+        createMultiSelect('pre-evento-filter', allData, 'tipo_cliente', 'Todos (Pré-Evento)');
+        createMultiSelect('consultor-filter', allData, 'consultor_comercial', 'Todos os Consultores');
+        createMultiSelect('indicacao-filter', allData, 'indicado_por', 'Todas as Indicações');
     }
 
-    function updateMonthlyAdesoesChart(historicalData, selectedUnidades) {
+    function updateMonthlyAdesoesChart(filteredData, selectedUnidades) {
         const selectorContainer = document.getElementById('adesoes-chart-selector');
-        const unitsToConsider = selectedUnidades.length > 0 ? selectedUnidades : [...new Set(allData.map(d => d.nm_unidade))];
-        const filteredHistoricalData = historicalData.filter(d => unitsToConsider.includes(d.nm_unidade));
-
         const adesoesByYearMonth = {};
-        filteredHistoricalData.forEach(d => {
-            const year = d.dt_cadastro_integrante.getFullYear();
-            const month = d.dt_cadastro_integrante.getMonth();
-            if (!adesoesByYearMonth[year]) {
-                adesoesByYearMonth[year] = Array(12).fill(0);
-            }
-            adesoesByYearMonth[year][month]++; 
-        });
-
-        const uniqueYears = Object.keys(adesoesByYearMonth).sort();
+        const uniqueYears = [...new Set(filteredData.map(d => d.dt_cadastro_integrante.getFullYear()))].sort();
 
         if (selectorContainer.children.length === 0) {
             uniqueYears.forEach(year => {
@@ -1128,8 +1329,17 @@ function drawMonthlyTicketChart(data, year) {
         }
 
         const activeYears = Array.from(selectorContainer.querySelectorAll('button.active')).map(btn => parseInt(btn.dataset.year));
-        const colors = ['#6c757d', '#28a745', '#dc3545', '#ffc107', '#007bff', '#17a2b8', '#fd7e14'];
+        
+        filteredData.forEach(d => {
+            const year = d.dt_cadastro_integrante.getFullYear();
+            const month = d.dt_cadastro_integrante.getMonth();
+            if (!adesoesByYearMonth[year]) {
+                adesoesByYearMonth[year] = Array(12).fill(0);
+            }
+            adesoesByYearMonth[year][month]++; 
+        });
 
+        const colors = ['#6c757d', '#28a745', '#dc3545', '#ffc107', '#007bff', '#17a2b8', '#fd7e14'];
         const datasets = [];
         uniqueYears.forEach((year, index) => {
             const monthlyData = adesoesByYearMonth[year] || Array(12).fill(0);
@@ -1157,6 +1367,9 @@ function drawMonthlyTicketChart(data, year) {
                     intersect: false
                 },
                 plugins: {
+                    legend: {
+                        position: 'bottom',
+                    },
                     tooltip: {
                         callbacks: {
                             label: function(context) {
@@ -1175,6 +1388,7 @@ function drawMonthlyTicketChart(data, year) {
                         display: true,
                         align: 'end',
                         anchor: 'end',
+                        clamp: true,
                         color: '#F8F9FA',
                         font: {
                             size: 9,
@@ -1200,13 +1414,10 @@ function drawMonthlyTicketChart(data, year) {
         });
     }
 
-    function updateAdesoesDrillDownCharts(historicalData, selectedUnidades) {
-        const unitsToConsider = selectedUnidades.length > 0 ? selectedUnidades : [...new Set(allData.map(d => d.nm_unidade))];
-        const filteredHistoricalData = historicalData.filter(d => unitsToConsider.includes(d.nm_unidade));
+    function updateAdesoesDrillDownCharts(filteredData, selectedUnidades) {
         const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-
         const adesoesByYear = {};
-        filteredHistoricalData.forEach(d => {
+        filteredData.forEach(d => {
             const year = d.dt_cadastro_integrante.getFullYear();
             if (!adesoesByYear[year]) {
                 adesoesByYear[year] = { vendas: 0, posVendas: 0 };
@@ -1246,14 +1457,14 @@ function drawMonthlyTicketChart(data, year) {
                 onClick: (event, elements) => {
                     if (elements.length > 0) {
                         const clickedYear = years[elements[0].index];
-                        drawMonthlyAdesoesDetailChart(filteredHistoricalData, clickedYear);
+                        drawMonthlyAdesoesDetailChart(filteredData, clickedYear);
                     }
                 }
             }
         });
 
         if (years.length > 0) {
-            drawMonthlyAdesoesDetailChart(filteredHistoricalData, years[years.length - 1]);
+            drawMonthlyAdesoesDetailChart(filteredData, years[years.length - 1]);
         }
     }
 
@@ -1359,95 +1570,91 @@ function drawMonthlyTicketChart(data, year) {
         }
     }
 
-   function updateDetalhadaAdesoesTable(filteredData) {
-    const tableData = filteredData.map(d => [
-        d.nm_unidade,
-        d.codigo_integrante,
-        d.nm_integrante,
-        d.dt_cadastro_integrante.toLocaleDateString('pt-BR'),
-        d.id_fundo,
-        d.venda_posvenda,
-        d.indicado_por,
-        d.vl_plano
-    ]);
+    function updateDetalhadaAdesoesTable(filteredData) {
+        const tableData = filteredData.map(d => [
+            d.nm_unidade,
+            d.codigo_integrante,
+            d.nm_integrante,
+            d.dt_cadastro_integrante.toLocaleDateString('pt-BR'),
+            d.id_fundo,
+            d.venda_posvenda,
+            d.indicado_por,
+            d.vl_plano
+        ]);
 
-    if (detalhadaAdesoesDataTable) {
-        detalhadaAdesoesDataTable.clear().rows.add(tableData).draw();
-    } else {
-        detalhadaAdesoesDataTable = $('#detalhada-adesoes-table').DataTable({
-            data: tableData,
-            columns: [
-                null, null, null, null, null, null, null,
-                { render: data => formatCurrency(data) }
-            ],
-            pageLength: 10,
-            language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json' },
-            destroy: true,
-            dom: 'Bfrtip',
-            buttons: [
-                {
-                    extend: 'excelHtml5',
-                    text: 'Exportar para Excel',
-                    title: `Relatorio_Adesoes_Detalhadas_${new Date().toLocaleDateString('pt-BR')}`,
-                    className: 'excel-button',
-                    exportOptions: {
-                        format: {
-                            body: function ( data, row, column, node ) {
-                                // Coluna 7: VVR (Moeda)
-                                if (column === 7) {
-                                    // A 'data' aqui é o texto formatado "R$ 1.234,56"
-                                    // Precisamos convertê-lo de volta para número
-                                    return parseFloat(String(data).replace('R$', '').replace(/\./g, '').replace(',', '.').trim());
+        if (detalhadaAdesoesDataTable) {
+            detalhadaAdesoesDataTable.clear().rows.add(tableData).draw();
+        } else {
+            detalhadaAdesoesDataTable = $('#detalhada-adesoes-table').DataTable({
+                data: tableData,
+                columns: [
+                    null, null, null, null, null, null, null,
+                    { render: data => formatCurrency(data) }
+                ],
+                pageLength: 10,
+                language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json' },
+                destroy: true,
+                dom: 'Bfrtip',
+                buttons: [
+                    {
+                        extend: 'excelHtml5',
+                        text: 'Exportar para Excel',
+                        title: `Relatorio_Adesoes_Detalhadas_${new Date().toLocaleDateString('pt-BR')}`,
+                        className: 'excel-button',
+                        exportOptions: {
+                            format: {
+                                body: function ( data, row, column, node ) {
+                                    if (column === 7) {
+                                        return parseFloat(String(data).replace('R$', '').replace(/\./g, '').replace(',', '.').trim());
+                                    }
+                                    return data;
                                 }
-                                // As outras colunas usam o dado bruto
-                                return data;
                             }
                         }
                     }
-                }
-            ]
-        });
+                ]
+            });
+        }
     }
-}
-function updateFundosDetalhadosTable(fundosData, selectedUnidades, startDate, endDate) {
-    const filteredData = fundosData.filter(d => {
-        const isUnitMatch = selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade);
-        // Filtra pela data do contrato do fundo
-        const isDateMatch = d.dt_contrato >= startDate && d.dt_contrato < endDate;
-        return isUnitMatch && isDateMatch;
-    });
-
-    const tableData = filteredData.map(d => [
-        d.nm_unidade,
-        d.id_fundo,
-        d.fundo,
-        formatDate(d.dt_contrato),
-        formatDate(d.dt_cadastro),
-        d.tipo_servico,
-        d.instituicao,
-        formatDate(d.dt_baile)
-    ]);
-
-    if (fundosDetalhadosDataTable) {
-        fundosDetalhadosDataTable.clear().rows.add(tableData).draw();
-    } else {
-        fundosDetalhadosDataTable = $('#fundos-detalhados-table').DataTable({
-            data: tableData,
-            pageLength: 10,
-            language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json' },
-            destroy: true,
-            dom: 'Bfrtip',
-            buttons: [
-                {
-                    extend: 'excelHtml5',
-                    text: 'Exportar para Excel',
-                    title: `Relatorio_Fundos_Detalhados_${new Date().toLocaleDateString('pt-BR')}`,
-                    className: 'excel-button'
-                }
-            ]
+    
+    function updateFundosDetalhadosTable(fundosData, selectedUnidades, startDate, endDate) {
+        const filteredData = fundosData.filter(d => {
+            const isUnitMatch = selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade);
+            const isDateMatch = d.dt_contrato >= startDate && d.dt_contrato < endDate;
+            return isUnitMatch && isDateMatch;
         });
+
+        const tableData = filteredData.map(d => [
+            d.nm_unidade,
+            d.id_fundo,
+            d.fundo,
+            formatDate(d.dt_contrato),
+            formatDate(d.dt_cadastro),
+            d.tipo_servico,
+            d.instituicao,
+            formatDate(d.dt_baile)
+        ]);
+
+        if (fundosDetalhadosDataTable) {
+            fundosDetalhadosDataTable.clear().rows.add(tableData).draw();
+        } else {
+            fundosDetalhadosDataTable = $('#fundos-detalhados-table').DataTable({
+                data: tableData,
+                pageLength: 10,
+                language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json' },
+                destroy: true,
+                dom: 'Bfrtip',
+                buttons: [
+                    {
+                        extend: 'excelHtml5',
+                        text: 'Exportar para Excel',
+                        title: `Relatorio_Fundos_Detalhados_${new Date().toLocaleDateString('pt-BR')}`,
+                        className: 'excel-button'
+                    }
+                ]
+            });
+        }
     }
-}
 </script>
 </body>
 </html>
