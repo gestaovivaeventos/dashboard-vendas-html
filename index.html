@@ -1239,51 +1239,54 @@
     }
 
     function updateDetalhadaAdesoesTable(filteredData) {
-        const tableData = filteredData.map(d => [
-            d.nm_unidade,
-            d.codigo_integrante,
-            d.nm_integrante,
-            d.dt_cadastro_integrante.toLocaleDateString('pt-BR'),
-            d.id_fundo,
-            d.venda_posvenda,
-            d.indicado_por,
-            d.vl_plano
-        ]);
+    const tableData = filteredData.map(d => [
+        d.nm_unidade,
+        d.codigo_integrante,
+        d.nm_integrante,
+        d.dt_cadastro_integrante.toLocaleDateString('pt-BR'),
+        d.id_fundo,
+        d.venda_posvenda,
+        d.indicado_por,
+        d.vl_plano
+    ]);
 
-        if (detalhadaAdesoesDataTable) {
-            detalhadaAdesoesDataTable.clear().rows.add(tableData).draw();
-        } else {
-            detalhadaAdesoesDataTable = $('#detalhada-adesoes-table').DataTable({
-                data: tableData,
-                columns: [
-                    null, null, null, null, null, null, null,
-                    { render: data => formatCurrency(data) }
-                ],
-                pageLength: 10,
-                language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json' },
-                destroy: true,
-                dom: 'Bfrtip',
-                buttons: [
-                    {
-                        extend: 'excelHtml5',
-                        text: 'Exportar para Excel',
-                        title: `Relatorio_Adesoes_Detalhadas_${new Date().toLocaleDateString('pt-BR')}`,
-                        className: 'excel-button',
-                        exportOptions: {
-                            format: {
-                                body: function ( data, row, column, node ) {
-                                    if (column === 7) {
-                                        return data;
-                                    }
-                                    return node.innerHTML;
+    if (detalhadaAdesoesDataTable) {
+        detalhadaAdesoesDataTable.clear().rows.add(tableData).draw();
+    } else {
+        detalhadaAdesoesDataTable = $('#detalhada-adesoes-table').DataTable({
+            data: tableData,
+            columns: [
+                null, null, null, null, null, null, null,
+                { render: data => formatCurrency(data) }
+            ],
+            pageLength: 10,
+            language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json' },
+            destroy: true,
+            dom: 'Bfrtip',
+            buttons: [
+                {
+                    extend: 'excelHtml5',
+                    text: 'Exportar para Excel',
+                    title: `Relatorio_Adesoes_Detalhadas_${new Date().toLocaleDateString('pt-BR')}`,
+                    className: 'excel-button',
+                    exportOptions: {
+                        format: {
+                            body: function ( data, row, column, node ) {
+                                // As colunas Cód. Integrante(1), Cód. Fundo(4) e VVR(7) devem ser numéricas
+                                if (column === 1 || column === 4 || column === 7) {
+                                    // A variável 'data' aqui já é o número bruto, então apenas o retornamos
+                                    return data;
                                 }
+                                // As outras colunas são retornadas como texto
+                                return data;
                             }
                         }
                     }
-                ]
-            });
-        }
+                }
+            ]
+        });
     }
+}
 </script>
 </body>
 </html>
