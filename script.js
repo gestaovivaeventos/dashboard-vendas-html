@@ -348,50 +348,74 @@ function updateDrillDownCharts(historicalData, selectedUnidades) {
     }
 }
 
-    function drawMonthlyDetailChart(data, year) {
-        document.getElementById('monthly-stacked-title').textContent = `Venda Realizada Total Mensal (${year})`;
-        const salesByMonth = Array(12).fill(0).map(() => ({ vendas: 0, posVendas: 0 }));
-        const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-        
-        data.forEach(d => {
-            if (d.dt_cadastro_integrante.getFullYear() === parseInt(year)) {
-                const month = d.dt_cadastro_integrante.getMonth();
-                if (normalizeText(d.venda_posvenda) === 'VENDA') {
-                    salesByMonth[month].vendas += d.vl_plano;
-                } else if (normalizeText(d.venda_posvenda) === 'POS VENDA') {
-                    salesByMonth[month].posVendas += d.vl_plano;
-                }
+   function drawMonthlyDetailChart(data, year) {
+    document.getElementById('monthly-stacked-title').textContent = `Venda Realizada Total Mensal (${year})`;
+    const salesByMonth = Array(12).fill(0).map(() => ({ vendas: 0, posVendas: 0 }));
+    const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    
+    data.forEach(d => {
+        if (d.dt_cadastro_integrante.getFullYear() === parseInt(year)) {
+            const month = d.dt_cadastro_integrante.getMonth();
+            if (normalizeText(d.venda_posvenda) === 'VENDA') {
+                salesByMonth[month].vendas += d.vl_plano;
+            } else if (normalizeText(d.venda_posvenda) === 'POS VENDA') {
+                salesByMonth[month].posVendas += d.vl_plano;
             }
-        });
+        }
+    });
 
-        const vendasMensal = salesByMonth.map(m => m.vendas);
-        const posVendasMensal = salesByMonth.map(m => m.posVendas);
-        const monthLabels = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+    const vendasMensal = salesByMonth.map(m => m.vendas);
+    const posVendasMensal = salesByMonth.map(m => m.posVendas);
+    const monthLabels = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
 
-        if (monthlyStackedChart) monthlyStackedChart.destroy();
-        monthlyStackedChart = new Chart(document.getElementById('monthlyStackedChart'), {
-            type: 'bar',
-            data: {
-                labels: monthLabels,
-                datasets: [
-                    { label: 'Pós Venda', data: posVendasMensal, backgroundColor: '#007bff' },
-                    { label: 'Venda', data: vendasMensal, backgroundColor: '#6c757d' }
-                ]
+    if (monthlyStackedChart) monthlyStackedChart.destroy();
+    monthlyStackedChart = new Chart(document.getElementById('monthlyStackedChart'), {
+        type: 'bar',
+        data: {
+            labels: monthLabels,
+            datasets: [
+                { label: 'Pós Venda', data: posVendasMensal, backgroundColor: '#007bff' },
+                { label: 'Venda', data: vendasMensal, backgroundColor: '#6c757d' }
+            ]
+        },
+        options: {
+            maintainAspectRatio: false,
+
+            // --- 1. ALTERAÇÃO DO TOOLTIP ---
+            interaction: {
+                mode: 'index',
+                intersect: false,
             },
-            options: {
-                maintainAspectRatio: false,
-                scales: { x: { stacked: true }, y: { stacked: true } },
-                plugins: {
-                    datalabels: { color: 'white', font: { weight: 'bold' }, formatter: (value) => (value > 1000 ? `${(value / 1000).toFixed(0)}k` : '') },
-                    tooltip: { callbacks: {
-                        label: function(context) { let label = context.dataset.label || ''; if (label) { label += ': '; } if (context.parsed.y !== null) { label += formatCurrency(context.parsed.y); } return label; },
-                        footer: function(tooltipItems) { let sum = 0; tooltipItems.forEach(item => { sum += item.parsed.y; }); return 'Total: ' + formatCurrency(sum); }
-                    }}
+
+            scales: { x: { stacked: true }, y: { stacked: true } },
+            plugins: {
+                datalabels: {
+                    color: 'white',
+                    font: { weight: 'bold' },
+                    // --- 2. ALTERAÇÃO DOS RÓTULOS (FORMATTER) ---
+                    formatter: function(value) {
+                        if (value === 0) return '';
+                        if (value >= 1000000) {
+                            // Formata para Milhões. Ex: 21.355.146 -> "21.4 M"
+                            return (value / 1000000).toFixed(1).replace('.0', '') + ' M';
+                        }
+                        if (value >= 1000) {
+                             // Formata para milhares. Ex: 9637 -> "10k"
+                            return (value / 1000).toFixed(0) + 'k';
+                        }
+                        return value;
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function (context) { let label = context.dataset.label || ''; if (label) { label += ': '; } if (context.parsed.y !== null) { label += formatCurrency(context.parsed.y); } return label; },
+                        footer: function (tooltipItems) { let sum = 0; tooltipItems.forEach(item => { sum += item.parsed.y; }); return 'Total: ' + formatCurrency(sum); }
+                    }
                 }
             }
-        });
-    }
-
+        }
+    });
+}
     function updateTicketCharts(historicalData, selectedUnidades) {
         const unitsToConsider = selectedUnidades.length > 0 ? selectedUnidades : [...new Set(allData.map(d => d.nm_unidade))];
         const filteredHistoricalData = historicalData.filter(d => unitsToConsider.includes(d.nm_unidade));
