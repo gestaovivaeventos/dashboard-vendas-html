@@ -302,6 +302,20 @@
                             </div>
                         </div>
                     </div>
+                    <section class="table-container" id="consultor-table-section" style="display: none;">
+                        <h2>Desempenho por Consultor Comercial</h2>
+                        <table id="consultor-table" class="display" style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th>Unidade</th>
+                                    <th>Consultor Comercial</th>
+                                    <th>VVR Total</th>
+                                    <th>Total de Adesões</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </section>
                 </div>
             </div>
         </div>
@@ -315,7 +329,7 @@
     const METAS_SHEET_NAME = "metas";
     const API_KEY = "AIzaSyBuGRH91CnRuDtN5RGsb5DvHEfhTxJnWSs"; 
     
-    let allData = [], fundosData = [], metasData = new Map(), dataTable, vvrVsMetaPorMesChart, cumulativeVvrChart, monthlyVvrChart, yearlyStackedChart, monthlyStackedChart, yearlyTicketChart, monthlyTicketChart, yearlyContractsChart, monthlyContractsChart, monthlyAdesoesChart, yearlyAdesoesStackedChart, monthlyAdesoesStackedChart;
+    let allData = [], fundosData = [], metasData = new Map(), dataTable, vvrVsMetaPorMesChart, cumulativeVvrChart, monthlyVvrChart, yearlyStackedChart, monthlyStackedChart, yearlyTicketChart, monthlyTicketChart, yearlyContractsChart, monthlyContractsChart, monthlyAdesoesChart, yearlyAdesoesStackedChart, monthlyAdesoesStackedChart, consultorDataTable;
     let currentVvrChartType = 'total';
     let currentTableDataType = 'total';
     let currentFilteredDataForTable = [];
@@ -340,7 +354,8 @@
                  'chart-yearly-contracts-section', 'chart-monthly-contracts-section',
                  'chart-monthly-adesoes-section',
                  'chart-yearly-adesoes-stacked-section',
-                 'chart-monthly-adesoes-stacked-section'
+                 'chart-monthly-adesoes-stacked-section',
+                 'consultor-table-section'
                 ].forEach(id => {
                     const el = document.getElementById(id);
                     if (el) el.style.display = 'block';
@@ -375,6 +390,51 @@
         }, 300);
     });
     
+    async function fetchAllSalesDataFromSheet() {
+        if (!SALES_SPREADSHEET_ID || !SALES_SHEET_NAME || !API_KEY) {
+            console.error("ID da Planilha de Vendas, Nome da Aba ou Chave de API não configurados.");
+            return [];
+        }
+        const url = `https://sheets.googleapis.com/v4/spreadsheets/${SALES_SPREADSHEET_ID}/values/${SALES_SHEET_NAME}?key=${API_KEY}`;
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                console.error("Erro ao buscar dados de vendas da planilha:", await response.json());
+                return [];
+            }
+            const data = await response.json();
+            const rows = data.values || [];
+            if (rows.length < 2) return [];
+
+            const headers = rows[0].map(h => h.trim().toLowerCase());
+            const unidadeIndex = headers.indexOf("nm_unidade");
+            const dataIndex = headers.indexOf("dt_cadastro_integrante");
+            const valorIndex = headers.indexOf("vl_plano");
+            const tipoVendaIndex = headers.indexOf("venda_posvenda");
+            const indicadoPorIndex = headers.indexOf("indicado_por");
+
+            if (unidadeIndex === -1 || dataIndex === -1 || valorIndex === -1 || indicadoPorIndex === -1) {
+                console.error("Colunas necessárias (nm_unidade, dt_cadastro_integrante, vl_plano, indicado_por) não foram encontradas.");
+                return [];
+            }
+
+            return rows.slice(1).map(row => {
+                const dataString = row[dataIndex];
+                if (!dataString) return null;
+                return {
+                    nm_unidade: row[unidadeIndex] || 'N/A',
+                    dt_cadastro_integrante: new Date(dataString),
+                    vl_plano: parseFloat(String(row[valorIndex] || '0').replace(',', '.')) || 0,
+                    venda_posvenda: row[tipoVendaIndex] || 'VENDA',
+                    indicado_por: row[indicadoPorIndex] || 'N/A'
+                };
+            }).filter(Boolean);
+        } catch (error) {
+            console.error("Erro CRÍTICO ao buscar dados de vendas:", error);
+            return [];
+        }
+    }
+
     async function fetchFundosData() {
         if (!SALES_SPREADSHEET_ID || !FUNDOS_SHEET_NAME || !API_KEY) {
             console.error("ID da Planilha, Nome da Aba FUNDOS ou Chave de API não configurados.");
@@ -416,8 +476,7 @@
             return [];
         }
     }
-
-    async function fetchAllSalesDataFromSheet() { if (!SALES_SPREADSHEET_ID || !SALES_SHEET_NAME || !API_KEY) { console.error("ID da Planilha de Vendas, Nome da Aba ou Chave de API não configurados."); return []; } const url = `https://sheets.googleapis.com/v4/spreadsheets/${SALES_SPREADSHEET_ID}/values/${SALES_SHEET_NAME}?key=${API_KEY}`; try { const response = await fetch(url); if (!response.ok) { console.error("Erro ao buscar dados de vendas da planilha:", await response.json()); return []; } const data = await response.json(); const rows = data.values || []; if (rows.length < 2) return []; const headers = rows[0].map(h => h.trim().toLowerCase()); const unidadeIndex = headers.indexOf("nm_unidade"), dataIndex = headers.indexOf("dt_cadastro_integrante"), valorIndex = headers.indexOf("vl_plano"), tipoVendaIndex = headers.indexOf("venda_posvenda"); if (unidadeIndex === -1 || dataIndex === -1 || valorIndex === -1) { console.error("Colunas necessárias (nm_unidade, dt_cadastro_integrante, vl_plano) não foram encontradas."); return []; } return rows.slice(1).map(row => { const dataString = row[dataIndex]; if (!dataString) return null; return { nm_unidade: row[unidadeIndex] || 'N/A', dt_cadastro_integrante: new Date(dataString), vl_plano: parseFloat(String(row[valorIndex] || '0').replace(',', '.')) || 0, venda_posvenda: row[tipoVendaIndex] || 'VENDA' }; }).filter(Boolean); } catch (error) { console.error("Erro CRÍTICO ao buscar dados de vendas:", error); return []; } }
+    
     async function fetchMetasData() { if (!METAS_SPREADSHEET_ID || !METAS_SHEET_NAME || !API_KEY) { console.error("Configurações da planilha de metas incompletas."); return new Map(); } const url = `https://sheets.googleapis.com/v4/spreadsheets/${METAS_SPREADSHEET_ID}/values/${METAS_SHEET_NAME}?key=${API_KEY}`; try { const response = await fetch(url); if (!response.ok) { console.error("Erro API Google Sheets:", await response.json()); return new Map(); } const data = await response.json(); const rows = data.values || []; const metasMap = new Map(); const headers = rows[0].map(h => h.trim().toLowerCase()); const unidadeIndex = headers.indexOf("nm_unidade"), anoIndex = headers.indexOf("ano"), mesIndex = headers.indexOf("mês"), metaVendasIndex = headers.indexOf("meta vvr_venda"), metaPosvendasIndex = headers.indexOf("meta vvr_pos_venda"), metaAdesoesIndex = headers.indexOf("meta adesões"); rows.slice(1).forEach(row => { const unidade = row[unidadeIndex], ano = row[anoIndex], mes = String(row[mesIndex]).padStart(2, '0'); const parseMetaValue = (index) => parseFloat(String(row[index] || "0").replace(/\./g, '').replace(',', '.')) || 0; const metaVendas = parseMetaValue(metaVendasIndex), metaPosvendas = parseMetaValue(metaPosvendasIndex), metaAdesoes = parseInt(row[metaAdesoesIndex]) || 0; if (unidade && ano && mes) { const chave = `${unidade}-${ano}-${mes}`; metasMap.set(chave, { meta_vvr_vendas: metaVendas, meta_vvr_posvendas: metaPosvendas, meta_vvr_total: metaVendas + metaPosvendas, meta_adesoes: metaAdesoes }); } }); return metasMap; } catch (error) { console.error("Erro CRÍTICO ao buscar metas:", error); return new Map(); } }
     function processAndCrossReferenceData(salesData) { const vendasPorMesUnidade = salesData.reduce((acc, d) => { const year = d.dt_cadastro_integrante.getFullYear(); const month = String(d.dt_cadastro_integrante.getMonth() + 1).padStart(2, '0'); const periodo = `${year}-${month}`; const chave = `${d.nm_unidade}-${periodo}`; if (!acc[chave]) { acc[chave] = { unidade: d.nm_unidade, periodo: periodo, realizado_vvr: 0, realizado_adesoes: 0 }; } acc[chave].realizado_vvr += d.vl_plano; acc[chave].realizado_adesoes += 1; return acc; }, {}); return Object.values(vendasPorMesUnidade).map(item => { const chaveMeta = `${item.unidade}-${item.periodo}`; const meta = metasData.get(chaveMeta) || { meta_vvr_total: 0, meta_vvr_vendas: 0, meta_vvr_posvendas: 0, meta_adesoes: 0 }; return { ...item, ...meta }; }); }
     function updateMainKPIs(dataBruta, selectedUnidades, startDate, endDate) { const getColorForPercentage = (percent) => { if (percent >= 1) return '#28a_745'; if (percent >= 0.5) return '#ffc107'; return '#dc3545'; }; const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); const realizadoVendas = dataBruta.filter(d => normalizeText(d.venda_posvenda) === 'VENDA').reduce((sum, d) => sum + d.vl_plano, 0); const realizadoPosVendas = dataBruta.filter(d => normalizeText(d.venda_posvenda) === 'POS VENDA').reduce((sum, d) => sum + d.vl_plano, 0); const realizadoTotal = realizadoVendas + realizadoPosVendas; let metaVendas = 0; let metaPosVendas = 0; const unitsToConsider = selectedUnidades.length > 0 ? selectedUnidades : [...new Set(allData.map(d => d.nm_unidade))]; metasData.forEach((metaInfo, key) => { const [unidade, ano, mes] = key.split('-'); const metaDate = new Date(ano, parseInt(mes) - 1, 15); if (unitsToConsider.includes(unidade) && metaDate >= startDate && metaDate < endDate) { metaVendas += metaInfo.meta_vvr_vendas; metaPosVendas += metaInfo.meta_vvr_posvendas; } }); const metaTotal = metaVendas + metaPosVendas; const percentTotal = metaTotal > 0 ? realizadoTotal / metaTotal : 0; const percentVendas = metaVendas > 0 ? realizadoVendas / metaVendas : 0; const percentPosVendas = metaPosVendas > 0 ? realizadoPosVendas / metaPosVendas : 0; const totalColor = getColorForPercentage(percentTotal); document.getElementById('kpi-total-realizado').textContent = formatCurrency(realizadoTotal); document.getElementById('kpi-total-meta').textContent = formatCurrency(metaTotal); const totalPercentEl = document.getElementById('kpi-total-percent'); totalPercentEl.textContent = formatPercent(percentTotal); totalPercentEl.style.color = totalColor; document.getElementById('kpi-total-progress').style.backgroundColor = totalColor; document.getElementById('kpi-total-progress').style.width = `${Math.min(percentTotal * 100, 100)}%`; const vendasColor = getColorForPercentage(percentVendas); document.getElementById('kpi-vendas-realizado').textContent = formatCurrency(realizadoVendas); document.getElementById('kpi-vendas-meta').textContent = formatCurrency(metaVendas); const vendasPercentEl = document.getElementById('kpi-vendas-percent'); vendasPercentEl.textContent = formatPercent(percentVendas); vendasPercentEl.style.color = vendasColor; document.getElementById('kpi-vendas-progress').style.backgroundColor = vendasColor; document.getElementById('kpi-vendas-progress').style.width = `${Math.min(percentVendas * 100, 100)}%`; const posVendasColor = getColorForPercentage(percentPosVendas); document.getElementById('kpi-posvendas-realizado').textContent = formatCurrency(realizadoPosVendas); document.getElementById('kpi-posvendas-meta').textContent = formatCurrency(metaPosVendas); const posVendasPercentEl = document.getElementById('kpi-posvendas-percent'); posVendasPercentEl.textContent = formatPercent(percentPosVendas); posVendasPercentEl.style.color = posVendasColor; document.getElementById('kpi-posvendas-progress').style.backgroundColor = posVendasColor; document.getElementById('kpi-posvendas-progress').style.width = `${Math.min(percentPosVendas * 100, 100)}%`; }
@@ -435,6 +494,7 @@
         updateContractsCharts(fundosData, selectedUnidades);
         updateMonthlyAdesoesChart(allData, selectedUnidades);
         updateAdesoesDrillDownCharts(allData, selectedUnidades);
+        updateConsultorTable(allData, selectedUnidades);
         
         const startDateString = document.getElementById('start-date').value;
         const startParts = startDateString.split('-');
@@ -1085,6 +1145,54 @@
                 }
             }
         });
+    }
+
+    function updateConsultorTable(historicalData, selectedUnidades) {
+        const unitsToConsider = selectedUnidades.length > 0 ? selectedUnidades : [...new Set(allData.map(d => d.nm_unidade))];
+        const filteredData = historicalData.filter(d => unitsToConsider.includes(d.nm_unidade));
+
+        const performanceMap = new Map();
+        filteredData.forEach(d => {
+            const key = `${d.nm_unidade}-${d.indicado_por}`;
+            if (!performanceMap.has(key)) {
+                performanceMap.set(key, {
+                    unidade: d.nm_unidade,
+                    consultor: d.indicado_por,
+                    vvr_total: 0,
+                    total_adesoes: 0
+                });
+            }
+            const entry = performanceMap.get(key);
+            entry.vvr_total += d.vl_plano;
+            entry.total_adesoes += 1;
+        });
+
+        const tableData = Array.from(performanceMap.values()).map(item => [
+            item.unidade,
+            item.consultor,
+            formatCurrency(item.vvr_total),
+            item.total_adesoes
+        ]);
+
+        if (consultorDataTable) {
+            consultorDataTable.clear().rows.add(tableData).draw();
+        } else {
+            consultorDataTable = $('#consultor-table').DataTable({
+                data: tableData,
+                pageLength: 10,
+                language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json' },
+                destroy: true,
+                dom: 'Bfrtip',
+                buttons: [
+                    {
+                        extend: 'excelHtml5',
+                        text: 'Exportar para Excel',
+                        title: `Relatorio_Consultores_${new Date().toLocaleDateString('pt-BR')}`,
+                        className: 'excel-button'
+                    }
+                ]
+            });
+        }
     }
 </script>
 </body>
