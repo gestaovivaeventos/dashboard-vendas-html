@@ -654,27 +654,39 @@ updateFundosDetalhadosTable(fundosData, selectedUnidades, startDate, endDate);
                     { label: 'Venda', data: vendasAnual, backgroundColor: '#6c757d' }
                 ]
             },
-            options: {
-                maintainAspectRatio: false,
-                indexAxis: 'y',
-                scales: { 
-                    x: { stacked: true }, 
-                    y: { stacked: true } 
-                },
-                plugins: {
-                    datalabels: { color: 'white', font: { weight: 'bold' }, formatter: (value) => (value > 1000 ? `${(value / 1000).toFixed(1)} mi` : '') },
-                    tooltip: { callbacks: {
-                        label: function(context) { let label = context.dataset.label || ''; if (label) { label += ': '; } if (context.parsed.x !== null) { label += formatCurrency(context.parsed.x); } return label; },
-                        footer: function(tooltipItems) { let sum = 0; tooltipItems.forEach(item => { sum += item.parsed.x; }); return 'Total: ' + formatCurrency(sum); }
-                    }}
-                },
-                onClick: (event, elements) => {
-                    if (elements.length > 0) {
-                        const clickedYear = years[elements[0].index];
-                        drawMonthlyDetailChart(filteredHistoricalData, clickedYear);
+           options: {
+        maintainAspectRatio: false,
+        indexAxis: 'y',
+        scales: { x: { stacked: true }, y: { stacked: true } },
+        plugins: {
+            datalabels: { color: 'white', font: { weight: 'bold' }, formatter: (value) => (value > 1000 ? `${(value / 1000).toFixed(1)} mi` : '') },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        return context.dataset.label || '';
+                    },
+                    footer: function(tooltipItems) {
+                        let sum = 0;
+                        const lines = [];
+                        tooltipItems.slice().reverse().forEach(function(tooltipItem) {
+                            sum += tooltipItem.parsed.x;
+                            const value = formatCurrency(tooltipItem.parsed.x);
+                            lines.push(`${tooltipItem.dataset.label}: ${value}`);
+                        });
+                        lines.push('');
+                        lines.push(`Total: ${formatCurrency(sum)}`);
+                        return lines;
                     }
                 }
             }
+        },
+        onClick: (event, elements) => {
+            if (elements.length > 0) {
+                const clickedYear = years[elements[0].index];
+                drawMonthlyDetailChart(filteredHistoricalData, clickedYear);
+            }
+        }
+    }
         });
 
         if (years.length > 0) {
@@ -712,18 +724,31 @@ updateFundosDetalhadosTable(fundosData, selectedUnidades, startDate, endDate);
                     { label: 'Venda', data: vendasMensal, backgroundColor: '#6c757d' }
                 ]
             },
-            options: {
-                maintainAspectRatio: false,
-                scales: { x: { stacked: true }, y: { stacked: true } },
-                plugins: {
-                    datalabels: { color: 'white', font: { weight: 'bold' }, formatter: (value) => (value > 1000 ? `${(value / 1000).toFixed(0)}k` : '') },
-                    tooltip: { callbacks: {
-                        label: function(context) { let label = context.dataset.label || ''; if (label) { label += ': '; } if (context.parsed.y !== null) { label += formatCurrency(context.parsed.y); } return label; },
-                        footer: function(tooltipItems) { let sum = 0; tooltipItems.forEach(item => { sum += item.parsed.y; }); return 'Total: ' + formatCurrency(sum); }
-                    }}
+         options: {
+        maintainAspectRatio: false,
+        scales: { x: { stacked: true }, y: { stacked: true } },
+        plugins: {
+            datalabels: { color: 'white', font: { weight: 'bold' }, formatter: (value) => (value > 1000 ? `${(value / 1000).toFixed(0)}k` : '') },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        return context.dataset.label || '';
+                    },
+                    footer: function(tooltipItems) {
+                        let sum = 0;
+                        const lines = [];
+                        tooltipItems.slice().reverse().forEach(function(tooltipItem) {
+                            sum += tooltipItem.parsed.y;
+                            const value = formatCurrency(tooltipItem.parsed.y);
+                            lines.push(`${tooltipItem.dataset.label}: ${value}`);
+                        });
+                        lines.push('');
+                        lines.push(`Total: ${formatCurrency(sum)}`);
+                        return lines;
+                    }
                 }
             }
-        });
+        }
     }
 
     function updateTicketCharts(historicalData, selectedUnidades) {
