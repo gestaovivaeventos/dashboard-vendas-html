@@ -316,6 +316,24 @@
                             <tbody></tbody>
                         </table>
                     </section>
+                    <section class="table-container" id="detalhada-adesoes-table-section" style="display: none;">
+                        <h2>Adesões Detalhadas no Período</h2>
+                        <table id="detalhada-adesoes-table" class="display" style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th>Unidade</th>
+                                    <th>Cód. Integrante</th>
+                                    <th>Integrante</th>
+                                    <th>Data Cadastro</th>
+                                    <th>Cód. Fundo</th>
+                                    <th>Tipo</th>
+                                    <th>Consultor</th>
+                                    <th>VVR</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </section>
                 </div>
             </div>
         </div>
@@ -329,7 +347,7 @@
     const METAS_SHEET_NAME = "metas";
     const API_KEY = "AIzaSyBuGRH91CnRuDtN5RGsb5DvHEfhTxJnWSs"; 
     
-    let allData = [], fundosData = [], metasData = new Map(), dataTable, vvrVsMetaPorMesChart, cumulativeVvrChart, monthlyVvrChart, yearlyStackedChart, monthlyStackedChart, yearlyTicketChart, monthlyTicketChart, yearlyContractsChart, monthlyContractsChart, monthlyAdesoesChart, yearlyAdesoesStackedChart, monthlyAdesoesStackedChart, consultorDataTable;
+    let allData = [], fundosData = [], metasData = new Map(), dataTable, vvrVsMetaPorMesChart, cumulativeVvrChart, monthlyVvrChart, yearlyStackedChart, monthlyStackedChart, yearlyTicketChart, monthlyTicketChart, yearlyContractsChart, monthlyContractsChart, monthlyAdesoesChart, yearlyAdesoesStackedChart, monthlyAdesoesStackedChart, consultorDataTable, detalhadaAdesoesDataTable;
     let currentVvrChartType = 'total';
     let currentTableDataType = 'total';
     let currentFilteredDataForTable = [];
@@ -348,14 +366,13 @@
 
             if (allData && allData.length > 0) {
                 loader.style.display = 'none';
-                ['filters-section', 'kpi-section', 'chart-vvr-mes-section', 'chart-cumulative-section', 'table-section', 
-                 'chart-monthly-vvr-section', 'chart-yearly-stacked-section', 'chart-monthly-stacked-section',
-                 'chart-yearly-ticket-section', 'chart-monthly-ticket-section',
-                 'chart-yearly-contracts-section', 'chart-monthly-contracts-section',
-                 'chart-monthly-adesoes-section',
-                 'chart-yearly-adesoes-stacked-section',
-                 'chart-monthly-adesoes-stacked-section',
-                 'consultor-table-section'
+                [
+                 'filters-section', 'kpi-section', 'kpi-section-py', 'chart-vvr-mes-section', 
+                 'chart-cumulative-section', 'table-section', 'chart-monthly-vvr-section', 
+                 'chart-yearly-stacked-section', 'chart-monthly-stacked-section', 'chart-yearly-ticket-section', 
+                 'chart-monthly-ticket-section', 'chart-yearly-contracts-section', 'chart-monthly-contracts-section',
+                 'chart-monthly-adesoes-section', 'chart-yearly-adesoes-stacked-section', 'chart-monthly-adesoes-stacked-section',
+                 'consultor-table-section', 'detalhada-adesoes-table-section'
                 ].forEach(id => {
                     const el = document.getElementById(id);
                     if (el) el.style.display = 'block';
@@ -365,8 +382,13 @@
                 populateFilters();
                 addEventListeners();
                 updateDashboard();
-            } else { loader.innerHTML = 'Nenhum dado de vendas encontrado na planilha.'; }
-        } catch (error) { console.error("Erro fatal na inicialização:", error); loader.innerHTML = `Erro ao carregar dados. Verifique o console.`; }
+            } else { 
+                loader.innerHTML = 'Nenhum dado de vendas encontrado ou falha ao carregar. Verifique o console (F12) para mais detalhes.'; 
+            }
+        } catch (error) { 
+            console.error("Erro fatal na inicialização:", error); 
+            loader.innerHTML = `Erro ao carregar dados. Verifique o console (F12).`; 
+        }
     });
 
     document.getElementById('sidebar-toggle').addEventListener('click', function() {
@@ -410,13 +432,17 @@
             const unidadeIndex = headers.indexOf("nm_unidade");
             const dataIndex = headers.indexOf("dt_cadastro_integrante");
             const valorIndex = headers.indexOf("vl_plano");
-            const tipoVendaIndex = headers.indexOf("venda_posvenda");
-            const indicadoPorIndex = headers.indexOf("indicado_por");
-
-            if (unidadeIndex === -1 || dataIndex === -1 || valorIndex === -1 || indicadoPorIndex === -1) {
-                console.error("Colunas necessárias (nm_unidade, dt_cadastro_integrante, vl_plano, indicado_por) não foram encontradas.");
+            
+            if (unidadeIndex === -1 || dataIndex === -1 || valorIndex === -1) {
+                console.error("Colunas essenciais (nm_unidade, dt_cadastro_integrante, vl_plano) não foram encontradas.");
                 return [];
             }
+
+            const tipoVendaIndex = headers.indexOf("venda_posvenda");
+            const indicadoPorIndex = headers.indexOf("indicado_por");
+            const codigoIntegranteIndex = headers.indexOf("codigo_integrante");
+            const nomeIntegranteIndex = headers.indexOf("nm_integrante");
+            const idFundoIndex = headers.indexOf("id_fundo");
 
             return rows.slice(1).map(row => {
                 const dataString = row[dataIndex];
@@ -425,8 +451,11 @@
                     nm_unidade: row[unidadeIndex] || 'N/A',
                     dt_cadastro_integrante: new Date(dataString),
                     vl_plano: parseFloat(String(row[valorIndex] || '0').replace(',', '.')) || 0,
-                    venda_posvenda: row[tipoVendaIndex] || 'VENDA',
-                    indicado_por: row[indicadoPorIndex] || 'N/A'
+                    venda_posvenda: tipoVendaIndex !== -1 ? row[tipoVendaIndex] || 'VENDA' : 'N/A',
+                    indicado_por: indicadoPorIndex !== -1 ? row[indicadoPorIndex] || 'N/A' : 'N/A',
+                    codigo_integrante: codigoIntegranteIndex !== -1 ? row[codigoIntegranteIndex] || 'N/A' : 'N/A',
+                    nm_integrante: nomeIntegranteIndex !== -1 ? row[nomeIntegranteIndex] || 'N/A' : 'N/A',
+                    id_fundo: idFundoIndex !== -1 ? row[idFundoIndex] || 'N/A' : 'N/A'
                 };
             }).filter(Boolean);
         } catch (error) {
@@ -505,7 +534,8 @@
         updateContractsCharts(fundosData, selectedUnidades);
         updateMonthlyAdesoesChart(allData, selectedUnidades);
         updateAdesoesDrillDownCharts(allData, selectedUnidades);
-        updateConsultorTable(dataBrutaFiltrada); // Passa os dados já filtrados por data
+        updateConsultorTable(dataBrutaFiltrada);
+        updateDetalhadaAdesoesTable(dataBrutaFiltrada);
         updateMainKPIs(dataBrutaFiltrada, selectedUnidades, startDate, endDate);
 
         const dataAgregadaComVendas = processAndCrossReferenceData(dataBrutaFiltrada);
@@ -1192,15 +1222,60 @@
                         exportOptions: {
                             format: {
                                 body: function ( data, row, column, node ) {
-                                    // Coluna 2: VVR Total (Moeda)
                                     if (column === 2) {
                                         return parseFloat(String(data).replace('R$', '').replace(/\./g, '').replace(',', '.').trim());
                                     }
-                                    // Coluna 3: Total de Adesões (Número)
                                     if (column === 3) {
                                         return Number(data);
                                     }
-                                    return data; // Demais colunas como texto
+                                    return data;
+                                }
+                            }
+                        }
+                    }
+                ]
+            });
+        }
+    }
+
+    function updateDetalhadaAdesoesTable(filteredData) {
+        const tableData = filteredData.map(d => [
+            d.nm_unidade,
+            d.codigo_integrante,
+            d.nm_integrante,
+            d.dt_cadastro_integrante.toLocaleDateString('pt-BR'),
+            d.id_fundo,
+            d.venda_posvenda,
+            d.indicado_por,
+            d.vl_plano
+        ]);
+
+        if (detalhadaAdesoesDataTable) {
+            detalhadaAdesoesDataTable.clear().rows.add(tableData).draw();
+        } else {
+            detalhadaAdesoesDataTable = $('#detalhada-adesoes-table').DataTable({
+                data: tableData,
+                columns: [
+                    null, null, null, null, null, null, null,
+                    { render: data => formatCurrency(data) }
+                ],
+                pageLength: 10,
+                language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json' },
+                destroy: true,
+                dom: 'Bfrtip',
+                buttons: [
+                    {
+                        extend: 'excelHtml5',
+                        text: 'Exportar para Excel',
+                        title: `Relatorio_Adesoes_Detalhadas_${new Date().toLocaleDateString('pt-BR')}`,
+                        className: 'excel-button',
+                        exportOptions: {
+                            format: {
+                                body: function ( data, row, column, node ) {
+                                    if (column === 7) {
+                                        return data;
+                                    }
+                                    return node.innerHTML;
                                 }
                             }
                         }
