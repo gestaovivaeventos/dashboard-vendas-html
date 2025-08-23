@@ -1,4 +1,3 @@
-<script>
     const SALES_SPREADSHEET_ID = "1HXyq_r2ssJ5c7wXdrBUc-WdqrlCfiZYE1EuIWbIDg0U";
     const SALES_SHEET_NAME = "ADESOES";
     const FUNDOS_SHEET_NAME = "FUNDOS";
@@ -1032,4 +1031,3 @@ function updateFundosDetalhadosTable(fundosData, selectedUnidades, startDate, en
         });
     }
 }
-</script>
