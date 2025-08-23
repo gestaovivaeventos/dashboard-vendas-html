@@ -302,6 +302,24 @@
                             </div>
                         </div>
                     </div>
+                    <section class="table-container" id="adesoes-table-section" style="display: none;">
+                        <h2>Adesões Detalhadas no Período</h2>
+                        <table id="adesoes-table" class="display" style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th>Unidade</th>
+                                    <th>ID Integrante</th>
+                                    <th>Integrante</th>
+                                    <th>DT Cadastro Integrante</th>
+                                    <th>ID Fundo</th>
+                                    <th>Tipo Adesão</th>
+                                    <th>Consultor Responsável</th>
+                                    <th>VVR</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </section>
                     <section class="table-container" id="consultor-table-section" style="display: none;">
                         <h2>Desempenho por Consultor Comercial</h2>
                         <table id="consultor-table" class="display" style="width:100%">
@@ -329,7 +347,7 @@
     const METAS_SHEET_NAME = "metas";
     const API_KEY = "AIzaSyBuGRH91CnRuDtN5RGsb5DvHEfhTxJnWSs"; 
     
-    let allData = [], fundosData = [], metasData = new Map(), dataTable, vvrVsMetaPorMesChart, cumulativeVvrChart, monthlyVvrChart, yearlyStackedChart, monthlyStackedChart, yearlyTicketChart, monthlyTicketChart, yearlyContractsChart, monthlyContractsChart, monthlyAdesoesChart, yearlyAdesoesStackedChart, monthlyAdesoesStackedChart, consultorDataTable;
+    let allData = [], fundosData = [], metasData = new Map(), dataTable, vvrVsMetaPorMesChart, cumulativeVvrChart, monthlyVvrChart, yearlyStackedChart, monthlyStackedChart, yearlyTicketChart, monthlyTicketChart, yearlyContractsChart, monthlyContractsChart, monthlyAdesoesChart, yearlyAdesoesStackedChart, monthlyAdesoesStackedChart, consultorDataTable, adesoesDataTable;
     let currentVvrChartType = 'total';
     let currentTableDataType = 'total';
     let currentFilteredDataForTable = [];
@@ -355,6 +373,7 @@
                  'chart-monthly-adesoes-section',
                  'chart-yearly-adesoes-stacked-section',
                  'chart-monthly-adesoes-stacked-section',
+                 'adesoes-table-section',
                  'consultor-table-section'
                 ].forEach(id => {
                     const el = document.getElementById(id);
@@ -435,6 +454,59 @@
         }
     }
 
+    function updateAdesoesTable(filteredData) {
+        const tableData = filteredData.map(d => [
+            d.nm_unidade,
+            d.codigo_integrante,
+            d.nm_integrante,
+            d.dt_cadastro_integrante.toLocaleDateString('pt-BR'),
+            d.id_fundo,
+            d.venda_posvenda,
+            d.indicado_por,
+            formatCurrency(d.vl_plano)
+        ]);
+
+        if (adesoesDataTable) {
+            adesoesDataTable.clear().rows.add(tableData).draw();
+        } else {
+            adesoesDataTable = $('#adesoes-table').DataTable({
+                data: tableData,
+                pageLength: 10,
+                language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json' },
+                destroy: true,
+                dom: 'Bfrtip',
+                buttons: [
+                    {
+                        extend: 'excelHtml5',
+                        text: 'Exportar para Excel',
+                        title: `Relatorio_Adesoes_${new Date().toLocaleDateString('pt-BR')}`,
+                        className: 'excel-button',
+                        exportOptions: {
+                            format: {
+                                body: function ( data, row, column, node ) {
+                                    // Colunas numéricas
+                                    if (column === 1 || column === 4) {
+                                        return Number(data);
+                                    }
+                                    // Data em formato ISO para Excel
+                                    if (column === 3) {
+                                        const parts = data.split('/');
+                                        return `${parts[2]}-${parts[1]}-${parts[0]}`;
+                                    }
+                                    // Coluna de moeda
+                                    if (column === 7) {
+                                        return parseFloat(String(data).replace('R$', '').replace(/\./g, '').replace(',', '.').trim());
+                                    }
+                                    return data;
+                                }
+                            }
+                        }
+                    }
+                ]
+            });
+        }
+    }
+
     async function fetchFundosData() {
         if (!SALES_SPREADSHEET_ID || !FUNDOS_SHEET_NAME || !API_KEY) {
             console.error("ID da Planilha, Nome da Aba FUNDOS ou Chave de API não configurados.");
@@ -505,6 +577,7 @@
         updateContractsCharts(fundosData, selectedUnidades);
         updateMonthlyAdesoesChart(allData, selectedUnidades);
         updateAdesoesDrillDownCharts(allData, selectedUnidades);
+        updateAdesoesTable(dataBrutaFiltrada);
         updateConsultorTable(dataBrutaFiltrada); // Passa os dados já filtrados por data
         updateMainKPIs(dataBrutaFiltrada, selectedUnidades, startDate, endDate);
 
