@@ -488,7 +488,7 @@
         }
     }
 
-   async function fetchFundosData() {
+async function fetchFundosData() {
     if (!SALES_SPREADSHEET_ID || !FUNDOS_SHEET_NAME || !API_KEY) {
         console.error("ID da Planilha, Nome da Aba FUNDOS ou Chave de API não configurados.");
         return [];
@@ -519,19 +519,33 @@
              return [];
         }
 
+        // Função interna para converter datas no formato DD/MM/YYYY
+        const parsePtBrDate = (dateString) => {
+            if (!dateString || typeof dateString !== 'string') return null;
+            const parts = dateString.split('/');
+            if (parts.length === 3) {
+                // Formato DD/MM/YYYY -> MM/DD/YYYY para o construtor Date
+                return new Date(`${parts[1]}/${parts[0]}/${parts[2]}`);
+            }
+            return new Date(dateString); // Tenta o formato padrão
+        };
+
         return rows.slice(1).map(row => {
             const dtContratoString = row[dtContratoIndex];
             if (!dtContratoString) return null; 
             
+            const dtContrato = parsePtBrDate(dtContratoString);
+            if (isNaN(dtContrato)) return null; // Pula a linha se a data do contrato for inválida
+
             return {
                 nm_unidade: row[unidadeIndex] || 'N/A',
                 id_fundo: row[idFundoIndex] || 'N/A',
                 fundo: fundoIndex !== -1 ? row[fundoIndex] || 'N/A' : 'N/A',
-                dt_contrato: new Date(dtContratoString),
-                dt_cadastro: dtCadastroIndex !== -1 ? row[dtCadastroIndex] : null,
+                dt_contrato: dtContrato,
+                dt_cadastro: dtCadastroIndex !== -1 ? parsePtBrDate(row[dtCadastroIndex]) : null,
                 tipo_servico: tipoServicoIndex !== -1 ? row[tipoServicoIndex] || 'N/A' : 'N/A',
                 instituicao: instituicaoIndex !== -1 ? row[instituicaoIndex] || 'N/A' : 'N/A',
-                dt_baile: dtBaileIndex !== -1 ? row[dtBaileIndex] : null,
+                dt_baile: dtBaileIndex !== -1 ? parsePtBrDate(row[dtBaileIndex]) : null,
             };
         }).filter(Boolean);
     } catch (error) {
