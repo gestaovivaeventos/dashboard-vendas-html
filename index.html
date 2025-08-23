@@ -1238,7 +1238,7 @@
         }
     }
 
-    function updateDetalhadaAdesoesTable(filteredData) {
+   function updateDetalhadaAdesoesTable(filteredData) {
     const tableData = filteredData.map(d => [
         d.nm_unidade,
         d.codigo_integrante,
@@ -1272,12 +1272,13 @@
                     exportOptions: {
                         format: {
                             body: function ( data, row, column, node ) {
-                                // As colunas Cód. Integrante(1), Cód. Fundo(4) e VVR(7) devem ser numéricas
-                                if (column === 1 || column === 4 || column === 7) {
-                                    // A variável 'data' aqui já é o número bruto, então apenas o retornamos
-                                    return data;
+                                // Coluna 7: VVR (Moeda)
+                                if (column === 7) {
+                                    // A 'data' aqui é o texto formatado "R$ 1.234,56"
+                                    // Precisamos convertê-lo de volta para número
+                                    return parseFloat(String(data).replace('R$', '').replace(/\./g, '').replace(',', '.').trim());
                                 }
-                                // As outras colunas são retornadas como texto
+                                // As outras colunas usam o dado bruto
                                 return data;
                             }
                         }
@@ -1286,6 +1287,7 @@
             ]
         });
     }
+}
 }
 </script>
 </body>
