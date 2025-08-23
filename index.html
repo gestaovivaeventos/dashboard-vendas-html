@@ -126,6 +126,12 @@
                 grid-template-columns: 1fr; /* Em telas pequenas, ambos viram uma única coluna */
             }
         }
+.page-navigation hr {
+    border: none;
+    height: 1px;
+    background-color: #495057; /* Mesma cor das outras bordas do menu */
+    margin: 10px 0; /* Espaçamento vertical para a linha respirar */
+}
     </style>
 </head>
 <body>
@@ -133,8 +139,8 @@
         <button id="sidebar-toggle">&#9776;</button>
         <div id="sidebar">
             <div class="page-navigation">
- <a href="https://central-dashs-viva-html.vercel.app/" class="page-navigation-button"><button>CENTRAL DE DASHS</button></a>
-                <button id="btn-page1" class="active" data-page="page1">Metas e Resultados</button>
+ <a href="https://central-dashs-viva-html.vercel.app/" class="page-navigation-button"><button>Central de Dashboards VIVA Eventos</button></a>
+               <hr> <button id="btn-page1" class="active" data-page="page1">Metas e Resultados</button>
                 <button id="btn-page2" data-page="page2">Indicadores Secundários</button>
             </div>
             <section id="loader" class="filters"><div class="loader">Carregando informações...</div></section>
