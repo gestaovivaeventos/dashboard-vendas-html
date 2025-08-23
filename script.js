@@ -298,20 +298,35 @@ function updateDrillDownCharts(historicalData, selectedUnidades) {
         options: {
             maintainAspectRatio: false,
             indexAxis: 'y',
-            
-            // --- ALTERAÇÃO ADICIONADA AQUI ---
             interaction: {
-                mode: 'index',      // Agrupa os itens de todos os datasets no mesmo índice
-                intersect: false, // Faz o tooltip aparecer mesmo sem tocar exatamente na barra
+                mode: 'index',
+                intersect: false,
             },
-            // --- FIM DA ALTERAÇÃO ---
-
             scales: {
                 x: { stacked: true },
                 y: { stacked: true }
             },
             plugins: {
-                datalabels: { color: 'white', font: { weight: 'bold' }, formatter: (value) => (value > 1000 ? `${(value / 1000).toFixed(1)} mi` : '') },
+                datalabels: {
+                    color: 'white',
+                    font: { weight: 'bold' },
+                    // --- INÍCIO DA ALTERAÇÃO ---
+                    formatter: function(value) {
+                        if (value === 0) {
+                            return ''; // Não mostra nada se o valor for zero
+                        }
+                        if (value >= 1000000) {
+                            // Se for maior ou igual a 1 milhão, formata como "121.5 M"
+                            return (value / 1000000).toFixed(1).replace('.0', '') + ' M';
+                        }
+                        if (value >= 1000) {
+                            // Se for maior que mil, formata como "500k"
+                            return (value / 1000).toFixed(1).replace('.0', '') + 'k';
+                        }
+                        return value; // Se for menor que mil, mostra o número inteiro
+                    }
+                    // --- FIM DA ALTERAÇÃO ---
+                },
                 tooltip: {
                     callbacks: {
                         label: function (context) { let label = context.dataset.label || ''; if (label) { label += ': '; } if (context.parsed.x !== null) { label += formatCurrency(context.parsed.x); } return label; },
