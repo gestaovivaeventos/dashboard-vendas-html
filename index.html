@@ -31,9 +31,35 @@
         #sidebar-toggle.collapsed { left: 10px; }
 
         .page-navigation { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #495057; padding-bottom: 20px; }
-        .page-navigation button { background-color: #495057; color: #F8F9FA; border: 1px solid #ADB5BD; padding: 10px 20px; cursor: pointer; transition: all 0.2s ease-in-out; width: 100%; text-align: left; border-radius: 6px; }
-        .page-navigation button:not(.active):hover { background-color: #6c757d; border-color: #dee2e6; }
-        .page-navigation button.active { background-color: #FFC107; color: #212529; border-color: #FFC107; font-weight: bold; }
+       .page-navigation button {
+    background-image: linear-gradient(to bottom, #6c757d, #495057);
+    color: #F8F9FA;
+    border: 1px solid #343a40;
+    border-bottom: 3px solid #343a40; /* Borda inferior para efeito 3D */
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: all 0.1s ease-in-out;
+    width: 100%;
+    text-align: left;
+    border-radius: 6px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
+}
+.page-navigation button:hover {
+    background-image: linear-gradient(to bottom, #8a9198, #5a6268);
+}
+.page-navigation button:active { /* Efeito de pressionar */
+    transform: translateY(2px);
+    border-bottom-width: 1px;
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.2);
+}
+.page-navigation button.active {
+    background-image: linear-gradient(to bottom, #ffca2c, #ffc107);
+    color: #212529;
+    border-color: #b38600;
+    font-weight: bold;
+    text-shadow: none;
+}
 
         .page-content { display: none; }
         .page-content.active {
@@ -92,9 +118,33 @@
         .dt-button:hover { background-color: #ADB5BD !important; color: #212529 !important; }
 
         .chart-selector { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
-        .chart-selector button { background-color: #495057; color: #F8F9FA; border: 1px solid #ADB5BD; border-radius: 6px; padding: 5px 15px; cursor: pointer; transition: all 0.2s ease-in-out; }
-        .chart-selector button:not(.active):hover { background-color: #6c757d; border-color: #dee2e6; }
-        .chart-selector button.active { background-color: #FFC107; color: #212529; border-color: #FFC107; font-weight: bold; }
+       .chart-selector button {
+    background-image: linear-gradient(to bottom, #6c757d, #495057);
+    color: #F8F9FA;
+    border: 1px solid #343a40;
+    border-bottom: 3px solid #343a40;
+    padding: 5px 15px;
+    cursor: pointer;
+    transition: all 0.1s ease-in-out;
+    border-radius: 6px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
+}
+.chart-selector button:hover {
+    background-image: linear-gradient(to bottom, #8a9198, #5a6268);
+}
+.chart-selector button:active { /* Efeito de pressionar */
+    transform: translateY(2px);
+    border-bottom-width: 1px;
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.2);
+}
+.chart-selector button.active {
+    background-image: linear-gradient(to bottom, #ffca2c, #ffc107);
+    color: #212529;
+    border-color: #b38600;
+    font-weight: bold;
+    text-shadow: none;
+}
 
         .chart-row {
             display: grid;
