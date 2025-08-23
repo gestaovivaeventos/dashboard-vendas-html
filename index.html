@@ -150,87 +150,7 @@
                     <img id="company-logo" src="Rockets2.png" alt="Logo da Empresa">
                 </header>
                 <div id="page1" class="page-content active">
-                    <section class="kpi-container" id="kpi-section" style="display: none;">
-                        <div class="kpi-main-wrapper">
-                            <div class="kpi-main-cards-container">
-                                <div class="kpi-main-card">
-                                    <span class="kpi-card-title">REALIZADO TOTAL</span>
-                                    <span class="kpi-card-value" id="kpi-total-realizado">R$ 0,00</span>
-                                    <span class="kpi-card-details"><span class="percent" id="kpi-total-percent">0,0%</span> de <span id="kpi-total-meta">R$ 0,00</span> META TOTAL</span>
-                                    <div class="progress-bar-bg"><div class="progress-bar-fg" id="kpi-total-progress"></div></div>
-                                </div>
-                                <div class="kpi-main-card">
-                                    <span class="kpi-card-title">REALIZADO VENDAS</span>
-                                    <span class="kpi-card-value" id="kpi-vendas-realizado">R$ 0,00</span>
-                                    <span class="kpi-card-details"><span class="percent" id="kpi-vendas-percent">0,0%</span> de <span id="kpi-vendas-meta">R$ 0,00</span> META VENDAS</span>
-                                    <div class="progress-bar-bg"><div class="progress-bar-fg" id="kpi-vendas-progress"></div></div>
-                                </div>
-                                <div class="kpi-main-card">
-                                    <span class="kpi-card-title">REALIZADO PÓS VENDAS</span>
-                                    <span class="kpi-card-value" id="kpi-posvendas-realizado">R$ 0,00</span>
-                                    <span class="kpi-card-details"><span class="percent" id="kpi-posvendas-percent">0,0%</span> de <span id="kpi-posvendas-meta">R$ 0,00</span> META PÓS VENDAS</span>
-                                    <div class="progress-bar-bg"><div class="progress-bar-fg" id="kpi-posvendas-progress"></div></div>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-                    <section class="kpi-container" id="kpi-section-py" style="display: none;">
-                        <h2 style="grid-column: span 12; font-size: 1.2em; border-bottom: none; padding-bottom: 0;">Desempenho no Período Anterior</h2>
-                        <div class="kpi-main-wrapper" style="width: 100%; grid-column: span 12;">
-                            <div class="kpi-main-cards-container">
-                                <div class="kpi-main-card">
-                                    <span class="kpi-card-title">REALIZADO TOTAL</span>
-                                    <span class="kpi-card-value" id="kpi-total-realizado-py">R$ 0,00</span>
-                                    <span class="kpi-card-details"><span class="percent" id="kpi-total-percent-py">0,0%</span> de <span id="kpi-total-meta-py">R$ 0,00</span> META TOTAL</span>
-                                    <div class="progress-bar-bg"><div class="progress-bar-fg" id="kpi-total-progress-py"></div></div>
-                                </div>
-                                <div class="kpi-main-card">
-                                    <span class="kpi-card-title">REALIZADO VENDAS</span>
-                                    <span class="kpi-card-value" id="kpi-vendas-realizado-py">R$ 0,00</span>
-                                    <span class="kpi-card-details"><span class="percent" id="kpi-vendas-percent-py">0,0%</span> de <span id="kpi-vendas-meta-py">R$ 0,00</span> META VENDAS</span>
-                                    <div class="progress-bar-bg"><div class="progress-bar-fg" id="kpi-vendas-progress-py"></div></div>
-                                </div>
-                                <div class="kpi-main-card">
-                                    <span class="kpi-card-title">REALIZADO PÓS VENDAS</span>
-                                    <span class="kpi-card-value" id="kpi-posvendas-realizado-py">R$ 0,00</span>
-                                    <span class="kpi-card-details"><span class="percent" id="kpi-posvendas-percent-py">0,0%</span> de <span id="kpi-posvendas-meta-py">R$ 0,00</span> META PÓS VENDAS</span>
-                                    <div class="progress-bar-bg"><div class="progress-bar-fg" id="kpi-posvendas-progress-py"></div></div>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-                    <section class="chart-container" id="chart-vvr-mes-section" style="display: none;">
-                        <h2>VVR Realizado vs. Meta por Mês (Ano Vigente)</h2>
-                        <div class="chart-selector">
-                            <button id="btn-total" class="active" data-type="total">Total</button>
-                            <button id="btn-vendas" data-type="vendas">Vendas</button>
-                            <button id="btn-posvendas" data-type="posvendas">Pós Venda</button>
-                        </div>
-                        <div class="chart-wrapper">
-                            <canvas id="vvrVsMetaPorMesChart"></canvas>
-                        </div>
-                    </section>
-                    <section class="chart-container" id="chart-cumulative-section" style="display: none;">
-                        <h2>VVR Acumulado Anual (Comparativo)</h2>
-                        <div class="chart-selector" id="cumulative-chart-selector"></div>
-                        <div class="chart-wrapper">
-                            <canvas id="cumulativeVvrChart"></canvas>
-                        </div>
-                    </section>
-                    <section class="table-container" id="table-section" style="display: none;">
-                        <h2>Dados Detalhados por Mês/Unidade (Período Selecionado)</h2>
-                        <div class="chart-selector">
-                            <button class="active" data-type="total">Total</button>
-                            <button data-type="vendas">Vendas</button>
-                            <button data-type="posvendas">Pós Venda</button>
-                        </div>
-                        <table id="dados-table" class="display" style="width:100%">
-                            <thead><tr><th>Unidade</th><th>Período</th><th>VVR Realizado</th><th>Meta VVR</th><th>Atingimento VVR</th></tr></thead>
-                            <tbody></tbody>
-                            <tfoot></tfoot>
-                        </table>
-                    </section>
-                </div>
+                    </div>
                 <div id="page2" class="page-content">
                     <section class="chart-container" id="chart-monthly-vvr-section" style="display: none;">
                         <h2>Comparativo de VVR Mensal</h2>
@@ -316,6 +236,24 @@
                             <tbody></tbody>
                         </table>
                     </section>
+                    <section class="table-container" id="detalhada-adesoes-table-section" style="display: none;">
+                        <h2>Adesões Detalhadas no Período</h2>
+                        <table id="detalhada-adesoes-table" class="display" style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th>Unidade</th>
+                                    <th>Cód. Integrante</th>
+                                    <th>Integrante</th>
+                                    <th>Data Cadastro</th>
+                                    <th>Cód. Fundo</th>
+                                    <th>Tipo</th>
+                                    <th>Consultor</th>
+                                    <th>VVR</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </section>
                 </div>
             </div>
         </div>
@@ -329,7 +267,7 @@
     const METAS_SHEET_NAME = "metas";
     const API_KEY = "AIzaSyBuGRH91CnRuDtN5RGsb5DvHEfhTxJnWSs"; 
     
-    let allData = [], fundosData = [], metasData = new Map(), dataTable, vvrVsMetaPorMesChart, cumulativeVvrChart, monthlyVvrChart, yearlyStackedChart, monthlyStackedChart, yearlyTicketChart, monthlyTicketChart, yearlyContractsChart, monthlyContractsChart, monthlyAdesoesChart, yearlyAdesoesStackedChart, monthlyAdesoesStackedChart, consultorDataTable;
+    let allData = [], fundosData = [], metasData = new Map(), dataTable, vvrVsMetaPorMesChart, cumulativeVvrChart, monthlyVvrChart, yearlyStackedChart, monthlyStackedChart, yearlyTicketChart, monthlyTicketChart, yearlyContractsChart, monthlyContractsChart, monthlyAdesoesChart, yearlyAdesoesStackedChart, monthlyAdesoesStackedChart, consultorDataTable, detalhadaAdesoesDataTable;
     let currentVvrChartType = 'total';
     let currentTableDataType = 'total';
     let currentFilteredDataForTable = [];
@@ -355,7 +293,8 @@
                  'chart-monthly-adesoes-section',
                  'chart-yearly-adesoes-stacked-section',
                  'chart-monthly-adesoes-stacked-section',
-                 'consultor-table-section'
+                 'consultor-table-section',
+                 'detalhada-adesoes-table-section'
                 ].forEach(id => {
                     const el = document.getElementById(id);
                     if (el) el.style.display = 'block';
@@ -410,13 +349,19 @@
             const unidadeIndex = headers.indexOf("nm_unidade");
             const dataIndex = headers.indexOf("dt_cadastro_integrante");
             const valorIndex = headers.indexOf("vl_plano");
+            
+            // Colunas essenciais para o funcionamento básico
+            if (unidadeIndex === -1 || dataIndex === -1 || valorIndex === -1) {
+                console.error("Colunas essenciais (nm_unidade, dt_cadastro_integrante, vl_plano) não foram encontradas.");
+                return []; // Falha se as colunas principais não existirem
+            }
+
+            // Colunas opcionais - busca o índice, que será -1 se não encontrar
             const tipoVendaIndex = headers.indexOf("venda_posvenda");
             const indicadoPorIndex = headers.indexOf("indicado_por");
-
-            if (unidadeIndex === -1 || dataIndex === -1 || valorIndex === -1 || indicadoPorIndex === -1) {
-                console.error("Colunas necessárias (nm_unidade, dt_cadastro_integrante, vl_plano, indicado_por) não foram encontradas.");
-                return [];
-            }
+            const codigoIntegranteIndex = headers.indexOf("codigo_integrante");
+            const nomeIntegranteIndex = headers.indexOf("nm_integrante");
+            const idFundoIndex = headers.indexOf("id_fundo");
 
             return rows.slice(1).map(row => {
                 const dataString = row[dataIndex];
@@ -425,8 +370,12 @@
                     nm_unidade: row[unidadeIndex] || 'N/A',
                     dt_cadastro_integrante: new Date(dataString),
                     vl_plano: parseFloat(String(row[valorIndex] || '0').replace(',', '.')) || 0,
-                    venda_posvenda: row[tipoVendaIndex] || 'VENDA',
-                    indicado_por: row[indicadoPorIndex] || 'N/A'
+                    // Usa o índice para verificar se a coluna existe antes de tentar acessá-la
+                    venda_posvenda: tipoVendaIndex !== -1 ? row[tipoVendaIndex] || 'VENDA' : 'N/A',
+                    indicado_por: indicadoPorIndex !== -1 ? row[indicadoPorIndex] || 'N/A' : 'N/A',
+                    codigo_integrante: codigoIntegranteIndex !== -1 ? row[codigoIntegranteIndex] || 'N/A' : 'N/A',
+                    nm_integrante: nomeIntegranteIndex !== -1 ? row[nomeIntegranteIndex] || 'N/A' : 'N/A',
+                    id_fundo: idFundoIndex !== -1 ? row[idFundoIndex] || 'N/A' : 'N/A'
                 };
             }).filter(Boolean);
         } catch (error) {
@@ -505,7 +454,8 @@
         updateContractsCharts(fundosData, selectedUnidades);
         updateMonthlyAdesoesChart(allData, selectedUnidades);
         updateAdesoesDrillDownCharts(allData, selectedUnidades);
-        updateConsultorTable(dataBrutaFiltrada); // Passa os dados já filtrados por data
+        updateConsultorTable(dataBrutaFiltrada);
+        updateDetalhadaAdesoesTable(dataBrutaFiltrada);
         updateMainKPIs(dataBrutaFiltrada, selectedUnidades, startDate, endDate);
 
         const dataAgregadaComVendas = processAndCrossReferenceData(dataBrutaFiltrada);
@@ -1192,15 +1142,61 @@
                         exportOptions: {
                             format: {
                                 body: function ( data, row, column, node ) {
-                                    // Coluna 2: VVR Total (Moeda)
                                     if (column === 2) {
                                         return parseFloat(String(data).replace('R$', '').replace(/\./g, '').replace(',', '.').trim());
                                     }
-                                    // Coluna 3: Total de Adesões (Número)
                                     if (column === 3) {
                                         return Number(data);
                                     }
-                                    return data; // Demais colunas como texto
+                                    return data;
+                                }
+                            }
+                        }
+                    }
+                ]
+            });
+        }
+    }
+
+    function updateDetalhadaAdesoesTable(filteredData) {
+        const tableData = filteredData.map(d => [
+            d.nm_unidade,
+            d.codigo_integrante,
+            d.nm_integrante,
+            d.dt_cadastro_integrante.toLocaleDateString('pt-BR'),
+            d.id_fundo,
+            d.venda_posvenda,
+            d.indicado_por,
+            d.vl_plano
+        ]);
+
+        if (detalhadaAdesoesDataTable) {
+            detalhadaAdesoesDataTable.clear().rows.add(tableData).draw();
+        } else {
+            detalhadaAdesoesDataTable = $('#detalhada-adesoes-table').DataTable({
+                data: tableData,
+                columns: [
+                    null, null, null, null, null, null, null,
+                    { render: data => formatCurrency(data) }
+                ],
+                pageLength: 10,
+                language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json' },
+                destroy: true,
+                dom: 'Bfrtip',
+                buttons: [
+                    {
+                        extend: 'excelHtml5',
+                        text: 'Exportar para Excel',
+                        title: `Relatorio_Adesoes_Detalhadas_${new Date().toLocaleDateString('pt-BR')}`,
+                        className: 'excel-button',
+                        exportOptions: {
+                            format: {
+                                body: function ( data, row, column, node ) {
+                                    // Coluna 7: VVR (Moeda)
+                                    if (column === 7) {
+                                        return data;
+                                    }
+                                    return node.innerHTML;
                                 }
                             }
                         }
