@@ -788,58 +788,63 @@ updateFundosDetalhadosTable(fundosData, selectedUnidades, startDate, endDate);
         }
     }
 
-    function drawMonthlyTicketChart(data, year) {
-        document.getElementById('monthly-ticket-title').textContent = `Ticket Médio Mensal (${year})`;
-        
-        const ticketByMonth = Array(12).fill(0).map(() => ({ totalValor: 0, totalAdesoes: 0 }));
+function drawMonthlyTicketChart(data, year) {
+    document.getElementById('monthly-ticket-title').textContent = `Ticket Médio Mensal (${year})`;
+    
+    const ticketByMonth = Array(12).fill(0).map(() => ({ totalValor: 0, totalAdesoes: 0 }));
 
-        data.forEach(d => {
-            if (d.dt_cadastro_integrante.getFullYear() === parseInt(year)) {
-                const month = d.dt_cadastro_integrante.getMonth();
-                ticketByMonth[month].totalValor += d.vl_plano;
-                ticketByMonth[month].totalAdesoes += 1;
-            }
-        });
-        
-        const monthlyTicketData = ticketByMonth.map(m => m.totalAdesoes > 0 ? m.totalValor / m.totalAdesoes : 0);
-        const monthLabels = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+    data.forEach(d => {
+        if (d.dt_cadastro_integrante.getFullYear() === parseInt(year)) {
+            const month = d.dt_cadastro_integrante.getMonth();
+            ticketByMonth[month].totalValor += d.vl_plano;
+            ticketByMonth[month].totalAdesoes += 1;
+        }
+    });
+    
+    const monthlyTicketData = ticketByMonth.map(m => m.totalAdesoes > 0 ? m.totalValor / m.totalAdesoes : 0);
+    const monthLabels = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
 
-        if (monthlyTicketChart) monthlyTicketChart.destroy();
-        monthlyTicketChart = new Chart(document.getElementById('monthlyTicketChart'), {
-            type: 'bar',
-            data: {
-                labels: monthLabels,
-                datasets: [{
-                    label: 'Ticket Médio',
-                    data: monthlyTicketData,
-                    backgroundColor: '#17a2b8'
-                }]
-            },
-            options: {
-                maintainAspectRatio: false,
-                plugins: {
-                    datalabels: {
-                        anchor: 'end',
-                        align: 'end',
-                        color: 'white',
-clamp: true,
-                        font: { weight: 'bold' },
-                        formatter: (value) => formatCurrency(value)
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: (context) => `Ticket Médio: ${formatCurrency(context.parsed.y)}`
-                        }
-                    }
+    // 1. Encontra o valor máximo nos dados do gráfico
+    const maxValue = Math.max(...monthlyTicketData);
+
+    if (monthlyTicketChart) monthlyTicketChart.destroy();
+    monthlyTicketChart = new Chart(document.getElementById('monthlyTicketChart'), {
+        type: 'bar',
+        data: {
+            labels: monthLabels,
+            datasets: [{
+                label: 'Ticket Médio',
+                data: monthlyTicketData,
+                backgroundColor: '#17a2b8'
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            plugins: {
+                datalabels: {
+                    anchor: 'end',
+                    align: 'end',
+                    color: 'white',
+                    font: { weight: 'bold' },
+                    formatter: (value) => value > 0 ? formatCurrency(value) : '' // Formata apenas valores maiores que zero
                 },
-                scales: {
-                    y: {
-                        beginAtZero: true
+                tooltip: {
+                    callbacks: {
+                        label: (context) => `Ticket Médio: ${formatCurrency(context.parsed.y)}`
                     }
                 }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    // 2. Define o valor máximo do eixo Y com uma folga de 20%
+                    // Se o valor máximo for 0, o gráfico se ajusta automaticamente
+                    max: maxValue > 0 ? maxValue * 1.20 : undefined 
+                }
             }
-        });
-    }
+        }
+    });
+}
     
     function updateContractsCharts(historicalData, selectedUnidades) {
         const unitsToConsider = selectedUnidades.length > 0 ? selectedUnidades : [...new Set(allData.map(d => d.nm_unidade))];
