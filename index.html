@@ -195,12 +195,6 @@
             </div>
             <section id="loader" class="filters"><div class="loader">Carregando informações...</div></section>
             <section class="filters" id="filters-section" style="display: none;">
-</section> <section class="filters" id="filters-section-page2" style="display: none;">
-                <div class="filter-item">
-                    <label for="curso-filter">Filtrar por Curso</label>
-                    <select id="curso-filter" multiple="multiple"></select>
-                </div>
-            </section>
                 <div class="filter-item filter-item-unidades"><label for="unidade-filter">Filtrar por Unidade(s)</label><select id="unidade-filter" multiple="multiple"></select></div>
                 <div class="filter-item"><label for="start-date">Data de Início</label><input type="date" id="start-date"></div>
                 <div class="filter-item"><label for="end-date">Data de Fim</label><input type="date" id="end-date"></div>
@@ -499,60 +493,58 @@
         }, 300);
     });
     
-   async function fetchAllSalesDataFromSheet() {
-    if (!SALES_SPREADSHEET_ID || !SALES_SHEET_NAME || !API_KEY) {
-        console.error("ID da Planilha de Vendas, Nome da Aba ou Chave de API não configurados.");
-        return [];
-    }
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SALES_SPREADSHEET_ID}/values/${SALES_SHEET_NAME}?key=${API_KEY}`;
-    try {
-        const response = await fetch(url);
-        if (!response.ok) {
-            console.error("Erro ao buscar dados de vendas da planilha:", await response.json());
+    async function fetchAllSalesDataFromSheet() {
+        if (!SALES_SPREADSHEET_ID || !SALES_SHEET_NAME || !API_KEY) {
+            console.error("ID da Planilha de Vendas, Nome da Aba ou Chave de API não configurados.");
             return [];
         }
-        const data = await response.json();
-        const rows = data.values || [];
-        if (rows.length < 2) return [];
+        const url = `https://sheets.googleapis.com/v4/spreadsheets/${SALES_SPREADSHEET_ID}/values/${SALES_SHEET_NAME}?key=${API_KEY}`;
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                console.error("Erro ao buscar dados de vendas da planilha:", await response.json());
+                return [];
+            }
+            const data = await response.json();
+            const rows = data.values || [];
+            if (rows.length < 2) return [];
 
-        const headers = rows[0].map(h => h.trim().toLowerCase());
-        const unidadeIndex = headers.indexOf("nm_unidade");
-        const dataIndex = headers.indexOf("dt_cadastro_integrante");
-        const valorIndex = headers.indexOf("vl_plano");
-        
-        if (unidadeIndex === -1 || dataIndex === -1 || valorIndex === -1) {
-            console.error("Colunas essenciais (nm_unidade, dt_cadastro_integrante, vl_plano) não foram encontradas.");
+            const headers = rows[0].map(h => h.trim().toLowerCase());
+            const unidadeIndex = headers.indexOf("nm_unidade");
+            const dataIndex = headers.indexOf("dt_cadastro_integrante");
+            const valorIndex = headers.indexOf("vl_plano");
+            
+            if (unidadeIndex === -1 || dataIndex === -1 || valorIndex === -1) {
+                console.error("Colunas essenciais (nm_unidade, dt_cadastro_integrante, vl_plano) não foram encontradas.");
+                return [];
+            }
+
+            const tipoVendaIndex = headers.indexOf("venda_posvenda");
+            const indicadoPorIndex = headers.indexOf("indicado_por");
+            const codigoIntegranteIndex = headers.indexOf("codigo_integrante");
+            const nomeIntegranteIndex = headers.indexOf("nm_integrante");
+            const idFundoIndex = headers.indexOf("id_fundo");
+
+            return rows.slice(1).map(row => {
+                const dataString = row[dataIndex];
+                if (!dataString) return null;
+                return {
+                    nm_unidade: row[unidadeIndex] || 'N/A',
+                    dt_cadastro_integrante: new Date(dataString),
+                    vl_plano: parseFloat(String(row[valorIndex] || '0').replace(',', '.')) || 0,
+                    venda_posvenda: tipoVendaIndex !== -1 ? row[tipoVendaIndex] || 'VENDA' : 'N/A',
+                    indicado_por: indicadoPorIndex !== -1 ? row[indicadoPorIndex] || 'N/A' : 'N/A',
+                    codigo_integrante: codigoIntegranteIndex !== -1 ? row[codigoIntegranteIndex] || 'N/A' : 'N/A',
+                    nm_integrante: nomeIntegranteIndex !== -1 ? row[nomeIntegranteIndex] || 'N/A' : 'N/A',
+                    id_fundo: idFundoIndex !== -1 ? row[idFundoIndex] || 'N/A' : 'N/A'
+                };
+            }).filter(Boolean);
+        } catch (error) {
+            console.error("Erro CRÍTICO ao buscar dados de vendas:", error);
             return [];
         }
-
-        // Busca as colunas adicionais de forma segura
-        const tipoVendaIndex = headers.indexOf("venda_posvenda");
-        const indicadoPorIndex = headers.indexOf("indicado_por");
-        const codigoIntegranteIndex = headers.indexOf("codigo_integrante");
-        const nomeIntegranteIndex = headers.indexOf("nm_integrante");
-        const idFundoIndex = headers.indexOf("id_fundo");
-        const cursoFundoIndex = headers.indexOf("curso_fundo"); // <-- Coluna para o novo filtro
-
-        return rows.slice(1).map(row => {
-            const dataString = row[dataIndex];
-            if (!dataString) return null;
-            return {
-                nm_unidade: row[unidadeIndex] || 'N/A',
-                dt_cadastro_integrante: new Date(dataString),
-                vl_plano: parseFloat(String(row[valorIndex] || '0').replace(',', '.')) || 0,
-                venda_posvenda: tipoVendaIndex !== -1 ? row[tipoVendaIndex] || 'VENDA' : 'N/A',
-                indicado_por: indicadoPorIndex !== -1 ? row[indicadoPorIndex] || 'N/A' : 'N/A',
-                codigo_integrante: codigoIntegranteIndex !== -1 ? row[codigoIntegranteIndex] || 'N/A' : 'N/A',
-                nm_integrante: nomeIntegranteIndex !== -1 ? row[nomeIntegranteIndex] || 'N/A' : 'N/A',
-                id_fundo: idFundoIndex !== -1 ? row[idFundoIndex] || 'N/A' : 'N/A',
-                curso_fundo: cursoFundoIndex !== -1 ? row[cursoFundoIndex] || 'N/A' : 'N/A' // <-- Dado adicionado
-            };
-        }).filter(Boolean);
-    } catch (error) {
-        console.error("Erro CRÍTICO ao buscar dados de vendas:", error);
-        return [];
     }
-}
+
 async function fetchFundosData() {
     if (!SALES_SPREADSHEET_ID || !FUNDOS_SHEET_NAME || !API_KEY) {
         console.error("ID da Planilha, Nome da Aba FUNDOS ou Chave de API não configurados.");
@@ -637,14 +629,8 @@ async function fetchFundosData() {
         const endDate = new Date(endParts[0], endParts[1] - 1, endParts[2]);
         endDate.setDate(endDate.getDate() + 1);
         
-        // Pega o valor do novo filtro
-const selectedCursos = $('#curso-filter').val() || [];
-
-const dataBrutaFiltrada = allData.filter(d => 
-    (selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade)) && 
-    d.dt_cadastro_integrante >= startDate && d.dt_cadastro_integrante < endDate &&
-    (selectedCursos.length === 0 || selectedCursos.includes(d.curso_fundo)) // <-- LÓGICA DO FILTRO ADICIONADA
-);
+        const dataBrutaFiltrada = allData.filter(d => (selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade)) && d.dt_cadastro_integrante >= startDate && d.dt_cadastro_integrante < endDate);
+        
         updateVvrVsMetaPorMesChart(dataParaGrafico, anoVigente);
         updateCumulativeVvrChart(allData, selectedUnidades);
         updateMonthlyVvrChart(allData, selectedUnidades);
@@ -1039,28 +1025,17 @@ function drawMonthlyTicketChart(data, year) {
     function updateDataTable(data) { const tableData = data.map(d => { const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); let realizado = 0; let meta = 0; const vendasDoPeriodo = allData.filter(v => v.nm_unidade === d.unidade && `${v.dt_cadastro_integrante.getFullYear()}-${String(v.dt_cadastro_integrante.getMonth() + 1).padStart(2, '0')}` === d.periodo); if (currentTableDataType === 'vendas') { realizado = vendasDoPeriodo.filter(v => normalizeText(v.venda_posvenda) === 'VENDA').reduce((sum, v) => sum + v.vl_plano, 0); meta = d.meta_vvr_vendas; } else if (currentTableDataType === 'posvendas') { realizado = vendasDoPeriodo.filter(v => normalizeText(v.venda_posvenda) === 'POS VENDA').reduce((sum, v) => sum + v.vl_plano, 0); meta = d.meta_vvr_posvendas; } else { realizado = d.realizado_vvr; meta = d.meta_vvr_total; } const atingimentoVvr = meta > 0 ? realizado / meta : 0; return [ d.unidade, d.periodo, formatCurrency(realizado), formatCurrency(meta), formatPercent(atingimentoVvr) ]; }).sort((a,b) => String(a[1]).localeCompare(String(b[0]))); if (dataTable) { dataTable.clear().rows.add(tableData).draw(); } else { dataTable = $('#dados-table').DataTable({ data: tableData, pageLength: 10, language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json' }, destroy: true, dom: 'Bfrtip', buttons: [ { extend: 'excelHtml5', text: 'Exportar para Excel', title: `Relatorio_Vendas_${new Date().toLocaleDateString('pt-BR')}`, className: 'excel-button', exportOptions: { format: { body: function ( data, row, column, node ) { if (column === 2 || column === 3) { return parseFloat(data.replace('R$', '').replace(/\./g, '').replace(',', '.').trim()); } if (column === 4) { return parseFloat(data.replace('%', '').replace(',', '.').trim()) / 100; } return data; } } } } ] }); } }
     
     function addEventListeners() { 
-       // SUBSTITUA O BLOCO DE CÓDIGO .page-navigation button POR ESTE:
-    document.querySelectorAll('.page-navigation button').forEach(button => {
-        button.addEventListener('click', function() {
-            // Remove a classe 'active' de todos os botões de navegação
-            document.querySelectorAll('.page-navigation button').forEach(btn => btn.classList.remove('active'));
-            // Adiciona a classe 'active' apenas no botão clicado
-            this.classList.add('active');
-            
-            // Esconde todas as páginas de conteúdo
-            document.querySelectorAll('.page-content').forEach(page => page.classList.remove('active'));
-            // Mostra apenas a página de conteúdo correspondente ao botão clicado
-            document.getElementById(this.dataset.page).classList.add('active');
-
-            // Lógica para mostrar/esconder os filtros específicos da página 2
-            const page2Filters = document.getElementById('filters-section-page2');
-            if (this.dataset.page === 'page2') {
-                page2Filters.style.display = 'flex';
-            } else {
-                page2Filters.style.display = 'none';
-            }
+        document.getElementById('start-date').addEventListener('change', updateDashboard); 
+        document.getElementById('end-date').addEventListener('change', updateDashboard); 
+        
+        document.querySelectorAll('.page-navigation button').forEach(button => {
+            button.addEventListener('click', function() {
+                document.querySelectorAll('.page-navigation button').forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+                document.querySelectorAll('.page-content').forEach(page => page.classList.remove('active'));
+                document.getElementById(this.dataset.page).classList.add('active');
+            });
         });
-    });
 
         document.querySelectorAll('#chart-vvr-mes-section .chart-selector button').forEach(button => {
             button.addEventListener('click', () => {
@@ -1114,31 +1089,6 @@ function drawMonthlyTicketChart(data, year) {
         const fimMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0); 
         document.getElementById('start-date').value = inicioMes.toISOString().split('T')[0]; 
         document.getElementById('end-date').value = fimMes.toISOString().split('T')[0]; 
-// Adicione este código NO FINAL da sua função populateFilters
-const createMultiSelect = (elementId, data, dataField, placeholder) => {
-    const uniqueValues = [...new Set(data.map(item => item[dataField]).filter(Boolean))].sort();
-    const filterElement = $(`#${elementId}`);
-    filterElement.empty();
-    uniqueValues.forEach(val => {
-        filterElement.append($('<option>', { value: val, text: val }));
-    });
-    filterElement.multiselect({
-        enableFiltering: true,
-        includeSelectAllOption: true,
-        selectAllText: 'Marcar todos',
-        filterPlaceholder: 'Pesquisar...',
-        nonSelectedText: placeholder,
-        nSelectedText: 'selecionados',
-        allSelectedText: 'Todos selecionados',
-        buttonWidth: '100%',
-        maxHeight: 300,
-        onChange: updateDashboard,
-        onSelectAll: updateDashboard,
-        onDeselectAll: updateDashboard
-    });
-};
-
-createMultiSelect('curso-filter', allData, 'curso_fundo', 'Todos os Cursos');
     }
 
     function updateMonthlyAdesoesChart(historicalData, selectedUnidades) {
