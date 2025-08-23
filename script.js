@@ -830,106 +830,124 @@ function drawMonthlyTicketChart(data, year) {
     }
 
     function updateAdesoesDrillDownCharts(historicalData, selectedUnidades) {
-        const unitsToConsider = selectedUnidades.length > 0 ? selectedUnidades : [...new Set(allData.map(d => d.nm_unidade))];
-        const filteredHistoricalData = historicalData.filter(d => unitsToConsider.includes(d.nm_unidade));
-        const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const unitsToConsider = selectedUnidades.length > 0 ? selectedUnidades : [...new Set(allData.map(d => d.nm_unidade))];
+    const filteredHistoricalData = historicalData.filter(d => unitsToConsider.includes(d.nm_unidade));
+    const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
-        const adesoesByYear = {};
-        filteredHistoricalData.forEach(d => {
-            const year = d.dt_cadastro_integrante.getFullYear();
-            if (!adesoesByYear[year]) {
-                adesoesByYear[year] = { vendas: 0, posVendas: 0 };
-            }
-            if (normalizeText(d.venda_posvenda) === 'VENDA') {
-                adesoesByYear[year].vendas++; 
-            } else if (normalizeText(d.venda_posvenda) === 'POS VENDA') {
-                adesoesByYear[year].posVendas++;
-            }
-        });
+    const adesoesByYear = {};
+    filteredHistoricalData.forEach(d => {
+        const year = d.dt_cadastro_integrante.getFullYear();
+        if (!adesoesByYear[year]) {
+            adesoesByYear[year] = { vendas: 0, posVendas: 0 };
+        }
+        if (normalizeText(d.venda_posvenda) === 'VENDA') {
+            adesoesByYear[year].vendas++;
+        } else if (normalizeText(d.venda_posvenda) === 'POS VENDA') {
+            adesoesByYear[year].posVendas++;
+        }
+    });
 
-        const years = Object.keys(adesoesByYear).sort();
-        const adesoesVendasAnual = years.map(year => adesoesByYear[year].vendas);
-        const adesoesPosVendasAnual = years.map(year => adesoesByYear[year].posVendas);
+    const years = Object.keys(adesoesByYear).sort();
+    const adesoesVendasAnual = years.map(year => adesoesByYear[year].vendas);
+    const adesoesPosVendasAnual = years.map(year => adesoesByYear[year].posVendas);
 
-        if (yearlyAdesoesStackedChart) yearlyAdesoesStackedChart.destroy();
-        yearlyAdesoesStackedChart = new Chart(document.getElementById('yearlyAdesoesStackedChart'), {
-            type: 'bar',
-            data: {
-                labels: years,
-                datasets: [
-                    { label: 'Pós Venda', data: adesoesPosVendasAnual, backgroundColor: '#007bff' },
-                    { label: 'Venda', data: adesoesVendasAnual, backgroundColor: '#6c757d' }
-                ]
+    if (yearlyAdesoesStackedChart) yearlyAdesoesStackedChart.destroy();
+    yearlyAdesoesStackedChart = new Chart(document.getElementById('yearlyAdesoesStackedChart'), {
+        type: 'bar',
+        data: {
+            labels: years,
+            datasets: [
+                { label: 'Pós Venda', data: adesoesPosVendasAnual, backgroundColor: '#007bff' },
+                { label: 'Venda', data: adesoesVendasAnual, backgroundColor: '#6c757d' }
+            ]
+        },
+        options: {
+            // AJUSTES ADICIONADOS AQUI
+            devicePixelRatio: window.devicePixelRatio,
+            interaction: {
+                mode: 'index',
+                intersect: false,
             },
-            options: {
-                maintainAspectRatio: false,
-                indexAxis: 'y',
-                scales: { x: { stacked: true }, y: { stacked: true } },
-                plugins: {
-                    datalabels: { color: 'white', font: { weight: 'bold' }, formatter: (value) => value > 0 ? value : '' },
-                    tooltip: { callbacks: {
-                        label: function(context) { let label = context.dataset.label || ''; if (label) { label += ': '; } if (context.parsed.x !== null) { label += context.parsed.x; } return label; },
-                        footer: function(tooltipItems) { let sum = 0; tooltipItems.forEach(item => { sum += item.parsed.x; }); return 'Total: ' + sum; }
-                    }}
-                },
-                onClick: (event, elements) => {
-                    if (elements.length > 0) {
-                        const clickedYear = years[elements[0].index];
-                        drawMonthlyAdesoesDetailChart(filteredHistoricalData, clickedYear);
+            // FIM DOS AJUSTES
+
+            maintainAspectRatio: false,
+            indexAxis: 'y',
+            scales: { x: { stacked: true }, y: { stacked: true } },
+            plugins: {
+                datalabels: { color: 'white', font: { weight: 'bold' }, formatter: (value) => value > 0 ? value : '' },
+                tooltip: {
+                    callbacks: {
+                        label: function (context) { let label = context.dataset.label || ''; if (label) { label += ': '; } if (context.parsed.x !== null) { label += context.parsed.x; } return label; },
+                        footer: function (tooltipItems) { let sum = 0; tooltipItems.forEach(item => { sum += item.parsed.x; }); return 'Total: ' + sum; }
+                    }
+                }
+            },
+            onClick: (event, elements) => {
+                if (elements.length > 0) {
+                    const clickedYear = years[elements[0].index];
+                    drawMonthlyAdesoesDetailChart(filteredHistoricalData, clickedYear);
+                }
+            }
+        }
+    });
+
+    if (years.length > 0) {
+        drawMonthlyAdesoesDetailChart(filteredHistoricalData, years[years.length - 1]);
+    }
+}
+    function drawMonthlyAdesoesDetailChart(data, year) {
+    document.getElementById('monthly-adesoes-stacked-title').textContent = `Adesões por Tipo (Mensal ${year})`;
+    const adesoesByMonth = Array(12).fill(0).map(() => ({ vendas: 0, posVendas: 0 }));
+    const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    
+    data.forEach(d => {
+        if (d.dt_cadastro_integrante.getFullYear() === parseInt(year)) {
+            const month = d.dt_cadastro_integrante.getMonth();
+            if (normalizeText(d.venda_posvenda) === 'VENDA') {
+                adesoesByMonth[month].vendas++;
+            } else if (normalizeText(d.venda_posvenda) === 'POS VENDA') {
+                adesoesByMonth[month].posVendas++;
+            }
+        }
+    });
+
+    const adesoesVendasMensal = adesoesByMonth.map(m => m.vendas);
+    const adesoesPosVendasMensal = adesoesByMonth.map(m => m.posVendas);
+    const monthLabels = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+
+    if (monthlyAdesoesStackedChart) monthlyAdesoesStackedChart.destroy();
+    monthlyAdesoesStackedChart = new Chart(document.getElementById('monthlyAdesoesStackedChart'), {
+        type: 'bar',
+        data: {
+            labels: monthLabels,
+            datasets: [
+                { label: 'Pós Venda', data: adesoesPosVendasMensal, backgroundColor: '#007bff' },
+                { label: 'Venda', data: adesoesVendasMensal, backgroundColor: '#6c757d' }
+            ]
+        },
+        options: {
+            // AJUSTES ADICIONADOS AQUI
+            devicePixelRatio: window.devicePixelRatio,
+            interaction: {
+                mode: 'index',
+                intersect: false,
+            },
+            // FIM DOS AJUSTES
+            
+            maintainAspectRatio: false,
+            scales: { x: { stacked: true }, y: { stacked: true } },
+            plugins: {
+                datalabels: { color: 'white', font: { weight: 'bold' }, formatter: (value) => value > 0 ? value : '' },
+                tooltip: {
+                    callbacks: {
+                        label: function (context) { let label = context.dataset.label || ''; if (label) { label += ': '; } if (context.parsed.y !== null) { label += context.parsed.y; } return label; },
+                        footer: function (tooltipItems) { let sum = 0; tooltipItems.forEach(item => { sum += item.parsed.y; }); return 'Total: ' + sum; }
                     }
                 }
             }
-        });
-
-        if (years.length > 0) {
-            drawMonthlyAdesoesDetailChart(filteredHistoricalData, years[years.length - 1]);
         }
-    }
-
-    function drawMonthlyAdesoesDetailChart(data, year) {
-        document.getElementById('monthly-adesoes-stacked-title').textContent = `Adesões por Tipo (Mensal ${year})`;
-        const adesoesByMonth = Array(12).fill(0).map(() => ({ vendas: 0, posVendas: 0 }));
-        const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-        
-        data.forEach(d => {
-            if (d.dt_cadastro_integrante.getFullYear() === parseInt(year)) {
-                const month = d.dt_cadastro_integrante.getMonth();
-                if (normalizeText(d.venda_posvenda) === 'VENDA') {
-                    adesoesByMonth[month].vendas++;
-                } else if (normalizeText(d.venda_posvenda) === 'POS VENDA') {
-                    adesoesByMonth[month].posVendas++;
-                }
-            }
-        });
-
-        const adesoesVendasMensal = adesoesByMonth.map(m => m.vendas);
-        const adesoesPosVendasMensal = adesoesByMonth.map(m => m.posVendas);
-        const monthLabels = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
-
-        if (monthlyAdesoesStackedChart) monthlyAdesoesStackedChart.destroy();
-        monthlyAdesoesStackedChart = new Chart(document.getElementById('monthlyAdesoesStackedChart'), {
-            type: 'bar',
-            data: {
-                labels: monthLabels,
-                datasets: [
-                    { label: 'Pós Venda', data: adesoesPosVendasMensal, backgroundColor: '#007bff' },
-                    { label: 'Venda', data: adesoesVendasMensal, backgroundColor: '#6c757d' }
-                ]
-            },
-            options: {
-                maintainAspectRatio: false,
-                scales: { x: { stacked: true }, y: { stacked: true } },
-                plugins: {
-                    datalabels: { color: 'white', font: { weight: 'bold' }, formatter: (value) => value > 0 ? value : '' },
-                    tooltip: { callbacks: {
-                        label: function(context) { let label = context.dataset.label || ''; if (label) { label += ': '; } if (context.parsed.y !== null) { label += context.parsed.y; } return label; },
-                        footer: function(tooltipItems) { let sum = 0; tooltipItems.forEach(item => { sum += item.parsed.y; }); return 'Total: ' + sum; }
-                    }}
-                }
-            }
-        });
-    }
-
+    });
+}
     function updateConsultorTable(filteredData) {
         const performanceMap = new Map();
         filteredData.forEach(d => {
