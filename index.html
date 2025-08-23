@@ -334,6 +334,24 @@
                             <tbody></tbody>
                         </table>
                     </section>
+<section class="table-container" id="fundos-detalhados-table-section" style="display: none;">
+    <h2>Fundos Detalhados no Período</h2>
+    <table id="fundos-detalhados-table" class="display" style="width:100%">
+        <thead>
+            <tr>
+                <th>Unidade</th>
+                <th>ID Fundo</th>
+                <th>Fundo</th>
+                <th>DT Contrato</th>
+                <th>DT Cadastro</th>
+                <th>Tipo de Serviço</th>
+                <th>Instituição</th>
+                <th>DT Baile</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</section>
                 </div>
             </div>
         </div>
@@ -347,10 +365,16 @@
     const METAS_SHEET_NAME = "metas";
     const API_KEY = "AIzaSyBuGRH91CnRuDtN5RGsb5DvHEfhTxJnWSs"; 
     
-    let allData = [], fundosData = [], metasData = new Map(), dataTable, vvrVsMetaPorMesChart, cumulativeVvrChart, monthlyVvrChart, yearlyStackedChart, monthlyStackedChart, yearlyTicketChart, monthlyTicketChart, yearlyContractsChart, monthlyContractsChart, monthlyAdesoesChart, yearlyAdesoesStackedChart, monthlyAdesoesStackedChart, consultorDataTable, detalhadaAdesoesDataTable;
+    let allData = [], fundosData = [], metasData = new Map(), dataTable, vvrVsMetaPorMesChart, cumulativeVvrChart, monthlyVvrChart, yearlyStackedChart, monthlyStackedChart, yearlyTicketChart, monthlyTicketChart, yearlyContractsChart, monthlyContractsChart, monthlyAdesoesChart, yearlyAdesoesStackedChart, monthlyAdesoesStackedChart, consultorDataTable, detalhadaAdesoesDataTable, fundosDetalhadosDataTable;
     let currentVvrChartType = 'total';
     let currentTableDataType = 'total';
     let currentFilteredDataForTable = [];
+    const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    if (isNaN(date)) return 'N/A';
+    return date.toLocaleDateString('pt-BR', { timeZone: 'UTC' });
+};
     
     const formatCurrency = (value) => new Intl.NumberFormat('pt-br', { style: 'currency', currency: 'BRL' }).format(value || 0);
     const formatPercent = (value) => new Intl.NumberFormat('pt-br', { style: 'percent', minimumFractionDigits: 1 }).format(value || 0);
@@ -372,7 +396,7 @@
                  'chart-yearly-stacked-section', 'chart-monthly-stacked-section', 'chart-yearly-ticket-section', 
                  'chart-monthly-ticket-section', 'chart-yearly-contracts-section', 'chart-monthly-contracts-section',
                  'chart-monthly-adesoes-section', 'chart-yearly-adesoes-stacked-section', 'chart-monthly-adesoes-stacked-section',
-                 'consultor-table-section', 'detalhada-adesoes-table-section'
+                 'consultor-table-section', 'detalhada-adesoes-table-section', 'fundos-detalhados-table-section'
                 ].forEach(id => {
                     const el = document.getElementById(id);
                     if (el) el.style.display = 'block';
@@ -464,47 +488,57 @@
         }
     }
 
-    async function fetchFundosData() {
-        if (!SALES_SPREADSHEET_ID || !FUNDOS_SHEET_NAME || !API_KEY) {
-            console.error("ID da Planilha, Nome da Aba FUNDOS ou Chave de API não configurados.");
-            return [];
-        }
-        const url = `https://sheets.googleapis.com/v4/spreadsheets/${SALES_SPREADSHEET_ID}/values/${FUNDOS_SHEET_NAME}?key=${API_KEY}`;
-        try {
-            const response = await fetch(url);
-            if (!response.ok) {
-                console.error("Erro ao buscar dados de fundos da planilha:", await response.json());
-                return [];
-            }
-            const data = await response.json();
-            const rows = data.values || [];
-            if (rows.length < 2) return [];
-
-            const headers = rows[0].map(h => h.trim().toLowerCase());
-            const unidadeIndex = headers.indexOf("nm_unidade");
-            const dataIndex = headers.indexOf("dt_contrato");
-            const fundoIdIndex = headers.indexOf("id_fundo");
-
-            if (unidadeIndex === -1 || dataIndex === -1 || fundoIdIndex === -1) {
-                console.error("Colunas necessárias (nm_unidade, dt_contrato, id_fundo) não foram encontradas na aba FUNDOS.");
-                return [];
-            }
-
-            return rows.slice(1).map(row => {
-                const dataString = row[dataIndex];
-                if (!dataString || !row[fundoIdIndex]) return null; 
-                
-                return {
-                    nm_unidade: row[unidadeIndex] || 'N/A',
-                    dt_contrato: new Date(dataString),
-                    id_fundo: row[fundoIdIndex]
-                };
-            }).filter(Boolean);
-        } catch (error) {
-            console.error("Erro CRÍTICO ao buscar dados de fundos:", error);
-            return [];
-        }
+   async function fetchFundosData() {
+    if (!SALES_SPREADSHEET_ID || !FUNDOS_SHEET_NAME || !API_KEY) {
+        console.error("ID da Planilha, Nome da Aba FUNDOS ou Chave de API não configurados.");
+        return [];
     }
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SALES_SPREADSHEET_ID}/values/${FUNDOS_SHEET_NAME}?key=${API_KEY}`;
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            console.error("Erro ao buscar dados de fundos da planilha:", await response.json());
+            return [];
+        }
+        const data = await response.json();
+        const rows = data.values || [];
+        if (rows.length < 2) return [];
+
+        const headers = rows[0].map(h => String(h).trim().toLowerCase());
+        const unidadeIndex = headers.indexOf("nm_unidade");
+        const idFundoIndex = headers.indexOf("id fundo");
+        const fundoIndex = headers.indexOf("fundo");
+        const dtContratoIndex = headers.indexOf("dt contrato");
+        const dtCadastroIndex = headers.indexOf("dt cadastro");
+        const tipoServicoIndex = headers.indexOf("tipo de serviço");
+        const instituicaoIndex = headers.indexOf("instituição");
+        const dtBaileIndex = headers.indexOf("dt baile");
+
+        if (unidadeIndex === -1 || idFundoIndex === -1 || dtContratoIndex === -1) {
+             console.error("Colunas essenciais (nm_unidade, id fundo, dt contrato) não foram encontradas na planilha FUNDOS.");
+             return [];
+        }
+
+        return rows.slice(1).map(row => {
+            const dtContratoString = row[dtContratoIndex];
+            if (!dtContratoString) return null; 
+            
+            return {
+                nm_unidade: row[unidadeIndex] || 'N/A',
+                id_fundo: row[idFundoIndex] || 'N/A',
+                fundo: fundoIndex !== -1 ? row[fundoIndex] || 'N/A' : 'N/A',
+                dt_contrato: new Date(dtContratoString),
+                dt_cadastro: dtCadastroIndex !== -1 ? row[dtCadastroIndex] : null,
+                tipo_servico: tipoServicoIndex !== -1 ? row[tipoServicoIndex] || 'N/A' : 'N/A',
+                instituicao: instituicaoIndex !== -1 ? row[instituicaoIndex] || 'N/A' : 'N/A',
+                dt_baile: dtBaileIndex !== -1 ? row[dtBaileIndex] : null,
+            };
+        }).filter(Boolean);
+    } catch (error) {
+        console.error("Erro CRÍTICO ao buscar dados de fundos:", error);
+        return [];
+    }
+}
     
     async function fetchMetasData() { if (!METAS_SPREADSHEET_ID || !METAS_SHEET_NAME || !API_KEY) { console.error("Configurações da planilha de metas incompletas."); return new Map(); } const url = `https://sheets.googleapis.com/v4/spreadsheets/${METAS_SPREADSHEET_ID}/values/${METAS_SHEET_NAME}?key=${API_KEY}`; try { const response = await fetch(url); if (!response.ok) { console.error("Erro API Google Sheets:", await response.json()); return new Map(); } const data = await response.json(); const rows = data.values || []; const metasMap = new Map(); const headers = rows[0].map(h => h.trim().toLowerCase()); const unidadeIndex = headers.indexOf("nm_unidade"), anoIndex = headers.indexOf("ano"), mesIndex = headers.indexOf("mês"), metaVendasIndex = headers.indexOf("meta vvr_venda"), metaPosvendasIndex = headers.indexOf("meta vvr_pos_venda"), metaAdesoesIndex = headers.indexOf("meta adesões"); rows.slice(1).forEach(row => { const unidade = row[unidadeIndex], ano = row[anoIndex], mes = String(row[mesIndex]).padStart(2, '0'); const parseMetaValue = (index) => parseFloat(String(row[index] || "0").replace(/\./g, '').replace(',', '.')) || 0; const metaVendas = parseMetaValue(metaVendasIndex), metaPosvendas = parseMetaValue(metaPosvendasIndex), metaAdesoes = parseInt(row[metaAdesoesIndex]) || 0; if (unidade && ano && mes) { const chave = `${unidade}-${ano}-${mes}`; metasMap.set(chave, { meta_vvr_vendas: metaVendas, meta_vvr_posvendas: metaPosvendas, meta_vvr_total: metaVendas + metaPosvendas, meta_adesoes: metaAdesoes }); } }); return metasMap; } catch (error) { console.error("Erro CRÍTICO ao buscar metas:", error); return new Map(); } }
     function processAndCrossReferenceData(salesData) { const vendasPorMesUnidade = salesData.reduce((acc, d) => { const year = d.dt_cadastro_integrante.getFullYear(); const month = String(d.dt_cadastro_integrante.getMonth() + 1).padStart(2, '0'); const periodo = `${year}-${month}`; const chave = `${d.nm_unidade}-${periodo}`; if (!acc[chave]) { acc[chave] = { unidade: d.nm_unidade, periodo: periodo, realizado_vvr: 0, realizado_adesoes: 0 }; } acc[chave].realizado_vvr += d.vl_plano; acc[chave].realizado_adesoes += 1; return acc; }, {}); return Object.values(vendasPorMesUnidade).map(item => { const chaveMeta = `${item.unidade}-${item.periodo}`; const meta = metasData.get(chaveMeta) || { meta_vvr_total: 0, meta_vvr_vendas: 0, meta_vvr_posvendas: 0, meta_adesoes: 0 }; return { ...item, ...meta }; }); }
@@ -536,6 +570,7 @@
         updateAdesoesDrillDownCharts(allData, selectedUnidades);
         updateConsultorTable(dataBrutaFiltrada);
         updateDetalhadaAdesoesTable(dataBrutaFiltrada);
+updateFundosDetalhadosTable(fundosData, selectedUnidades, startDate, endDate);
         updateMainKPIs(dataBrutaFiltrada, selectedUnidades, startDate, endDate);
 
         const dataAgregadaComVendas = processAndCrossReferenceData(dataBrutaFiltrada);
@@ -1283,6 +1318,45 @@
                             }
                         }
                     }
+                }
+            ]
+        });
+    }
+}
+function updateFundosDetalhadosTable(fundosData, selectedUnidades, startDate, endDate) {
+    const filteredData = fundosData.filter(d => {
+        const isUnitMatch = selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade);
+        // Filtra pela data do contrato do fundo
+        const isDateMatch = d.dt_contrato >= startDate && d.dt_contrato < endDate;
+        return isUnitMatch && isDateMatch;
+    });
+
+    const tableData = filteredData.map(d => [
+        d.nm_unidade,
+        d.id_fundo,
+        d.fundo,
+        formatDate(d.dt_contrato),
+        formatDate(d.dt_cadastro),
+        d.tipo_servico,
+        d.instituicao,
+        formatDate(d.dt_baile)
+    ]);
+
+    if (fundosDetalhadosDataTable) {
+        fundosDetalhadosDataTable.clear().rows.add(tableData).draw();
+    } else {
+        fundosDetalhadosDataTable = $('#fundos-detalhados-table').DataTable({
+            data: tableData,
+            pageLength: 10,
+            language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json' },
+            destroy: true,
+            dom: 'Bfrtip',
+            buttons: [
+                {
+                    extend: 'excelHtml5',
+                    text: 'Exportar para Excel',
+                    title: `Relatorio_Fundos_Detalhados_${new Date().toLocaleDateString('pt-BR')}`,
+                    className: 'excel-button'
                 }
             ]
         });
