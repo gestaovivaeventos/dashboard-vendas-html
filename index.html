@@ -486,15 +486,6 @@
         const selectedUnidades = $('#unidade-filter').val() || [];
         const anoVigente = 2025;
         const dataParaGrafico = allData.filter(d => (selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade)) && d.dt_cadastro_integrante.getFullYear() === anoVigente);
-        updateVvrVsMetaPorMesChart(dataParaGrafico, anoVigente);
-        updateCumulativeVvrChart(allData, selectedUnidades);
-        updateMonthlyVvrChart(allData, selectedUnidades);
-        updateDrillDownCharts(allData, selectedUnidades);
-        updateTicketCharts(allData, selectedUnidades);
-        updateContractsCharts(fundosData, selectedUnidades);
-        updateMonthlyAdesoesChart(allData, selectedUnidades);
-        updateAdesoesDrillDownCharts(allData, selectedUnidades);
-        updateConsultorTable(allData, selectedUnidades);
         
         const startDateString = document.getElementById('start-date').value;
         const startParts = startDateString.split('-');
@@ -503,8 +494,20 @@
         const endParts = endDateString.split('-');
         const endDate = new Date(endParts[0], endParts[1] - 1, endParts[2]);
         endDate.setDate(endDate.getDate() + 1);
+        
         const dataBrutaFiltrada = allData.filter(d => (selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade)) && d.dt_cadastro_integrante >= startDate && d.dt_cadastro_integrante < endDate);
+        
+        updateVvrVsMetaPorMesChart(dataParaGrafico, anoVigente);
+        updateCumulativeVvrChart(allData, selectedUnidades);
+        updateMonthlyVvrChart(allData, selectedUnidades);
+        updateDrillDownCharts(allData, selectedUnidades);
+        updateTicketCharts(allData, selectedUnidades);
+        updateContractsCharts(fundosData, selectedUnidades);
+        updateMonthlyAdesoesChart(allData, selectedUnidades);
+        updateAdesoesDrillDownCharts(allData, selectedUnidades);
+        updateConsultorTable(dataBrutaFiltrada);
         updateMainKPIs(dataBrutaFiltrada, selectedUnidades, startDate, endDate);
+
         const dataAgregadaComVendas = processAndCrossReferenceData(dataBrutaFiltrada);
         const combinedDataMap = new Map();
         dataAgregadaComVendas.forEach(item => { const key = `${item.unidade}-${item.periodo}`; combinedDataMap.set(key, item); });
@@ -1147,10 +1150,7 @@
         });
     }
 
-    function updateConsultorTable(historicalData, selectedUnidades) {
-        const unitsToConsider = selectedUnidades.length > 0 ? selectedUnidades : [...new Set(allData.map(d => d.nm_unidade))];
-        const filteredData = historicalData.filter(d => unitsToConsider.includes(d.nm_unidade));
-
+    function updateConsultorTable(filteredData) {
         const performanceMap = new Map();
         filteredData.forEach(d => {
             const key = `${d.nm_unidade}-${d.indicado_por}`;
