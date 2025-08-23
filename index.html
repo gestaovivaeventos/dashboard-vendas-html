@@ -757,30 +757,39 @@ updateFundosDetalhadosTable(fundosData, selectedUnidades, startDate, endDate);
                     backgroundColor: '#17a2b8'
                 }]
             },
-            options: {
-                maintainAspectRatio: false,
-                indexAxis: 'y',
-                plugins: {
-                    datalabels: {
-                        anchor: 'end',
-                        align: 'end',
-                        color: 'white',
-                        font: { weight: 'bold' },
-                        formatter: (value) => formatCurrency(value)
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: (context) => `Ticket Médio: ${formatCurrency(context.parsed.x)}`
-                        }
-                    }
-                },
-                onClick: (event, elements) => {
-                    if (elements.length > 0) {
-                        const clickedYear = years[elements[0].index];
-                        drawMonthlyTicketChart(filteredHistoricalData, clickedYear);
-                    }
-                }
+         options: {
+    maintainAspectRatio: false,
+    indexAxis: 'y',
+    plugins: {
+        datalabels: {
+            anchor: 'end',
+            align: 'end',
+            color: 'white',
+            font: { weight: 'bold' },
+            formatter: (value) => value > 0 ? formatCurrency(value) : ''
+        },
+        tooltip: {
+            callbacks: {
+                label: (context) => `Ticket Médio: ${formatCurrency(context.parsed.x)}`
             }
+        }
+    },
+    scales: { // Adicionamos a configuração de escalas
+        x: {
+            beginAtZero: true,
+            // Lógica para adicionar espaço extra no eixo X (horizontal)
+            afterDataLimits: (scale) => {
+                scale.max *= 1.2;
+            }
+        }
+    },
+    onClick: (event, elements) => {
+        if (elements.length > 0) {
+            const clickedYear = years[elements[0].index];
+            drawMonthlyTicketChart(filteredHistoricalData, clickedYear);
+        }
+    }
+}
         });
 
         if (years.length > 0) {
