@@ -825,9 +825,6 @@ updateFundosDetalhadosTable(fundosData, selectedUnidades, startDate, endDate);
                         font: { weight: 'bold' },
                         formatter: (value) => formatCurrency(value)
                     },
-legend: {
-            position: 'bottom', // <-- ADICIONE ESTA LINHA PARA MOVER A LEGENDA
-        },
                     tooltip: {
                         callbacks: {
                             label: (context) => `Ticket Médio: ${formatCurrency(context.parsed.y)}`
