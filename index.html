@@ -611,7 +611,7 @@
                 const parts = dateString.split('/');
                 if (parts.length === 3) {
                     const day = parseInt(parts[0], 10);
-                    const month = parseInt(parts[1], 10) - 1;
+                    const month = parseInt(parts[1], 10) - 1; // Mês no JavaScript é 0-indexado
                     const year = parseInt(parts[2], 10);
                     if (!isNaN(day) && !isNaN(month) && !isNaN(year)) {
                         return new Date(Date.UTC(year, month, day));
@@ -969,6 +969,7 @@
             }
         });
     }
+
     function updateCumulativeVvrChart(historicalData, selectedUnidades) {
         const selectorContainer = document.getElementById('cumulative-chart-selector');
         const unitsToConsider = selectedUnidades.length > 0 ? selectedUnidades : [...new Set(allData.map(d => d.nm_unidade))];
@@ -1046,6 +1047,7 @@
             }
         });
     }
+
     function updateMonthlyVvrChart(filteredData, selectedUnidades) {
         const selectorContainer = document.getElementById('monthly-chart-selector');
         const salesByYearMonth = {};
