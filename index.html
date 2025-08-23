@@ -1062,7 +1062,7 @@ updateFundosDetalhadosTable(fundosData, selectedUnidades, startDate, endDate);
         uniqueYears.forEach((year, index) => {
             const monthlyData = adesoesByYearMonth[year] || Array(12).fill(0);
             datasets.push({
-                label: `Adesões ${year}`,
+                label: year,
                 data: monthlyData,
                 backgroundColor: colors[index % colors.length],
                 hidden: !activeYears.includes(parseInt(year))
