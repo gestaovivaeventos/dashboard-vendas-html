@@ -263,65 +263,75 @@ updateFundosDetalhadosTable(fundosData, selectedUnidades, startDate, endDate);
         maintainAspectRatio: false,
         interaction: { mode: 'index', intersect: false }, plugins: { tooltip: { callbacks: { label: function(context) { let label = context.dataset.label || ''; if (label) { label += ': '; } if (context.parsed.y !== null) { label += formatCurrency(context.parsed.y); } return label; } } }, datalabels: { display: true, align: 'top', offset: 8, backgroundColor: 'rgba(52, 58, 64, 0.7)', borderRadius: 4, color: 'white', font: { size: 14 }, padding: 4, formatter: (value) => { if (value > 0) { if (value >= 1000000) return `${(value / 1000000).toFixed(1)} mi`; if (value >= 1000) return `${(value / 1000).toFixed(0)}k`; return value.toFixed(0); } return ''; } } }, scales: { y: { beginAtZero: true } } } }); }
     
-    function updateDrillDownCharts(historicalData, selectedUnidades) {
-        const unitsToConsider = selectedUnidades.length > 0 ? selectedUnidades : [...new Set(allData.map(d => d.nm_unidade))];
-        const filteredHistoricalData = historicalData.filter(d => unitsToConsider.includes(d.nm_unidade));
-        const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+function updateDrillDownCharts(historicalData, selectedUnidades) {
+    const unitsToConsider = selectedUnidades.length > 0 ? selectedUnidades : [...new Set(allData.map(d => d.nm_unidade))];
+    const filteredHistoricalData = historicalData.filter(d => unitsToConsider.includes(d.nm_unidade));
+    const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
-        const salesByYear = {};
-        filteredHistoricalData.forEach(d => {
-            const year = d.dt_cadastro_integrante.getFullYear();
-            if (!salesByYear[year]) {
-                salesByYear[year] = { vendas: 0, posVendas: 0 };
-            }
-            if (normalizeText(d.venda_posvenda) === 'VENDA') {
-                salesByYear[year].vendas += d.vl_plano;
-            } else if (normalizeText(d.venda_posvenda) === 'POS VENDA') {
-                salesByYear[year].posVendas += d.vl_plano;
-            }
-        });
+    const salesByYear = {};
+    filteredHistoricalData.forEach(d => {
+        const year = d.dt_cadastro_integrante.getFullYear();
+        if (!salesByYear[year]) {
+            salesByYear[year] = { vendas: 0, posVendas: 0 };
+        }
+        if (normalizeText(d.venda_posvenda) === 'VENDA') {
+            salesByYear[year].vendas += d.vl_plano;
+        } else if (normalizeText(d.venda_posvenda) === 'POS VENDA') {
+            salesByYear[year].posVendas += d.vl_plano;
+        }
+    });
 
-        const years = Object.keys(salesByYear).sort();
-        const vendasAnual = years.map(year => salesByYear[year].vendas);
-        const posVendasAnual = years.map(year => salesByYear[year].posVendas);
+    const years = Object.keys(salesByYear).sort();
+    const vendasAnual = years.map(year => salesByYear[year].vendas);
+    const posVendasAnual = years.map(year => salesByYear[year].posVendas);
 
-        if (yearlyStackedChart) yearlyStackedChart.destroy();
-        yearlyStackedChart = new Chart(document.getElementById('yearlyStackedChart'), {
-            type: 'bar',
-            data: {
-                labels: years,
-                datasets: [
-                    { label: 'Pós Venda', data: posVendasAnual, backgroundColor: '#007bff' },
-                    { label: 'Venda', data: vendasAnual, backgroundColor: '#6c757d' }
-                ]
+    if (yearlyStackedChart) yearlyStackedChart.destroy();
+    yearlyStackedChart = new Chart(document.getElementById('yearlyStackedChart'), {
+        type: 'bar',
+        data: {
+            labels: years,
+            datasets: [
+                { label: 'Pós Venda', data: posVendasAnual, backgroundColor: '#007bff' },
+                { label: 'Venda', data: vendasAnual, backgroundColor: '#6c757d' }
+            ]
+        },
+        options: {
+            maintainAspectRatio: false,
+            indexAxis: 'y',
+            
+            // --- ALTERAÇÃO ADICIONADA AQUI ---
+            interaction: {
+                mode: 'index',      // Agrupa os itens de todos os datasets no mesmo índice
+                intersect: false, // Faz o tooltip aparecer mesmo sem tocar exatamente na barra
             },
-            options: {
-                maintainAspectRatio: false,
-                indexAxis: 'y',
-                scales: { 
-                    x: { stacked: true }, 
-                    y: { stacked: true } 
-                },
-                plugins: {
-                    datalabels: { color: 'white', font: { weight: 'bold' }, formatter: (value) => (value > 1000 ? `${(value / 1000).toFixed(1)} mi` : '') },
-                    tooltip: { callbacks: {
-                        label: function(context) { let label = context.dataset.label || ''; if (label) { label += ': '; } if (context.parsed.x !== null) { label += formatCurrency(context.parsed.x); } return label; },
-                        footer: function(tooltipItems) { let sum = 0; tooltipItems.forEach(item => { sum += item.parsed.x; }); return 'Total: ' + formatCurrency(sum); }
-                    }}
-                },
-                onClick: (event, elements) => {
-                    if (elements.length > 0) {
-                        const clickedYear = years[elements[0].index];
-                        drawMonthlyDetailChart(filteredHistoricalData, clickedYear);
+            // --- FIM DA ALTERAÇÃO ---
+
+            scales: {
+                x: { stacked: true },
+                y: { stacked: true }
+            },
+            plugins: {
+                datalabels: { color: 'white', font: { weight: 'bold' }, formatter: (value) => (value > 1000 ? `${(value / 1000).toFixed(1)} mi` : '') },
+                tooltip: {
+                    callbacks: {
+                        label: function (context) { let label = context.dataset.label || ''; if (label) { label += ': '; } if (context.parsed.x !== null) { label += formatCurrency(context.parsed.x); } return label; },
+                        footer: function (tooltipItems) { let sum = 0; tooltipItems.forEach(item => { sum += item.parsed.x; }); return 'Total: ' + formatCurrency(sum); }
                     }
                 }
+            },
+            onClick: (event, elements) => {
+                if (elements.length > 0) {
+                    const clickedYear = years[elements[0].index];
+                    drawMonthlyDetailChart(filteredHistoricalData, clickedYear);
+                }
             }
-        });
-
-        if (years.length > 0) {
-            drawMonthlyDetailChart(filteredHistoricalData, years[years.length - 1]);
         }
+    });
+
+    if (years.length > 0) {
+        drawMonthlyDetailChart(filteredHistoricalData, years[years.length - 1]);
     }
+}
 
     function drawMonthlyDetailChart(data, year) {
         document.getElementById('monthly-stacked-title').textContent = `Venda Realizada Total Mensal (${year})`;
