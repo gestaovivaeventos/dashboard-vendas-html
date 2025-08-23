@@ -757,9 +757,9 @@ function drawMonthlyTicketChart(data, year) {
                     },
                     datalabels: {
                         display: true,
-                        align: 'end',
-                        anchor: 'end',
-                        color: '#F8F9FA',
+                        align: 'center',
+                        anchor: 'center',
+                        color: '#FFFFFF',
                         font: {
                             size: 14,
                             weight: 'bold'
