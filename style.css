@@ -159,4 +159,22 @@
     background-color: #495057; /* Mesma cor das outras bordas do menu */
     margin: 10px 0; /* Espaçamento vertical para a linha respirar */
 }
-   
+ /* Estilos para o novo filtro de checkbox */
+.checkbox-container {
+    max-height: 200px; /* Altura máxima antes de aparecer a barra de rolagem */
+    overflow-y: auto;
+    border: 1px solid #495057;
+    background-color: #212529;
+    border-radius: 6px;
+    padding: 10px;
+}
+
+.checkbox-item {
+    display: block; /* Garante que cada item ocupe uma linha */
+    margin-bottom: 5px;
+}
+
+.checkbox-item label {
+    margin-left: 8px;
+    cursor: pointer;
+}  
