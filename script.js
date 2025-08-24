@@ -678,7 +678,9 @@ function drawMonthlyTicketChart(data, year) {
 
     function updateDataTable(data) { const tableData = data.map(d => { const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); let realizado = 0; let meta = 0; const vendasDoPeriodo = allData.filter(v => v.nm_unidade === d.unidade && `${v.dt_cadastro_integrante.getFullYear()}-${String(v.dt_cadastro_integrante.getMonth() + 1).padStart(2, '0')}` === d.periodo); if (currentTableDataType === 'vendas') { realizado = vendasDoPeriodo.filter(v => normalizeText(v.venda_posvenda) === 'VENDA').reduce((sum, v) => sum + v.vl_plano, 0); meta = d.meta_vvr_vendas; } else if (currentTableDataType === 'posvendas') { realizado = vendasDoPeriodo.filter(v => normalizeText(v.venda_posvenda) === 'POS VENDA').reduce((sum, v) => sum + v.vl_plano, 0); meta = d.meta_vvr_posvendas; } else { realizado = d.realizado_vvr; meta = d.meta_vvr_total; } const atingimentoVvr = meta > 0 ? realizado / meta : 0; return [ d.unidade, d.periodo, formatCurrency(realizado), formatCurrency(meta), formatPercent(atingimentoVvr) ]; }).sort((a,b) => String(a[1]).localeCompare(String(b[0]))); if (dataTable) { dataTable.clear().rows.add(tableData).draw(); } else { dataTable = $('#dados-table').DataTable({ data: tableData, pageLength: 10, language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json' }, destroy: true, dom: 'Bfrtip', buttons: [ { extend: 'excelHtml5', text: 'Exportar para Excel', title: `Relatorio_Vendas_${new Date().toLocaleDateString('pt-BR')}`, className: 'excel-button', exportOptions: { format: { body: function ( data, row, column, node ) { if (column === 2 || column === 3) { return parseFloat(data.replace('R$', '').replace(/\./g, '').replace(',', '.').trim()); } if (column === 4) { return parseFloat(data.replace('%', '').replace(',', '.').trim()) / 100; } return data; } } } } ] }); } }
     
-   function addEventListeners() {
+  let cursoFilterInitialized = false; // Variável de controle global
+
+function addEventListeners() {
     document.getElementById('start-date').addEventListener('change', updateDashboard);
     document.getElementById('end-date').addEventListener('change', updateDashboard);
 
@@ -686,29 +688,46 @@ function drawMonthlyTicketChart(data, year) {
 
     document.querySelectorAll('.page-navigation button').forEach(button => {
         button.addEventListener('click', function () {
-            // Lógica de troca de página (existente)
             document.querySelectorAll('.page-navigation button').forEach(btn => btn.classList.remove('active'));
             this.classList.add('active');
             document.querySelectorAll('.page-content').forEach(page => page.classList.remove('active'));
             document.getElementById(this.dataset.page).classList.add('active');
 
-            // --- NOVA LÓGICA DE EXIBIÇÃO DO FILTRO ---
-            // Se o botão da página 2 foi clicado, mostra o filtro. Senão, esconde.
             if (this.id === 'btn-page2') {
                 cursoFilterContainer.style.display = 'block';
+
+                // --- NOVA LÓGICA DE INICIALIZAÇÃO ---
+                // Se o filtro de curso ainda não foi inicializado, inicializa agora.
+                if (!cursoFilterInitialized) {
+                    $('#curso-filter').multiselect({
+                        enableFiltering: true,
+                        includeSelectAllOption: true,
+                        selectAllText: 'Marcar todos',
+                        filterPlaceholder: 'Pesquisar...',
+                        nonSelectedText: 'Todos os cursos',
+                        nSelectedText: 'cursos',
+                        allSelectedText: 'Todos selecionados',
+                        buttonWidth: '100%',
+                        maxHeight: 300,
+                        onChange: updateDashboard,
+                        onSelectAll: updateDashboard,
+                        onDeselectAll: updateDashboard
+                    });
+                    cursoFilterInitialized = true; // Marca como inicializado para não rodar de novo
+                }
+                // --- FIM DA NOVA LÓGICA ---
+
             } else {
                 cursoFilterContainer.style.display = 'none';
             }
         });
     });
 
-    // Esconde o filtro de curso por padrão ao carregar a página
-    // pois a página 1 é a inicial.
     if (cursoFilterContainer) {
        cursoFilterContainer.style.display = 'none';
     }
 
-    // Botões de tipo de gráfico e tabela (código existente)
+    // O resto da sua função (event listeners dos botões de gráfico) continua igual...
     document.querySelectorAll('#chart-vvr-mes-section .chart-selector button').forEach(button => {
         button.addEventListener('click', () => {
             document.querySelectorAll('#chart-vvr-mes-section .chart-selector button').forEach(btn => btn.classList.remove('active'));
@@ -729,8 +748,8 @@ function drawMonthlyTicketChart(data, year) {
     });
 }
     
-    function populateFilters() {
-    // Popula filtro de Unidades
+   function populateFilters() {
+    // Popula filtro de Unidades (código existente, sem alterações)
     const unidadesVendas = allData.map(d => d.nm_unidade);
     const unidadesFundos = fundosData.map(d => d.nm_unidade);
     const unidades = [...new Set([...unidadesVendas, ...unidadesFundos])].sort();
@@ -752,33 +771,20 @@ function drawMonthlyTicketChart(data, year) {
         onDeselectAll: updateDashboard
     });
 
-    // Popula filtro de Curso (com código mais seguro)
-    // Usamos 'd => d?.curso_fundo' para evitar erros se algum item 'd' for nulo
+    // --- CÓDIGO ALTERADO ---
+    // Apenas popula as opções do filtro de curso, SEM inicializar o multiselect
     const cursosAdesoes = allData.map(d => d?.curso_fundo);
     const cursosFundos = fundosData.map(d => d?.curso_fundo);
     const cursos = [...new Set([...cursosAdesoes, ...cursosFundos])]
-        .filter(Boolean) // Remove valores nulos, undefined ou vazios da lista
+        .filter(Boolean)
         .sort();
         
     const cursoFilter = $('#curso-filter');
     cursoFilter.empty();
     cursos.forEach(c => { cursoFilter.append($('<option>', { value: c, text: c })); });
-    cursoFilter.multiselect({
-        enableFiltering: true,
-        includeSelectAllOption: true,
-        selectAllText: 'Marcar todos',
-        filterPlaceholder: 'Pesquisar...',
-        nonSelectedText: 'Todos os cursos',
-        nSelectedText: 'cursos',
-        allSelectedText: 'Todos selecionados',
-        buttonWidth: '100%',
-        maxHeight: 300,
-        onChange: updateDashboard,
-        onSelectAll: updateDashboard,
-        onDeselectAll: updateDashboard
-    });
+    // --- FIM DA ALTERAÇÃO ---
 
-    // Define datas padrão
+    // Define datas padrão (código existente)
     const hoje = new Date();
     const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
     const fimMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
