@@ -682,6 +682,8 @@ function drawMonthlyTicketChart(data, year) {
 
 // Remova a variável "let cursoFilterInitialized = false;" de cima desta função se ela existir
 
+let cursoFilterInitialized = false; // Esta variável de controle é MUITO importante
+
 function addEventListeners() {
     document.getElementById('start-date').addEventListener('change', updateDashboard);
     document.getElementById('end-date').addEventListener('change', updateDashboard);
@@ -697,10 +699,42 @@ function addEventListeners() {
 
             if (this.id === 'btn-page2') {
                 cursoFilterContainer.style.display = 'block';
-                // --- COMANDO CRUCIAL ADICIONADO AQUI ---
-                // Força o plugin a se redesenhar agora que está visível
-                $('#curso-filter').multiselect('rebuild');
-                
+
+                // --- TODA A LÓGICA DO FILTRO DE CURSO VEM PARA CÁ ---
+                // Se o filtro de curso ainda não foi criado, cria agora.
+                if (!cursoFilterInitialized) {
+                    
+                    // 1. Puxa os dados do curso
+                    const cursosAdesoes = allData.map(d => d?.curso_fundo);
+                    const cursosFundos = fundosData.map(d => d?.curso_fundo);
+                    const cursos = [...new Set([...cursosAdesoes, ...cursosFundos])]
+                        .filter(Boolean)
+                        .sort();
+                    
+                    // 2. Popula as opções no HTML
+                    const cursoFilter = $('#curso-filter');
+                    cursoFilter.empty();
+                    cursos.forEach(c => { cursoFilter.append($('<option>', { value: c, text: c })); });
+
+                    // 3. INICIALIZA o plugin multiselect
+                    cursoFilter.multiselect({
+                        enableFiltering: true,
+                        includeSelectAllOption: true,
+                        selectAllText: 'Marcar todos',
+                        filterPlaceholder: 'Pesquisar...',
+                        nonSelectedText: 'Todos os cursos',
+                        nSelectedText: 'cursos',
+                        allSelectedText: 'Todos selecionados',
+                        buttonWidth: '100%',
+                        maxHeight: 300,
+                        onChange: updateDashboard,
+                        onSelectAll: updateDashboard,
+                        onDeselectAll: updateDashboard
+                    });
+
+                    // 4. Marca como criado para não executar de novo
+                    cursoFilterInitialized = true; 
+                }
             } else {
                 cursoFilterContainer.style.display = 'none';
             }
@@ -711,7 +745,7 @@ function addEventListeners() {
        cursoFilterContainer.style.display = 'none';
     }
 
-    // O resto da sua função continua o mesmo...
+    // O resto da função continua o mesmo
     document.querySelectorAll('#chart-vvr-mes-section .chart-selector button').forEach(button => {
         button.addEventListener('click', () => {
             document.querySelectorAll('#chart-vvr-mes-section .chart-selector button').forEach(btn => btn.classList.remove('active'));
@@ -733,7 +767,7 @@ function addEventListeners() {
 }
     
   function populateFilters() {
-    // 1. Popula e INICIALIZA o filtro de Unidades
+    // Esta função agora cuida APENAS do filtro de Unidade e das datas.
     const unidadesVendas = allData.map(d => d.nm_unidade);
     const unidadesFundos = fundosData.map(d => d.nm_unidade);
     const unidades = [...new Set([...unidadesVendas, ...unidadesFundos])].sort();
@@ -741,27 +775,21 @@ function addEventListeners() {
     unidadeFilter.empty();
     unidades.forEach(u => { unidadeFilter.append($('<option>', { value: u, text: u })); });
     unidadeFilter.multiselect({
-        enableFiltering: true, includeSelectAllOption: true, selectAllText: 'Marcar todos',
-        filterPlaceholder: 'Pesquisar...', nonSelectedText: 'Todas as unidades', nSelectedText: 'unidades',
-        allSelectedText: 'Todas selecionadas', buttonWidth: '100%', maxHeight: 300,
-        onChange: updateDashboard, onSelectAll: updateDashboard, onDeselectAll: updateDashboard
+        enableFiltering: true,
+        includeSelectAllOption: true,
+        selectAllText: 'Marcar todos',
+        filterPlaceholder: 'Pesquisar...',
+        nonSelectedText: 'Todas as unidades',
+        nSelectedText: 'unidades',
+        allSelectedText: 'Todas selecionadas',
+        buttonWidth: '100%',
+        maxHeight: 300,
+        onChange: updateDashboard,
+        onSelectAll: updateDashboard,
+        onDeselectAll: updateDashboard
     });
 
-    // 2. Popula e INICIALIZA o filtro de Curso
-    const cursosAdesoes = allData.map(d => d?.curso_fundo);
-    const cursosFundos = fundosData.map(d => d?.curso_fundo);
-    const cursos = [...new Set([...cursosAdesoes, ...cursosFundos])].filter(Boolean).sort();
-    const cursoFilter = $('#curso-filter');
-    cursoFilter.empty();
-    cursos.forEach(c => { cursoFilter.append($('<option>', { value: c, text: c })); });
-    cursoFilter.multiselect({
-        enableFiltering: true, includeSelectAllOption: true, selectAllText: 'Marcar todos',
-        filterPlaceholder: 'Pesquisar...', nonSelectedText: 'Todos os cursos', nSelectedText: 'cursos',
-        allSelectedText: 'Todos selecionados', buttonWidth: '100%', maxHeight: 300,
-        onChange: updateDashboard, onSelectAll: updateDashboard, onDeselectAll: updateDashboard
-    });
-
-    // 3. Define as datas padrão
+    // Define as datas padrão
     const hoje = new Date();
     const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
     const fimMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
