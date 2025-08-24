@@ -307,7 +307,7 @@ function updateDrillDownCharts(historicalData, selectedUnidades) {
             },
             scales: {
                 x: { stacked: true },
-                y: { stacked: true }
+                y: { stacked: true, reverse: true }
             },
             plugins: {
                 datalabels: {
