@@ -688,7 +688,6 @@ function addEventListeners() {
 
     const cursoFilterContainer = document.getElementById('curso-filter-container');
 
-    // Lógica para mostrar/esconder o filtro de curso
     document.querySelectorAll('.page-navigation button').forEach(button => {
         button.addEventListener('click', function () {
             document.querySelectorAll('.page-navigation button').forEach(btn => btn.classList.remove('active'));
@@ -698,18 +697,21 @@ function addEventListeners() {
 
             if (this.id === 'btn-page2') {
                 cursoFilterContainer.style.display = 'block';
+                // --- COMANDO CRUCIAL ADICIONADO AQUI ---
+                // Força o plugin a se redesenhar agora que está visível
+                $('#curso-filter').multiselect('rebuild');
+                
             } else {
                 cursoFilterContainer.style.display = 'none';
             }
         });
     });
 
-    // Esconde o filtro de curso por padrão ao carregar a página
     if (cursoFilterContainer) {
        cursoFilterContainer.style.display = 'none';
     }
 
-    // O resto da sua função continua o mesmo
+    // O resto da sua função continua o mesmo...
     document.querySelectorAll('#chart-vvr-mes-section .chart-selector button').forEach(button => {
         button.addEventListener('click', () => {
             document.querySelectorAll('#chart-vvr-mes-section .chart-selector button').forEach(btn => btn.classList.remove('active'));
@@ -739,43 +741,24 @@ function addEventListeners() {
     unidadeFilter.empty();
     unidades.forEach(u => { unidadeFilter.append($('<option>', { value: u, text: u })); });
     unidadeFilter.multiselect({
-        enableFiltering: true,
-        includeSelectAllOption: true,
-        selectAllText: 'Marcar todos',
-        filterPlaceholder: 'Pesquisar...',
-        nonSelectedText: 'Todas as unidades',
-        nSelectedText: 'unidades',
-        allSelectedText: 'Todas selecionadas',
-        buttonWidth: '100%',
-        maxHeight: 300,
-        onChange: updateDashboard,
-        onSelectAll: updateDashboard,
-        onDeselectAll: updateDashboard
+        enableFiltering: true, includeSelectAllOption: true, selectAllText: 'Marcar todos',
+        filterPlaceholder: 'Pesquisar...', nonSelectedText: 'Todas as unidades', nSelectedText: 'unidades',
+        allSelectedText: 'Todas selecionadas', buttonWidth: '100%', maxHeight: 300,
+        onChange: updateDashboard, onSelectAll: updateDashboard, onDeselectAll: updateDashboard
     });
 
-    // 2. Popula e INICIALIZA o filtro de Curso (seguindo a MESMA LÓGICA)
+    // 2. Popula e INICIALIZA o filtro de Curso
     const cursosAdesoes = allData.map(d => d?.curso_fundo);
     const cursosFundos = fundosData.map(d => d?.curso_fundo);
-    const cursos = [...new Set([...cursosAdesoes, ...cursosFundos])]
-        .filter(Boolean)
-        .sort();
-        
+    const cursos = [...new Set([...cursosAdesoes, ...cursosFundos])].filter(Boolean).sort();
     const cursoFilter = $('#curso-filter');
     cursoFilter.empty();
     cursos.forEach(c => { cursoFilter.append($('<option>', { value: c, text: c })); });
     cursoFilter.multiselect({
-        enableFiltering: true,
-        includeSelectAllOption: true,
-        selectAllText: 'Marcar todos',
-        filterPlaceholder: 'Pesquisar...',
-        nonSelectedText: 'Todos os cursos',
-        nSelectedText: 'cursos',
-        allSelectedText: 'Todos selecionados',
-        buttonWidth: '100%',
-        maxHeight: 300,
-        onChange: updateDashboard,
-        onSelectAll: updateDashboard,
-        onDeselectAll: updateDashboard
+        enableFiltering: true, includeSelectAllOption: true, selectAllText: 'Marcar todos',
+        filterPlaceholder: 'Pesquisar...', nonSelectedText: 'Todos os cursos', nSelectedText: 'cursos',
+        allSelectedText: 'Todos selecionados', buttonWidth: '100%', maxHeight: 300,
+        onChange: updateDashboard, onSelectAll: updateDashboard, onDeselectAll: updateDashboard
     });
 
     // 3. Define as datas padrão
