@@ -21,6 +21,7 @@
     const formatPercent = (value) => new Intl.NumberFormat('pt-br', { style: 'percent', minimumFractionDigits: 1 }).format(value || 0);
 
     document.addEventListener('DOMContentLoaded', async () => {
+displayLastUpdateMessage();
         const loader = document.getElementById('loader');
         try {
             const [salesData, sheetData, novosFundosData] = await Promise.all([fetchAllSalesDataFromSheet(), fetchMetasData(), fetchFundosData()]);
@@ -337,6 +338,38 @@ function updateDrillDownCharts(historicalData, selectedUnidades) {
 
     if (years.length > 0) {
         drawMonthlyDetailChart(filteredHistoricalData, years[years.length - 1]);
+    }
+}
+function displayLastUpdateMessage() {
+    // 1. Pega a data e hora atuais
+    const today = new Date();
+    
+    // Define a hora para o fuso horário de Brasília (GMT-3) para consistência
+    today.setHours(today.getHours() - 3);
+
+    const dayOfWeek = today.getDay(); // 0 = Domingo, 1 = Segunda, ..., 6 = Sábado
+
+    let displayDate = new Date(today); // Cria uma cópia para não alterar a data original
+
+    // 2. Verifica se é fim de semana e ajusta a data para a sexta-feira anterior
+    if (dayOfWeek === 0) { // Se for Domingo
+        displayDate.setDate(today.getDate() - 2); // Subtrai 2 dias
+    } else if (dayOfWeek === 6) { // Se for Sábado
+        displayDate.setDate(today.getDate() - 1); // Subtrai 1 dia
+    }
+
+    // 3. Formata a data para o padrão dd/MM/YYYY
+    const day = String(displayDate.getDate()).padStart(2, '0');
+    const month = String(displayDate.getMonth() + 1).padStart(2, '0'); // Mês começa em 0
+    const year = displayDate.getFullYear();
+    const formattedDate = `${day}/${month}/${year}`;
+
+    // 4. Monta a mensagem final e a insere no HTML
+    const message = `Última Atualização: ${formattedDate} 08:30`;
+    const messageElement = document.getElementById('last-update-message');
+    
+    if (messageElement) {
+        messageElement.textContent = message;
     }
 }
   function drawMonthlyDetailChart(data, year) {
