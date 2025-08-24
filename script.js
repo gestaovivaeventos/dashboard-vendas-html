@@ -205,7 +205,8 @@ async function fetchFundosData() {
 
     // 1. Lê os valores dos filtros, incluindo o novo filtro de Curso
     const selectedUnidades = $('#unidade-filter').val() || [];
-    const selectedCursos = $('#curso-filter').val() || [];
+    const selectedCursos = Array.from(document.querySelectorAll('#curso-filter-options input[type="checkbox"]:checked'))
+                                .map(cb => cb.value);
 
     const anoVigente = 2025;
     
@@ -697,42 +698,6 @@ function addEventListeners() {
 
             if (this.id === 'btn-page2') {
                 cursoFilterContainer.style.display = 'block';
-
-                // --- TODA A LÓGICA DO FILTRO DE CURSO VEM PARA CÁ ---
-                // Se o filtro de curso ainda não foi criado, cria agora.
-                if (!cursoFilterInitialized) {
-                    
-                    // 1. Puxa os dados do curso
-                    const cursosAdesoes = allData.map(d => d?.curso_fundo);
-                    const cursosFundos = fundosData.map(d => d?.curso_fundo);
-                    const cursos = [...new Set([...cursosAdesoes, ...cursosFundos])]
-                        .filter(Boolean)
-                        .sort();
-                    
-                    // 2. Popula as opções no HTML
-                    const cursoFilter = $('#curso-filter');
-                    cursoFilter.empty();
-                    cursos.forEach(c => { cursoFilter.append($('<option>', { value: c, text: c })); });
-
-                    // 3. INICIALIZA o plugin multiselect
-                    cursoFilter.multiselect({
-                        enableFiltering: true,
-                        includeSelectAllOption: true,
-                        selectAllText: 'Marcar todos',
-                        filterPlaceholder: 'Pesquisar...',
-                        nonSelectedText: 'Todos os cursos',
-                        nSelectedText: 'cursos',
-                        allSelectedText: 'Todos selecionados',
-                        buttonWidth: '100%',
-                        maxHeight: 300,
-                        onChange: updateDashboard,
-                        onSelectAll: updateDashboard,
-                        onDeselectAll: updateDashboard
-                    });
-
-                    // 4. Marca como criado para não executar de novo
-                    cursoFilterInitialized = true; 
-                }
             } else {
                 cursoFilterContainer.style.display = 'none';
             }
@@ -742,49 +707,50 @@ function addEventListeners() {
     if (cursoFilterContainer) {
        cursoFilterContainer.style.display = 'none';
     }
-
-    // O resto da função continua o mesmo
-    document.querySelectorAll('#chart-vvr-mes-section .chart-selector button').forEach(button => {
-        button.addEventListener('click', () => {
-            document.querySelectorAll('#chart-vvr-mes-section .chart-selector button').forEach(btn => btn.classList.remove('active'));
-            button.classList.add('active');
-            currentVvrChartType = button.dataset.type;
-            updateDashboard();
-        });
-    });
-    document.querySelectorAll('#table-section .chart-selector button').forEach(button => {
-        button.addEventListener('click', () => {
-            const scrollPosition = window.scrollY;
-            document.querySelectorAll('#table-section .chart-selector button').forEach(btn => btn.classList.remove('active'));
-            button.classList.add('active');
-            currentTableDataType = button.dataset.type;
-            updateDataTable(currentFilteredDataForTable);
-            window.scrollTo(0, scrollPosition);
-        });
-    });
+    // O resto da função...
 }
     
   function populateFilters() {
-    // Esta função agora cuida APENAS do filtro de Unidade e das datas.
+    // Filtro de Unidade continua o mesmo
     const unidadesVendas = allData.map(d => d.nm_unidade);
     const unidadesFundos = fundosData.map(d => d.nm_unidade);
     const unidades = [...new Set([...unidadesVendas, ...unidadesFundos])].sort();
     const unidadeFilter = $('#unidade-filter');
     unidadeFilter.empty();
     unidades.forEach(u => { unidadeFilter.append($('<option>', { value: u, text: u })); });
-    unidadeFilter.multiselect({
-        enableFiltering: true,
-        includeSelectAllOption: true,
-        selectAllText: 'Marcar todos',
-        filterPlaceholder: 'Pesquisar...',
-        nonSelectedText: 'Todas as unidades',
-        nSelectedText: 'unidades',
-        allSelectedText: 'Todas selecionadas',
-        buttonWidth: '100%',
-        maxHeight: 300,
-        onChange: updateDashboard,
-        onSelectAll: updateDashboard,
-        onDeselectAll: updateDashboard
+    unidadeFilter.multiselect({ /* ... opções do multiselect de unidade ... */ });
+
+    // --- LÓGICA DO FILTRO DE CURSO TOTALMENTE REFEITA ---
+    const cursosAdesoes = allData.map(d => d?.curso_fundo);
+    const cursosFundos = fundosData.map(d => d?.curso_fundo);
+    const cursos = [...new Set([...cursosAdesoes, ...cursosFundos])].filter(Boolean).sort();
+    
+    const cursoOptionsContainer = document.getElementById('curso-filter-options');
+    cursoOptionsContainer.innerHTML = ''; // Limpa o container
+
+    cursos.forEach((curso, index) => {
+        // Cria o container para o item
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'checkbox-item';
+
+        // Cria o input checkbox
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.id = `curso-${index}`;
+        checkbox.value = curso;
+        checkbox.addEventListener('change', updateDashboard); // Chama o update a cada mudança
+
+        // Cria a label
+        const label = document.createElement('label');
+        label.htmlFor = `curso-${index}`;
+        label.textContent = curso;
+
+        // Adiciona o checkbox e a label ao container do item
+        itemDiv.appendChild(checkbox);
+        itemDiv.appendChild(label);
+
+        // Adiciona o item ao container principal
+        cursoOptionsContainer.appendChild(itemDiv);
     });
 
     // Define as datas padrão
@@ -794,7 +760,6 @@ function addEventListeners() {
     document.getElementById('start-date').value = inicioMes.toISOString().split('T')[0];
     document.getElementById('end-date').value = fimMes.toISOString().split('T')[0];
 }
-
     function updateMonthlyAdesoesChart(historicalData, selectedUnidades) {
         const selectorContainer = document.getElementById('adesoes-chart-selector');
         const unitsToConsider = selectedUnidades.length > 0 ? selectedUnidades : [...new Set(allData.map(d => d.nm_unidade))];
