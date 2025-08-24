@@ -159,3 +159,16 @@
     background-color: #495057; /* Mesma cor das outras bordas do menu */
     margin: 10px 0; /* Espaçamento vertical para a linha respirar */
 }
+/* Ajuste no header para alinhar o título e a nova mensagem */
+.header > div {
+    display: flex;
+    flex-direction: column;
+    gap: 5px; /* Adiciona um pequeno espaço entre o título e a mensagem */
+}
+
+/* Estilo para a mensagem de última atualização */
+#last-update-message {
+    font-size: 0.85em; /* Tamanho um pouco menor que o texto normal */
+    color: #adb5bd;     /* Cor cinza claro para texto secundário */
+    font-weight: 500;
+}
