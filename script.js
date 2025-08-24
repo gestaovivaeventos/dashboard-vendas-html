@@ -201,22 +201,10 @@ async function fetchFundosData() {
     function updatePreviousYearKPIs(dataBruta, selectedUnidades, startDate, endDate) { const getColorForPercentage = (percent) => { if (percent >= 1) return '#28a745'; if (percent >= 0.5) return '#ffc107'; return '#dc3545'; }; const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); const realizadoVendas = dataBruta.filter(d => normalizeText(d.venda_posvenda) === 'VENDA').reduce((sum, d) => sum + d.vl_plano, 0); const realizadoPosVendas = dataBruta.filter(d => normalizeText(d.venda_posvenda) === 'POS VENDA').reduce((sum, d) => sum + d.vl_plano, 0); const realizadoTotal = realizadoVendas + realizadoPosVendas; let metaVendas = 0; let metaPosVendas = 0; const unitsToConsider = selectedUnidades.length > 0 ? selectedUnidades : [...new Set(allData.map(d => d.nm_unidade))]; metasData.forEach((metaInfo, key) => { const [unidade, ano, mes] = key.split('-'); const metaDate = new Date(ano, parseInt(mes) - 1, 15); if (unitsToConsider.includes(unidade) && metaDate >= startDate && metaDate < endDate) { metaVendas += metaInfo.meta_vvr_vendas; metaPosVendas += metaInfo.meta_vvr_posvendas; } }); const metaTotal = metaVendas + metaPosVendas; const percentTotal = metaTotal > 0 ? realizadoTotal / metaTotal : 0; const percentVendas = metaVendas > 0 ? realizadoVendas / metaVendas : 0; const percentPosVendas = metaPosVendas > 0 ? realizadoPosVendas / metaPosVendas : 0; const totalColor = getColorForPercentage(percentTotal); document.getElementById('kpi-total-realizado-py').textContent = formatCurrency(realizadoTotal); document.getElementById('kpi-total-meta-py').textContent = formatCurrency(metaTotal); const totalPercentEl = document.getElementById('kpi-total-percent-py'); totalPercentEl.textContent = formatPercent(percentTotal); totalPercentEl.style.color = totalColor; document.getElementById('kpi-total-progress-py').style.backgroundColor = totalColor; document.getElementById('kpi-total-progress-py').style.width = `${Math.min(percentTotal * 100, 100)}%`; const vendasColor = getColorForPercentage(percentVendas); document.getElementById('kpi-vendas-realizado-py').textContent = formatCurrency(realizadoVendas); document.getElementById('kpi-vendas-meta-py').textContent = formatCurrency(metaVendas); const vendasPercentEl = document.getElementById('kpi-vendas-percent-py'); vendasPercentEl.textContent = formatPercent(percentVendas); vendasPercentEl.style.color = vendasColor; document.getElementById('kpi-vendas-progress-py').style.backgroundColor = vendasColor; document.getElementById('kpi-vendas-progress-py').style.width = `${Math.min(percentVendas * 100, 100)}%`; const posVendasColor = getColorForPercentage(percentPosVendas); document.getElementById('kpi-posvendas-realizado-py').textContent = formatCurrency(realizadoPosVendas); document.getElementById('kpi-posvendas-meta-py').textContent = formatCurrency(metaPosVendas); const posVendasPercentEl = document.getElementById('kpi-posvendas-percent-py'); posVendasPercentEl.textContent = formatPercent(percentPosVendas); posVendasPercentEl.style.color = posVendasColor; document.getElementById('kpi-posvendas-progress-py').style.backgroundColor = posVendasColor; document.getElementById('kpi-posvendas-progress-py').style.width = `${Math.min(percentPosVendas * 100, 100)}%`; }
 
     function updateDashboard() {
-    // --- INÍCIO DAS ALTERAÇÕES ---
-
-    // 1. Lê os valores dos filtros, incluindo o novo filtro de Curso
     const selectedUnidades = $('#unidade-filter').val() || [];
-    const selectedCursos = Array.from(document.querySelectorAll('#curso-filter-options input[type="checkbox"]:checked'))
-                                .map(cb => cb.value);
+    const anoVigente = 2025; // Mantendo o ano que você definiu
+    const dataParaGrafico = allData.filter(d => (selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade)) && d.dt_cadastro_integrante.getFullYear() === anoVigente);
 
-    const anoVigente = 2025;
-    
-    // 2. Aplica o filtro de Curso nos dados
-    const dataParaGrafico = allData.filter(d => 
-        (selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade)) &&
-        (selectedCursos.length === 0 || selectedCursos.includes(d.curso_fundo)) && // <-- CONDIÇÃO ADICIONADA
-        d.dt_cadastro_integrante.getFullYear() === anoVigente
-    );
-    
     const startDateString = document.getElementById('start-date').value;
     const startParts = startDateString.split('-');
     const startDate = new Date(startParts[0], startParts[1] - 1, startParts[2]);
@@ -224,28 +212,20 @@ async function fetchFundosData() {
     const endParts = endDateString.split('-');
     const endDate = new Date(endParts[0], endParts[1] - 1, endParts[2]);
     endDate.setDate(endDate.getDate() + 1);
-    
-    // 3. Aplica o filtro de Curso nos dados do período selecionado
-    const dataBrutaFiltrada = allData.filter(d => 
-        (selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade)) &&
-        (selectedCursos.length === 0 || selectedCursos.includes(d.curso_fundo)) && // <-- CONDIÇÃO ADICIONADA
-        d.dt_cadastro_integrante >= startDate && d.dt_cadastro_integrante < endDate
-    );
 
-    // --- FIM DAS ALTERAÇÕES ---
+    const dataBrutaFiltrada = allData.filter(d => (selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade)) && d.dt_cadastro_integrante >= startDate && d.dt_cadastro_integrante < endDate);
 
-    // As chamadas de atualização agora usarão os dados já filtrados por curso
     updateVvrVsMetaPorMesChart(dataParaGrafico, anoVigente);
-    updateCumulativeVvrChart(allData, selectedUnidades, selectedCursos); // Passando cursos para funções que filtram internamente
-    updateMonthlyVvrChart(allData, selectedUnidades, selectedCursos);   // Passando cursos para funções que filtram internamente
-    updateDrillDownCharts(allData, selectedUnidades, selectedCursos);  // Passando cursos para funções que filtram internamente
-    updateTicketCharts(allData, selectedUnidades, selectedCursos);      // Passando cursos para funções que filtram internamente
-    updateContractsCharts(fundosData, selectedUnidades, selectedCursos); // Passando cursos para funções que filtram internamente
-    updateMonthlyAdesoesChart(allData, selectedUnidades, selectedCursos); // Passando cursos para funções que filtram internamente
-    updateAdesoesDrillDownCharts(allData, selectedUnidades, selectedCursos); // Passando cursos para funções que filtram internamente
+    updateCumulativeVvrChart(allData, selectedUnidades);
+    updateMonthlyVvrChart(allData, selectedUnidades);
+    updateDrillDownCharts(allData, selectedUnidades);
+    updateTicketCharts(allData, selectedUnidades);
+    updateContractsCharts(fundosData, selectedUnidades);
+    updateMonthlyAdesoesChart(allData, selectedUnidades);
+    updateAdesoesDrillDownCharts(allData, selectedUnidades);
     updateConsultorTable(dataBrutaFiltrada);
     updateDetalhadaAdesoesTable(dataBrutaFiltrada);
-    updateFundosDetalhadosTable(fundosData, selectedUnidades, startDate, endDate, selectedCursos); // Passando cursos
+    updateFundosDetalhadosTable(fundosData, selectedUnidades, startDate, endDate);
     updateMainKPIs(dataBrutaFiltrada, selectedUnidades, startDate, endDate);
 
     const dataAgregadaComVendas = processAndCrossReferenceData(dataBrutaFiltrada);
@@ -268,13 +248,7 @@ async function fetchFundosData() {
     startDatePY.setFullYear(startDatePY.getFullYear() - 1);
     const endDatePY = new Date(endDate);
     endDatePY.setFullYear(endDatePY.getFullYear() - 1);
-    
-    // 4. Aplica o filtro de Curso nos dados do ano anterior
-    const dataBrutaFiltradaPY = allData.filter(d => 
-        (selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade)) &&
-        (selectedCursos.length === 0 || selectedCursos.includes(d.curso_fundo)) && // <-- CONDIÇÃO ADICIONADA
-        d.dt_cadastro_integrante >= startDatePY && d.dt_cadastro_integrante < endDatePY
-    );
+    const dataBrutaFiltradaPY = allData.filter(d => (selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade)) && d.dt_cadastro_integrante >= startDatePY && d.dt_cadastro_integrante < endDatePY);
     document.getElementById('kpi-section-py').style.display = 'block';
     updatePreviousYearKPIs(dataBrutaFiltradaPY, selectedUnidades, startDatePY, endDatePY);
 }
@@ -679,15 +653,10 @@ function drawMonthlyTicketChart(data, year) {
 
     function updateDataTable(data) { const tableData = data.map(d => { const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); let realizado = 0; let meta = 0; const vendasDoPeriodo = allData.filter(v => v.nm_unidade === d.unidade && `${v.dt_cadastro_integrante.getFullYear()}-${String(v.dt_cadastro_integrante.getMonth() + 1).padStart(2, '0')}` === d.periodo); if (currentTableDataType === 'vendas') { realizado = vendasDoPeriodo.filter(v => normalizeText(v.venda_posvenda) === 'VENDA').reduce((sum, v) => sum + v.vl_plano, 0); meta = d.meta_vvr_vendas; } else if (currentTableDataType === 'posvendas') { realizado = vendasDoPeriodo.filter(v => normalizeText(v.venda_posvenda) === 'POS VENDA').reduce((sum, v) => sum + v.vl_plano, 0); meta = d.meta_vvr_posvendas; } else { realizado = d.realizado_vvr; meta = d.meta_vvr_total; } const atingimentoVvr = meta > 0 ? realizado / meta : 0; return [ d.unidade, d.periodo, formatCurrency(realizado), formatCurrency(meta), formatPercent(atingimentoVvr) ]; }).sort((a,b) => String(a[1]).localeCompare(String(b[0]))); if (dataTable) { dataTable.clear().rows.add(tableData).draw(); } else { dataTable = $('#dados-table').DataTable({ data: tableData, pageLength: 10, language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json' }, destroy: true, dom: 'Bfrtip', buttons: [ { extend: 'excelHtml5', text: 'Exportar para Excel', title: `Relatorio_Vendas_${new Date().toLocaleDateString('pt-BR')}`, className: 'excel-button', exportOptions: { format: { body: function ( data, row, column, node ) { if (column === 2 || column === 3) { return parseFloat(data.replace('R$', '').replace(/\./g, '').replace(',', '.').trim()); } if (column === 4) { return parseFloat(data.replace('%', '').replace(',', '.').trim()) / 100; } return data; } } } } ] }); } }
     
- 
-
-let cursoFilterInitialized = false; // Esta variável de controle é MUITO importante
 
 function addEventListeners() {
     document.getElementById('start-date').addEventListener('change', updateDashboard);
     document.getElementById('end-date').addEventListener('change', updateDashboard);
-
-    const cursoFilterContainer = document.getElementById('curso-filter-container');
 
     document.querySelectorAll('.page-navigation button').forEach(button => {
         button.addEventListener('click', function () {
@@ -695,65 +664,51 @@ function addEventListeners() {
             this.classList.add('active');
             document.querySelectorAll('.page-content').forEach(page => page.classList.remove('active'));
             document.getElementById(this.dataset.page).classList.add('active');
-
-            if (this.id === 'btn-page2') {
-                cursoFilterContainer.style.display = 'block';
-            } else {
-                cursoFilterContainer.style.display = 'none';
-            }
         });
     });
 
-    if (cursoFilterContainer) {
-       cursoFilterContainer.style.display = 'none';
-    }
-    // O resto da função...
+    document.querySelectorAll('#chart-vvr-mes-section .chart-selector button').forEach(button => {
+        button.addEventListener('click', () => {
+            document.querySelectorAll('#chart-vvr-mes-section .chart-selector button').forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+            currentVvrChartType = button.dataset.type;
+            updateDashboard();
+        });
+    });
+    document.querySelectorAll('#table-section .chart-selector button').forEach(button => {
+        button.addEventListener('click', () => {
+            const scrollPosition = window.scrollY;
+            document.querySelectorAll('#table-section .chart-selector button').forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+            currentTableDataType = button.dataset.type;
+            updateDataTable(currentFilteredDataForTable);
+            window.scrollTo(0, scrollPosition);
+        });
+    });
 }
     
   function populateFilters() {
-    // Filtro de Unidade continua o mesmo
     const unidadesVendas = allData.map(d => d.nm_unidade);
     const unidadesFundos = fundosData.map(d => d.nm_unidade);
     const unidades = [...new Set([...unidadesVendas, ...unidadesFundos])].sort();
     const unidadeFilter = $('#unidade-filter');
     unidadeFilter.empty();
     unidades.forEach(u => { unidadeFilter.append($('<option>', { value: u, text: u })); });
-    unidadeFilter.multiselect({ /* ... opções do multiselect de unidade ... */ });
-
-    // --- LÓGICA DO FILTRO DE CURSO TOTALMENTE REFEITA ---
-    const cursosAdesoes = allData.map(d => d?.curso_fundo);
-    const cursosFundos = fundosData.map(d => d?.curso_fundo);
-    const cursos = [...new Set([...cursosAdesoes, ...cursosFundos])].filter(Boolean).sort();
-    
-    const cursoOptionsContainer = document.getElementById('curso-filter-options');
-    cursoOptionsContainer.innerHTML = ''; // Limpa o container
-
-    cursos.forEach((curso, index) => {
-        // Cria o container para o item
-        const itemDiv = document.createElement('div');
-        itemDiv.className = 'checkbox-item';
-
-        // Cria o input checkbox
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.id = `curso-${index}`;
-        checkbox.value = curso;
-        checkbox.addEventListener('change', updateDashboard); // Chama o update a cada mudança
-
-        // Cria a label
-        const label = document.createElement('label');
-        label.htmlFor = `curso-${index}`;
-        label.textContent = curso;
-
-        // Adiciona o checkbox e a label ao container do item
-        itemDiv.appendChild(checkbox);
-        itemDiv.appendChild(label);
-
-        // Adiciona o item ao container principal
-        cursoOptionsContainer.appendChild(itemDiv);
+    unidadeFilter.multiselect({
+        enableFiltering: true,
+        includeSelectAllOption: true,
+        selectAllText: 'Marcar todos',
+        filterPlaceholder: 'Pesquisar...',
+        nonSelectedText: 'Todas as unidades',
+        nSelectedText: 'unidades',
+        allSelectedText: 'Todas selecionadas',
+        buttonWidth: '100%',
+        maxHeight: 300,
+        onChange: updateDashboard,
+        onSelectAll: updateDashboard,
+        onDeselectAll: updateDashboard
     });
-
-    // Define as datas padrão
+    
     const hoje = new Date();
     const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
     const fimMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
