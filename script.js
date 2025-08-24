@@ -696,26 +696,29 @@ function addEventListeners() {
             if (this.id === 'btn-page2') {
                 cursoFilterContainer.style.display = 'block';
 
-                // --- NOVA LÓGICA DE INICIALIZAÇÃO ---
-                // Se o filtro de curso ainda não foi inicializado, inicializa agora.
+                // --- INÍCIO DA ALTERAÇÃO COM setTimeout ---
+                // Se o filtro de curso ainda não foi inicializado...
                 if (!cursoFilterInitialized) {
-                    $('#curso-filter').multiselect({
-                        enableFiltering: true,
-                        includeSelectAllOption: true,
-                        selectAllText: 'Marcar todos',
-                        filterPlaceholder: 'Pesquisar...',
-                        nonSelectedText: 'Todos os cursos',
-                        nSelectedText: 'cursos',
-                        allSelectedText: 'Todos selecionados',
-                        buttonWidth: '100%',
-                        maxHeight: 300,
-                        onChange: updateDashboard,
-                        onSelectAll: updateDashboard,
-                        onDeselectAll: updateDashboard
-                    });
-                    cursoFilterInitialized = true; // Marca como inicializado para não rodar de novo
+                    // Espera 50 milissegundos para garantir que o elemento está visível
+                    setTimeout(function() {
+                        $('#curso-filter').multiselect({
+                            enableFiltering: true,
+                            includeSelectAllOption: true,
+                            selectAllText: 'Marcar todos',
+                            filterPlaceholder: 'Pesquisar...',
+                            nonSelectedText: 'Todos os cursos',
+                            nSelectedText: 'cursos',
+                            allSelectedText: 'Todos selecionados',
+                            buttonWidth: '100%',
+                            maxHeight: 300,
+                            onChange: updateDashboard,
+                            onSelectAll: updateDashboard,
+                            onDeselectAll: updateDashboard
+                        });
+                        cursoFilterInitialized = true; // Marca como inicializado
+                    }, 50); // Uma pequena pausa de 50ms
                 }
-                // --- FIM DA NOVA LÓGICA ---
+                // --- FIM DA ALTERAÇÃO ---
 
             } else {
                 cursoFilterContainer.style.display = 'none';
@@ -727,7 +730,7 @@ function addEventListeners() {
        cursoFilterContainer.style.display = 'none';
     }
 
-    // O resto da sua função (event listeners dos botões de gráfico) continua igual...
+    // O resto da sua função continua igual...
     document.querySelectorAll('#chart-vvr-mes-section .chart-selector button').forEach(button => {
         button.addEventListener('click', () => {
             document.querySelectorAll('#chart-vvr-mes-section .chart-selector button').forEach(btn => btn.classList.remove('active'));
