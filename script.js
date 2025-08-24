@@ -680,12 +680,15 @@ function drawMonthlyTicketChart(data, year) {
     
   let cursoFilterInitialized = false; // Variável de controle global
 
+// Remova a variável "let cursoFilterInitialized = false;" de cima desta função se ela existir
+
 function addEventListeners() {
     document.getElementById('start-date').addEventListener('change', updateDashboard);
     document.getElementById('end-date').addEventListener('change', updateDashboard);
 
     const cursoFilterContainer = document.getElementById('curso-filter-container');
 
+    // Lógica para mostrar/esconder o filtro de curso
     document.querySelectorAll('.page-navigation button').forEach(button => {
         button.addEventListener('click', function () {
             document.querySelectorAll('.page-navigation button').forEach(btn => btn.classList.remove('active'));
@@ -695,42 +698,18 @@ function addEventListeners() {
 
             if (this.id === 'btn-page2') {
                 cursoFilterContainer.style.display = 'block';
-
-                // --- INÍCIO DA ALTERAÇÃO COM setTimeout ---
-                // Se o filtro de curso ainda não foi inicializado...
-                if (!cursoFilterInitialized) {
-                    // Espera 50 milissegundos para garantir que o elemento está visível
-                    setTimeout(function() {
-                        $('#curso-filter').multiselect({
-                            enableFiltering: true,
-                            includeSelectAllOption: true,
-                            selectAllText: 'Marcar todos',
-                            filterPlaceholder: 'Pesquisar...',
-                            nonSelectedText: 'Todos os cursos',
-                            nSelectedText: 'cursos',
-                            allSelectedText: 'Todos selecionados',
-                            buttonWidth: '100%',
-                            maxHeight: 300,
-                            onChange: updateDashboard,
-                            onSelectAll: updateDashboard,
-                            onDeselectAll: updateDashboard
-                        });
-                        cursoFilterInitialized = true; // Marca como inicializado
-                    }, 50); // Uma pequena pausa de 50ms
-                }
-                // --- FIM DA ALTERAÇÃO ---
-
             } else {
                 cursoFilterContainer.style.display = 'none';
             }
         });
     });
 
+    // Esconde o filtro de curso por padrão ao carregar a página
     if (cursoFilterContainer) {
        cursoFilterContainer.style.display = 'none';
     }
 
-    // O resto da sua função continua igual...
+    // O resto da sua função continua o mesmo
     document.querySelectorAll('#chart-vvr-mes-section .chart-selector button').forEach(button => {
         button.addEventListener('click', () => {
             document.querySelectorAll('#chart-vvr-mes-section .chart-selector button').forEach(btn => btn.classList.remove('active'));
@@ -751,8 +730,8 @@ function addEventListeners() {
     });
 }
     
-   function populateFilters() {
-    // Popula filtro de Unidades (código existente, sem alterações)
+  function populateFilters() {
+    // 1. Popula e INICIALIZA o filtro de Unidades
     const unidadesVendas = allData.map(d => d.nm_unidade);
     const unidadesFundos = fundosData.map(d => d.nm_unidade);
     const unidades = [...new Set([...unidadesVendas, ...unidadesFundos])].sort();
@@ -774,8 +753,7 @@ function addEventListeners() {
         onDeselectAll: updateDashboard
     });
 
-    // --- CÓDIGO ALTERADO ---
-    // Apenas popula as opções do filtro de curso, SEM inicializar o multiselect
+    // 2. Popula e INICIALIZA o filtro de Curso (seguindo a MESMA LÓGICA)
     const cursosAdesoes = allData.map(d => d?.curso_fundo);
     const cursosFundos = fundosData.map(d => d?.curso_fundo);
     const cursos = [...new Set([...cursosAdesoes, ...cursosFundos])]
@@ -785,9 +763,22 @@ function addEventListeners() {
     const cursoFilter = $('#curso-filter');
     cursoFilter.empty();
     cursos.forEach(c => { cursoFilter.append($('<option>', { value: c, text: c })); });
-    // --- FIM DA ALTERAÇÃO ---
+    cursoFilter.multiselect({
+        enableFiltering: true,
+        includeSelectAllOption: true,
+        selectAllText: 'Marcar todos',
+        filterPlaceholder: 'Pesquisar...',
+        nonSelectedText: 'Todos os cursos',
+        nSelectedText: 'cursos',
+        allSelectedText: 'Todos selecionados',
+        buttonWidth: '100%',
+        maxHeight: 300,
+        onChange: updateDashboard,
+        onSelectAll: updateDashboard,
+        onDeselectAll: updateDashboard
+    });
 
-    // Define datas padrão (código existente)
+    // 3. Define as datas padrão
     const hoje = new Date();
     const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
     const fimMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
