@@ -12,6 +12,19 @@ const getColorForPercentage = (percent) => {
     if (percent >= 0.5) return '#ffc107'; // Amarelo para 50% ou mais
     return '#dc3545'; // Vermelho para menos de 50%
 };
+const parsePtBrDate = (dateString) => {
+    if (!dateString || typeof dateString !== 'string') return null;
+    // Tenta identificar se a data está no formato DD/MM/YYYY
+    const parts = dateString.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    if (parts) {
+        // Formato DD/MM/YYYY -> new Date(YYYY, MM-1, DD)
+        return new Date(parts[3], parts[2] - 1, parts[1]);
+    }
+    // Se não, tenta o formato padrão que o new Date() entende (ex: YYYY-MM-DD)
+    const date = new Date(dateString);
+    // Retorna null se a data final for inválida
+    return isNaN(date) ? null : date;
+};
     Chart.defaults.color = '#FFFFFF';
 
     let allData = [], fundosData = [], metasData = new Map(), dataTable, vvrVsMetaPorMesChart, cumulativeVvrChart, monthlyVvrChart, yearlyStackedChart, monthlyStackedChart, yearlyTicketChart, monthlyTicketChart, yearlyContractsChart, monthlyContractsChart, monthlyAdesoesChart, yearlyAdesoesStackedChart, monthlyAdesoesStackedChart, consultorDataTable, detalhadaAdesoesDataTable, fundosDetalhadosDataTable;
@@ -135,7 +148,7 @@ async function fetchFunilData() {
         const headers = rows[0].map(h => h.trim().toLowerCase());
         const tituloIndex = headers.indexOf("título");
         const criadoEmIndex = headers.indexOf("criado em");
-        const unidadeIndex = headers.indexOf("nm_unidade"); // <-- NOVO
+        const unidadeIndex = headers.indexOf("nm_unidade");
 
         if (tituloIndex === -1 || criadoEmIndex === -1 || unidadeIndex === -1) {
             console.error("Colunas essenciais ('Título', 'Criado em', 'nm_unidade') não encontradas na planilha do Funil.");
@@ -145,11 +158,14 @@ async function fetchFunilData() {
         return rows.slice(1).map(row => {
             const dateString = row[criadoEmIndex];
             const titulo = row[tituloIndex];
-            if (titulo && dateString) {
+            const dataCriado = parsePtBrDate(dateString); // <-- USA A NOVA FUNÇÃO
+
+            // Só processa a linha se tiver um título e uma data válida
+            if (titulo && dataCriado) {
                 return {
                     titulo: titulo,
-                    criado_em: new Date(dateString),
-                    nm_unidade: row[unidadeIndex] || 'N/A' // <-- NOVO
+                    criado_em: dataCriado,
+                    nm_unidade: row[unidadeIndex] || 'N/A'
                 };
             }
             return null;
@@ -321,29 +337,40 @@ async function fetchFundosData() {
     }
 }
 function updateOperacionaisKPIs(selectedUnidades, startDate, endDate) {
-    // 1. Calcula o Realizado de Leads, AGORA FILTRANDO POR UNIDADE
+    // 1. Calcula o Realizado de Leads (código existente, já correto com a nova `fetchFunilData`)
     const filteredLeads = funilData.filter(d => 
-        (selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade)) && // <-- NOVO
+        (selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade)) &&
         d.criado_em >= startDate && d.criado_em < endDate
     );
     const realizadoLeads = filteredLeads.length;
 
-    // 2. Calcula a Meta de Leads (código existente, já funciona com o filtro de unidade)
+    // 2. Calcula a Meta de Leads
     let metaLeads = 0;
-    const unitsToConsider = selectedUnidades.length > 0 ? selectedUnidades : [...new Set(allData.map(d => d.nm_unidade))];
+    
+    // --- INÍCIO DA CORREÇÃO ---
+    // Cria uma lista completa de TODAS as unidades de TODAS as fontes de dados
+    const allPossibleUnits = [...new Set([
+        ...allData.map(d => d.nm_unidade),
+        ...fundosData.map(d => d.nm_unidade),
+        ...funilData.map(d => d.nm_unidade)
+    ])];
+    // Usa a lista completa se nenhum filtro estiver ativo
+    const unitsToConsider = selectedUnidades.length > 0 ? selectedUnidades : allPossibleUnits;
+    // --- FIM DA CORREÇÃO ---
+
     metasData.forEach((metaInfo, key) => {
         const [unidade, ano, mes] = key.split('-');
         const metaDate = new Date(ano, parseInt(mes) - 1, 15);
+        // A condição abaixo agora funciona corretamente com a lista completa de unidades
         if (unitsToConsider.includes(unidade) && metaDate >= startDate && metaDate < endDate) {
             metaLeads += metaInfo.meta_leads || 0;
         }
     });
 
-    // 3. Calcula o percentual
+    // 3. Calcula o percentual e atualiza o HTML (sem alterações)
     const percentLeads = metaLeads > 0 ? realizadoLeads / metaLeads : 0;
     const leadsColor = getColorForPercentage(percentLeads); 
 
-    // 4. Atualiza o HTML
     document.getElementById('kpi-leads-realizado').textContent = realizadoLeads.toLocaleString('pt-BR');
     document.getElementById('kpi-leads-meta').textContent = metaLeads.toLocaleString('pt-BR') + ' META';
     const leadsPercentEl = document.getElementById('kpi-leads-percent');
