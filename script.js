@@ -158,10 +158,11 @@ async function fetchFunilData() {
         return rows.slice(1).map(row => {
             const dateString = row[criadoEmIndex];
             const titulo = row[tituloIndex];
-            const dataCriado = parsePtBrDate(dateString); // <-- USA A NOVA FUNÇÃO
+            const dataCriado = parsePtBrDate(dateString);
 
-            // Só processa a linha se tiver um título e uma data válida
-            if (titulo && dataCriado) {
+            // --- CORREÇÃO APLICADA AQUI ---
+            // Só processa a linha se tiver um título VÁLIDO (não apenas espaços) e uma data válida
+            if (titulo && titulo.trim() !== '' && dataCriado) {
                 return {
                     titulo: titulo,
                     criado_em: dataCriado,
@@ -337,7 +338,7 @@ async function fetchFundosData() {
     }
 }
 function updateOperacionaisKPIs(selectedUnidades, startDate, endDate) {
-    // 1. Calcula o Realizado de Leads (código existente, já correto com a nova `fetchFunilData`)
+    // 1. Calcula o Realizado de Leads (sem alterações aqui)
     const filteredLeads = funilData.filter(d => 
         (selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade)) &&
         d.criado_em >= startDate && d.criado_em < endDate
@@ -348,20 +349,24 @@ function updateOperacionaisKPIs(selectedUnidades, startDate, endDate) {
     let metaLeads = 0;
     
     // --- INÍCIO DA CORREÇÃO ---
+    // Pega as unidades da própria planilha de metas para garantir que nenhuma seja esquecida
+    const unitsFromMetas = [...metasData.keys()].map(key => key.split('-')[0]);
+
     // Cria uma lista completa de TODAS as unidades de TODAS as fontes de dados
     const allPossibleUnits = [...new Set([
         ...allData.map(d => d.nm_unidade),
         ...fundosData.map(d => d.nm_unidade),
-        ...funilData.map(d => d.nm_unidade)
+        ...funilData.map(d => d.nm_unidade),
+        ...unitsFromMetas // Adiciona as unidades da planilha de metas à lista
     ])];
-    // Usa a lista completa se nenhum filtro estiver ativo
+    
+    // Usa a lista completa se nenhum filtro de unidade estiver ativo
     const unitsToConsider = selectedUnidades.length > 0 ? selectedUnidades : allPossibleUnits;
     // --- FIM DA CORREÇÃO ---
 
     metasData.forEach((metaInfo, key) => {
         const [unidade, ano, mes] = key.split('-');
         const metaDate = new Date(ano, parseInt(mes) - 1, 15);
-        // A condição abaixo agora funciona corretamente com a lista completa de unidades
         if (unitsToConsider.includes(unidade) && metaDate >= startDate && metaDate < endDate) {
             metaLeads += metaInfo.meta_leads || 0;
         }
