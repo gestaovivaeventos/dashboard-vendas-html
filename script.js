@@ -29,46 +29,78 @@ const getColorForPercentage = (percent) => {
     const formatPercent = (value) => new Intl.NumberFormat('pt-br', { style: 'percent', minimumFractionDigits: 1 }).format(value || 0);
 
     document.addEventListener('DOMContentLoaded', async () => {
-displayLastUpdateMessage();
-        const loader = document.getElementById('loader');
-        try {
-            const [salesData, sheetData, novosFundosData, funnelData] = await Promise.all([
-    fetchAllSalesDataFromSheet(),
-    fetchMetasData(),
-    fetchFundosData(),
-    fetchFunilData() // <-- NOVA CHAMADA
-]);
-allData = salesData;
-metasData = sheetData;
-fundosData = novosFundosData;
-funilData = funnelData; // <-- ARMAZENA OS NOVOS DADOS
+    displayLastUpdateMessage();
+    const loader = document.getElementById('loader');
 
-            if (allData && allData.length > 0) {
-                loader.style.display = 'none';
-                [
-                 'filters-section', 'kpi-section', 'kpi-section-py', 'chart-vvr-mes-section', 
-                 'chart-cumulative-section', 'table-section', 'chart-monthly-vvr-section', 
-                 'chart-yearly-stacked-section', 'chart-monthly-stacked-section', 'chart-yearly-ticket-section', 
-                 'chart-monthly-ticket-section', 'chart-yearly-contracts-section', 'chart-monthly-contracts-section',
-                 'chart-monthly-adesoes-section', 'chart-yearly-adesoes-stacked-section', 'chart-monthly-adesoes-stacked-section',
-                 'consultor-table-section', 'detalhada-adesoes-table-section', 'fundos-detalhados-table-section'
-                ].forEach(id => {
-                    const el = document.getElementById(id);
-                    if (el) el.style.display = 'block';
-                });
-                document.getElementById('filters-section').style.display = 'flex';
-                
-                populateFilters();
-                addEventListeners();
-                updateDashboard();
-            } else { 
-                loader.innerHTML = 'Nenhum dado de vendas encontrado ou falha ao carregar. Verifique o console (F12) para mais detalhes.'; 
+    try {
+        // ETAPA 1: ESPERA TODOS OS DADOS SEREM CARREGADOS
+        const [salesData, sheetData, novosFundosData, funnelData] = await Promise.all([
+            fetchAllSalesDataFromSheet(),
+            fetchMetasData(),
+            fetchFundosData(),
+            fetchFunilData()
+        ]);
+
+        // ETAPA 2: ARMAZENA OS DADOS NAS VARIÁVEIS GLOBAIS
+        allData = salesData;
+        metasData = sheetData;
+        fundosData = novosFundosData;
+        funilData = funnelData;
+
+        if (allData && allData.length > 0) {
+            // ETAPAS 3, 4 e 5
+            populateFilters();
+            addEventListeners();
+            updateDashboard();
+
+            // Mostra as seções do dashboard
+            loader.style.display = 'none';
+
+            // --- INÍCIO DA CORREÇÃO ---
+            // Mapeia cada seção para o seu tipo de display correto
+            const sectionsToShow = {
+                'filters-section': 'flex',
+                'kpi-section': 'flex',
+                'kpi-section-py': 'flex',
+                'operacionais-kpi-section': 'flex', // Corrigido para 'flex'
+                'chart-vvr-mes-section': 'flex',
+                'chart-cumulative-section': 'flex',
+                'table-section': 'flex',
+                'chart-monthly-vvr-section': 'flex',
+                'chart-yearly-stacked-section': 'flex',
+                'chart-monthly-stacked-section': 'flex',
+                'chart-yearly-ticket-section': 'flex',
+                'chart-monthly-ticket-section': 'flex',
+                'chart-yearly-contracts-section': 'flex',
+                'chart-monthly-contracts-section': 'flex',
+                'chart-monthly-adesoes-section': 'flex',
+                'chart-yearly-adesoes-stacked-section': 'flex',
+                'chart-monthly-adesoes-stacked-section': 'flex',
+                'consultor-table-section': 'flex',
+                'detalhada-adesoes-table-section': 'flex',
+                'fundos-detalhados-table-section': 'flex'
+            };
+
+            for (const [id, displayType] of Object.entries(sectionsToShow)) {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.style.display = displayType;
+                }
             }
-        } catch (error) { 
-            console.error("Erro fatal na inicialização:", error); 
-            loader.innerHTML = `Erro ao carregar dados. Verifique o console (F12).`; 
+            
+            // Garante que a página correta (pai das seções) esteja visível
+             document.getElementById('page1').style.display = 'grid';
+             document.getElementById('page2').style.display = 'none'; // Garante que a pág 2 comece escondida
+            // --- FIM DA CORREÇÃO ---
+
+        } else {
+            loader.innerHTML = 'Nenhum dado encontrado ou falha ao carregar.';
         }
-    });
+    } catch (error) {
+        console.error("Erro fatal na inicialização:", error);
+        loader.innerHTML = `Erro ao carregar dados. Verifique o console (F12). Detalhes: ${error.message}`;
+    }
+});
 
     document.getElementById('sidebar-toggle').addEventListener('click', function() {
         document.getElementById('sidebar').classList.toggle('collapsed');
