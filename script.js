@@ -831,9 +831,12 @@ function drawMonthlyTicketChart(data, year) {
     
 
 function addEventListeners() {
+    // Conecta os eventos de mudança nos filtros à função que atualiza o dashboard
+    $('#unidade-filter').on('change', updateDashboard);
     document.getElementById('start-date').addEventListener('change', updateDashboard);
     document.getElementById('end-date').addEventListener('change', updateDashboard);
 
+    // Adiciona o evento de clique para a navegação entre as páginas
     document.querySelectorAll('.page-navigation button').forEach(button => {
         button.addEventListener('click', function () {
             document.querySelectorAll('.page-navigation button').forEach(btn => btn.classList.remove('active'));
@@ -843,6 +846,7 @@ function addEventListeners() {
         });
     });
 
+    // Adiciona o evento de clique para os botões de tipo de gráfico (VVR vs. Meta)
     document.querySelectorAll('#chart-vvr-mes-section .chart-selector button').forEach(button => {
         button.addEventListener('click', () => {
             document.querySelectorAll('#chart-vvr-mes-section .chart-selector button').forEach(btn => btn.classList.remove('active'));
@@ -851,6 +855,8 @@ function addEventListeners() {
             updateDashboard();
         });
     });
+    
+    // Adiciona o evento de clique para os botões de tipo de dado da tabela
     document.querySelectorAll('#table-section .chart-selector button').forEach(button => {
         button.addEventListener('click', () => {
             const scrollPosition = window.scrollY;
@@ -864,12 +870,15 @@ function addEventListeners() {
 }
     
   function populateFilters() {
+    // Popula filtro de Unidades
     const unidadesVendas = allData.map(d => d.nm_unidade);
     const unidadesFundos = fundosData.map(d => d.nm_unidade);
     const unidades = [...new Set([...unidadesVendas, ...unidadesFundos])].sort();
     const unidadeFilter = $('#unidade-filter');
     unidadeFilter.empty();
     unidades.forEach(u => { unidadeFilter.append($('<option>', { value: u, text: u })); });
+    
+    // ATENÇÃO: A inicialização agora NÃO tem mais a chamada para updateDashboard
     unidadeFilter.multiselect({
         enableFiltering: true,
         includeSelectAllOption: true,
@@ -879,12 +888,10 @@ function addEventListeners() {
         nSelectedText: 'unidades',
         allSelectedText: 'Todas selecionadas',
         buttonWidth: '100%',
-        maxHeight: 300,
-        onChange: updateDashboard,
-        onSelectAll: updateDashboard,
-        onDeselectAll: updateDashboard
+        maxHeight: 300
     });
     
+    // Define datas padrão
     const hoje = new Date();
     const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
     const fimMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
