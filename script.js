@@ -281,9 +281,7 @@ function updateDrillDownCharts(historicalData, selectedUnidades) {
         }
     });
 
-    // --- CORREÇÃO APLICADA AQUI ---
     const years = Object.keys(salesByYear).sort((a, b) => a - b);
-    
     const vendasAnual = years.map(year => salesByYear[year].vendas);
     const posVendasAnual = years.map(year => salesByYear[year].posVendas);
 
@@ -307,6 +305,7 @@ function updateDrillDownCharts(historicalData, selectedUnidades) {
             },
             scales: {
                 x: { stacked: true },
+                // --- ALTERAÇÃO FINAL APLICADA AQUI ---
                 y: { stacked: true, reverse: true }
             },
             plugins: {
