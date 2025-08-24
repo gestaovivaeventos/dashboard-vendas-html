@@ -302,7 +302,7 @@ function updateDrillDownCharts(historicalData, selectedUnidades) {
             maintainAspectRatio: false,
             indexAxis: 'y',
             interaction: {
-                mode: 'index',
+                mode: 'y',
                 intersect: false,
             },
             scales: {
