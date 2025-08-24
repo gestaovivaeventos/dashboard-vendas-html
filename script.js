@@ -5,7 +5,7 @@
     const METAS_SHEET_NAME = "metas";
     const API_KEY = "AIzaSyBuGRH91CnRuDtN5RGsb5DvHEfhTxJnWSs"; 
 const FUNIL_SPREADSHEET_ID = "1oXO9O4jsrWmVv6px0m6qVTCDPEkYO7wRLUXPaeiU2Vc";
-const FUNIL_SHEET_NAME = "base";
+const FUNIL_SHEET_NAME = "BASE";
 let funilData = [];
     Chart.defaults.color = '#FFFFFF';
 
