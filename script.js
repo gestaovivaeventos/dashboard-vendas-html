@@ -281,7 +281,7 @@ function updateDrillDownCharts(historicalData, selectedUnidades) {
         }
     });
 
-    const years = Object.keys(salesByYear).sort();
+    const years = Object.keys(salesByYear).sort((a, b) => a - b);
     const vendasAnual = years.map(year => salesByYear[year].vendas);
     const posVendasAnual = years.map(year => salesByYear[year].posVendas);
 
