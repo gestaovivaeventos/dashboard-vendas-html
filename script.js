@@ -852,7 +852,7 @@ function addEventListeners() {
             // AJUSTES ADICIONADOS AQUI
             devicePixelRatio: window.devicePixelRatio,
             interaction: {
-                mode: 'index',
+                mode: 'y',
                 intersect: false,
             },
             // FIM DOS AJUSTES
