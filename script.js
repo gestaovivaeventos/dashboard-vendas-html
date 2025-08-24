@@ -678,9 +678,7 @@ function drawMonthlyTicketChart(data, year) {
 
     function updateDataTable(data) { const tableData = data.map(d => { const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); let realizado = 0; let meta = 0; const vendasDoPeriodo = allData.filter(v => v.nm_unidade === d.unidade && `${v.dt_cadastro_integrante.getFullYear()}-${String(v.dt_cadastro_integrante.getMonth() + 1).padStart(2, '0')}` === d.periodo); if (currentTableDataType === 'vendas') { realizado = vendasDoPeriodo.filter(v => normalizeText(v.venda_posvenda) === 'VENDA').reduce((sum, v) => sum + v.vl_plano, 0); meta = d.meta_vvr_vendas; } else if (currentTableDataType === 'posvendas') { realizado = vendasDoPeriodo.filter(v => normalizeText(v.venda_posvenda) === 'POS VENDA').reduce((sum, v) => sum + v.vl_plano, 0); meta = d.meta_vvr_posvendas; } else { realizado = d.realizado_vvr; meta = d.meta_vvr_total; } const atingimentoVvr = meta > 0 ? realizado / meta : 0; return [ d.unidade, d.periodo, formatCurrency(realizado), formatCurrency(meta), formatPercent(atingimentoVvr) ]; }).sort((a,b) => String(a[1]).localeCompare(String(b[0]))); if (dataTable) { dataTable.clear().rows.add(tableData).draw(); } else { dataTable = $('#dados-table').DataTable({ data: tableData, pageLength: 10, language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json' }, destroy: true, dom: 'Bfrtip', buttons: [ { extend: 'excelHtml5', text: 'Exportar para Excel', title: `Relatorio_Vendas_${new Date().toLocaleDateString('pt-BR')}`, className: 'excel-button', exportOptions: { format: { body: function ( data, row, column, node ) { if (column === 2 || column === 3) { return parseFloat(data.replace('R$', '').replace(/\./g, '').replace(',', '.').trim()); } if (column === 4) { return parseFloat(data.replace('%', '').replace(',', '.').trim()) / 100; } return data; } } } } ] }); } }
     
-  let cursoFilterInitialized = false; // Variável de controle global
-
-// Remova a variável "let cursoFilterInitialized = false;" de cima desta função se ela existir
+ 
 
 let cursoFilterInitialized = false; // Esta variável de controle é MUITO importante
 
