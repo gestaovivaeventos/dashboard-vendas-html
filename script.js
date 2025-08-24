@@ -281,7 +281,9 @@ function updateDrillDownCharts(historicalData, selectedUnidades) {
         }
     });
 
+    // --- CORREÇÃO APLICADA AQUI ---
     const years = Object.keys(salesByYear).sort((a, b) => a - b);
+    
     const vendasAnual = years.map(year => salesByYear[year].vendas);
     const posVendasAnual = years.map(year => salesByYear[year].posVendas);
 
@@ -296,9 +298,7 @@ function updateDrillDownCharts(historicalData, selectedUnidades) {
             ]
         },
         options: {
-            // --- AJUSTE ADICIONADO AQUI ---
             devicePixelRatio: window.devicePixelRatio,
-
             maintainAspectRatio: false,
             indexAxis: 'y',
             interaction: {
@@ -314,15 +314,9 @@ function updateDrillDownCharts(historicalData, selectedUnidades) {
                     color: 'white',
                     font: { weight: 'bold' },
                     formatter: function(value) {
-                        if (value === 0) {
-                            return '';
-                        }
-                        if (value >= 1000000) {
-                            return (value / 1000000).toFixed(1).replace('.0', '') + ' M';
-                        }
-                        if (value >= 1000) {
-                            return (value / 1000).toFixed(1).replace('.0', '') + 'k';
-                        }
+                        if (value === 0) return '';
+                        if (value >= 1000000) return (value / 1000000).toFixed(1).replace('.0', '') + ' M';
+                        if (value >= 1000) return (value / 1000).toFixed(1).replace('.0', '') + 'k';
                         return value;
                     }
                 },
@@ -346,7 +340,6 @@ function updateDrillDownCharts(historicalData, selectedUnidades) {
         drawMonthlyDetailChart(filteredHistoricalData, years[years.length - 1]);
     }
 }
-
   function drawMonthlyDetailChart(data, year) {
     document.getElementById('monthly-stacked-title').textContent = `Venda Realizada Total Mensal (${year})`;
     const salesByMonth = Array(12).fill(0).map(() => ({ vendas: 0, posVendas: 0 }));
