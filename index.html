@@ -1,34 +1,11 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard de Vendas</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
-    <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.css">
-    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.js"></script>
-    
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.2/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/1.1.2/css/bootstrap-multiselect.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.2/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/1.1.2/js/bootstrap-multiselect.js"></script>
-
-    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.dataTables.min.css">
-    <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
-<link rel="stylesheet" href="style.css">
-</head>
 <body>
     <div class="dashboard-wrapper">
         <button id="sidebar-toggle">&#9776;</button>
         <div id="sidebar">
             <div class="page-navigation">
- <a href="https://central-dashs-viva-html.vercel.app/" class="page-navigation-button"><button>Central de Dashboards VIVA Eventos</button></a>
-               <hr> <button id="btn-page1" class="active" data-page="page1">Metas e Resultados</button>
+                <a href="https://central-dashs-viva-html.vercel.app/" class="page-navigation-button"><button>Central de Dashboards VIVA Eventos</button></a>
+                <hr> 
+                <button id="btn-page1" class="active" data-page="page1">Metas e Resultados</button>
                 <button id="btn-page2" data-page="page2">Indicadores Secundários</button>
             </div>
             <section id="loader" class="filters"><div class="loader">Carregando informações...</div></section>
@@ -41,11 +18,13 @@
         <div id="main-content">
             <div class="container">
                <header class="header">
-    <div>
-        <h1>Dashboard de Vendas e Metas</h1>
-        <span id="last-update-message"></span> </div>
-    <img id="company-logo" src="Rockets2.png" alt="Logo da Empresa">
-</header>
+                    <div>
+                        <h1>Dashboard de Vendas e Metas</h1>
+                        <span id="last-update-message"></span> 
+                    </div>
+                    <img id="company-logo" src="Rockets2.png" alt="Logo da Empresa">
+                </header>
+
                 <div id="page1" class="page-content active">
                     <section class="kpi-container" id="kpi-section" style="display: none;">
                         <div class="kpi-main-wrapper">
@@ -96,12 +75,10 @@
                             </div>
                         </div>
                     </section>
-
                     <section class="kpi-container" id="operacionais-kpi-section" style="display: none;">
                         <h2 style="grid-column: span 12; font-size: 1.2em; border-bottom: none; padding-bottom: 0;">Indicadores Operacionais</h2>
                         <div class="kpi-main-wrapper" style="width: 100%; grid-column: span 12;">
                             <div class="kpi-main-cards-container">
-                                
                                 <div class="kpi-main-card">
                                     <span class="kpi-card-title">LEADS</span>
                                     <span class="kpi-card-value" id="kpi-leads-realizado">0</span>
@@ -110,8 +87,7 @@
                                     </span>
                                     <div class="progress-bar-bg"><div class="progress-bar-fg" id="kpi-leads-progress"></div></div>
                                 </div>
-
-                                </div>
+                            </div>
                         </div>
                     </section>
                     <section class="chart-container" id="chart-vvr-mes-section" style="display: none;">
@@ -249,29 +225,28 @@
                             <tbody></tbody>
                         </table>
                     </section>
-<section class="table-container" id="fundos-detalhados-table-section" style="display: none;">
-    <h2>Fundos Detalhados no Período</h2>
-    <table id="fundos-detalhados-table" class="display" style="width:100%">
-        <thead>
-            <tr>
-                <th>Unidade</th>
-                <th>ID Fundo</th>
-                <th>Fundo</th>
-                <th>DT Contrato</th>
-                <th>DT Cadastro</th>
-                <th>Tipo de Serviço</th>
-                <th>Instituição</th>
-                <th>DT Baile</th>
-            </tr>
-        </thead>
-        <tbody></tbody>
-    </table>
-</section>
+                    <section class="table-container" id="fundos-detalhados-table-section" style="display: none;">
+                        <h2>Fundos Detalhados no Período</h2>
+                        <table id="fundos-detalhados-table" class="display" style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th>Unidade</th>
+                                    <th>ID Fundo</th>
+                                    <th>Fundo</th>
+                                    <th>DT Contrato</th>
+                                    <th>DT Cadastro</th>
+                                    <th>Tipo de Serviço</th>
+                                    <th>Instituição</th>
+                                    <th>DT Baile</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </section>
                 </div>
-            </div>
+                </div>
         </div>
     </div>
 
 <script src="script.js"></script>
 </body>
-</html>
