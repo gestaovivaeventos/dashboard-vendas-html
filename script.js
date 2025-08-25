@@ -317,10 +317,11 @@ function updatePreviousYearKPIs(dataBruta, selectedUnidades, startDate, endDate)
     document.getElementById('kpi-posvendas-progress-py').style.width = `${Math.min(percentPosVendas * 100, 100)}%`;
 }
     function updateDashboard() {
+    // Pega os valores dos filtros
     const selectedUnidades = $('#unidade-filter').val() || [];
-    const anoVigente = 2025; // Mantendo o ano que você definiu
-    const dataParaGrafico = allData.filter(d => (selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade)) && d.dt_cadastro_integrante.getFullYear() === anoVigente);
-
+    const anoVigente = 2025;
+    
+    // Prepara as datas do filtro
     const startDateString = document.getElementById('start-date').value;
     const startParts = startDateString.split('-');
     const startDate = new Date(startParts[0], startParts[1] - 1, startParts[2]);
@@ -329,8 +330,18 @@ function updatePreviousYearKPIs(dataBruta, selectedUnidades, startDate, endDate)
     const endDate = new Date(endParts[0], endParts[1] - 1, endParts[2]);
     endDate.setDate(endDate.getDate() + 1);
 
+    // Filtra os dados de acordo com os filtros selecionados
+    const dataParaGrafico = allData.filter(d => (selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade)) && d.dt_cadastro_integrante.getFullYear() === anoVigente);
     const dataBrutaFiltrada = allData.filter(d => (selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade)) && d.dt_cadastro_integrante >= startDate && d.dt_cadastro_integrante < endDate);
+    
+    // Prepara os dados do período anterior
+    const startDatePY = new Date(startDate);
+    startDatePY.setFullYear(startDatePY.getFullYear() - 1);
+    const endDatePY = new Date(endDate);
+    endDatePY.setFullYear(endDatePY.getFullYear() - 1);
+    const dataBrutaFiltradaPY = allData.filter(d => (selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade)) && d.dt_cadastro_integrante >= startDatePY && d.dt_cadastro_integrante < endDatePY);
 
+    // Chama todas as funções de atualização
     updateVvrVsMetaPorMesChart(dataParaGrafico, anoVigente);
     updateCumulativeVvrChart(allData, selectedUnidades);
     updateMonthlyVvrChart(allData, selectedUnidades);
@@ -343,13 +354,24 @@ function updatePreviousYearKPIs(dataBruta, selectedUnidades, startDate, endDate)
     updateDetalhadaAdesoesTable(dataBrutaFiltrada);
     updateFundosDetalhadosTable(fundosData, selectedUnidades, startDate, endDate);
     updateMainKPIs(dataBrutaFiltrada, selectedUnidades, startDate, endDate);
+    updatePreviousYearKPIs(dataBrutaFiltradaPY, selectedUnidades, startDatePY, endDatePY);
+    updateOperacionaisKPIs(selectedUnidades, startDate, endDate);
+    document.getElementById('kpi-section-py').style.display = 'block';
 
+    // Prepara os dados para a tabela principal
     const dataAgregadaComVendas = processAndCrossReferenceData(dataBrutaFiltrada);
     const combinedDataMap = new Map();
     dataAgregadaComVendas.forEach(item => { const key = `${item.unidade}-${item.periodo}`; combinedDataMap.set(key, item); });
     const unitsToConsider = selectedUnidades.length > 0 ? selectedUnidades : [...new Set(allData.map(d => d.nm_unidade))];
+    
     metasData.forEach((metaInfo, key) => {
-        const [unidade, ano, mes] = key.split('-');
+        // --- LÓGICA DE EXTRAÇÃO DE CHAVE CORRIGIDA ---
+        const parts = key.split('-');
+        const mes = parts.pop();
+        const ano = parts.pop();
+        const unidade = parts.join('-'); // Reconstrói o nome da unidade corretamente
+        // --- FIM DA CORREÇÃO ---
+
         const metaDate = new Date(ano, parseInt(mes) - 1, 1);
         const periodo = `${ano}-${mes}`;
         const mapKey = `${unidade}-${periodo}`;
@@ -357,16 +379,10 @@ function updatePreviousYearKPIs(dataBruta, selectedUnidades, startDate, endDate)
             combinedDataMap.set(mapKey, { unidade: unidade, periodo: periodo, realizado_vvr: 0, realizado_adesoes: 0, ...metaInfo });
         }
     });
+
     const finalTableData = Array.from(combinedDataMap.values());
     currentFilteredDataForTable = finalTableData;
     updateDataTable(finalTableData);
-    const startDatePY = new Date(startDate);
-    startDatePY.setFullYear(startDatePY.getFullYear() - 1);
-    const endDatePY = new Date(endDate);
-    endDatePY.setFullYear(endDatePY.getFullYear() - 1);
-    const dataBrutaFiltradaPY = allData.filter(d => (selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade)) && d.dt_cadastro_integrante >= startDatePY && d.dt_cadastro_integrante < endDatePY);
-    document.getElementById('kpi-section-py').style.display = 'block';
-    updatePreviousYearKPIs(dataBrutaFiltradaPY, selectedUnidades, startDatePY, endDatePY);
 }
     
     function updateVvrVsMetaPorMesChart(salesDataForYear, anoVigente) { const allYearPeriodos = Array.from({ length: 12 }, (_, i) => `${anoVigente}-${String(i + 1).padStart(2, '0')}`); const chartDataMap = new Map(); allYearPeriodos.forEach(periodo => { chartDataMap.set(periodo, { realizado_vendas: 0, realizado_posvendas: 0, meta_vendas: 0, meta_posvendas: 0, meta_total: 0 }); }); const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); salesDataForYear.forEach(d => { const year = d.dt_cadastro_integrante.getFullYear(); const month = String(d.dt_cadastro_integrante.getMonth() + 1).padStart(2, '0'); const periodo = `${year}-${month}`; if (chartDataMap.has(periodo)) { if (normalizeText(d.venda_posvenda) === 'VENDA') { chartDataMap.get(periodo).realizado_vendas += d.vl_plano; } else if (normalizeText(d.venda_posvenda) === 'POS VENDA') { chartDataMap.get(periodo).realizado_posvendas += d.vl_plano; } } }); const selectedUnidades = $('#unidade-filter').val() || [...new Set(allData.map(d => d.nm_unidade))]; metasData.forEach((metaInfo, key) => { const [unidade, ano, mes] = key.split('-'); const periodo = `${ano}-${mes}`; if (ano == anoVigente && chartDataMap.has(periodo)) { if (selectedUnidades.length === 0 || selectedUnidades.includes(unidade)) { chartDataMap.get(periodo).meta_vendas += metaInfo.meta_vvr_vendas; chartDataMap.get(periodo).meta_posvendas += metaInfo.meta_vvr_posvendas; chartDataMap.get(periodo).meta_total += metaInfo.meta_vvr_total; } } }); let realizadoValues, metaValues; if (currentVvrChartType === 'vendas') { realizadoValues = allYearPeriodos.map(p => chartDataMap.get(p).realizado_vendas); metaValues = allYearPeriodos.map(p => chartDataMap.get(p).meta_vendas); } else if (currentVvrChartType === 'posvendas') { realizadoValues = allYearPeriodos.map(p => chartDataMap.get(p).realizado_posvendas); metaValues = allYearPeriodos.map(p => chartDataMap.get(p).meta_posvendas); } else { realizadoValues = allYearPeriodos.map(p => chartDataMap.get(p).realizado_vendas + chartDataMap.get(p).realizado_posvendas); metaValues = allYearPeriodos.map(p => chartDataMap.get(p).meta_total); } const formattedLabels = allYearPeriodos.map(periodo => { const [year, month] = periodo.split('-'); const date = new Date(year, month - 1); const monthName = date.toLocaleString('pt-BR', { month: 'short' }).replace('.', ''); const shortYear = year.slice(2); return `${monthName}-${shortYear}`; }); if (vvrVsMetaPorMesChart) vvrVsMetaPorMesChart.destroy(); Chart.register(ChartDataLabels); vvrVsMetaPorMesChart = new Chart(document.getElementById('vvrVsMetaPorMesChart'), { type: 'bar', data: { labels: formattedLabels, datasets: [ { label: 'VVR Realizado', data: realizadoValues, backgroundColor: 'rgba(255, 193, 7, 0.7)', order: 1 }, { label: 'Meta VVR', data: metaValues, type: 'line', borderColor: 'rgb(220, 53, 69)', order: 0, datalabels: { display: true, align: 'bottom', backgroundColor: 'rgba(0, 0, 0, 0.6)', borderRadius: 4, color: 'white', font: { size: 15 }, padding: 4, formatter: (value) => (value > 0 ? `${(value / 1000).toFixed(0)}k` : '') } } ] }, options: { 
