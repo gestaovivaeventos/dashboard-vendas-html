@@ -338,41 +338,29 @@ async function fetchFundosData() {
     }
 }
 function updateOperacionaisKPIs(selectedUnidades, startDate, endDate) {
-    // 1. Calcula o Realizado de Leads (sem alterações aqui)
     const filteredLeads = funilData.filter(d => 
         (selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade)) &&
         d.criado_em >= startDate && d.criado_em < endDate
     );
     const realizadoLeads = filteredLeads.length;
 
-    // 2. Calcula a Meta de Leads
     let metaLeads = 0;
-    
-    // --- INÍCIO DA CORREÇÃO ---
-    // Pega as unidades da própria planilha de metas para garantir que nenhuma seja esquecida
-    const unitsFromMetas = [...metasData.keys()].map(key => key.split('-')[0]);
 
-    // Cria uma lista completa de TODAS as unidades de TODAS as fontes de dados
-    const allPossibleUnits = [...new Set([
-        ...allData.map(d => d.nm_unidade),
-        ...fundosData.map(d => d.nm_unidade),
-        ...funilData.map(d => d.nm_unidade),
-        ...unitsFromMetas // Adiciona as unidades da planilha de metas à lista
-    ])];
+    // --- LÓGICA DE NORMALIZAÇÃO APLICADA AQUI TAMBÉM ---
+    const normalizedSelectedUnidades = selectedUnidades.map(u => u.trim().toLowerCase());
     
-    // Usa a lista completa se nenhum filtro de unidade estiver ativo
-    const unitsToConsider = selectedUnidades.length > 0 ? selectedUnidades : allPossibleUnits;
-    // --- FIM DA CORREÇÃO ---
-
     metasData.forEach((metaInfo, key) => {
         const [unidade, ano, mes] = key.split('-');
+        const normalizedUnidade = unidade.trim().toLowerCase();
         const metaDate = new Date(ano, parseInt(mes) - 1, 1);
-        if (unitsToConsider.includes(unidade) && metaDate >= startDate && metaDate < endDate) {
+        
+        const unitsToConsider = selectedUnidades.length > 0 ? normalizedSelectedUnidades : [normalizedUnidade];
+
+        if (unitsToConsider.includes(normalizedUnidade) && metaDate >= startDate && metaDate < endDate) {
             metaLeads += metaInfo.meta_leads || 0;
         }
     });
 
-    // 3. Calcula o percentual e atualiza o HTML (sem alterações)
     const percentLeads = metaLeads > 0 ? realizadoLeads / metaLeads : 0;
     const leadsColor = getColorForPercentage(percentLeads); 
 
@@ -385,9 +373,117 @@ function updateOperacionaisKPIs(selectedUnidades, startDate, endDate) {
     document.getElementById('kpi-leads-progress').style.backgroundColor = leadsColor;
 }
         function processAndCrossReferenceData(salesData) { const vendasPorMesUnidade = salesData.reduce((acc, d) => { const year = d.dt_cadastro_integrante.getFullYear(); const month = String(d.dt_cadastro_integrante.getMonth() + 1).padStart(2, '0'); const periodo = `${year}-${month}`; const chave = `${d.nm_unidade}-${periodo}`; if (!acc[chave]) { acc[chave] = { unidade: d.nm_unidade, periodo: periodo, realizado_vvr: 0, realizado_adesoes: 0 }; } acc[chave].realizado_vvr += d.vl_plano; acc[chave].realizado_adesoes += 1; return acc; }, {}); return Object.values(vendasPorMesUnidade).map(item => { const chaveMeta = `${item.unidade}-${item.periodo}`; const meta = metasData.get(chaveMeta) || { meta_vvr_total: 0, meta_vvr_vendas: 0, meta_vvr_posvendas: 0, meta_adesoes: 0 }; return { ...item, ...meta }; }); }
-    function updateMainKPIs(dataBruta, selectedUnidades, startDate, endDate) { const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); const realizadoVendas = dataBruta.filter(d => normalizeText(d.venda_posvenda) === 'VENDA').reduce((sum, d) => sum + d.vl_plano, 0); const realizadoPosVendas = dataBruta.filter(d => normalizeText(d.venda_posvenda) === 'POS VENDA').reduce((sum, d) => sum + d.vl_plano, 0); const realizadoTotal = realizadoVendas + realizadoPosVendas; let metaVendas = 0; let metaPosVendas = 0; const unitsToConsider = selectedUnidades.length > 0 ? selectedUnidades : [...new Set(allData.map(d => d.nm_unidade))]; metasData.forEach((metaInfo, key) => { const [unidade, ano, mes] = key.split('-'); const metaDate = new Date(ano, parseInt(mes) - 1, 1); if (unitsToConsider.includes(unidade) && metaDate >= startDate && metaDate < endDate) { metaVendas += metaInfo.meta_vvr_vendas; metaPosVendas += metaInfo.meta_vvr_posvendas; } }); const metaTotal = metaVendas + metaPosVendas; const percentTotal = metaTotal > 0 ? realizadoTotal / metaTotal : 0; const percentVendas = metaVendas > 0 ? realizadoVendas / metaVendas : 0; const percentPosVendas = metaPosVendas > 0 ? realizadoPosVendas / metaPosVendas : 0; const totalColor = getColorForPercentage(percentTotal); document.getElementById('kpi-total-realizado').textContent = formatCurrency(realizadoTotal); document.getElementById('kpi-total-meta').textContent = formatCurrency(metaTotal); const totalPercentEl = document.getElementById('kpi-total-percent'); totalPercentEl.textContent = formatPercent(percentTotal); totalPercentEl.style.color = totalColor; document.getElementById('kpi-total-progress').style.backgroundColor = totalColor; document.getElementById('kpi-total-progress').style.width = `${Math.min(percentTotal * 100, 100)}%`; const vendasColor = getColorForPercentage(percentVendas); document.getElementById('kpi-vendas-realizado').textContent = formatCurrency(realizadoVendas); document.getElementById('kpi-vendas-meta').textContent = formatCurrency(metaVendas); const vendasPercentEl = document.getElementById('kpi-vendas-percent'); vendasPercentEl.textContent = formatPercent(percentVendas); vendasPercentEl.style.color = vendasColor; document.getElementById('kpi-vendas-progress').style.backgroundColor = vendasColor; document.getElementById('kpi-vendas-progress').style.width = `${Math.min(percentVendas * 100, 100)}%`; const posVendasColor = getColorForPercentage(percentPosVendas); document.getElementById('kpi-posvendas-realizado').textContent = formatCurrency(realizadoPosVendas); document.getElementById('kpi-posvendas-meta').textContent = formatCurrency(metaPosVendas); const posVendasPercentEl = document.getElementById('kpi-posvendas-percent'); posVendasPercentEl.textContent = formatPercent(percentPosVendas); posVendasPercentEl.style.color = posVendasColor; document.getElementById('kpi-posvendas-progress').style.backgroundColor = posVendasColor; document.getElementById('kpi-posvendas-progress').style.width = `${Math.min(percentPosVendas * 100, 100)}%`; }
-    function updatePreviousYearKPIs(dataBruta, selectedUnidades, startDate, endDate) { const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); const realizadoVendas = dataBruta.filter(d => normalizeText(d.venda_posvenda) === 'VENDA').reduce((sum, d) => sum + d.vl_plano, 0); const realizadoPosVendas = dataBruta.filter(d => normalizeText(d.venda_posvenda) === 'POS VENDA').reduce((sum, d) => sum + d.vl_plano, 0); const realizadoTotal = realizadoVendas + realizadoPosVendas; let metaVendas = 0; let metaPosVendas = 0; const unitsToConsider = selectedUnidades.length > 0 ? selectedUnidades : [...new Set(allData.map(d => d.nm_unidade))]; metasData.forEach((metaInfo, key) => { const [unidade, ano, mes] = key.split('-'); const metaDate = new Date(ano, parseInt(mes) - 1, 1); if (unitsToConsider.includes(unidade) && metaDate >= startDate && metaDate < endDate) { metaVendas += metaInfo.meta_vvr_vendas; metaPosVendas += metaInfo.meta_vvr_posvendas; } }); const metaTotal = metaVendas + metaPosVendas; const percentTotal = metaTotal > 0 ? realizadoTotal / metaTotal : 0; const percentVendas = metaVendas > 0 ? realizadoVendas / metaVendas : 0; const percentPosVendas = metaPosVendas > 0 ? realizadoPosVendas / metaPosVendas : 0; const totalColor = getColorForPercentage(percentTotal); document.getElementById('kpi-total-realizado-py').textContent = formatCurrency(realizadoTotal); document.getElementById('kpi-total-meta-py').textContent = formatCurrency(metaTotal); const totalPercentEl = document.getElementById('kpi-total-percent-py'); totalPercentEl.textContent = formatPercent(percentTotal); totalPercentEl.style.color = totalColor; document.getElementById('kpi-total-progress-py').style.backgroundColor = totalColor; document.getElementById('kpi-total-progress-py').style.width = `${Math.min(percentTotal * 100, 100)}%`; const vendasColor = getColorForPercentage(percentVendas); document.getElementById('kpi-vendas-realizado-py').textContent = formatCurrency(realizadoVendas); document.getElementById('kpi-vendas-meta-py').textContent = formatCurrency(metaVendas); const vendasPercentEl = document.getElementById('kpi-vendas-percent-py'); vendasPercentEl.textContent = formatPercent(percentVendas); vendasPercentEl.style.color = vendasColor; document.getElementById('kpi-vendas-progress-py').style.backgroundColor = vendasColor; document.getElementById('kpi-vendas-progress-py').style.width = `${Math.min(percentVendas * 100, 100)}%`; const posVendasColor = getColorForPercentage(percentPosVendas); document.getElementById('kpi-posvendas-realizado-py').textContent = formatCurrency(realizadoPosVendas); document.getElementById('kpi-posvendas-meta-py').textContent = formatCurrency(metaPosVendas); const posVendasPercentEl = document.getElementById('kpi-posvendas-percent-py'); posVendasPercentEl.textContent = formatPercent(percentPosVendas); posVendasPercentEl.style.color = posVendasColor; document.getElementById('kpi-posvendas-progress-py').style.backgroundColor = posVendasColor; document.getElementById('kpi-posvendas-progress-py').style.width = `${Math.min(percentPosVendas * 100, 100)}%`; }
+    function updateMainKPIs(dataBruta, selectedUnidades, startDate, endDate) {
+    const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const realizadoVendas = dataBruta.filter(d => normalizeText(d.venda_posvenda) === 'VENDA').reduce((sum, d) => sum + d.vl_plano, 0);
+    const realizadoPosVendas = dataBruta.filter(d => normalizeText(d.venda_posvenda) === 'POS VENDA').reduce((sum, d) => sum + d.vl_plano, 0);
+    const realizadoTotal = realizadoVendas + realizadoPosVendas;
 
+    let metaVendas = 0;
+    let metaPosVendas = 0;
+    
+    // --- INÍCIO DA CORREÇÃO DE NORMALIZAÇÃO ---
+    const normalizedSelectedUnidades = selectedUnidades.map(u => u.trim().toLowerCase());
+    
+    metasData.forEach((metaInfo, key) => {
+        const [unidade, ano, mes] = key.split('-');
+        const normalizedUnidade = unidade.trim().toLowerCase();
+        const metaDate = new Date(ano, parseInt(mes) - 1, 1);
+
+        const unitsToConsider = selectedUnidades.length > 0 ? normalizedSelectedUnidades : [normalizedUnidade]; // Usa a lista normalizada ou compara consigo mesmo
+
+        if (unitsToConsider.includes(normalizedUnidade) && metaDate >= startDate && metaDate < endDate) {
+            metaVendas += metaInfo.meta_vvr_vendas;
+            metaPosVendas += metaInfo.meta_vvr_posvendas;
+        }
+    });
+    // --- FIM DA CORREÇÃO ---
+
+    const metaTotal = metaVendas + metaPosVendas;
+    // ... O resto da função continua igual
+    const percentTotal = metaTotal > 0 ? realizadoTotal / metaTotal : 0;
+    const percentVendas = metaVendas > 0 ? realizadoVendas / metaVendas : 0;
+    const percentPosVendas = metaPosVendas > 0 ? realizadoPosVendas / metaPosVendas : 0;
+    const totalColor = getColorForPercentage(percentTotal);
+    document.getElementById('kpi-total-realizado').textContent = formatCurrency(realizadoTotal);
+    document.getElementById('kpi-total-meta').textContent = formatCurrency(metaTotal);
+    const totalPercentEl = document.getElementById('kpi-total-percent');
+    totalPercentEl.textContent = formatPercent(percentTotal);
+    totalPercentEl.style.color = totalColor;
+    document.getElementById('kpi-total-progress').style.backgroundColor = totalColor;
+    document.getElementById('kpi-total-progress').style.width = `${Math.min(percentTotal * 100, 100)}%`;
+    const vendasColor = getColorForPercentage(percentVendas);
+    document.getElementById('kpi-vendas-realizado').textContent = formatCurrency(realizadoVendas);
+    document.getElementById('kpi-vendas-meta').textContent = formatCurrency(metaVendas);
+    const vendasPercentEl = document.getElementById('kpi-vendas-percent');
+    vendasPercentEl.textContent = formatPercent(percentVendas);
+    vendasPercentEl.style.color = vendasColor;
+    document.getElementById('kpi-vendas-progress').style.backgroundColor = vendasColor;
+    document.getElementById('kpi-vendas-progress').style.width = `${Math.min(percentVendas * 100, 100)}%`;
+    const posVendasColor = getColorForPercentage(percentPosVendas);
+    document.getElementById('kpi-posvendas-realizado').textContent = formatCurrency(realizadoPosVendas);
+    document.getElementById('kpi-posvendas-meta').textContent = formatCurrency(metaPosVendas);
+    const posVendasPercentEl = document.getElementById('kpi-posvendas-percent');
+    posVendasPercentEl.textContent = formatPercent(percentPosVendas);
+    posVendasPercentEl.style.color = posVendasColor;
+    document.getElementById('kpi-posvendas-progress').style.backgroundColor = posVendasColor;
+    document.getElementById('kpi-posvendas-progress').style.width = `${Math.min(percentPosVendas * 100, 100)}%`;
+}
+   function updatePreviousYearKPIs(dataBruta, selectedUnidades, startDate, endDate) {
+    const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const realizadoVendas = dataBruta.filter(d => normalizeText(d.venda_posvenda) === 'VENDA').reduce((sum, d) => sum + d.vl_plano, 0);
+    const realizadoPosVendas = dataBruta.filter(d => normalizeText(d.venda_posvenda) === 'POS VENDA').reduce((sum, d) => sum + d.vl_plano, 0);
+    const realizadoTotal = realizadoVendas + realizadoPosVendas;
+
+    let metaVendas = 0;
+    let metaPosVendas = 0;
+
+    // --- LÓGICA DE NORMALIZAÇÃO APLICADA AQUI TAMBÉM ---
+    const normalizedSelectedUnidades = selectedUnidades.map(u => u.trim().toLowerCase());
+
+    metasData.forEach((metaInfo, key) => {
+        const [unidade, ano, mes] = key.split('-');
+        const normalizedUnidade = unidade.trim().toLowerCase();
+        const metaDate = new Date(ano, parseInt(mes) - 1, 1);
+        
+        const unitsToConsider = selectedUnidades.length > 0 ? normalizedSelectedUnidades : [normalizedUnidade];
+
+        if (unitsToConsider.includes(normalizedUnidade) && metaDate >= startDate && metaDate < endDate) {
+            metaVendas += metaInfo.meta_vvr_vendas;
+            metaPosVendas += metaInfo.meta_vvr_posvendas;
+        }
+    });
+    
+    const metaTotal = metaVendas + metaPosVendas;
+    // ... O resto da função continua igual
+    const percentTotal = metaTotal > 0 ? realizadoTotal / metaTotal : 0;
+    const percentVendas = metaVendas > 0 ? realizadoVendas / metaVendas : 0;
+    const percentPosVendas = metaPosVendas > 0 ? realizadoPosVendas / metaPosVendas : 0;
+    const totalColor = getColorForPercentage(percentTotal);
+    document.getElementById('kpi-total-realizado-py').textContent = formatCurrency(realizadoTotal);
+    document.getElementById('kpi-total-meta-py').textContent = formatCurrency(metaTotal);
+    const totalPercentEl = document.getElementById('kpi-total-percent-py');
+    totalPercentEl.textContent = formatPercent(percentTotal);
+    totalPercentEl.style.color = totalColor;
+    document.getElementById('kpi-total-progress-py').style.backgroundColor = totalColor;
+    document.getElementById('kpi-total-progress-py').style.width = `${Math.min(percentTotal * 100, 100)}%`;
+    const vendasColor = getColorForPercentage(percentVendas);
+    document.getElementById('kpi-vendas-realizado-py').textContent = formatCurrency(realizadoVendas);
+    document.getElementById('kpi-vendas-meta-py').textContent = formatCurrency(metaVendas);
+    const vendasPercentEl = document.getElementById('kpi-vendas-percent-py');
+    vendasPercentEl.textContent = formatPercent(percentVendas);
+    vendasPercentEl.style.color = vendasColor;
+    document.getElementById('kpi-vendas-progress-py').style.backgroundColor = vendasColor;
+    document.getElementById('kpi-vendas-progress-py').style.width = `${Math.min(percentVendas * 100, 100)}%`;
+    const posVendasColor = getColorForPercentage(percentPosVendas);
+    document.getElementById('kpi-posvendas-realizado-py').textContent = formatCurrency(realizadoPosVendas);
+    document.getElementById('kpi-posvendas-meta-py').textContent = formatCurrency(metaPosVendas);
+    const posVendasPercentEl = document.getElementById('kpi-posvendas-percent-py');
+    posVendasPercentEl.textContent = formatPercent(percentPosVendas);
+    posVendasPercentEl.style.color = posVendasColor;
+    document.getElementById('kpi-posvendas-progress-py').style.backgroundColor = posVendasColor;
+    document.getElementById('kpi-posvendas-progress-py').style.width = `${Math.min(percentPosVendas * 100, 100)}%`;
+}
     function updateDashboard() {
     // --- ETAPA 1: PREPARAR TODAS AS VARIÁVEIS DE DADOS ---
     
@@ -934,12 +1030,16 @@ function addEventListeners() {
     });
 }
     
- function populateFilters() {
-    // Adiciona as unidades do funil à lista de unidades
-    const unidadesVendas = allData.map(d => d.nm_unidade);
-    const unidadesFundos = fundosData.map(d => d.nm_unidade);
-    const unidadesFunil = funilData.map(d => d.nm_unidade); // <-- NOVO
-    const unidades = [...new Set([...unidadesVendas, ...unidadesFundos, ...unidadesFunil])].sort(); // <-- NOVO
+function populateFilters() {
+    // Pega as unidades de TODAS as fontes de dados para criar uma lista completa
+    const unidadesVendas = allData.map(d => d.nm_unidade.trim());
+    const unidadesFundos = fundosData.map(d => d.nm_unidade.trim());
+    const unidadesFunil = funilData.map(d => d.nm_unidade.trim());
+    const unidadesMetas = [...metasData.keys()].map(key => key.split('-')[0].trim());
+
+    const unidades = [...new Set([...unidadesVendas, ...unidadesFundos, ...unidadesFunil, ...unidadesMetas])]
+        .filter(Boolean) // Remove qualquer entrada vazia
+        .sort();
 
     const unidadeFilter = $('#unidade-filter');
     unidadeFilter.empty();
