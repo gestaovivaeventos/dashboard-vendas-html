@@ -98,7 +98,7 @@ const formatPercent = (value) =>
 document.addEventListener("DOMContentLoaded", () => {
     // Tenta fazer o login automático pela URL primeiro
     const urlParams = new URLSearchParams(window.location.search);
-    const codeFromUrl = urlParams.get('codigo'); // Pega o código da URL
+    const codeFromUrl = urlParams.get('pk'); // Pega o código da URL
 
     if (codeFromUrl && accessCodes[codeFromUrl]) {
         // Se encontrou um código na URL e ele é válido...
