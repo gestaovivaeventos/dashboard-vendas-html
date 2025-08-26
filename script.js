@@ -9,7 +9,7 @@ Chart.defaults.color = "#FFFFFF";
 // MAPEAMENTO DE CÓDIGOS DE ACESSO
 const accessCodes = {
     // Código Mestre para acesso total (Franqueadora)
-    "614771": "ALL_UNITS", // CSC SDR VIVA Brasil
+    "383838": "ALL_UNITS", // CSC SDR VIVA Brasil
 
     // Códigos das Unidades (Franquias)
     "527931": "Barbacena",
