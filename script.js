@@ -11,9 +11,9 @@ Chart.defaults.color = "#FFFFFF";
 // O nome da unidade aqui DEVE ser IDÊNTICO ao nome na coluna 'nm_unidade' da sua planilha.
 const accessCodes = {
     "VIVA_ADMIN": "ALL_UNITS", // Código mestre para a franqueadora
-    "UNIDADE_A_2025": "VIVA JUIZ DE FORA",
-    "UNIDADE_B_2025": "VIVA VOLTA REDONDA",
-    "UNIDADE_C_2025": "VIVA BARBACENA"
+    "UNIDADE_A_2025": "Juiz de Fora",
+    "UNIDADE_B_2025": "Barbacena",
+    "UNIDADE_C_2025": "Volta Redonda"
     // Adicione mais códigos e unidades aqui
 };
 
