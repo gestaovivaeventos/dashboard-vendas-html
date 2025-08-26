@@ -9,12 +9,55 @@ Chart.defaults.color = "#FFFFFF";
 // --- NOVO: MAPEAMENTO DE CÓDIGOS DE ACESSO ---
 // IMPORTANTE: Substitua os códigos e nomes das unidades pelos valores reais.
 // O nome da unidade aqui DEVE ser IDÊNTICO ao nome na coluna 'nm_unidade' da sua planilha.
+// --- NOVO: MAPEAMENTO DE CÓDIGOS DE ACESSO ---
+// Códigos de acesso baseados na planilha de unidades.
 const accessCodes = {
-    "VIVA_ADMIN": "ALL_UNITS", // Código mestre para a franqueadora
-    "UNIDADE_A_2025": "Juiz de Fora",
-    "UNIDADE_B_2025": "Barbacena",
-    "UNIDADE_C_2025": "Volta Redonda"
-    // Adicione mais códigos e unidades aqui
+    // Código Mestre para acesso total (Franqueadora)
+    "383838": "ALL_UNITS", // CSC SDR VIVA Brasil
+
+    // Códigos das Unidades (Franquias)
+    "527931": "Barbacena",
+    "960812": "Belo Horizonte",
+    "533169": "Campo Grande",
+    "350959": "Contagem", // Assumindo este código para Contagem, conforme a imagem
+    "169575": "Cuiaba",
+    "540514": "Curitiba",
+    "191458": "Divinopolis",
+    "484413": "Governador Valadares",
+    "243004": "Ipatinga",
+    "226612": "Itaperuna Muriae",
+    "747083": "Juiz de Fora",
+    "432369": "Lavras",
+    "609492": "Linhares",
+    "984878": "Palmas",
+    "745856": "Petropolis",
+    "309207": "Pocos de Caldas",
+    "693809": "Porto Alegre",
+    "602213": "Porto Velho",
+    "547924": "Pouso Alegre",
+    "278055": "Recife",
+    "647174": "Rio Branco",
+    "319686": "Rio de Janeiro",
+    "304404": "Sao Paulo",
+    "659949": "Uba",
+    "947478": "Uberaba",
+    "680264": "Vitoria",
+    "219319": "Viva GO",
+    "584569": "Volta Redonda",
+    "243357": "Montes Claros",
+    "719197": "Sete Lagoas",
+    "580065": "Cacoal",
+    "440077": "Manaus",
+    "543547": "Salvador",
+    "424938": "Londrina",
+    "400629": "Cascavel"
+"391887": "João Pessoa"
+"792154": "Vitória da Conquista"
+"877447": "Passos"
+"456998": "Florianópolis"
+"911356": "Itabuna"
+"719501": "Maceió"
+"176583": "Fortaleza"
 };
 
 let userAccessLevel = null; // Variável para controlar qual unidade o usuário pode ver
