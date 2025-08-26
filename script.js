@@ -94,38 +94,54 @@ const formatPercent = (value) =>
     minimumFractionDigits: 1,
   }).format(value || 0);
 
+// --- BLOCO DE INICIALIZAÇÃO ATUALIZADO ---
 document.addEventListener("DOMContentLoaded", () => {
-    const loginOverlay = document.getElementById("login-overlay");
-    const dashboardWrapper = document.querySelector(".dashboard-wrapper");
-    const accessCodeInput = document.getElementById("access-code-input");
-    const accessCodeButton = document.getElementById("access-code-button");
-    const errorMessage = document.getElementById("login-error-message");
+    // Tenta fazer o login automático pela URL primeiro
+    const urlParams = new URLSearchParams(window.location.search);
+    const codeFromUrl = urlParams.get('codigo'); // Pega o código da URL
 
-    accessCodeInput.focus();
+    if (codeFromUrl && accessCodes[codeFromUrl]) {
+        // Se encontrou um código na URL e ele é válido...
+        userAccessLevel = accessCodes[codeFromUrl];
+        document.querySelector(".dashboard-wrapper").style.display = "flex";
+        document.getElementById("login-overlay").style.display = "none";
+        initializeDashboard(); // Pula direto para o dashboard
+    } else {
+        // Se NÃO encontrou um código válido na URL, mostra a tela de login normal
+        const loginOverlay = document.getElementById("login-overlay");
+        const dashboardWrapper = document.querySelector(".dashboard-wrapper");
+        const accessCodeInput = document.getElementById("access-code-input");
+        const accessCodeButton = document.getElementById("access-code-button");
+        const errorMessage = document.getElementById("login-error-message");
 
-    const attemptLogin = () => {
-        const code = accessCodeInput.value.trim();
-        const unit = accessCodes[code];
+        loginOverlay.style.display = "flex"; // Garante que o overlay apareça
+        accessCodeInput.focus();
 
-        if (unit) {
-            userAccessLevel = unit;
-            loginOverlay.style.display = "none";
-            dashboardWrapper.style.display = "flex";
-            initializeDashboard();
-        } else {
-            errorMessage.textContent = "Código de acesso inválido.";
-            accessCodeInput.value = "";
-            accessCodeInput.focus();
-        }
-    };
+        const attemptLogin = () => {
+            const code = accessCodeInput.value.trim();
+            const unit = accessCodes[code];
 
-    accessCodeButton.addEventListener("click", attemptLogin);
-    accessCodeInput.addEventListener("keyup", (event) => {
-        if (event.key === "Enter") {
-            attemptLogin();
-        }
-    });
+            if (unit) {
+                userAccessLevel = unit;
+                loginOverlay.style.display = "none";
+                dashboardWrapper.style.display = "flex";
+                initializeDashboard();
+            } else {
+                errorMessage.textContent = "Código de acesso inválido.";
+                accessCodeInput.value = "";
+                accessCodeInput.focus();
+            }
+        };
+
+        accessCodeButton.addEventListener("click", attemptLogin);
+        accessCodeInput.addEventListener("keyup", (event) => {
+            if (event.key === "Enter") {
+                attemptLogin();
+            }
+        });
+    }
 });
+// --- FIM DO BLOCO DE INICIALIZAÇÃO ATUALIZADO ---
 
 async function initializeDashboard() {
     displayLastUpdateMessage();
@@ -169,6 +185,9 @@ async function initializeDashboard() {
         loader.innerHTML = `Erro ao carregar dados. Verifique o console (F12).`;
     }
 }
+
+// ... O RESTANTE DO CÓDIGO PERMANECE EXATAMENTE IGUAL ...
+// (Colei todo o resto abaixo para garantir)
 
 document.getElementById("sidebar-toggle").addEventListener("click", function () {
     document.getElementById("sidebar").classList.toggle("collapsed");
@@ -414,7 +433,6 @@ function updateMainKPIs(dataBruta, selectedUnidades, startDate, endDate) {
     const percentVendas = metaVendas > 0 ? realizadoVendas / metaVendas : 0;
     const percentPosVendas = metaPosVendas > 0 ? realizadoPosVendas / metaPosVendas : 0;
 
-    // Update Total KPI
     const totalColor = getColorForPercentage(percentTotal);
     document.getElementById("kpi-total-realizado").textContent = formatCurrency(realizadoTotal);
     document.getElementById("kpi-total-meta").textContent = formatCurrency(metaTotal);
@@ -424,7 +442,6 @@ function updateMainKPIs(dataBruta, selectedUnidades, startDate, endDate) {
     document.getElementById("kpi-total-progress").style.backgroundColor = totalColor;
     document.getElementById("kpi-total-progress").style.width = `${Math.min(percentTotal * 100, 100)}%`;
 
-    // Update Vendas KPI
     const vendasColor = getColorForPercentage(percentVendas);
     document.getElementById("kpi-vendas-realizado").textContent = formatCurrency(realizadoVendas);
     document.getElementById("kpi-vendas-meta").textContent = formatCurrency(metaVendas);
@@ -434,7 +451,6 @@ function updateMainKPIs(dataBruta, selectedUnidades, startDate, endDate) {
     document.getElementById("kpi-vendas-progress").style.backgroundColor = vendasColor;
     document.getElementById("kpi-vendas-progress").style.width = `${Math.min(percentVendas * 100, 100)}%`;
 
-    // Update Pós Vendas KPI
     const posVendasColor = getColorForPercentage(percentPosVendas);
     document.getElementById("kpi-posvendas-realizado").textContent = formatCurrency(realizadoPosVendas);
     document.getElementById("kpi-posvendas-meta").textContent = formatCurrency(metaPosVendas);
@@ -475,7 +491,6 @@ function updatePreviousYearKPIs(dataBruta, selectedUnidades, startDate, endDate)
     const percentVendas = metaVendas > 0 ? realizadoVendas / metaVendas : 0;
     const percentPosVendas = metaPosVendas > 0 ? realizadoPosVendas / metaPosVendas : 0;
 
-    // Update Total PY KPI
     const totalColor = getColorForPercentage(percentTotal);
     document.getElementById("kpi-total-realizado-py").textContent = formatCurrency(realizadoTotal);
     document.getElementById("kpi-total-meta-py").textContent = formatCurrency(metaTotal);
@@ -485,7 +500,6 @@ function updatePreviousYearKPIs(dataBruta, selectedUnidades, startDate, endDate)
     document.getElementById("kpi-total-progress-py").style.backgroundColor = totalColor;
     document.getElementById("kpi-total-progress-py").style.width = `${Math.min(percentTotal * 100, 100)}%`;
 
-    // Update Vendas PY KPI
     const vendasColor = getColorForPercentage(percentVendas);
     document.getElementById("kpi-vendas-realizado-py").textContent = formatCurrency(realizadoVendas);
     document.getElementById("kpi-vendas-meta-py").textContent = formatCurrency(metaVendas);
@@ -495,7 +509,6 @@ function updatePreviousYearKPIs(dataBruta, selectedUnidades, startDate, endDate)
     document.getElementById("kpi-vendas-progress-py").style.backgroundColor = vendasColor;
     document.getElementById("kpi-vendas-progress-py").style.width = `${Math.min(percentVendas * 100, 100)}%`;
 
-    // Update Pós Vendas PY KPI
     const posVendasColor = getColorForPercentage(percentPosVendas);
     document.getElementById("kpi-posvendas-realizado-py").textContent = formatCurrency(realizadoPosVendas);
     document.getElementById("kpi-posvendas-meta-py").textContent = formatCurrency(metaPosVendas);
