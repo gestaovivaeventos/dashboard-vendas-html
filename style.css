@@ -1,4 +1,4 @@
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #212529; color: #F8F9FA; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #212529; color: #F8F9FA; margin: 0; padding: 0; }
         .dashboard-wrapper { display: flex; }
         #sidebar { width: 350px; height: 100vh; background-color: #343A40; padding: 20px; position: fixed; top: 0; left: 0; overflow-y: auto; transition: transform 0.3s ease-in-out; z-index: 1000; }
         #sidebar.collapsed { transform: translateX(-100%); }
@@ -12,7 +12,7 @@
     background-image: linear-gradient(to bottom, #6c757d, #495057);
     color: #F8F9FA;
     border: 1px solid #343a40;
-    border-bottom: 3px solid #343a40; /* Borda inferior para efeito 3D */
+    border-bottom: 3px solid #343a40;
     padding: 10px 20px;
     cursor: pointer;
     transition: all 0.1s ease-in-out;
@@ -25,7 +25,7 @@
 .page-navigation button:hover {
     background-image: linear-gradient(to bottom, #8a9198, #5a6268);
 }
-.page-navigation button:active { /* Efeito de pressionar */
+.page-navigation button:active {
     transform: translateY(2px);
     border-bottom-width: 1px;
     box-shadow: 0 2px 3px rgba(0, 0, 0, 0.2);
@@ -110,7 +110,7 @@
 .chart-selector button:hover {
     background-image: linear-gradient(to bottom, #8a9198, #5a6268);
 }
-.chart-selector button:active { /* Efeito de pressionar */
+.chart-selector button:active {
     transform: translateY(2px);
     border-bottom-width: 1px;
     box-shadow: 0 2px 3px rgba(0, 0, 0, 0.2);
@@ -125,14 +125,14 @@
 
         .chart-row {
             display: grid;
-            grid-template-columns: repeat(2, 1fr); /* Proporção 50% / 50% */
+            grid-template-columns: repeat(2, 1fr);
             gap: 20px;
             grid-column: span 12;
         }
 
         .chart-row-adesoes {
             display: grid;
-            grid-template-columns: 1fr 2fr; /* Proporção 1/3 e 2/3 */
+            grid-template-columns: 1fr 2fr;
             gap: 20px;
             grid-column: span 12;
         }
@@ -150,76 +150,102 @@
 
         @media (max-width: 1200px) {
             .chart-row, .chart-row-adesoes {
-                grid-template-columns: 1fr; /* Em telas pequenas, ambos viram uma única coluna */
+                grid-template-columns: 1fr;
             }
         }
 .page-navigation hr {
     border: none;
     height: 1px;
-    background-color: #495057; /* Mesma cor das outras bordas do menu */
-    margin: 10px 0; /* Espaçamento vertical para a linha respirar */
+    background-color: #495057;
+    margin: 10px 0;
 }
-/* Ajuste no header para alinhar o título e a nova mensagem */
 .header > div {
     display: flex;
     flex-direction: column;
-    gap: 5px; /* Adiciona um pequeno espaço entre o título e a mensagem */
+    gap: 5px;
 }
 
-/* Estilo para a mensagem de última atualização */
 #last-update-message {
-    font-size: 0.85em; /* Tamanho um pouco menor que o texto normal */
-    color: #adb5bd;     /* Cor cinza claro para texto secundário */
+    font-size: 0.85em;
+    color: #adb5bd;   
     font-weight: 500;
 }
-/* --- ESTILOS DA TELA DE LOGIN --- */
-#login-container {
-    background-color: #343a40; /* Cor de fundo do bloco */
-    padding: 30px 40px;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-    text-align: center;
-    max-width: 400px;
-    width: 90%;
-    box-sizing: border-box; /* Garante que padding e border sejam incluídos na largura/altura */
-    margin-bottom: 20px; /* Para dar espaço ao logo que vamos adicionar abaixo */
+
+/* --- ESTILOS ATUALIZADOS DA TELA DE LOGIN --- */
+#login-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(33, 37, 41, 0.95);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    flex-direction: column;
+    background-image: url('capa_site.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
 }
 
-#login-container h1 {
-    color: #f8f9fa; /* Cor do texto "Digite o Código de Acesso" */
-    margin-bottom: 20px;
-    font-size: 1.5em;
-}
-
-#login-container input[type="password"] {
-    width: calc(100% - 20px); /* Ajusta a largura para considerar o padding */
-    padding: 10px;
-    margin-bottom: 15px;
+#login-box {
+    background-color: #343A40;
+    padding: 40px;
+    border-radius: 10px;
     border: 1px solid #495057;
-    border-radius: 4px;
+    text-align: center;
+    width: 100%;
+    max-width: 350px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+}
+
+#login-box h2 {
+    border-bottom: none;
+    margin-bottom: 25px;
+}
+
+#access-code-input {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 20px;
     background-color: #212529;
-    color: #f8f9fa;
-    font-size: 1em;
+    border: 1px solid #495057;
+    color: #F8F9FA;
+    border-radius: 6px;
+    text-align: center;
+    font-size: 1.2em;
+    box-sizing: border-box;
 }
 
-#login-container button {
-    background-color: #ffc107; /* Cor do botão "Liberar Acesso" */
-    color: #212529;
-    padding: 10px 20px;
+#access-code-button {
+    width: 100%;
+    padding: 12px;
     border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 1em;
+    border-radius: 6px;
+    background-color: #FFC107;
+    color: #212529;
     font-weight: bold;
+    cursor: pointer;
     transition: background-color 0.2s;
+    font-size: 1.1em;
 }
 
-#login-container button:hover {
-    background-color: #e0a800; /* Cor do botão ao passar o mouse */
+#access-code-button:hover {
+    background-color: #ffca2c;
 }
 
 #login-error-message {
+    margin-top: 15px;
     color: #dc3545;
-    margin-top: 10px;
-    font-size: 0.9em;
+    font-weight: bold;
+    height: 20px;
+}
+
+#login-logo {
+    max-width: 180px; /* Largura do logo */
+    height: auto;
+    margin-top: 40px; /* Espaço entre o box de login e o logo */
+    opacity: 0.8;
 }
