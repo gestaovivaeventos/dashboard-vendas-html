@@ -99,6 +99,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Tenta fazer o login automático pela URL primeiro
     const urlParams = new URLSearchParams(window.location.search);
     const codeFromUrl = urlParams.get('pk'); // Pega o código da URL
+    const accessCode = atob(encodedCode);
 
     if (codeFromUrl && accessCodes[codeFromUrl]) {
         // Se encontrou um código na URL e ele é válido...
