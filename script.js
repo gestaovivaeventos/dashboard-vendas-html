@@ -96,26 +96,36 @@ const formatPercent = (value) =>
 
 // --- BLOCO DE INICIALIZAÇÃO ATUALIZADO ---
 document.addEventListener("DOMContentLoaded", () => {
-    // Tenta fazer o login automático pela URL primeiro
     const urlParams = new URLSearchParams(window.location.search);
-    const codeFromUrl = urlParams.get('pk'); // Pega o código da URL
-    const accessCode = atob(encodedCode);
+    const encodedCodeFromUrl = urlParams.get('pk'); // Pega o código codificado (ex: MzgMzgMzg)
 
-    if (codeFromUrl && accessCodes[codeFromUrl]) {
-        // Se encontrou um código na URL e ele é válido...
-        userAccessLevel = accessCodes[codeFromUrl];
+    let decodedCode = null;
+    if (encodedCodeFromUrl) {
+        try {
+            // Tenta decodificar para o código original (ex: 383838)
+            decodedCode = atob(encodedCodeFromUrl);
+        } catch (e) {
+            console.error("Falha ao decodificar o código da URL:", e);
+            decodedCode = null; // Garante que o código seja nulo se a decodificação falhar
+        }
+    }
+
+    // Verifica se o código DECODIFICADO é válido
+    if (decodedCode && accessCodes[decodedCode]) {
+        // Se for válido, pula a tela de login e vai direto para o dashboard
+        userAccessLevel = accessCodes[decodedCode];
         document.querySelector(".dashboard-wrapper").style.display = "flex";
         document.getElementById("login-overlay").style.display = "none";
-        initializeDashboard(); // Pula direto para o dashboard
+        initializeDashboard();
     } else {
-        // Se NÃO encontrou um código válido na URL, mostra a tela de login normal
+        // Se NÃO houver código válido na URL, mostra a tela de login para digitação manual
         const loginOverlay = document.getElementById("login-overlay");
         const dashboardWrapper = document.querySelector(".dashboard-wrapper");
         const accessCodeInput = document.getElementById("access-code-input");
         const accessCodeButton = document.getElementById("access-code-button");
         const errorMessage = document.getElementById("login-error-message");
 
-        loginOverlay.style.display = "flex"; // Garante que o overlay apareça
+        loginOverlay.style.display = "flex";
         accessCodeInput.focus();
 
         const attemptLogin = () => {
