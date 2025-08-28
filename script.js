@@ -95,30 +95,37 @@ const formatPercent = (value) =>
   }).format(value || 0);
 
 // --- BLOCO DE INICIALIZAÇÃO ATUALIZADO ---
+// --- BLOCO DE INICIALIZAÇÃO CORRIGIDO ---
 document.addEventListener("DOMContentLoaded", () => {
     const urlParams = new URLSearchParams(window.location.search);
-    const encodedCodeFromUrl = urlParams.get('pk'); // Pega o código codificado (ex: MzgMzgMzg)
+    const encodedCodeFromUrl = urlParams.get('pk'); 
 
     let decodedCode = null;
     if (encodedCodeFromUrl) {
         try {
-            // Tenta decodificar para o código original (ex: 383838)
             decodedCode = atob(encodedCodeFromUrl);
         } catch (e) {
             console.error("Falha ao decodificar o código da URL:", e);
-            decodedCode = null; // Garante que o código seja nulo se a decodificação falhar
+            decodedCode = null;
         }
     }
 
-    // Verifica se o código DECODIFICADO é válido
     if (decodedCode && accessCodes[decodedCode]) {
-        // Se for válido, pula a tela de login e vai direto para o dashboard
         userAccessLevel = accessCodes[decodedCode];
+
+        // --- LÓGICA ADICIONADA AQUI ---
+        // Pega o link de retorno para a Central
+        const returnLink = document.getElementById('return-to-hub-link');
+        if (returnLink) {
+            // Adiciona o código embaralhado de volta na URL de retorno
+            returnLink.href = `${returnLink.href}?pk=${encodedCodeFromUrl}`;
+        }
+        // --- FIM DA LÓGICA ADICIONADA ---
+
         document.querySelector(".dashboard-wrapper").style.display = "flex";
         document.getElementById("login-overlay").style.display = "none";
         initializeDashboard();
     } else {
-        // Se NÃO houver código válido na URL, mostra a tela de login para digitação manual
         const loginOverlay = document.getElementById("login-overlay");
         const dashboardWrapper = document.querySelector(".dashboard-wrapper");
         const accessCodeInput = document.getElementById("access-code-input");
