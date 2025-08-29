@@ -42,7 +42,13 @@
                 <button id="btn-page1" class="active" data-page="page1">Metas e Resultados</button>
                 <button id="btn-page2" data-page="page2">Indicadores Secundários</button>
             </div>
-            <section id="loader" class="filters"><div class="loader">Carregando informações...</div></section>
+            <section id="loader" class="filters">
+    <div class="loader-container">
+        <div class="loader-animation" id="loader-animation">
+            </div>
+        <div class="loader-text">Carregando dados...</div>
+    </div>
+</section>
             <section class="filters" id="filters-section" style="display: none;">
                 <div class="filter-item filter-item-unidades"><label for="unidade-filter">Filtrar por Unidade(s)</label><select id="unidade-filter" multiple="multiple"></select></div>
                 <div class="filter-item"><label for="start-date">Data de Início</label><input type="date" id="start-date"></div>
