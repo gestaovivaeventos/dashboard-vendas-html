@@ -34,7 +34,9 @@
     </div>
 
     <div class="dashboard-wrapper" style="display: none;">
+        <!-- Botão do menu lateral corrigido -->
         <button id="sidebar-toggle"><span class="arrow-icon"></span></button>
+        
         <div id="sidebar">
             <div class="page-navigation">
                 <a href="https://central-dashs-viva-html.vercel.app/" class="page-navigation-button" id="return-to-hub-link"><button>Central de Dashboards VIVA Eventos</button></a>
@@ -42,15 +44,15 @@
                 <button id="btn-page1" class="active" data-page="page1">Metas e Resultados</button>
                 <button id="btn-page2" data-page="page2">Indicadores Secundários</button>
             </div>
-   <section id="loader" class="filters">
-    <div class="loader-container">
-        <div class="css-loader">
-            <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
-        </div>
-        <div class="loader-text">Carregando dados...</div>
-    </div>
-</section>
 
+            <section id="loader" class="filters">
+                <div class="loader-container">
+                    <div class="css-loader">
+                        <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
+                    </div>
+                    <div class="loader-text">Carregando dados...</div>
+                </div>
+            </section>
 
             <section class="filters" id="filters-section" style="display: none;">
                 <div class="filter-item filter-item-unidades"><label for="unidade-filter">Filtrar por Unidade(s)</label><select id="unidade-filter" multiple="multiple"></select></div>
@@ -252,24 +254,24 @@
                             <tbody></tbody>
                         </table>
                     </section>
-<section class="table-container" id="fundos-detalhados-table-section" style="display: none;">
-    <h2>Fundos Detalhados no Período</h2>
-    <table id="fundos-detalhados-table" class="display" style="width:100%">
-        <thead>
-            <tr>
-                <th>Unidade</th>
-                <th>ID Fundo</th>
-                <th>Fundo</th>
-                <th>DT Contrato</th>
-                <th>DT Cadastro</th>
-                <th>Tipo de Serviço</th>
-                <th>Instituição</th>
-                <th>DT Baile</th>
-            </tr>
-        </thead>
-        <tbody></tbody>
-    </table>
-</section>
+                    <section class="table-container" id="fundos-detalhados-table-section" style="display: none;">
+                        <h2>Fundos Detalhados no Período</h2>
+                        <table id="fundos-detalhados-table" class="display" style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th>Unidade</th>
+                                    <th>ID Fundo</th>
+                                    <th>Fundo</th>
+                                    <th>DT Contrato</th>
+                                    <th>DT Cadastro</th>
+                                    <th>Tipo de Serviço</th>
+                                    <th>Instituição</th>
+                                    <th>DT Baile</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </section>
                 </div>
             </div>
         </div>

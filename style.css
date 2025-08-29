@@ -330,7 +330,30 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 }
 .loader-text { font-size: 1.5em; font-weight: 500; color: #FFC107; text-shadow: 0 0 5px rgba(255, 193, 7, 0.5); }
 
+/* --- ESTILOS CORRIGIDOS PARA O BOTÃO DO MENU E SETA --- */
+
+/* Garante que o ícone da seta fique perfeitamente centralizado no botão */
+#sidebar-toggle {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.arrow-icon {
+    display: inline-block;
+    padding: 3px;
+    border: solid #212529; /* Cor da seta (escura, para contrastar com o botão amarelo) */
+    border-width: 0 3px 3px 0; /* Desenha a forma de "L" da seta */
+    width: 8px;
+    height: 8px;
+    transition: transform 0.3s ease-in-out;
+
+    /* Posição inicial (menu aberto): Aponta para a Esquerda */
+    transform: rotate(135deg);
+}
+
+/* Regra para quando o menu está fechado (o botão tem a classe .collapsed) */
 #sidebar-toggle.collapsed .arrow-icon {
-    /* Posição quando o menu está fechado: Seta para a Direita (para abrir) */
+    /* Gira a seta para apontar para a Direita */
     transform: rotate(-45deg);
 }
