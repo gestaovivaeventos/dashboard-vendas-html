@@ -97,27 +97,28 @@ const formatPercent = (value) =>
 // --- BLOCO DE INICIALIZAÇÃO ATUALIZADO ---
 // --- BLOCO DE INICIALIZAÇÃO CORRIGIDO ---
 document.addEventListener("DOMContentLoaded", () => {
-    const loaderAnimation = document.getElementById('loader-animation');
-    if (loaderAnimation) {
-        const columns = 5; // Defina quantas colunas de números você quer
-        const digits = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+    // --- CÓDIGO NOVO PARA CRIAR A ANIMAÇÃO ---
+const loaderAnimation = document.getElementById('loader-animation');
+if (loaderAnimation) {
+    const columns = 5; 
+    const digits = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
 
-        for (let i = 0; i < columns; i++) {
-            const column = document.createElement('div');
-            column.className = 'digit-column';
+    for (let i = 0; i < columns; i++) {
+        const column = document.createElement('div');
+        column.className = 'digit-column';
 
-            // Embaralha os dígitos para cada coluna ter uma ordem diferente
-            const shuffledDigits = [...digits].sort(() => Math.random() - 0.5);
-            shuffledDigits.push(shuffledDigits[0]); // Adiciona o primeiro no final para um loop suave
+        const shuffledDigits = [...digits].sort(() => Math.random() - 0.5);
+        shuffledDigits.push(shuffledDigits[0]);
 
-            shuffledDigits.forEach(d => {
-                const digitSpan = document.createElement('span');
-                digitSpan.textContent = d;
-                column.appendChild(digitSpan);
-            });
-            loaderAnimation.appendChild(column);
-        }
+        shuffledDigits.forEach(d => {
+            const digitSpan = document.createElement('span');
+            digitSpan.textContent = d;
+            column.appendChild(digitSpan);
+        });
+        loaderAnimation.appendChild(column);
     }
+}
+// --- FIM DO CÓDIGO NOVO ---
     // --- FIM DO CÓDIGO NOVO ---
     const urlParams = new URLSearchParams(window.location.search);
     const encodedCodeFromUrl = urlParams.get('pk'); 
