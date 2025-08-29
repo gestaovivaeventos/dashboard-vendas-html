@@ -4,7 +4,24 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
         #sidebar.collapsed { transform: translateX(-100%); }
         #main-content { flex-grow: 1; padding: 20px; margin-left: 350px; transition: margin-left 0.3s ease-in-out; }
         #main-content.full-width { margin-left: 0; }
-        #sidebar-toggle { position: fixed; top: 20px; left: 360px; z-index: 1001; background-color: #FFC107; color: #212529; border: none; border-radius: 0 5px 5px 0; width: 30px; height: 40px; cursor: pointer; font-size: 20px; line-height: 40px; text-align: center; transition: left 0.3s ease-in-out; }
+        #sidebar-toggle {
+    position: fixed;
+    top: 20px;
+    left: 360px;
+    z-index: 1001;
+    background-color: #FFC107;
+    color: #212529;
+    border: none;
+    border-radius: 0 5px 5px 0;
+    width: 30px;
+    height: 40px;
+    cursor: pointer;
+    transition: left 0.3s ease-in-out;
+    /* Adicionado para centralizar a nova seta */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
         #sidebar-toggle.collapsed { left: 10px; }
 
         .page-navigation { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #495057; padding-bottom: 20px; }
@@ -307,4 +324,22 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
     letter-spacing: 1px;
     color: #FFC107; /* Cor de destaque para o texto */
     text-shadow: 0 0 5px rgba(255, 193, 7, 0.5);
+}
+/* --- ESTILOS PARA A NOVA SETA DO MENU --- */
+.arrow-icon {
+    display: inline-block;
+    padding: 3px;
+    border: solid #212529; /* Cor da seta */
+    border-width: 0 3px 3px 0; /* Cria a forma da seta */
+    width: 8px;
+    height: 8px;
+    transition: transform 0.3s ease-in-out;
+
+    /* Posição inicial: Seta para a Esquerda (para fechar) */
+    transform: rotate(135deg);
+}
+
+#sidebar-toggle.collapsed .arrow-icon {
+    /* Posição quando o menu está fechado: Seta para a Direita (para abrir) */
+    transform: rotate(-45deg);
 }
