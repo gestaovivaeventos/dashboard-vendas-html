@@ -273,10 +273,11 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
     color: #adb5bd;
 }
 
-.dice-loader-gif {
-    width: 300px; /* Ajuste o tamanho do GIF conforme necessário */
-    height: 300px;
-    object-fit: contain; /* Garante que o GIF se ajuste sem distorcer */
+/* Substitua a regra antiga do GIF por esta nova para o vídeo */
+.loader-video {
+    width: 240px;  /* Ajuste o tamanho do vídeo aqui conforme sua preferência */
+    height: 240px; /* Mantenha os valores iguais para um vídeo quadrado, se aplicável */
+    object-fit: contain; /* Garante que o vídeo se ajuste dentro do tamanho definido sem ser cortado */
 }
 
 .loader-text {
