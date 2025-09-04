@@ -636,13 +636,11 @@ function updateDashboard() {
     // ATUALIZAÇÃO DOS COMPONENTES
     updateVvrVsMetaPorMesChart(dataParaGraficoAnual, anoVigenteParaGrafico);
     updateCumulativeVvrChart(allDataForOtherCharts, selectedUnidades);
-    updateMonthlyVvrChart(allDataForOtherCharts, selectedUnidades);
-    
-    // A chamada para a função corrigida agora passa só um parâmetro
+    updateMonthlyVvrChart(allDataForOtherCharts, selectedUnidades);    
     updateDrillDownCharts(allDataForOtherCharts);
-    
+    // A chamada para a função corrigida agora passa só um parâmetro
+    updateTicketCharts(allDataForOtherCharts);    
     // As chamadas abaixo provavelmente precisarão do mesmo tratamento
-    updateTicketCharts(allDataForOtherCharts, selectedUnidades);
     updateAdesoesDrillDownCharts(allDataForOtherCharts, selectedUnidades);
     updateContractsCharts(fundosDataFiltrado, selectedUnidades);
     
@@ -1113,12 +1111,10 @@ function drawMonthlyDetailChart(data, year) {
     });
 }
 
-function updateTicketCharts(historicalData, selectedUnidades) {
-    const unitsToConsider = selectedUnidades.length > 0 ? selectedUnidades : [...new Set(allData.map((d) => d.nm_unidade))];
-    const filteredHistoricalData = historicalData.filter((d) => unitsToConsider.includes(d.nm_unidade));
-    
+function updateTicketCharts(filteredData) {
     const ticketByYear = {};
-    filteredHistoricalData.forEach((d) => {
+    // A função agora opera apenas sobre 'filteredData', que já é seguro.
+    filteredData.forEach((d) => {
         const year = d.dt_cadastro_integrante.getFullYear();
         if (!ticketByYear[year]) { ticketByYear[year] = { totalValor: 0, totalAdesoes: 0 }; }
         ticketByYear[year].totalValor += d.vl_plano;
@@ -1152,14 +1148,18 @@ function updateTicketCharts(historicalData, selectedUnidades) {
             onClick: (event, elements) => {
                 if (elements.length > 0) {
                     const clickedYear = years[elements[0].index];
-                    drawMonthlyTicketChart(filteredHistoricalData, clickedYear);
+                    drawMonthlyTicketChart(filteredData, clickedYear);
                 }
             },
         },
     });
 
+    // Lógica para limpar ou desenhar o gráfico mensal
     if (years.length > 0) {
-        drawMonthlyTicketChart(filteredHistoricalData, years[years.length - 1]);
+        drawMonthlyTicketChart(filteredData, years[years.length - 1]);
+    } else {
+        // Se não há dados, chama a função com um array vazio para limpar o gráfico mensal
+        drawMonthlyTicketChart([], new Date().getFullYear());
     }
 }
 
