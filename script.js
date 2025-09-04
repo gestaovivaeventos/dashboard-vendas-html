@@ -1433,13 +1433,12 @@ function populateFilters() {
 
 // ...
 
-function updateMonthlyAdesoesChart(historicalData, selectedUnidades) {
+function updateMonthlyAdesoesChart(filteredData) {
     const selectorContainer = document.getElementById("adesoes-chart-selector");
-    const unitsToConsider = selectedUnidades.length > 0 ? selectedUnidades : [...new Set(allData.map((d) => d.nm_unidade))];
-    const filteredHistoricalData = historicalData.filter((d) => unitsToConsider.includes(d.nm_unidade));
-
+    
+    // A função agora opera apenas sobre 'filteredData', que já é seguro.
     const adesoesByYearMonth = {};
-    filteredHistoricalData.forEach((d) => {
+    filteredData.forEach((d) => {
         const year = d.dt_cadastro_integrante.getFullYear();
         const month = d.dt_cadastro_integrante.getMonth();
         if (!adesoesByYearMonth[year]) { adesoesByYearMonth[year] = Array(12).fill(0); }
@@ -1447,7 +1446,9 @@ function updateMonthlyAdesoesChart(historicalData, selectedUnidades) {
     });
 
     const uniqueYears = Object.keys(adesoesByYearMonth).sort();
-    if (selectorContainer.children.length === 0) {
+
+    // A lógica para criar os botões de ano só roda uma vez
+    if (selectorContainer.children.length === 0 && uniqueYears.length > 0) {
         uniqueYears.forEach((year) => {
             const button = document.createElement("button");
             button.dataset.year = year;
