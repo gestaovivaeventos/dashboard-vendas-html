@@ -1510,6 +1510,7 @@ function updateMonthlyAdesoesChart(filteredData) {
 function updateAdesoesDrillDownCharts(filteredData) {
     const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     const adesoesByYear = {};
+    
     // A função agora opera apenas sobre 'filteredData', que já é seguro.
     filteredData.forEach((d) => {
         const year = d.dt_cadastro_integrante.getFullYear();
@@ -1574,7 +1575,6 @@ function updateAdesoesDrillDownCharts(filteredData) {
     if (years.length > 0) {
         drawMonthlyAdesoesDetailChart(filteredData, years[years.length - 1]);
     } else {
-        // Se não há dados, chama a função com um array vazio para limpar o gráfico mensal
         drawMonthlyAdesoesDetailChart([], new Date().getFullYear());
     }
 }
