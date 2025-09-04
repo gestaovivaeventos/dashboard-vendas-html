@@ -638,14 +638,11 @@ function updateDashboard() {
     updateCumulativeVvrChart(allDataForOtherCharts, selectedUnidades);
     updateMonthlyVvrChart(allDataForOtherCharts, selectedUnidades);
     
+    // Todas as chamadas abaixo agora estão corrigidas e seguras
     updateDrillDownCharts(allDataForOtherCharts);
     updateTicketCharts(allDataForOtherCharts);
-    
-    // A chamada para a função corrigida agora passa só um parâmetro
     updateContractsCharts(fundosDataFiltrado);
-    
-    // A chamada abaixo provavelmente precisará do mesmo tratamento
-    updateAdesoesDrillDownCharts(allDataForOtherCharts, selectedUnidades);
+    updateAdesoesDrillDownCharts(allDataForOtherCharts);
     
     updateConsultorTable(dataBrutaFiltrada);
     updateDetalhadaAdesoesTable(dataBrutaFiltrada);
@@ -1509,13 +1506,11 @@ function updateMonthlyAdesoesChart(historicalData, selectedUnidades) {
     });
 }
 
-function updateAdesoesDrillDownCharts(historicalData, selectedUnidades) {
-    const unitsToConsider = selectedUnidades.length > 0 ? selectedUnidades : [...new Set(allData.map((d) => d.nm_unidade))];
-    const filteredHistoricalData = historicalData.filter((d) => unitsToConsider.includes(d.nm_unidade));
-    
+function updateAdesoesDrillDownCharts(filteredData) {
     const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     const adesoesByYear = {};
-    filteredHistoricalData.forEach((d) => {
+    // A função agora opera apenas sobre 'filteredData', que já é seguro.
+    filteredData.forEach((d) => {
         const year = d.dt_cadastro_integrante.getFullYear();
         if (!adesoesByYear[year]) { adesoesByYear[year] = { vendas: 0, posVendas: 0 }; }
         if (normalizeText(d.venda_posvenda) === "VENDA") {
@@ -1568,14 +1563,18 @@ function updateAdesoesDrillDownCharts(historicalData, selectedUnidades) {
             onClick: (event, elements) => {
                 if (elements.length > 0) {
                     const clickedYear = years[elements[0].index];
-                    drawMonthlyAdesoesDetailChart(filteredHistoricalData, clickedYear);
+                    drawMonthlyAdesoesDetailChart(filteredData, clickedYear);
                 }
             },
         },
     });
 
+    // Lógica para limpar ou desenhar o gráfico mensal
     if (years.length > 0) {
-        drawMonthlyAdesoesDetailChart(filteredHistoricalData, years[years.length - 1]);
+        drawMonthlyAdesoesDetailChart(filteredData, years[years.length - 1]);
+    } else {
+        // Se não há dados, chama a função com um array vazio para limpar o gráfico mensal
+        drawMonthlyAdesoesDetailChart([], new Date().getFullYear());
     }
 }
 
