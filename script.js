@@ -62,6 +62,10 @@ const formatPercent = (value) =>
   }).format(value || 0);
 
 // --- NOVO: Função para buscar os dados de acesso da planilha ---
+// Arquivo: script.js (do Dashboard de Vendas)
+
+// ...
+
 async function fetchAccessData() {
     const url = `https://sheets.googleapis.com/v4/spreadsheets/${ACCESS_CONTROL_SPREADSHEET_ID}/values/${ACCESS_CONTROL_SHEET_NAME}?key=${API_KEY}`;
     try {
@@ -73,19 +77,36 @@ async function fetchAccessData() {
         const rows = data.values || [];
         
         accessDataFromSheet.clear();
+        // Passo 1: Agrupa as unidades por código
         rows.slice(1).forEach(row => {
-            const unitName = row[0];
-            const accessCode = row[1];
-            const accessLevel = row[2];
+            const [unitName, accessCode, accessLevel] = row;
             
             if (accessCode) {
+                const code = accessCode.trim();
+                
                 if (accessLevel === '1') {
-                    accessDataFromSheet.set(accessCode.trim(), 'ALL_UNITS');
+                    accessDataFromSheet.set(code, 'ALL_UNITS');
                 } else if (unitName) {
-                    accessDataFromSheet.set(accessCode.trim(), unitName.trim());
+                    const unit = unitName.trim();
+                    if (!accessDataFromSheet.has(code)) {
+                        accessDataFromSheet.set(code, []); // Inicia como um array
+                    }
+                    // Adiciona a unidade ao array do código correspondente
+                    if(accessDataFromSheet.get(code) !== 'ALL_UNITS') {
+                       accessDataFromSheet.get(code).push(unit);
+                    }
                 }
             }
         });
+
+        // Passo 2: Simplifica os arrays de item único para strings
+        // Isso facilita a lógica depois: o tipo da variável (array ou string) define o tipo de usuário
+        for (let [code, units] of accessDataFromSheet.entries()) {
+            if (Array.isArray(units) && units.length === 1) {
+                accessDataFromSheet.set(code, units[0]);
+            }
+        }
+        
         return true;
     } catch (error) {
         console.error("Erro ao buscar dados da planilha de acesso:", error);
@@ -96,6 +117,8 @@ async function fetchAccessData() {
         return false;
     }
 }
+
+// ...
 
 
 // --- BLOCO DE INICIALIZAÇÃO TOTALMENTE ATUALIZADO ---
@@ -1318,11 +1341,16 @@ function addEventListeners() {
     });
 }
 
+// Arquivo: script.js (do Dashboard de Vendas)
+
+// ...
+
 function populateFilters() {
     const unidadeFilter = $("#unidade-filter");
     unidadeFilter.empty();
 
     if (userAccessLevel === "ALL_UNITS") {
+        // CENÁRIO 1: FRANQUEADORA (vê todas as unidades)
         const unidadesVendas = allData.map((d) => d.nm_unidade);
         const unidadesFundos = fundosData.map((d) => d.nm_unidade);
         const unidades = [...new Set([...unidadesVendas, ...unidadesFundos])].sort();
@@ -1346,7 +1374,29 @@ function populateFilters() {
             onDeselectAll: updateDashboard,
         });
 
+    } else if (Array.isArray(userAccessLevel)) {
+        // CENÁRIO 2: MULTI-FRANQUEADO (vê apenas as suas unidades, mas pode selecionar)
+        userAccessLevel.forEach((u) => {
+            unidadeFilter.append($("<option>", { value: u, text: u, selected: true }));
+        });
+
+        unidadeFilter.multiselect({
+            enableFiltering: true,
+            includeSelectAllOption: true,
+            selectAllText: "Marcar todas",
+            filterPlaceholder: "Pesquisar...",
+            nonSelectedText: "Nenhuma unidade",
+            nSelectedText: "unidades",
+            allSelectedText: "Todas as minhas unidades",
+            buttonWidth: "100%",
+            maxHeight: 300,
+            onChange: updateDashboard,
+            onSelectAll: updateDashboard,
+            onDeselectAll: updateDashboard,
+        });
+
     } else {
+        // CENÁRIO 3: FRANQUEADO DE UNIDADE ÚNICA (filtro travado)
         unidadeFilter.append($("<option>", { value: userAccessLevel, text: userAccessLevel, selected: true }));
         unidadeFilter.multiselect({
             buttonWidth: "100%",
@@ -1354,12 +1404,15 @@ function populateFilters() {
         unidadeFilter.multiselect('disable');
     }
 
+    // Define as datas padrão
     const hoje = new Date();
     const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
     const fimMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
     document.getElementById("start-date").value = inicioMes.toISOString().split("T")[0];
     document.getElementById("end-date").value = fimMes.toISOString().split("T")[0];
 }
+
+// ...
 
 function updateMonthlyAdesoesChart(historicalData, selectedUnidades) {
     const selectorContainer = document.getElementById("adesoes-chart-selector");
