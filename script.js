@@ -700,116 +700,132 @@ function updateDashboard() {
 
 
 function updateVvrVsMetaPorMesChart(salesDataForYear, anoVigente) {
-  const allYearPeriodos = Array.from({ length: 12 }, (_, i) => `${anoVigente}-${String(i + 1).padStart(2, "0")}`);
-  const chartDataMap = new Map();
-  allYearPeriodos.forEach((periodo) => {
-    chartDataMap.set(periodo, {
-      realizado_vendas: 0,
-      realizado_posvendas: 0,
-      meta_vendas: 0,
-      meta_posvendas: 0,
-      meta_total: 0,
+    const allYearPeriodos = Array.from({ length: 12 }, (_, i) => `${anoVigente}-${String(i + 1).padStart(2, "0")}`);
+    const chartDataMap = new Map();
+    
+    // Inicializa o mapa do gráfico com valores zerados
+    allYearPeriodos.forEach((periodo) => {
+        chartDataMap.set(periodo, {
+            realizado_vendas: 0,
+            realizado_posvendas: 0,
+            meta_vendas: 0,
+            meta_posvendas: 0,
+            meta_total: 0,
+        });
     });
-  });
 
-  const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  salesDataForYear.forEach((d) => {
-    const year = d.dt_cadastro_integrante.getFullYear();
-    const month = String(d.dt_cadastro_integrante.getMonth() + 1).padStart(2, "0");
-    const periodo = `${year}-${month}`;
-    if (chartDataMap.has(periodo)) {
-      if (normalizeText(d.venda_posvenda) === "VENDA") {
-        chartDataMap.get(periodo).realizado_vendas += d.vl_plano;
-      } else if (normalizeText(d.venda_posvenda) === "POS VENDA") {
-        chartDataMap.get(periodo).realizado_posvendas += d.vl_plano;
-      }
+    const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+    // 1. Calcula o VALOR REALIZADO (esta parte já estava correta)
+    // Ela usa 'salesDataForYear', que já vem filtrado ou vazio
+    salesDataForYear.forEach((d) => {
+        const year = d.dt_cadastro_integrante.getFullYear();
+        const month = String(d.dt_cadastro_integrante.getMonth() + 1).padStart(2, "0");
+        const periodo = `${year}-${month}`;
+        if (chartDataMap.has(periodo)) {
+            if (normalizeText(d.venda_posvenda) === "VENDA") {
+                chartDataMap.get(periodo).realizado_vendas += d.vl_plano;
+            } else if (normalizeText(d.venda_posvenda) === "POS VENDA") {
+                chartDataMap.get(periodo).realizado_posvendas += d.vl_plano;
+            }
+        }
+    });
+
+    // 2. Calcula a META (lógica de segurança aplicada aqui)
+    const selectedUnidades = $("#unidade-filter").val() || [];
+    const canCalculateMeta = (userAccessLevel === 'ALL_UNITS' || selectedUnidades.length > 0);
+
+    if (canCalculateMeta) {
+        const unitsToConsider = (userAccessLevel === 'ALL_UNITS' && selectedUnidades.length === 0)
+            ? [...new Set(allData.map(d => d.nm_unidade))]
+            : selectedUnidades;
+
+        metasData.forEach((metaInfo, key) => {
+            const [unidade, ano, mes] = key.split("-");
+            const periodo = `${ano}-${mes}`;
+            if (String(ano) === String(anoVigente) && chartDataMap.has(periodo)) {
+                if (unitsToConsider.includes(unidade)) {
+                    chartDataMap.get(periodo).meta_vendas += metaInfo.meta_vvr_vendas;
+                    chartDataMap.get(periodo).meta_posvendas += metaInfo.meta_vvr_posvendas;
+                    chartDataMap.get(periodo).meta_total += metaInfo.meta_vvr_total;
+                }
+            }
+        });
     }
-  });
+    // Se 'canCalculateMeta' for falso, os valores de meta no chartDataMap permanecerão 0.
 
-  const selectedUnidades = $("#unidade-filter").val() || [...new Set(allData.map((d) => d.nm_unidade))];
-  metasData.forEach((metaInfo, key) => {
-    const [unidade, ano, mes] = key.split("-");
-    const periodo = `${ano}-${mes}`;
-    if (String(ano) === String(anoVigente) && chartDataMap.has(periodo)) {
-      if (selectedUnidades.length === 0 || selectedUnidades.includes(unidade)) {
-        chartDataMap.get(periodo).meta_vendas += metaInfo.meta_vvr_vendas;
-        chartDataMap.get(periodo).meta_posvendas += metaInfo.meta_vvr_posvendas;
-        chartDataMap.get(periodo).meta_total += metaInfo.meta_vvr_total;
-      }
+    // 3. Monta e desenha o gráfico (nenhuma alteração aqui)
+    let realizadoValues, metaValues;
+    if (currentVvrChartType === "vendas") {
+        realizadoValues = allYearPeriodos.map((p) => chartDataMap.get(p).realizado_vendas);
+        metaValues = allYearPeriodos.map((p) => chartDataMap.get(p).meta_vendas);
+    } else if (currentVvrChartType === "posvendas") {
+        realizadoValues = allYearPeriodos.map((p) => chartDataMap.get(p).realizado_posvendas);
+        metaValues = allYearPeriodos.map((p) => chartDataMap.get(p).meta_posvendas);
+    } else { // 'total'
+        realizadoValues = allYearPeriodos.map((p) => chartDataMap.get(p).realizado_vendas + chartDataMap.get(p).realizado_posvendas);
+        metaValues = allYearPeriodos.map((p) => chartDataMap.get(p).meta_total);
     }
-  });
 
-  let realizadoValues, metaValues;
-  if (currentVvrChartType === "vendas") {
-    realizadoValues = allYearPeriodos.map((p) => chartDataMap.get(p).realizado_vendas);
-    metaValues = allYearPeriodos.map((p) => chartDataMap.get(p).meta_vendas);
-  } else if (currentVvrChartType === "posvendas") {
-    realizadoValues = allYearPeriodos.map((p) => chartDataMap.get(p).realizado_posvendas);
-    metaValues = allYearPeriodos.map((p) => chartDataMap.get(p).meta_posvendas);
-  } else {
-    realizadoValues = allYearPeriodos.map((p) => chartDataMap.get(p).realizado_vendas + chartDataMap.get(p).realizado_posvendas);
-    metaValues = allYearPeriodos.map((p) => chartDataMap.get(p).meta_total);
-  }
+    const formattedLabels = allYearPeriodos.map((periodo) => {
+        const [year, month] = periodo.split("-");
+        const date = new Date(year, month - 1);
+        const monthName = date.toLocaleString("pt-BR", { month: "short" }).replace(".", "");
+        return `${monthName}-${year.slice(2)}`;
+    });
 
-  const formattedLabels = allYearPeriodos.map((periodo) => {
-    const [year, month] = periodo.split("-");
-    const date = new Date(year, month - 1);
-    const monthName = date.toLocaleString("pt-BR", { month: "short" }).replace(".", "");
-    return `${monthName}-${year.slice(2)}`;
-  });
-
-  if (vvrVsMetaPorMesChart) vvrVsMetaPorMesChart.destroy();
-  Chart.register(ChartDataLabels);
-  vvrVsMetaPorMesChart = new Chart(document.getElementById("vvrVsMetaPorMesChart"), {
-    type: "bar",
-    data: {
-      labels: formattedLabels,
-      datasets: [
-        { label: "VVR Realizado", data: realizadoValues, backgroundColor: "rgba(255, 193, 7, 0.7)", order: 1 },
-        {
-          label: "Meta VVR",
-          data: metaValues,
-          type: "line",
-          borderColor: "rgb(220, 53, 69)",
-          order: 0,
-          datalabels: {
-            display: true,
-            align: "bottom",
-            backgroundColor: "rgba(0, 0, 0, 0.6)",
-            borderRadius: 4,
-            color: "white",
-            font: { size: 15 },
-            padding: 4,
-            formatter: (value) => (value > 0 ? `${(value / 1000).toFixed(0)}k` : ""),
-          },
+    if (vvrVsMetaPorMesChart) vvrVsMetaPorMesChart.destroy();
+    Chart.register(ChartDataLabels);
+    vvrVsMetaPorMesChart = new Chart(document.getElementById("vvrVsMetaPorMesChart"), {
+        type: "bar",
+        data: {
+            labels: formattedLabels,
+            datasets: [
+                { label: "VVR Realizado", data: realizadoValues, backgroundColor: "rgba(255, 193, 7, 0.7)", order: 1 },
+                {
+                    label: "Meta VVR",
+                    data: metaValues,
+                    type: "line",
+                    borderColor: "rgb(220, 53, 69)",
+                    order: 0,
+                    datalabels: {
+                        display: true,
+                        align: "bottom",
+                        backgroundColor: "rgba(0, 0, 0, 0.6)",
+                        borderRadius: 4,
+                        color: "white",
+                        font: { size: 15 },
+                        padding: 4,
+                        formatter: (value) => (value > 0 ? `${(value / 1000).toFixed(0)}k` : ""),
+                    },
+                },
+            ],
         },
-      ],
-    },
-    options: {
-      maintainAspectRatio: false,
-      interaction: { mode: "index", intersect: false },
-      plugins: {
-        datalabels: {
-          anchor: "end",
-          align: "end",
-          formatter: (value) => (value >= 1000 ? `${(value / 1000).toFixed(0)}k` : ""),
-          color: "#F8F9FA",
-          font: { weight: "bold" },
-        },
-        tooltip: {
-          callbacks: {
-            label: function (context) {
-              let label = context.dataset.label || "";
-              if (label) { label += ": "; }
-              if (context.parsed.y !== null) { label += formatCurrency(context.parsed.y); }
-              return label;
+        options: {
+            maintainAspectRatio: false,
+            interaction: { mode: "index", intersect: false },
+            plugins: {
+                datalabels: {
+                    anchor: "end",
+                    align: "end",
+                    formatter: (value) => (value >= 1000 ? `${(value / 1000).toFixed(0)}k` : ""),
+                    color: "#F8F9FA",
+                    font: { weight: "bold" },
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function (context) {
+                            let label = context.dataset.label || "";
+                            if (label) { label += ": "; }
+                            if (context.parsed.y !== null) { label += formatCurrency(context.parsed.y); }
+                            return label;
+                        },
+                    },
+                },
             },
-          },
+            scales: { y: { beginAtZero: true } },
         },
-      },
-      scales: { y: { beginAtZero: true } },
-    },
-  });
+    });
 }
 
 // O restante do seu código (updateCumulativeVvrChart, updateMonthlyVvrChart, etc.)
