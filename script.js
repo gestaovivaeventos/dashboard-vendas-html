@@ -636,13 +636,16 @@ function updateDashboard() {
     // ATUALIZAÇÃO DOS COMPONENTES
     updateVvrVsMetaPorMesChart(dataParaGraficoAnual, anoVigenteParaGrafico);
     updateCumulativeVvrChart(allDataForOtherCharts, selectedUnidades);
-    updateMonthlyVvrChart(allDataForOtherCharts, selectedUnidades);    
+    updateMonthlyVvrChart(allDataForOtherCharts, selectedUnidades);
+    
     updateDrillDownCharts(allDataForOtherCharts);
+    updateTicketCharts(allDataForOtherCharts);
+    
     // A chamada para a função corrigida agora passa só um parâmetro
-    updateTicketCharts(allDataForOtherCharts);    
-    // As chamadas abaixo provavelmente precisarão do mesmo tratamento
+    updateContractsCharts(fundosDataFiltrado);
+    
+    // A chamada abaixo provavelmente precisará do mesmo tratamento
     updateAdesoesDrillDownCharts(allDataForOtherCharts, selectedUnidades);
-    updateContractsCharts(fundosDataFiltrado, selectedUnidades);
     
     updateConsultorTable(dataBrutaFiltrada);
     updateDetalhadaAdesoesTable(dataBrutaFiltrada);
@@ -1200,12 +1203,10 @@ function drawMonthlyTicketChart(data, year) {
     });
 }
 
-function updateContractsCharts(historicalData, selectedUnidades) {
-    const unitsToConsider = selectedUnidades.length > 0 ? selectedUnidades : [...new Set(allData.map((d) => d.nm_unidade))];
-    const filteredHistoricalData = historicalData.filter((d) => unitsToConsider.includes(d.nm_unidade));
-
+function updateContractsCharts(filteredData) {
     const contractsByYear = {};
-    filteredHistoricalData.forEach((d) => {
+    // A função agora opera apenas sobre 'filteredData', que já é seguro.
+    filteredData.forEach((d) => {
         const year = d.dt_contrato.getFullYear();
         if (!contractsByYear[year]) { contractsByYear[year] = 0; }
         contractsByYear[year]++;
@@ -1234,14 +1235,18 @@ function updateContractsCharts(historicalData, selectedUnidades) {
             onClick: (event, elements) => {
                 if (elements.length > 0) {
                     const clickedYear = years[elements[0].index];
-                    drawMonthlyContractsChart(filteredHistoricalData, clickedYear);
+                    drawMonthlyContractsChart(filteredData, clickedYear);
                 }
             },
         },
     });
 
+    // Lógica para limpar ou desenhar o gráfico mensal
     if (years.length > 0) {
-        drawMonthlyContractsChart(filteredHistoricalData, years[years.length - 1]);
+        drawMonthlyContractsChart(filteredData, years[years.length - 1]);
+    } else {
+        // Se não há dados, chama a função com um array vazio para limpar o gráfico mensal
+        drawMonthlyContractsChart([], new Date().getFullYear());
     }
 }
 
