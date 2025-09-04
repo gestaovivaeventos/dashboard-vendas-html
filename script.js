@@ -638,7 +638,10 @@ function updateDashboard() {
     updateCumulativeVvrChart(allDataForOtherCharts, selectedUnidades);
     updateMonthlyVvrChart(allDataForOtherCharts, selectedUnidades);
     
-    // Todas as chamadas abaixo agora estão corrigidas e seguras
+    // A chamada para a função corrigida agora passa só um parâmetro
+    updateMonthlyAdesoesChart(allDataForOtherCharts);
+    
+    // Todas as chamadas abaixo estão corrigidas e seguras
     updateDrillDownCharts(allDataForOtherCharts);
     updateTicketCharts(allDataForOtherCharts);
     updateContractsCharts(fundosDataFiltrado);
@@ -1436,8 +1439,8 @@ function populateFilters() {
 function updateMonthlyAdesoesChart(filteredData) {
     const selectorContainer = document.getElementById("adesoes-chart-selector");
     
-    // A função agora opera apenas sobre 'filteredData', que já é seguro.
     const adesoesByYearMonth = {};
+    // A função agora opera apenas sobre 'filteredData', que já é seguro.
     filteredData.forEach((d) => {
         const year = d.dt_cadastro_integrante.getFullYear();
         const month = d.dt_cadastro_integrante.getMonth();
@@ -1447,19 +1450,24 @@ function updateMonthlyAdesoesChart(filteredData) {
 
     const uniqueYears = Object.keys(adesoesByYearMonth).sort();
 
-    // A lógica para criar os botões de ano só roda uma vez
-    if (selectorContainer.children.length === 0 && uniqueYears.length > 0) {
+    // Limpa os botões antigos antes de criar novos, se necessário
+    selectorContainer.innerHTML = ''; 
+
+    if (uniqueYears.length > 0) {
         uniqueYears.forEach((year) => {
             const button = document.createElement("button");
             button.dataset.year = year;
             button.textContent = year;
-            if (year >= uniqueYears[uniqueYears.length - 2]) { button.classList.add("active"); }
+            // Seleciona os dois últimos anos por padrão
+            if (year >= uniqueYears[uniqueYears.length - 1] || year >= uniqueYears[uniqueYears.length - 2]) { 
+                button.classList.add("active"); 
+            }
             selectorContainer.appendChild(button);
         });
         selectorContainer.querySelectorAll("button").forEach((button) => {
             button.addEventListener("click", () => {
                 button.classList.toggle("active");
-                updateDashboard();
+                updateDashboard(); // Re-renderiza o dashboard com a nova seleção de anos
             });
         });
     }
