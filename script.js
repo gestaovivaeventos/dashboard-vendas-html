@@ -606,7 +606,6 @@ function updatePreviousYearKPIs(dataBruta, selectedUnidades, startDate, endDate)
 function updateDashboard() {
     const selectedUnidades = $("#unidade-filter").val() || [];
     
-    // --- LÓGICA DE DATAS (permanece a mesma) ---
     const startDateString = document.getElementById("start-date").value;
     const [startYear, startMonth, startDay] = startDateString.split('-').map(Number);
     const startDate = new Date(startYear, startMonth - 1, startDay);
@@ -618,82 +617,46 @@ function updateDashboard() {
 
     const anoVigenteParaGrafico = startDate.getFullYear();
 
-    // --- NOVA TRAVA DE SEGURANÇA ---
-    // Por padrão, os dados a serem exibidos são vazios.
-    let dataBrutaFiltrada = [];
-    let dataParaGraficoAnual = [];
-    let allDataForOtherCharts = []; // Usado para gráficos que precisam de todo o histórico
-
-    // Só populamos os dados se a condição de segurança for atendida.
+    let dataBrutaFiltrada = [], dataParaGraficoAnual = [], allDataForOtherCharts = [], fundosDataFiltrado = [], dataBrutaFiltradaPY = [];
     const hasPermissionToViewData = (userAccessLevel === 'ALL_UNITS' || selectedUnidades.length > 0);
 
     if (hasPermissionToViewData) {
-        // A lógica de filtragem original agora roda dentro desta condição segura.
-        // O caso `selectedUnidades.length === 0` agora só se aplica ao admin.
+        const filterLogic = d => (selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade));
         
-        dataBrutaFiltrada = allData.filter(d => 
-            (selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade)) && 
-            d.dt_cadastro_integrante >= startDate && 
-            d.dt_cadastro_integrante < endDate
-        );
+        dataBrutaFiltrada = allData.filter(d => filterLogic(d) && d.dt_cadastro_integrante >= startDate && d.dt_cadastro_integrante < endDate);
+        dataParaGraficoAnual = allData.filter(d => filterLogic(d) && d.dt_cadastro_integrante.getFullYear() === anoVigenteParaGrafico);
+        allDataForOtherCharts = allData.filter(filterLogic);
+        fundosDataFiltrado = fundosData.filter(filterLogic);
 
-        dataParaGraficoAnual = allData.filter(d => 
-            (selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade)) && 
-            d.dt_cadastro_integrante.getFullYear() === anoVigenteParaGrafico
-        );
-        
-        allDataForOtherCharts = allData.filter(d =>
-            (selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade))
-        );
+        const sDPY = new Date(startDate); sDPY.setFullYear(sDPY.getFullYear() - 1);
+        const eDPY = new Date(endDate); eDPY.setFullYear(eDPY.getFullYear() - 1);
+        dataBrutaFiltradaPY = allData.filter(d => filterLogic(d) && d.dt_cadastro_integrante >= sDPY && d.dt_cadastro_integrante < eDPY);
     }
-    // Se a condição `hasPermissionToViewData` for falsa (franqueado sem seleção),
-    // os arrays de dados permanecem vazios, zerando o dashboard.
-
-    // --- ATUALIZAÇÃO DOS COMPONENTES (agora recebem dados seguros) ---
     
+    // ATUALIZAÇÃO DOS COMPONENTES
     updateVvrVsMetaPorMesChart(dataParaGraficoAnual, anoVigenteParaGrafico);
-
-    // Gráficos que usam o histórico agora recebem a versão filtrada 'allDataForOtherCharts'
     updateCumulativeVvrChart(allDataForOtherCharts, selectedUnidades);
     updateMonthlyVvrChart(allDataForOtherCharts, selectedUnidades);
-    updateDrillDownCharts(allDataForOtherCharts, selectedUnidades);
-    updateTicketCharts(allDataForOtherCharts, selectedUnidades);
-    updateMonthlyAdesoesChart(allDataForOtherCharts, selectedUnidades);
-    updateAdesoesDrillDownCharts(allDataForOtherCharts, selectedUnidades);
     
-    // Os contratos são baseados em 'fundosData', então precisam de um filtro separado
-    const fundosDataFiltrado = fundosData.filter(d =>
-         hasPermissionToViewData && (selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade))
-    );
+    // A chamada para a função corrigida agora passa só um parâmetro
+    updateDrillDownCharts(allDataForOtherCharts);
+    
+    // As chamadas abaixo provavelmente precisarão do mesmo tratamento
+    updateTicketCharts(allDataForOtherCharts, selectedUnidades);
+    updateAdesoesDrillDownCharts(allDataForOtherCharts, selectedUnidades);
     updateContractsCharts(fundosDataFiltrado, selectedUnidades);
     
-    // KPIs e tabelas detalhadas usam os dados filtrados pelo período exato
     updateConsultorTable(dataBrutaFiltrada);
     updateDetalhadaAdesoesTable(dataBrutaFiltrada);
     updateFundosDetalhadosTable(fundosDataFiltrado, selectedUnidades, startDate, endDate);
     updateMainKPIs(dataBrutaFiltrada, selectedUnidades, startDate, endDate);
-
-    // Lógica da tabela principal (já opera sobre dataBrutaFiltrada, então está segura)
+    
     const dataAgregadaComVendas = processAndCrossReferenceData(dataBrutaFiltrada);
-    currentFilteredDataForTable = dataAgregadaComVendas;
+    currentFilteredDataForTable = dataAgregadaComVendas; 
     updateDataTable(dataAgregadaComVendas);
     
-    // Lógica para o período anterior
-    let dataBrutaFiltradaPY = [];
-    if(hasPermissionToViewData){
-        const startDatePY = new Date(startDate);
-        startDatePY.setFullYear(startDatePY.getFullYear() - 1);
-        const endDatePY = new Date(endDate);
-        endDatePY.setFullYear(endDatePY.getFullYear() - 1);
-        
-        dataBrutaFiltradaPY = allData.filter(d => 
-            (selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade)) && 
-            d.dt_cadastro_integrante >= startDatePY && 
-            d.dt_cadastro_integrante < endDatePY
-        );
-    }
     document.getElementById("kpi-section-py").style.display = "block";
-    updatePreviousYearKPIs(dataBrutaFiltradaPY, selectedUnidades, startDatePY, endDatePY);
+    updatePreviousYearKPIs(dataBrutaFiltradaPY, selectedUnidades, startDate, endDate);
 }
 
 // ...
@@ -996,13 +959,12 @@ function updateMonthlyVvrChart(historicalData, selectedUnidades) {
     });
 }
 
-function updateDrillDownCharts(historicalData, selectedUnidades) {
-    const unitsToConsider = selectedUnidades.length > 0 ? selectedUnidades : [...new Set(allData.map((d) => d.nm_unidade))];
-    const filteredHistoricalData = historicalData.filter((d) => unitsToConsider.includes(d.nm_unidade));
-    
+function updateDrillDownCharts(filteredData) {
     const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     const salesByYear = {};
-    filteredHistoricalData.forEach((d) => {
+
+    // A função agora opera apenas sobre 'filteredData', que já é seguro.
+    filteredData.forEach((d) => {
         const year = d.dt_cadastro_integrante.getFullYear();
         if (!salesByYear[year]) { salesByYear[year] = { vendas: 0, posVendas: 0 }; }
         if (normalizeText(d.venda_posvenda) === "VENDA") {
@@ -1060,17 +1022,20 @@ function updateDrillDownCharts(historicalData, selectedUnidades) {
             onClick: (event, elements) => {
                 if (elements.length > 0) {
                     const clickedYear = years[elements[0].index];
-                    drawMonthlyDetailChart(filteredHistoricalData, clickedYear);
+                    drawMonthlyDetailChart(filteredData, clickedYear);
                 }
             },
         },
     });
 
+    // Lógica para limpar ou desenhar o gráfico mensal
     if (years.length > 0) {
-        drawMonthlyDetailChart(filteredHistoricalData, years[years.length - 1]);
+        drawMonthlyDetailChart(filteredData, years[years.length - 1]);
+    } else {
+        // Se não há dados, chama a função com um array vazio para limpar o gráfico mensal
+        drawMonthlyDetailChart([], new Date().getFullYear());
     }
 }
-
 function displayLastUpdateMessage() {
     const today = new Date();
     today.setHours(today.getHours() - 3);
