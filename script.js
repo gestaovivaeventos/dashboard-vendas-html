@@ -580,9 +580,14 @@ function updatePreviousYearKPIs(dataBruta, selectedUnidades, startDate, endDate)
 }
 
 // FUNÇÃO ATUALIZADA: Correção na lógica dos filtros de data
+// Arquivo: script.js (do Dashboard de Vendas)
+
+// ...
+
 function updateDashboard() {
     const selectedUnidades = $("#unidade-filter").val() || [];
     
+    // --- LÓGICA DE DATAS (permanece a mesma) ---
     const startDateString = document.getElementById("start-date").value;
     const [startYear, startMonth, startDay] = startDateString.split('-').map(Number);
     const startDate = new Date(startYear, startMonth - 1, startDay);
@@ -590,77 +595,89 @@ function updateDashboard() {
     const endDateString = document.getElementById("end-date").value;
     const [endYear, endMonth, endDay] = endDateString.split('-').map(Number);
     const endDate = new Date(endYear, endMonth - 1, endDay);
-    endDate.setDate(endDate.getDate() + 1); // Para incluir o dia final na busca
+    endDate.setDate(endDate.getDate() + 1);
 
     const anoVigenteParaGrafico = startDate.getFullYear();
+
+    // --- NOVA TRAVA DE SEGURANÇA ---
+    // Por padrão, os dados a serem exibidos são vazios.
+    let dataBrutaFiltrada = [];
+    let dataParaGraficoAnual = [];
+    let allDataForOtherCharts = []; // Usado para gráficos que precisam de todo o histórico
+
+    // Só populamos os dados se a condição de segurança for atendida.
+    const hasPermissionToViewData = (userAccessLevel === 'ALL_UNITS' || selectedUnidades.length > 0);
+
+    if (hasPermissionToViewData) {
+        // A lógica de filtragem original agora roda dentro desta condição segura.
+        // O caso `selectedUnidades.length === 0` agora só se aplica ao admin.
+        
+        dataBrutaFiltrada = allData.filter(d => 
+            (selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade)) && 
+            d.dt_cadastro_integrante >= startDate && 
+            d.dt_cadastro_integrante < endDate
+        );
+
+        dataParaGraficoAnual = allData.filter(d => 
+            (selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade)) && 
+            d.dt_cadastro_integrante.getFullYear() === anoVigenteParaGrafico
+        );
+        
+        allDataForOtherCharts = allData.filter(d =>
+            (selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade))
+        );
+    }
+    // Se a condição `hasPermissionToViewData` for falsa (franqueado sem seleção),
+    // os arrays de dados permanecem vazios, zerando o dashboard.
+
+    // --- ATUALIZAÇÃO DOS COMPONENTES (agora recebem dados seguros) ---
     
-    const dataBrutaFiltrada = allData.filter(d => 
-        (selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade)) && 
-        d.dt_cadastro_integrante >= startDate && 
-        d.dt_cadastro_integrante < endDate
-    );
-
-    const dataParaGraficoAnual = allData.filter(d => 
-        (selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade)) && 
-        d.dt_cadastro_integrante.getFullYear() === anoVigenteParaGrafico
-    );
-
     updateVvrVsMetaPorMesChart(dataParaGraficoAnual, anoVigenteParaGrafico);
-    updateCumulativeVvrChart(allData, selectedUnidades);
-    updateMonthlyVvrChart(allData, selectedUnidades);
-    updateDrillDownCharts(allData, selectedUnidades);
-    updateTicketCharts(allData, selectedUnidades);
-    updateContractsCharts(fundosData, selectedUnidades);
-    updateMonthlyAdesoesChart(allData, selectedUnidades);
-    updateAdesoesDrillDownCharts(allData, selectedUnidades);
+
+    // Gráficos que usam o histórico agora recebem a versão filtrada 'allDataForOtherCharts'
+    updateCumulativeVvrChart(allDataForOtherCharts, selectedUnidades);
+    updateMonthlyVvrChart(allDataForOtherCharts, selectedUnidades);
+    updateDrillDownCharts(allDataForOtherCharts, selectedUnidades);
+    updateTicketCharts(allDataForOtherCharts, selectedUnidades);
+    updateMonthlyAdesoesChart(allDataForOtherCharts, selectedUnidades);
+    updateAdesoesDrillDownCharts(allDataForOtherCharts, selectedUnidades);
+    
+    // Os contratos são baseados em 'fundosData', então precisam de um filtro separado
+    const fundosDataFiltrado = fundosData.filter(d =>
+         hasPermissionToViewData && (selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade))
+    );
+    updateContractsCharts(fundosDataFiltrado, selectedUnidades);
+    
+    // KPIs e tabelas detalhadas usam os dados filtrados pelo período exato
     updateConsultorTable(dataBrutaFiltrada);
     updateDetalhadaAdesoesTable(dataBrutaFiltrada);
-    updateFundosDetalhadosTable(fundosData, selectedUnidades, startDate, endDate);
+    updateFundosDetalhadosTable(fundosDataFiltrado, selectedUnidades, startDate, endDate);
     updateMainKPIs(dataBrutaFiltrada, selectedUnidades, startDate, endDate);
 
+    // Lógica da tabela principal (já opera sobre dataBrutaFiltrada, então está segura)
     const dataAgregadaComVendas = processAndCrossReferenceData(dataBrutaFiltrada);
-    const combinedDataMap = new Map();
-    dataAgregadaComVendas.forEach((item) => {
-        const key = `${item.unidade}-${item.periodo}`;
-        combinedDataMap.set(key, item);
-    });
+    currentFilteredDataForTable = dataAgregadaComVendas;
+    updateDataTable(dataAgregadaComVendas);
     
-    const unitsToConsider = selectedUnidades.length > 0 ? selectedUnidades : [...new Set(allData.map((d) => d.nm_unidade))];
-    metasData.forEach((metaInfo, key) => {
-        const [unidade, ano, mes] = key.split("-");
-        const metaDate = new Date(ano, parseInt(mes) - 1, 1);
-        const periodo = `${ano}-${String(mes).padStart(2, '0')}`;
-        const mapKey = `${unidade}-${periodo}`;
+    // Lógica para o período anterior
+    let dataBrutaFiltradaPY = [];
+    if(hasPermissionToViewData){
+        const startDatePY = new Date(startDate);
+        startDatePY.setFullYear(startDatePY.getFullYear() - 1);
+        const endDatePY = new Date(endDate);
+        endDatePY.setFullYear(endDatePY.getFullYear() - 1);
         
-        if (unitsToConsider.includes(unidade) && metaDate >= new Date(startYear, startMonth - 1, 1) && metaDate < endDate && !combinedDataMap.has(mapKey)) {
-            combinedDataMap.set(mapKey, {
-                unidade: unidade,
-                periodo: periodo,
-                realizado_vvr: 0,
-                realizado_adesoes: 0,
-                ...metaInfo,
-            });
-        }
-    });
-    
-    const finalTableData = Array.from(combinedDataMap.values());
-    currentFilteredDataForTable = finalTableData;
-    updateDataTable(finalTableData);
-    
-    const startDatePY = new Date(startDate);
-    startDatePY.setFullYear(startDatePY.getFullYear() - 1);
-    const endDatePY = new Date(endDate);
-    endDatePY.setFullYear(endDatePY.getFullYear() - 1);
-    
-    const dataBrutaFiltradaPY = allData.filter(d => 
-        (selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade)) && 
-        d.dt_cadastro_integrante >= startDatePY && 
-        d.dt_cadastro_integrante < endDatePY
-    );
-    
+        dataBrutaFiltradaPY = allData.filter(d => 
+            (selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade)) && 
+            d.dt_cadastro_integrante >= startDatePY && 
+            d.dt_cadastro_integrante < endDatePY
+        );
+    }
     document.getElementById("kpi-section-py").style.display = "block";
     updatePreviousYearKPIs(dataBrutaFiltradaPY, selectedUnidades, startDatePY, endDatePY);
 }
+
+// ...
 
 
 function updateVvrVsMetaPorMesChart(salesDataForYear, anoVigente) {
