@@ -478,18 +478,26 @@ function updateMainKPIs(dataBruta, selectedUnidades, startDate, endDate) {
     let metaVendas = 0;
     let metaPosVendas = 0;
     
-    // A trava de segurança está aqui.
-    if (selectedUnidades.length > 0) {
+    // --- TRAVA DE SEGURANÇA DEFINITIVA DENTRO DA FUNÇÃO ---
+    // Só calcula a meta se o usuário for admin OU se for um franqueado com unidades selecionadas.
+    const canCalculateMeta = (userAccessLevel === 'ALL_UNITS' || selectedUnidades.length > 0);
+
+    if (canCalculateMeta) {
+        // Se for admin e não selecionou nada, considera todas as unidades. Senão, usa as selecionadas.
+        const unitsToConsider = (userAccessLevel === 'ALL_UNITS' && selectedUnidades.length === 0)
+            ? [...new Set(allData.map(d => d.nm_unidade))]
+            : selectedUnidades;
+
         metasData.forEach((metaInfo, key) => {
             const [unidade, ano, mes] = key.split("-");
             const metaDate = new Date(ano, parseInt(mes) - 1, 1);
-            if (selectedUnidades.includes(unidade) && metaDate >= startDate && metaDate < endDate) {
+            if (unitsToConsider.includes(unidade) && metaDate >= startDate && metaDate < endDate) {
                 metaVendas += metaInfo.meta_vvr_vendas;
                 metaPosVendas += metaInfo.meta_vvr_posvendas;
             }
         });
     }
-    // Se selectedUnidades estiver vazio, as metas permanecerão 0.
+    // Se 'canCalculateMeta' for falso, as metas permanecerão 0.
 
     const metaTotal = metaVendas + metaPosVendas;
     const percentTotal = metaTotal > 0 ? realizadoTotal / metaTotal : 0;
@@ -539,12 +547,18 @@ function updatePreviousYearKPIs(dataBruta, selectedUnidades, startDate, endDate)
     let metaVendas = 0;
     let metaPosVendas = 0;
 
-    // A trava de segurança está aqui.
-    if (selectedUnidades.length > 0) {
+    // --- TRAVA DE SEGURANÇA DEFINITIVA DENTRO DA FUNÇÃO ---
+    const canCalculateMeta = (userAccessLevel === 'ALL_UNITS' || selectedUnidades.length > 0);
+
+    if (canCalculateMeta) {
+        const unitsToConsider = (userAccessLevel === 'ALL_UNITS' && selectedUnidades.length === 0)
+            ? [...new Set(allData.map(d => d.nm_unidade))]
+            : selectedUnidades;
+            
         metasData.forEach((metaInfo, key) => {
             const [unidade, ano, mes] = key.split("-");
             const metaDate = new Date(ano, parseInt(mes) - 1, 1);
-            if (selectedUnidades.includes(unidade) && metaDate >= startDate && metaDate < endDate) {
+            if (unitsToConsider.includes(unidade) && metaDate >= startDate && metaDate < endDate) {
                 metaVendas += metaInfo.meta_vvr_vendas;
                 metaPosVendas += metaInfo.meta_vvr_posvendas;
             }
