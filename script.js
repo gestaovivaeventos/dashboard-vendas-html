@@ -1450,20 +1450,20 @@ function updateMonthlyAdesoesChart(filteredData) {
 
     const uniqueYears = Object.keys(adesoesByYearMonth).sort();
 
-    // Limpa os botões antigos antes de criar novos, se necessário
-    selectorContainer.innerHTML = ''; 
-
-    if (uniqueYears.length > 0) {
+    // CORREÇÃO: Só cria os botões se eles ainda não existirem.
+    if (selectorContainer.children.length === 0 && uniqueYears.length > 0) {
+        const currentYear = new Date().getFullYear();
         uniqueYears.forEach((year) => {
             const button = document.createElement("button");
             button.dataset.year = year;
             button.textContent = year;
-            // Seleciona os dois últimos anos por padrão
-            if (year >= uniqueYears[uniqueYears.length - 1] || year >= uniqueYears[uniqueYears.length - 2]) { 
+            // Seleciona os dois últimos anos por padrão na primeira carga
+            if (parseInt(year) >= currentYear - 1) { 
                 button.classList.add("active"); 
             }
             selectorContainer.appendChild(button);
         });
+        // Adiciona o evento de clique a todos os botões criados
         selectorContainer.querySelectorAll("button").forEach((button) => {
             button.addEventListener("click", () => {
                 button.classList.toggle("active");
