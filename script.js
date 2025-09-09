@@ -622,11 +622,11 @@ function updateDashboard() {
     const anoVigenteParaGrafico = new Date().getFullYear();
 
     // Zera as variáveis de dados antes de refiltrar
-    dataBrutaFiltrada = [];
-    dataBrutaFiltradaPY = [];
-    dataParaGraficoAnual = [];
-    allDataForOtherCharts = [];
-    fundosDataFiltrado = [];
+    let dataBrutaFiltrada = [];
+    let dataBrutaFiltradaPY = [];
+    let dataParaGraficoAnual = [];
+    let allDataForOtherCharts = [];
+    let fundosDataFiltrado = [];
 
     const hasPermissionToViewData = (userAccessLevel === 'ALL_UNITS' || selectedUnidades.length > 0);
 
@@ -636,32 +636,31 @@ function updateDashboard() {
         const isSecondaryPage = document.getElementById('btn-page2').classList.contains('active');
         const cursoFilterLogic = d => selectedCursos.length === 0 || selectedCursos.includes(d.curso_fundo);
 
-        // Filtra os dados base (vendas e fundos) pela unidade selecionada
-        let filteredSalesData = allData.filter(filterLogicUnidade);
-        let filteredFundosData = fundosData.filter(filterLogicUnidade);
+        // Define os dados base, aplicando o filtro de unidade
+        let baseSalesData = allData.filter(filterLogicUnidade);
+        let baseFundosData = fundosData.filter(filterLogicUnidade);
 
-        // Se estiver na página secundária, aplica o filtro de curso
+        // Se estiver na página secundária, aplica o filtro de curso sobre os dados base
         if (isSecondaryPage) {
-            filteredSalesData = filteredSalesData.filter(cursoFilterLogic);
-            filteredFundosData = filteredFundosData.filter(cursoFilterLogic);
+            baseSalesData = baseSalesData.filter(cursoFilterLogic);
+            baseFundosData = baseFundosData.filter(cursoFilterLogic);
         }
 
-        // CORREÇÃO: Simplifica a criação de variáveis. 'allDataForOtherCharts' será a base para os gráficos de vendas.
-        allDataForOtherCharts = filteredSalesData; 
-        fundosDataFiltrado = filteredFundosData;
+        // Recria as variáveis para os gráficos a partir dos dados base corretamente filtrados
+        dataBrutaFiltrada = baseSalesData.filter(d => d.dt_cadastro_integrante >= startDate && d.dt_cadastro_integrante < endDate);
+        dataParaGraficoAnual = baseSalesData.filter(d => d.dt_cadastro_integrante.getFullYear() === anoVigenteParaGrafico);
+        allDataForOtherCharts = baseSalesData;
+        fundosDataFiltrado = baseFundosData;
 
-        // As variáveis de data são filtradas a partir da base já corrigida.
-        dataBrutaFiltrada = allDataForOtherCharts.filter(d => d.dt_cadastro_integrante >= startDate && d.dt_cadastro_integrante < endDate);
         const sDPY = new Date(startDate); sDPY.setFullYear(sDPY.getFullYear() - 1);
         const eDPY = new Date(endDate); eDPY.setFullYear(eDPY.getFullYear() - 1);
-        dataBrutaFiltradaPY = allDataForOtherCharts.filter(d => d.dt_cadastro_integrante >= sDPY && d.dt_cadastro_integrante < eDPY);
+        dataBrutaFiltradaPY = baseSalesData.filter(d => d.dt_cadastro_integrante >= sDPY && d.dt_cadastro_integrante < eDPY);
     }
     
-    // ATUALIZAÇÃO DOS COMPONENTES
-    // CORREÇÃO: Passa a variável correta ('allDataForOtherCharts') para os gráficos anuais e mensais.
+    // ATUALIZAÇÃO DOS COMPONENTES (usando as variáveis corretas que cada função já esperava)
     updateIndicadores(dataBrutaFiltrada, dataBrutaFiltradaPY, metasData);
-    updateVVRAnualChart(allDataForOtherCharts, metasData);
-    updateVVRMensalChart(allDataForOtherCharts, metasData);
+    updateVVRAnualChart(dataParaGraficoAnual, metasData);
+    updateVVRMensalChart(dataBrutaFiltrada, metasData);
     updateMonthlyAdesoesChart(allDataForOtherCharts);
     updateAdesoesDrillDownCharts(dataBrutaFiltrada);
     updateFundosTable(fundosDataFiltrado);
@@ -671,11 +670,7 @@ function updateDashboard() {
 
 // ...existing code...
 // ...existing code...
-function updateVVRAnualChart(filteredData, metas) {
-    const anoVigenteParaGrafico = new Date().getFullYear();
-    // CORREÇÃO: Filtra os dados pelo ano vigente DENTRO da função.
-    const dataParaGraficoAnual = filteredData.filter(d => d.dt_cadastro_integrante.getFullYear() === anoVigenteParaGrafico);
-
+function updateVVRAnualChart(dataParaGraficoAnual, metas) {
     const vvrPorMes = Array(12).fill(0);
     dataParaGraficoAnual.forEach(d => {
         const month = d.dt_cadastro_integrante.getMonth();
