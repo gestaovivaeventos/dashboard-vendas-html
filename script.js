@@ -1447,6 +1447,8 @@ function populateFilters() {
             onChange: updateDashboard,
             onSelectAll: updateDashboard,
             onDeselectAll: updateDashboard,
+            enableCaseInsensitiveFiltering: true, // Habilita pesquisa case-insensitive
+            filterBehavior: 'text' // Pesquisa no texto visível, não no valor
         });
 
         // Inicialização do multiselect para cursos com timeout para garantir que o DOM esteja pronto
@@ -1463,6 +1465,8 @@ function populateFilters() {
             onChange: updateDashboard,
             onSelectAll: updateDashboard,
             onDeselectAll: updateDashboard,
+            enableCaseInsensitiveFiltering: true, // Habilita pesquisa case-insensitive
+            filterBehavior: 'text', // Pesquisa no texto visível, não no valor
             templates: {
                 button: '<button type="button" class="multiselect dropdown-toggle" data-toggle="dropdown"><span class="multiselect-selected-text"></span></button>',
                 ul: '<ul class="multiselect-container dropdown-menu"></ul>',
@@ -1492,6 +1496,8 @@ function populateFilters() {
             onChange: updateDashboard,
             onSelectAll: updateDashboard,
             onDeselectAll: updateDashboard,
+            enableCaseInsensitiveFiltering: true, // Habilita pesquisa case-insensitive
+            filterBehavior: 'text' // Pesquisa no texto visível, não no valor
         });
 
     } else {
