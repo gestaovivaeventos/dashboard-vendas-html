@@ -654,7 +654,7 @@ function updateDashboard() {
     if (hasPermissionToViewData) {
         const filterLogic = d => {
             const unidadeMatch = selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade);
-            const cursoMatch = selectedCursos.length === 0 || selectedCursos.includes(d.curso_fundo);
+            const cursoMatch = selectedCursos.length === 0 || (d.curso_fundo && selectedCursos.includes(d.curso_fundo));
             return unidadeMatch && cursoMatch;
         };
         
@@ -666,7 +666,7 @@ function updateDashboard() {
         // Filtrar dados de fundos usando dt_contrato
         fundosDataFiltrado = fundosData.filter(d => {
             const unidadeMatch = selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade);
-            const cursoMatch = selectedCursos.length === 0 || selectedCursos.includes(d.curso_fundo);
+            const cursoMatch = selectedCursos.length === 0 || (d.curso_fundo && selectedCursos.includes(d.curso_fundo));
             const dateMatch = d.dt_contrato && d.dt_contrato >= startDate && d.dt_contrato < endDate;
             return unidadeMatch && cursoMatch && dateMatch;
         });
@@ -1482,18 +1482,15 @@ function populateFilters() {
         });
 
         // Populate cursos filter
-        const cursos = [...new Set(allData.map((d) => d.nm_curso).filter(Boolean))].sort();
-
-        // Populate fundos filter
-        const fundos = [...new Set(allData.map((d) => d.nm_fundo).filter(Boolean))].sort();
+        const cursosVendas = allData.map((d) => d.curso_fundo || '').filter(c => c && c !== 'N/A');
+        const cursosFundos = fundosData.map((d) => d.curso_fundo || '').filter(c => c && c !== 'N/A');
+        const cursos = [...new Set([...cursosVendas, ...cursosFundos])].sort();
         
         console.log('Cursos encontrados:', cursos); // Para debug
         
         cursos.forEach((c) => {
             cursoFilter.append($("<option>", { value: c, text: c }));
         });
-
-
 
         unidadeFilter.multiselect({
             enableFiltering: true,
