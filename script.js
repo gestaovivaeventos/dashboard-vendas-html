@@ -1543,6 +1543,7 @@ function populateFilters(selectedUnidades = []) {
             dropUp: false,
             dropRight: false,
             widthSynchronizationMode: 'ifPopupIsSmaller',
+            closeOnSelect: false,
             templates: {
                 ul: '<ul class="multiselect-container dropdown-menu" style="width: auto; min-width: 100%;"></ul>'
             }
@@ -1593,6 +1594,7 @@ function populateFilters(selectedUnidades = []) {
             dropUp: false,
             dropRight: false,
             widthSynchronizationMode: 'ifPopupIsSmaller',
+            closeOnSelect: false,
             templates: {
                 button: '<button type="button" class="multiselect dropdown-toggle" data-toggle="dropdown"><span class="multiselect-selected-text"></span></button>',
                 ul: '<ul class="multiselect-container dropdown-menu" style="width: auto; min-width: 100%;"></ul>',
