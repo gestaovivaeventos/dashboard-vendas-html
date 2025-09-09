@@ -632,9 +632,12 @@ function updateDashboard() {
         const isSecondaryPage = document.getElementById('btn-page2').classList.contains('active');
         const cursoFilterLogic = d => !isSecondaryPage || selectedCursos.length === 0 || selectedCursos.includes(d.curso_fundo);
 
-        dataBrutaFiltrada = allData.filter(d => filterLogic(d) && cursoFilterLogic(d) && d.dt_cadastro_integrante >= startDate && d.dt_cadastro_integrante < endDate);
-        dataParaGraficoAnual = allData.filter(d => filterLogic(d) && cursoFilterLogic(d) && d.dt_cadastro_integrante.getFullYear() === anoVigenteParaGrafico);
-        allDataForOtherCharts = allData.filter(d => filterLogic(d) && cursoFilterLogic(d));
+        // CORREÇÃO: Aplicar o filtro de curso apenas na página secundária para os dados de vendas
+        const baseData = isSecondaryPage ? allData.filter(cursoFilterLogic) : allData;
+
+        dataBrutaFiltrada = baseData.filter(d => filterLogic(d) && d.dt_cadastro_integrante >= startDate && d.dt_cadastro_integrante < endDate);
+        dataParaGraficoAnual = baseData.filter(d => filterLogic(d) && d.dt_cadastro_integrante.getFullYear() === anoVigenteParaGrafico);
+        allDataForOtherCharts = baseData.filter(filterLogic);
         
         // CORREÇÃO: Aplica o filtro de curso em 'fundosData' apenas na página secundária
         fundosDataFiltrado = fundosData.filter(d => {
@@ -645,7 +648,7 @@ function updateDashboard() {
 
         const sDPY = new Date(startDate); sDPY.setFullYear(sDPY.getFullYear() - 1);
         const eDPY = new Date(endDate); eDPY.setFullYear(eDPY.getFullYear() - 1);
-        dataBrutaFiltradaPY = allData.filter(d => filterLogic(d) && cursoFilterLogic(d) && d.dt_cadastro_integrante >= sDPY && d.dt_cadastro_integrante < eDPY);
+        dataBrutaFiltradaPY = baseData.filter(d => filterLogic(d) && d.dt_cadastro_integrante >= sDPY && d.dt_cadastro_integrante < eDPY);
     }
     
     // ATUALIZAÇÃO DOS COMPONENTES
