@@ -1373,9 +1373,25 @@ function updateDataTable(data) {
     if (dataTable) {
         dataTable.clear().rows.add(tableData).draw();
     } else {
+        // Define os títulos das colunas com base no tipo de dados selecionado
+        const getTipo = () => {
+            switch(currentTableDataType) {
+                case "vendas": return "(Vendas)";
+                case "posvendas": return "(Pós-Venda)";
+                default: return "(Total)";
+            }
+        };
+        
         dataTable = $("#dados-table").DataTable({
             data: tableData,
             pageLength: 10,
+            columns: [
+                { title: "Unidade" },
+                { title: "Período" },
+                { title: `VVR Realizado ${getTipo()}` },
+                { title: `Meta VVR ${getTipo()}` },
+                { title: `Atingimento VVR ${getTipo()}` }
+            ],
             language: { url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json" },
             destroy: true,
             dom: "Bfrtip",
@@ -1425,6 +1441,11 @@ function addEventListeners() {
             document.querySelectorAll("#table-section .chart-selector button").forEach((btn) => btn.classList.remove("active"));
             button.classList.add("active");
             currentTableDataType = button.dataset.type;
+            // Destruir e recriar a tabela para atualizar os títulos das colunas
+            if (dataTable) {
+                dataTable.destroy();
+                dataTable = null;
+            }
             updateDataTable(currentFilteredDataForTable);
             window.scrollTo(0, scrollPosition);
         });
