@@ -302,6 +302,7 @@ async function fetchAllSalesDataFromSheet() {
         const codigoIntegranteIndex = headers.indexOf("codigo_integrante");
         const nomeIntegranteIndex = headers.indexOf("nm_integrante");
         const idFundoIndex = headers.indexOf("id_fundo");
+        const cursoFundoIndex = headers.indexOf("curso_fundo"); // ADICIONADO
 
         return rows.slice(1).map((row) => {
             const dateValue = parseDate(row[dataIndex]);
@@ -315,6 +316,7 @@ async function fetchAllSalesDataFromSheet() {
                 codigo_integrante: codigoIntegranteIndex !== -1 ? row[codigoIntegranteIndex] || "N/A" : "N/A",
                 nm_integrante: nomeIntegranteIndex !== -1 ? row[nomeIntegranteIndex] || "N/A" : "N/A",
                 id_fundo: idFundoIndex !== -1 ? row[idFundoIndex] || "N/A" : "N/A",
+                curso_fundo: cursoFundoIndex !== -1 ? row[cursoFundoIndex] || "N/A" : "N/A", // ADICIONADO
             };
         }).filter(Boolean);
     } catch (error) {
@@ -348,6 +350,7 @@ async function fetchFundosData() {
     const tipoServicoIndex = headers.indexOf("tp_servico");
     const instituicaoIndex = headers.indexOf("nm_instituicao");
     const dtBaileIndex = headers.indexOf("dt_baile");
+    const cursoFundoIndex = headers.indexOf("curso_fundo"); // ADICIONADO
 
     if (unidadeIndex === -1 || idFundoIndex === -1 || dtContratoIndex === -1) {
       console.error("Colunas essenciais (nm_unidade, id_fundo, dt_contrato) não foram encontradas na planilha FUNDOS.");
@@ -377,6 +380,7 @@ async function fetchFundosData() {
         tipo_servico: tipoServicoIndex !== -1 ? row[tipoServicoIndex] || "N/A" : "N/A",
         instituicao: instituicaoIndex !== -1 ? row[instituicaoIndex] || "N/A" : "N/A",
         dt_baile: dtBaileIndex !== -1 ? parsePtBrDate(row[dtBaileIndex]) : null,
+        curso_fundo: cursoFundoIndex !== -1 ? row[cursoFundoIndex] || "N/A" : "N/A", // ADICIONADO
       };
     }).filter(Boolean);
   } catch (error) {
@@ -605,6 +609,7 @@ function updatePreviousYearKPIs(dataBruta, selectedUnidades, startDate, endDate)
 
 function updateDashboard() {
     const selectedUnidades = $("#unidade-filter").val() || [];
+    const selectedCursos = $("#curso-filter").val() || []; // ADICIONADO
     
     const startDateString = document.getElementById("start-date").value;
     const [startYear, startMonth, startDay] = startDateString.split('-').map(Number);
@@ -623,14 +628,18 @@ function updateDashboard() {
     if (hasPermissionToViewData) {
         const filterLogic = d => (selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade));
         
-        dataBrutaFiltrada = allData.filter(d => filterLogic(d) && d.dt_cadastro_integrante >= startDate && d.dt_cadastro_integrante < endDate);
-        dataParaGraficoAnual = allData.filter(d => filterLogic(d) && d.dt_cadastro_integrante.getFullYear() === anoVigenteParaGrafico);
-        allDataForOtherCharts = allData.filter(filterLogic);
-        fundosDataFiltrado = fundosData.filter(filterLogic);
+        // Lógica de filtro de curso
+        const isSecondaryPage = document.getElementById('btn-page2').classList.contains('active');
+        const cursoFilterLogic = d => !isSecondaryPage || selectedCursos.length === 0 || selectedCursos.includes(d.curso_fundo);
+
+        dataBrutaFiltrada = allData.filter(d => filterLogic(d) && cursoFilterLogic(d) && d.dt_cadastro_integrante >= startDate && d.dt_cadastro_integrante < endDate);
+        dataParaGraficoAnual = allData.filter(d => filterLogic(d) && cursoFilterLogic(d) && d.dt_cadastro_integrante.getFullYear() === anoVigenteParaGrafico);
+        allDataForOtherCharts = allData.filter(d => filterLogic(d) && cursoFilterLogic(d));
+        fundosDataFiltrado = fundosData.filter(d => filterLogic(d) && cursoFilterLogic(d));
 
         const sDPY = new Date(startDate); sDPY.setFullYear(sDPY.getFullYear() - 1);
         const eDPY = new Date(endDate); eDPY.setFullYear(eDPY.getFullYear() - 1);
-        dataBrutaFiltradaPY = allData.filter(d => filterLogic(d) && d.dt_cadastro_integrante >= sDPY && d.dt_cadastro_integrante < eDPY);
+        dataBrutaFiltradaPY = allData.filter(d => filterLogic(d) && cursoFilterLogic(d) && d.dt_cadastro_integrante >= sDPY && d.dt_cadastro_integrante < eDPY);
     }
     
     // ATUALIZAÇÃO DOS COMPONENTES
@@ -1339,6 +1348,15 @@ function addEventListeners() {
             this.classList.add("active");
             document.querySelectorAll(".page-content").forEach((page) => page.classList.remove("active"));
             document.getElementById(this.dataset.page).classList.add("active");
+
+            // ADICIONADO: Lógica para mostrar/esconder o filtro de curso
+            const cursoFilterContainer = document.getElementById('curso-filter-container');
+            if (this.id === 'btn-page2') {
+                cursoFilterContainer.style.display = 'block';
+            } else {
+                cursoFilterContainer.style.display = 'none';
+            }
+            updateDashboard(); // Atualiza o dashboard para aplicar/remover o filtro de curso
         });
     });
 
@@ -1369,7 +1387,9 @@ function addEventListeners() {
 
 function populateFilters() {
     const unidadeFilter = $("#unidade-filter");
+    const cursoFilter = $("#curso-filter"); // ADICIONADO
     unidadeFilter.empty();
+    cursoFilter.empty(); // ADICIONADO
 
     if (userAccessLevel === "ALL_UNITS") {
         // CENÁRIO 1: FRANQUEADORA (vê todas as unidades)
@@ -1426,337 +1446,35 @@ function populateFilters() {
         unidadeFilter.multiselect('disable');
     }
 
+    // ADICIONADO: Popula o filtro de Cursos
+    const cursosVendas = allData.map((d) => d.curso_fundo).filter(Boolean);
+    const cursosFundos = fundosData.map((d) => d.curso_fundo).filter(Boolean);
+    const cursos = [...new Set([...cursosVendas, ...cursosFundos])].sort();
+    
+    cursos.forEach((c) => {
+        cursoFilter.append($("<option>", { value: c, text: c }));
+    });
+
+    cursoFilter.multiselect({
+        enableFiltering: true,
+        includeSelectAllOption: true,
+        selectAllText: "Marcar todos",
+        filterPlaceholder: "Pesquisar...",
+        nonSelectedText: "Todos os cursos",
+        nSelectedText: "cursos",
+        allSelectedText: "Todos selecionados",
+        buttonWidth: "100%",
+        maxHeight: 300,
+        onChange: updateDashboard,
+        onSelectAll: updateDashboard,
+        onDeselectAll: updateDashboard,
+    });
+
+
     // Define as datas padrão
     const hoje = new Date();
     const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
     const fimMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
     document.getElementById("start-date").value = inicioMes.toISOString().split("T")[0];
     document.getElementById("end-date").value = fimMes.toISOString().split("T")[0];
-}
-
-// ...
-
-function updateMonthlyAdesoesChart(filteredData) {
-    const selectorContainer = document.getElementById("adesoes-chart-selector");
-    
-    const adesoesByYearMonth = {};
-    // A função agora opera apenas sobre 'filteredData', que já é seguro.
-    filteredData.forEach((d) => {
-        const year = d.dt_cadastro_integrante.getFullYear();
-        const month = d.dt_cadastro_integrante.getMonth();
-        if (!adesoesByYearMonth[year]) { adesoesByYearMonth[year] = Array(12).fill(0); }
-        adesoesByYearMonth[year][month]++;
-    });
-
-    const uniqueYears = Object.keys(adesoesByYearMonth).sort();
-
-    // CORREÇÃO: Só cria os botões se eles ainda não existirem.
-    if (selectorContainer.children.length === 0 && uniqueYears.length > 0) {
-        const currentYear = new Date().getFullYear();
-        uniqueYears.forEach((year) => {
-            const button = document.createElement("button");
-            button.dataset.year = year;
-            button.textContent = year;
-            // Seleciona os dois últimos anos por padrão na primeira carga
-            if (parseInt(year) >= currentYear - 1) { 
-                button.classList.add("active"); 
-            }
-            selectorContainer.appendChild(button);
-        });
-        // Adiciona o evento de clique a todos os botões criados
-        selectorContainer.querySelectorAll("button").forEach((button) => {
-            button.addEventListener("click", () => {
-                button.classList.toggle("active");
-                updateDashboard(); // Re-renderiza o dashboard com a nova seleção de anos
-            });
-        });
-    }
-
-    const activeYears = Array.from(selectorContainer.querySelectorAll("button.active")).map((btn) => parseInt(btn.dataset.year));
-    const colors = ["#6c757d", "#28a745", "#dc3545", "#ffc107", "#007bff", "#17a2b8", "#fd7e14"];
-    const datasets = uniqueYears.map((year, index) => ({
-        label: year,
-        data: adesoesByYearMonth[year] || Array(12).fill(0),
-        backgroundColor: colors[index % colors.length],
-        hidden: !activeYears.includes(parseInt(year)),
-    }));
-
-    const monthLabels = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
-    if (monthlyAdesoesChart) monthlyAdesoesChart.destroy();
-    monthlyAdesoesChart = new Chart(document.getElementById("monthlyAdesoesChart"), {
-        type: "bar",
-        data: { labels: monthLabels, datasets: datasets },
-        options: {
-            maintainAspectRatio: false,
-            interaction: { mode: "index", intersect: false },
-            plugins: {
-                tooltip: {
-                    callbacks: {
-                        label: function (context) {
-                            let label = context.dataset.label || "";
-                            if (label) { label += ": "; }
-                            if (context.parsed.y !== null) { label += context.parsed.y; }
-                            return label;
-                        },
-                    },
-                },
-                datalabels: {
-                    display: true, align: "center", anchor: "center", color: "#FFFFFF", font: { size: 14, weight: "bold" },
-                    formatter: (value) => (value > 0 ? value : ""),
-                },
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: { callback: function (value) { return value >= 1000 ? value / 1000 + " mil" : value; } },
-                },
-            },
-        },
-    });
-}
-
-function updateAdesoesDrillDownCharts(filteredData) {
-    const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    const adesoesByYear = {};
-    
-    // A função agora opera apenas sobre 'filteredData', que já é seguro.
-    filteredData.forEach((d) => {
-        const year = d.dt_cadastro_integrante.getFullYear();
-        if (!adesoesByYear[year]) { adesoesByYear[year] = { vendas: 0, posVendas: 0 }; }
-        if (normalizeText(d.venda_posvenda) === "VENDA") {
-            adesoesByYear[year].vendas++;
-        } else if (normalizeText(d.venda_posvenda) === "POS VENDA") {
-            adesoesByYear[year].posVendas++;
-        }
-    });
-
-    const years = Object.keys(adesoesByYear).sort();
-    const adesoesVendasAnual = years.map((year) => adesoesByYear[year].vendas);
-    const adesoesPosVendasAnual = years.map((year) => adesoesByYear[year].posVendas);
-
-    if (yearlyAdesoesStackedChart) yearlyAdesoesStackedChart.destroy();
-    yearlyAdesoesStackedChart = new Chart(document.getElementById("yearlyAdesoesStackedChart"), {
-        type: "bar",
-        data: {
-            labels: years,
-            datasets: [
-                { label: "Pós Venda", data: adesoesPosVendasAnual, backgroundColor: "#007bff" },
-                { label: "Venda", data: adesoesVendasAnual, backgroundColor: "#6c757d" },
-            ],
-        },
-        options: {
-            devicePixelRatio: window.devicePixelRatio,
-            interaction: { mode: "y", intersect: false },
-            maintainAspectRatio: false,
-            indexAxis: "y",
-            scales: { x: { stacked: true }, y: { stacked: true } },
-            plugins: {
-                datalabels: {
-                    color: "white", font: { weight: "bold" },
-                    formatter: (value) => (value > 0 ? value : ""),
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function (context) {
-                            let label = context.dataset.label || "";
-                            if (label) { label += ": "; }
-                            if (context.parsed.x !== null) { label += context.parsed.x; }
-                            return label;
-                        },
-                        footer: function (tooltipItems) {
-                            let sum = tooltipItems.reduce((acc, item) => acc + item.parsed.x, 0);
-                            return "Total: " + sum;
-                        },
-                    },
-                },
-            },
-            onClick: (event, elements) => {
-                if (elements.length > 0) {
-                    const clickedYear = years[elements[0].index];
-                    drawMonthlyAdesoesDetailChart(filteredData, clickedYear);
-                }
-            },
-        },
-    });
-
-    // Lógica para limpar ou desenhar o gráfico mensal
-    if (years.length > 0) {
-        drawMonthlyAdesoesDetailChart(filteredData, years[years.length - 1]);
-    } else {
-        drawMonthlyAdesoesDetailChart([], new Date().getFullYear());
-    }
-}
-
-function drawMonthlyAdesoesDetailChart(data, year) {
-    document.getElementById("monthly-adesoes-stacked-title").textContent = `Adesões por Tipo (Mensal ${year})`;
-    const adesoesByMonth = Array(12).fill(0).map(() => ({ vendas: 0, posVendas: 0 }));
-    
-    const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    data.forEach((d) => {
-        if (d.dt_cadastro_integrante.getFullYear() === parseInt(year)) {
-            const month = d.dt_cadastro_integrante.getMonth();
-            if (normalizeText(d.venda_posvenda) === "VENDA") {
-                adesoesByMonth[month].vendas++;
-            } else if (normalizeText(d.venda_posvenda) === "POS VENDA") {
-                adesoesByMonth[month].posVendas++;
-            }
-        }
-    });
-
-    const adesoesVendasMensal = adesoesByMonth.map((m) => m.vendas);
-    const adesoesPosVendasMensal = adesoesByMonth.map((m) => m.posVendas);
-    const monthLabels = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
-
-    if (monthlyAdesoesStackedChart) monthlyAdesoesStackedChart.destroy();
-    monthlyAdesoesStackedChart = new Chart(document.getElementById("monthlyAdesoesStackedChart"), {
-        type: "bar",
-        data: {
-            labels: monthLabels,
-            datasets: [
-                { label: "Pós Venda", data: adesoesPosVendasMensal, backgroundColor: "#007bff" },
-                { label: "Venda", data: adesoesVendasMensal, backgroundColor: "#6c757d" },
-            ],
-        },
-        options: {
-            devicePixelRatio: window.devicePixelRatio,
-            interaction: { mode: "index", intersect: false },
-            maintainAspectRatio: false,
-            scales: { x: { stacked: true }, y: { stacked: true } },
-            plugins: {
-                datalabels: {
-                    color: "white", font: { weight: "bold" },
-                    formatter: (value) => (value > 0 ? value : ""),
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function (context) {
-                            let label = context.dataset.label || "";
-                            if (label) { label += ": "; }
-                            if (context.parsed.y !== null) { label += context.parsed.y; }
-                            return label;
-                        },
-                        footer: function (tooltipItems) {
-                            let sum = tooltipItems.reduce((acc, item) => acc + item.parsed.y, 0);
-                            return "Total: " + sum;
-                        },
-                    },
-                },
-            },
-        },
-    });
-}
-
-function updateConsultorTable(filteredData) {
-    const performanceMap = new Map();
-    filteredData.forEach((d) => {
-        const key = `${d.nm_unidade}-${d.indicado_por}`;
-        if (!performanceMap.has(key)) {
-            performanceMap.set(key, {
-                unidade: d.nm_unidade,
-                consultor: d.indicado_por,
-                vvr_total: 0,
-                total_adesoes: 0,
-            });
-        }
-        const entry = performanceMap.get(key);
-        entry.vvr_total += d.vl_plano;
-        entry.total_adesoes += 1;
-    });
-
-    const tableData = Array.from(performanceMap.values()).map((item) => [item.unidade, item.consultor, formatCurrency(item.vvr_total), item.total_adesoes]);
-
-    if (consultorDataTable) {
-        consultorDataTable.clear().rows.add(tableData).draw();
-    } else {
-        consultorDataTable = $("#consultor-table").DataTable({
-            data: tableData,
-            pageLength: 10,
-            language: { url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json" },
-            destroy: true,
-            dom: "Bfrtip",
-            buttons: [{
-                extend: "excelHtml5", text: "Exportar para Excel", title: `Relatorio_Consultores_${new Date().toLocaleDateString("pt-BR")}`, className: "excel-button",
-                exportOptions: {
-                    format: {
-                        body: function (data, row, column, node) {
-                            if (column === 2) { return parseFloat(String(data).replace("R$", "").replace(/\./g, "").replace(",", ".").trim()); }
-                            if (column === 3) { return Number(data); }
-                            return data;
-                        },
-                    },
-                },
-            }],
-        });
-    }
-}
-
-function updateDetalhadaAdesoesTable(filteredData) {
-    const tableData = filteredData.map((d) => [
-        d.nm_unidade,
-        d.codigo_integrante,
-        d.nm_integrante,
-        d.dt_cadastro_integrante.toLocaleDateString("pt-BR"),
-        d.id_fundo,
-        d.venda_posvenda,
-        d.indicado_por,
-        d.vl_plano,
-    ]);
-
-    if (detalhadaAdesoesDataTable) {
-        detalhadaAdesoesDataTable.clear().rows.add(tableData).draw();
-    } else {
-        detalhadaAdesoesDataTable = $("#detalhada-adesoes-table").DataTable({
-            data: tableData,
-            columns: [null, null, null, null, null, null, null, { render: (data) => formatCurrency(data) }],
-            pageLength: 10,
-            language: { url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json" },
-            destroy: true,
-            dom: "Bfrtip",
-            buttons: [{
-                extend: "excelHtml5", text: "Exportar para Excel", title: `Relatorio_Adesoes_Detalhadas_${new Date().toLocaleDateString("pt-BR")}`, className: "excel-button",
-                exportOptions: {
-                    format: {
-                        body: function (data, row, column, node) {
-                            if (column === 7) { return parseFloat(String(data).replace("R$", "").replace(/\./g, "").replace(",", ".").trim()); }
-                            return data;
-                        },
-                    },
-                },
-            }],
-        });
-    }
-}
-
-function updateFundosDetalhadosTable(fundosData, selectedUnidades, startDate, endDate) {
-    const filteredData = fundosData.filter((d) => {
-        const isUnitMatch = selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade);
-        const isDateMatch = d.dt_contrato >= startDate && d.dt_contrato < endDate;
-        return isUnitMatch && isDateMatch;
-    });
-
-    const tableData = filteredData.map((d) => [
-        d.nm_unidade,
-        d.id_fundo,
-        d.fundo,
-        formatDate(d.dt_contrato),
-        formatDate(d.dt_cadastro),
-        d.tipo_servico,
-        d.instituicao,
-        formatDate(d.dt_baile),
-    ]);
-
-    if (fundosDetalhadosDataTable) {
-        fundosDetalhadosDataTable.clear().rows.add(tableData).draw();
-    } else {
-        fundosDetalhadosDataTable = $("#fundos-detalhados-table").DataTable({
-            data: tableData,
-            pageLength: 10,
-            language: { url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json" },
-            destroy: true,
-            dom: "Bfrtip",
-            buttons: [{
-                extend: "excelHtml5", text: "Exportar para Excel", title: `Relatorio_Fundos_Detalhados_${new Date().toLocaleDateString("pt-BR")}`, className: "excel-button",
-            }],
-        });
-    }
 }
