@@ -302,7 +302,6 @@ async function fetchAllSalesDataFromSheet() {
         const codigoIntegranteIndex = headers.indexOf("codigo_integrante");
         const nomeIntegranteIndex = headers.indexOf("nm_integrante");
         const idFundoIndex = headers.indexOf("id_fundo");
-        const cursoFundoIndex = headers.indexOf("curso_fundo"); // ADICIONADO
 
         return rows.slice(1).map((row) => {
             const dateValue = parseDate(row[dataIndex]);
@@ -316,7 +315,6 @@ async function fetchAllSalesDataFromSheet() {
                 codigo_integrante: codigoIntegranteIndex !== -1 ? row[codigoIntegranteIndex] || "N/A" : "N/A",
                 nm_integrante: nomeIntegranteIndex !== -1 ? row[nomeIntegranteIndex] || "N/A" : "N/A",
                 id_fundo: idFundoIndex !== -1 ? row[idFundoIndex] || "N/A" : "N/A",
-                curso_fundo: cursoFundoIndex !== -1 ? row[cursoFundoIndex] || "N/A" : "N/A", // ADICIONADO
             };
         }).filter(Boolean);
     } catch (error) {
@@ -350,7 +348,6 @@ async function fetchFundosData() {
     const tipoServicoIndex = headers.indexOf("tp_servico");
     const instituicaoIndex = headers.indexOf("nm_instituicao");
     const dtBaileIndex = headers.indexOf("dt_baile");
-    const cursoFundoIndex = headers.indexOf("curso_fundo"); // ADICIONADO
 
     if (unidadeIndex === -1 || idFundoIndex === -1 || dtContratoIndex === -1) {
       console.error("Colunas essenciais (nm_unidade, id_fundo, dt_contrato) não foram encontradas na planilha FUNDOS.");
@@ -380,7 +377,6 @@ async function fetchFundosData() {
         tipo_servico: tipoServicoIndex !== -1 ? row[tipoServicoIndex] || "N/A" : "N/A",
         instituicao: instituicaoIndex !== -1 ? row[instituicaoIndex] || "N/A" : "N/A",
         dt_baile: dtBaileIndex !== -1 ? parsePtBrDate(row[dtBaileIndex]) : null,
-        curso_fundo: cursoFundoIndex !== -1 ? row[cursoFundoIndex] || "N/A" : "N/A", // ADICIONADO
       };
     }).filter(Boolean);
   } catch (error) {
@@ -609,149 +605,162 @@ function updatePreviousYearKPIs(dataBruta, selectedUnidades, startDate, endDate)
 
 function updateDashboard() {
     const selectedUnidades = $("#unidade-filter").val() || [];
-    const selectedCursos = $("#curso-filter").val() || [];
     
     const startDateString = document.getElementById("start-date").value;
     const [startYear, startMonth, startDay] = startDateString.split('-').map(Number);
     const startDate = new Date(startYear, startMonth - 1, startDay);
-
+    
     const endDateString = document.getElementById("end-date").value;
     const [endYear, endMonth, endDay] = endDateString.split('-').map(Number);
-    const endDate = new Date(endYear, endMonth - 1, endDay + 1);
+    const endDate = new Date(endYear, endMonth - 1, endDay);
+    endDate.setDate(endDate.getDate() + 1);
 
-    const anoVigenteParaGrafico = new Date().getFullYear();
+    const anoVigenteParaGrafico = startDate.getFullYear();
 
-    let dataBrutaFiltrada = [];
-    let dataBrutaFiltradaPY = [];
-    let fundosDataFiltrado = [];
-    let salesDataFilteredForCharts = [];
-
+    let dataBrutaFiltrada = [], dataParaGraficoAnual = [], allDataForOtherCharts = [], fundosDataFiltrado = [], dataBrutaFiltradaPY = [];
     const hasPermissionToViewData = (userAccessLevel === 'ALL_UNITS' || selectedUnidades.length > 0);
 
     if (hasPermissionToViewData) {
-        const filterLogicUnidade = d => (selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade));
-        const cursoFilterLogic = d => selectedCursos.length === 0 || selectedCursos.includes(d.curso_fundo);
-
-        // Aplica filtro de unidade e curso
-        let baseSalesData = allData.filter(filterLogicUnidade).filter(cursoFilterLogic);
-        let baseFundosData = fundosData.filter(filterLogicUnidade).filter(cursoFilterLogic);
-
-        // Dados para os KPIs e tabelas (período selecionado)
-        dataBrutaFiltrada = baseSalesData.filter(d => d.dt_cadastro_integrante >= startDate && d.dt_cadastro_integrante < endDate);
+        const filterLogic = d => (selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade));
         
-        // Dados para os KPIs do ano anterior
+        dataBrutaFiltrada = allData.filter(d => filterLogic(d) && d.dt_cadastro_integrante >= startDate && d.dt_cadastro_integrante < endDate);
+        dataParaGraficoAnual = allData.filter(d => filterLogic(d) && d.dt_cadastro_integrante.getFullYear() === anoVigenteParaGrafico);
+        allDataForOtherCharts = allData.filter(filterLogic);
+        fundosDataFiltrado = fundosData.filter(filterLogic);
+
         const sDPY = new Date(startDate); sDPY.setFullYear(sDPY.getFullYear() - 1);
         const eDPY = new Date(endDate); eDPY.setFullYear(eDPY.getFullYear() - 1);
-        dataBrutaFiltradaPY = allData.filter(filterLogicUnidade).filter(cursoFilterLogic) // Re-filtra os dados completos para o período PY
-                                     .filter(d => d.dt_cadastro_integrante >= sDPY && d.dt_cadastro_integrante < eDPY);
-
-        // Dados para os gráficos (geralmente todo o histórico filtrado por unidade/curso)
-        salesDataFilteredForCharts = baseSalesData;
-        fundosDataFiltrado = baseFundosData;
+        dataBrutaFiltradaPY = allData.filter(d => filterLogic(d) && d.dt_cadastro_integrante >= sDPY && d.dt_cadastro_integrante < eDPY);
     }
     
     // ATUALIZAÇÃO DOS COMPONENTES
-    updateMainKPIs(dataBrutaFiltrada, selectedUnidades, startDate, endDate);
-    updatePreviousYearKPIs(dataBrutaFiltradaPY, selectedUnidades, new Date(startDate.getFullYear() - 1, startDate.getMonth(), startDate.getDate()), new Date(endDate.getFullYear() - 1, endDate.getMonth(), endDate.getDate()));
+    updateVvrVsMetaPorMesChart(dataParaGraficoAnual, anoVigenteParaGrafico);
+    updateCumulativeVvrChart(allDataForOtherCharts, selectedUnidades);
+    updateMonthlyVvrChart(allDataForOtherCharts, selectedUnidades);
     
-    const dataParaGraficoAnual = salesDataFilteredForCharts.filter(d => d.dt_cadastro_integrante.getFullYear() === anoVigenteParaGrafico);
-    updateVVRAnualChart(dataParaGraficoAnual, metasData, selectedUnidades, anoVigenteParaGrafico);
+    // A chamada para a função corrigida agora passa só um parâmetro
+    updateMonthlyAdesoesChart(allDataForOtherCharts);
     
-    updateVVRMensalChart(dataBrutaFiltrada, metasData);
+    // Todas as chamadas abaixo estão corrigidas e seguras
+    updateDrillDownCharts(allDataForOtherCharts);
+    updateTicketCharts(allDataForOtherCharts);
+    updateContractsCharts(fundosDataFiltrado);
+    updateAdesoesDrillDownCharts(allDataForOtherCharts);
     
-    updateCumulativeVvrChart(salesDataFilteredForCharts);
-    updateMonthlyVvrChart(salesDataFilteredForCharts);
-    updateDrillDownCharts(salesDataFilteredForCharts);
-    updateTicketMedioCharts(salesDataFilteredForCharts);
-    updateContractsCharts(salesDataFilteredForCharts);
-    updateAdesoesCharts(salesDataFilteredForCharts);
-
-    updateAdesoesTable(dataBrutaFiltrada);
     updateConsultorTable(dataBrutaFiltrada);
-    updateFundosTable(fundosDataFiltrado);
-    updateVVRTable(dataBrutaFiltrada, metasData);
+    updateDetalhadaAdesoesTable(dataBrutaFiltrada);
+    updateFundosDetalhadosTable(fundosDataFiltrado, selectedUnidades, startDate, endDate);
+    updateMainKPIs(dataBrutaFiltrada, selectedUnidades, startDate, endDate);
+    
+    const dataAgregadaComVendas = processAndCrossReferenceData(dataBrutaFiltrada);
+    currentFilteredDataForTable = dataAgregadaComVendas; 
+    updateDataTable(dataAgregadaComVendas);
+    
+    document.getElementById("kpi-section-py").style.display = "block";
+    updatePreviousYearKPIs(dataBrutaFiltradaPY, selectedUnidades, startDate, endDate);
 }
 
-// ...existing code...
-// ...existing code...
-function updateVVRAnualChart(dataParaGraficoAnual, metas, selectedUnidades, anoVigente) {
-    const vvrPorMes = Array(12).fill(0);
-    const vvrVendasPorMes = Array(12).fill(0);
-    const vvrPosVendasPorMes = Array(12).fill(0);
+// ...
+
+
+function updateVvrVsMetaPorMesChart(salesDataForYear, anoVigente) {
+    const allYearPeriodos = Array.from({ length: 12 }, (_, i) => `${anoVigente}-${String(i + 1).padStart(2, "0")}`);
+    const chartDataMap = new Map();
+    
+    // Inicializa o mapa do gráfico com valores zerados
+    allYearPeriodos.forEach((periodo) => {
+        chartDataMap.set(periodo, {
+            realizado_vendas: 0,
+            realizado_posvendas: 0,
+            meta_vendas: 0,
+            meta_posvendas: 0,
+            meta_total: 0,
+        });
+    });
 
     const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
-    dataParaGraficoAnual.forEach(d => {
-        const month = d.dt_cadastro_integrante.getMonth();
-        vvrPorMes[month] += d.vl_plano;
-        if (normalizeText(d.venda_posvenda) === "VENDA") {
-            vvrVendasPorMes[month] += d.vl_plano;
-        } else if (normalizeText(d.venda_posvenda) === "POS VENDA") {
-            vvrPosVendasPorMes[month] += d.vl_plano;
-        }
-    });
-
-    const metaVendasPorMes = Array(12).fill(0);
-    const metaPosVendasPorMes = Array(12).fill(0);
-    
-    const unitsToConsider = (userAccessLevel === 'ALL_UNITS' && selectedUnidades.length === 0)
-        ? [...new Set(allData.map(d => d.nm_unidade))]
-        : selectedUnidades;
-
-    metas.forEach((metaInfo, key) => {
-        const [unidade, ano, mes] = key.split("-");
-        if (String(ano) === String(anoVigente) && unitsToConsider.includes(unidade)) {
-            const monthIndex = parseInt(mes) - 1;
-            if (!isNaN(monthIndex)) {
-                metaVendasPorMes[monthIndex] += metaInfo.meta_vvr_vendas;
-                metaPosVendasPorMes[monthIndex] += metaInfo.meta_vvr_posvendas;
+    // 1. Calcula o VALOR REALIZADO (esta parte já estava correta)
+    // Ela usa 'salesDataForYear', que já vem filtrado ou vazio
+    salesDataForYear.forEach((d) => {
+        const year = d.dt_cadastro_integrante.getFullYear();
+        const month = String(d.dt_cadastro_integrante.getMonth() + 1).padStart(2, "0");
+        const periodo = `${year}-${month}`;
+        if (chartDataMap.has(periodo)) {
+            if (normalizeText(d.venda_posvenda) === "VENDA") {
+                chartDataMap.get(periodo).realizado_vendas += d.vl_plano;
+            } else if (normalizeText(d.venda_posvenda) === "POS VENDA") {
+                chartDataMap.get(periodo).realizado_posvendas += d.vl_plano;
             }
         }
     });
 
-    const labels = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+    // 2. Calcula a META (lógica de segurança aplicada aqui)
+    const selectedUnidades = $("#unidade-filter").val() || [];
+    const canCalculateMeta = (userAccessLevel === 'ALL_UNITS' || selectedUnidades.length > 0);
+
+    if (canCalculateMeta) {
+        const unitsToConsider = (userAccessLevel === 'ALL_UNITS' && selectedUnidades.length === 0)
+            ? [...new Set(allData.map(d => d.nm_unidade))]
+            : selectedUnidades;
+
+        metasData.forEach((metaInfo, key) => {
+            const [unidade, ano, mes] = key.split("-");
+            const periodo = `${ano}-${mes}`;
+            if (String(ano) === String(anoVigente) && chartDataMap.has(periodo)) {
+                if (unitsToConsider.includes(unidade)) {
+                    chartDataMap.get(periodo).meta_vendas += metaInfo.meta_vvr_vendas;
+                    chartDataMap.get(periodo).meta_posvendas += metaInfo.meta_vvr_posvendas;
+                    chartDataMap.get(periodo).meta_total += metaInfo.meta_vvr_total;
+                }
+            }
+        });
+    }
+    // Se 'canCalculateMeta' for falso, os valores de meta no chartDataMap permanecerão 0.
+
+    // 3. Monta e desenha o gráfico (nenhuma alteração aqui)
+    let realizadoValues, metaValues;
+    if (currentVvrChartType === "vendas") {
+        realizadoValues = allYearPeriodos.map((p) => chartDataMap.get(p).realizado_vendas);
+        metaValues = allYearPeriodos.map((p) => chartDataMap.get(p).meta_vendas);
+    } else if (currentVvrChartType === "posvendas") {
+        realizadoValues = allYearPeriodos.map((p) => chartDataMap.get(p).realizado_posvendas);
+        metaValues = allYearPeriodos.map((p) => chartDataMap.get(p).meta_posvendas);
+    } else { // 'total'
+        realizadoValues = allYearPeriodos.map((p) => chartDataMap.get(p).realizado_vendas + chartDataMap.get(p).realizado_posvendas);
+        metaValues = allYearPeriodos.map((p) => chartDataMap.get(p).meta_total);
+    }
+
+    const formattedLabels = allYearPeriodos.map((periodo) => {
+        const [year, month] = periodo.split("-");
+        const date = new Date(year, month - 1);
+        const monthName = date.toLocaleString("pt-BR", { month: "short" }).replace(".", "");
+        return `${monthName}-${year.slice(2)}`;
+    });
 
     if (vvrVsMetaPorMesChart) vvrVsMetaPorMesChart.destroy();
-    
+    Chart.register(ChartDataLabels);
     vvrVsMetaPorMesChart = new Chart(document.getElementById("vvrVsMetaPorMesChart"), {
         type: "bar",
         data: {
-            labels: labels,
+            labels: formattedLabels,
             datasets: [
-                { 
-                    label: "Vendas", 
-                    data: vvrVendasPorMes, 
-                    backgroundColor: "#007bff", 
-                    stack: 'Stack 0',
-                },
-                { 
-                    label: "Pós-Venda", 
-                    data: vvrPosVendasPorMes, 
-                    backgroundColor: "#6c757d", 
-                    stack: 'Stack 0',
-                },
+                { label: "VVR Realizado", data: realizadoValues, backgroundColor: "rgba(255, 193, 7, 0.7)", order: 1 },
                 {
-                    label: "Meta Vendas",
-                    data: metaVendasPorMes,
+                    label: "Meta VVR",
+                    data: metaValues,
                     type: "line",
-                    borderColor: "#28a745",
-                    backgroundColor: "#28a745",
-                    fill: false,
-                    tension: 0.1,
+                    borderColor: "rgb(220, 53, 69)",
+                    order: 0,
                     datalabels: {
-                        display: false
-                    },
-                },
-                {
-                    label: "Meta Pós-Venda",
-                    data: metaPosVendasPorMes,
-                    type: "line",
-                    borderColor: "#dc3545",
-                    backgroundColor: "#dc3545",
-                    fill: false,
-                    tension: 0.1,
-                    datalabels: {
-                        display: false
+                        display: true,
+                        align: "bottom",
+                        backgroundColor: "rgba(0, 0, 0, 0.6)",
+                        borderRadius: 4,
+                        color: "white",
+                        font: { size: 15 },
+                        padding: 4,
+                        formatter: (value) => (value > 0 ? `${(value / 1000).toFixed(0)}k` : ""),
                     },
                 },
             ],
@@ -763,24 +772,7 @@ function updateVVRAnualChart(dataParaGraficoAnual, metas, selectedUnidades, anoV
                 datalabels: {
                     anchor: "end",
                     align: "end",
-                    formatter: (value, context) => {
-                         // Mostra o total da barra empilhada
-                        if (context.dataset.stack) {
-                            const datasetArray = context.chart.data.datasets;
-                            const stackName = context.dataset.stack;
-                            if (context.datasetIndex === datasetArray.findIndex(ds => ds.stack === stackName && !ds.hidden)) {
-                                let total = 0;
-                                datasetArray.forEach(ds => {
-                                    if (ds.stack === stackName && !ds.hidden) {
-                                        total += ds.data[context.dataIndex] || 0;
-                                    }
-                                });
-                                return total > 1000 ? `${(total / 1000).toFixed(0)}k` : (total > 0 ? total.toFixed(0) : '');
-                            }
-                            return '';
-                        }
-                        return value > 1000 ? `${(value / 1000).toFixed(0)}k` : (value > 0 ? value.toFixed(0) : '');
-                    },
+                    formatter: (value) => (value >= 1000 ? `${(value / 1000).toFixed(0)}k` : ""),
                     color: "#F8F9FA",
                     font: { weight: "bold" },
                 },
@@ -795,22 +787,7 @@ function updateVVRAnualChart(dataParaGraficoAnual, metas, selectedUnidades, anoV
                     },
                 },
             },
-            scales: { 
-                y: { 
-                    beginAtZero: true,
-                    stacked: true,
-                    ticks: {
-                        callback: function(value) {
-                            if (value >= 1000000) return `${value / 1000000}M`;
-                            if (value >= 1000) return `${value / 1000}k`;
-                            return value;
-                        }
-                    }
-                },
-                x: {
-                    stacked: true
-                }
-            },
+            scales: { y: { beginAtZero: true } },
         },
     });
 }
@@ -822,11 +799,13 @@ function updateVVRAnualChart(dataParaGraficoAnual, metas, selectedUnidades, anoV
 
 // ... cole o restante das suas funções originais aqui (a partir de updateCumulativeVvrChart) ...
 
-function updateCumulativeVvrChart(filteredData) {
+function updateCumulativeVvrChart(historicalData, selectedUnidades) {
     const selectorContainer = document.getElementById("cumulative-chart-selector");
+    const unitsToConsider = selectedUnidades.length > 0 ? selectedUnidades : [...new Set(allData.map((d) => d.nm_unidade))];
+    const filteredHistoricalData = historicalData.filter((d) => unitsToConsider.includes(d.nm_unidade));
     
     const salesByYearMonth = {};
-    const uniqueYears = [...new Set(filteredData.map((d) => d.dt_cadastro_integrante.getFullYear()))].sort();
+    const uniqueYears = [...new Set(filteredHistoricalData.map((d) => d.dt_cadastro_integrante.getFullYear()))].sort();
     
     if (selectorContainer.children.length === 0) {
         uniqueYears.forEach((year) => {
@@ -845,7 +824,7 @@ function updateCumulativeVvrChart(filteredData) {
     }
 
     const activeYears = Array.from(selectorContainer.querySelectorAll("button.active")).map((btn) => parseInt(btn.dataset.year));
-    filteredData.forEach((d) => {
+    filteredHistoricalData.forEach((d) => {
         const year = d.dt_cadastro_integrante.getFullYear();
         const month = d.dt_cadastro_integrante.getMonth();
         if (!salesByYearMonth[year]) { salesByYearMonth[year] = Array(12).fill(0); }
@@ -902,11 +881,13 @@ function updateCumulativeVvrChart(filteredData) {
     });
 }
 
-function updateMonthlyVvrChart(filteredData) {
+function updateMonthlyVvrChart(historicalData, selectedUnidades) {
     const selectorContainer = document.getElementById("monthly-chart-selector");
+    const unitsToConsider = selectedUnidades.length > 0 ? selectedUnidades : [...new Set(allData.map((d) => d.nm_unidade))];
+    const filteredHistoricalData = historicalData.filter((d) => unitsToConsider.includes(d.nm_unidade));
     
     const salesByYearMonth = {};
-    const uniqueYears = [...new Set(filteredData.map((d) => d.dt_cadastro_integrante.getFullYear()))].sort();
+    const uniqueYears = [...new Set(filteredHistoricalData.map((d) => d.dt_cadastro_integrante.getFullYear()))].sort();
 
     if (selectorContainer.children.length === 0) {
         uniqueYears.forEach((year) => {
@@ -925,7 +906,7 @@ function updateMonthlyVvrChart(filteredData) {
     }
 
     const activeYears = Array.from(selectorContainer.querySelectorAll("button.active")).map((btn) => parseInt(btn.dataset.year));
-    filteredData.forEach((d) => {
+    filteredHistoricalData.forEach((d) => {
         const year = d.dt_cadastro_integrante.getFullYear();
         const month = d.dt_cadastro_integrante.getMonth();
         if (!salesByYearMonth[year]) { salesByYearMonth[year] = Array(12).fill(0); }
@@ -983,6 +964,7 @@ function updateDrillDownCharts(filteredData) {
     const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     const salesByYear = {};
 
+    // A função agora opera apenas sobre 'filteredData', que já é seguro.
     filteredData.forEach((d) => {
         const year = d.dt_cadastro_integrante.getFullYear();
         if (!salesByYear[year]) { salesByYear[year] = { vendas: 0, posVendas: 0 }; }
@@ -1357,15 +1339,6 @@ function addEventListeners() {
             this.classList.add("active");
             document.querySelectorAll(".page-content").forEach((page) => page.classList.remove("active"));
             document.getElementById(this.dataset.page).classList.add("active");
-
-            // ADICIONADO: Lógica para mostrar/esconder o filtro de curso
-            const cursoFilterContainer = document.getElementById('curso-filter-container');
-            if (this.id === 'btn-page2') {
-                cursoFilterContainer.style.display = 'block';
-            } else {
-                cursoFilterContainer.style.display = 'none';
-            }
-            updateDashboard(); // Atualiza o dashboard para aplicar/remover o filtro de curso
         });
     });
 
@@ -1396,9 +1369,7 @@ function addEventListeners() {
 
 function populateFilters() {
     const unidadeFilter = $("#unidade-filter");
-    const cursoFilter = $("#curso-filter"); // ADICIONADO
     unidadeFilter.empty();
-    cursoFilter.empty(); // ADICIONADO
 
     if (userAccessLevel === "ALL_UNITS") {
         // CENÁRIO 1: FRANQUEADORA (vê todas as unidades)
@@ -1455,35 +1426,337 @@ function populateFilters() {
         unidadeFilter.multiselect('disable');
     }
 
-    // ADICIONADO: Popula o filtro de Cursos
-    const cursosVendas = allData.map((d) => d.curso_fundo).filter(Boolean);
-    const cursosFundos = fundosData.map((d) => d.curso_fundo).filter(Boolean);
-    const cursos = [...new Set([...cursosVendas, ...cursosFundos])].sort();
-    
-    cursos.forEach((c) => {
-        cursoFilter.append($("<option>", { value: c, text: c }));
-    });
-
-    cursoFilter.multiselect({
-        enableFiltering: true,
-        includeSelectAllOption: true,
-        selectAllText: "Marcar todos",
-        filterPlaceholder: "Pesquisar...",
-        nonSelectedText: "Todos os cursos",
-        nSelectedText: "cursos",
-        allSelectedText: "Todos selecionados",
-        buttonWidth: "100%",
-        maxHeight: 300,
-        onChange: updateDashboard,
-        onSelectAll: updateDashboard,
-        onDeselectAll: updateDashboard,
-    });
-
-
     // Define as datas padrão
     const hoje = new Date();
     const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
     const fimMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
     document.getElementById("start-date").value = inicioMes.toISOString().split("T")[0];
     document.getElementById("end-date").value = fimMes.toISOString().split("T")[0];
+}
+
+// ...
+
+function updateMonthlyAdesoesChart(filteredData) {
+    const selectorContainer = document.getElementById("adesoes-chart-selector");
+    
+    const adesoesByYearMonth = {};
+    // A função agora opera apenas sobre 'filteredData', que já é seguro.
+    filteredData.forEach((d) => {
+        const year = d.dt_cadastro_integrante.getFullYear();
+        const month = d.dt_cadastro_integrante.getMonth();
+        if (!adesoesByYearMonth[year]) { adesoesByYearMonth[year] = Array(12).fill(0); }
+        adesoesByYearMonth[year][month]++;
+    });
+
+    const uniqueYears = Object.keys(adesoesByYearMonth).sort();
+
+    // CORREÇÃO: Só cria os botões se eles ainda não existirem.
+    if (selectorContainer.children.length === 0 && uniqueYears.length > 0) {
+        const currentYear = new Date().getFullYear();
+        uniqueYears.forEach((year) => {
+            const button = document.createElement("button");
+            button.dataset.year = year;
+            button.textContent = year;
+            // Seleciona os dois últimos anos por padrão na primeira carga
+            if (parseInt(year) >= currentYear - 1) { 
+                button.classList.add("active"); 
+            }
+            selectorContainer.appendChild(button);
+        });
+        // Adiciona o evento de clique a todos os botões criados
+        selectorContainer.querySelectorAll("button").forEach((button) => {
+            button.addEventListener("click", () => {
+                button.classList.toggle("active");
+                updateDashboard(); // Re-renderiza o dashboard com a nova seleção de anos
+            });
+        });
+    }
+
+    const activeYears = Array.from(selectorContainer.querySelectorAll("button.active")).map((btn) => parseInt(btn.dataset.year));
+    const colors = ["#6c757d", "#28a745", "#dc3545", "#ffc107", "#007bff", "#17a2b8", "#fd7e14"];
+    const datasets = uniqueYears.map((year, index) => ({
+        label: year,
+        data: adesoesByYearMonth[year] || Array(12).fill(0),
+        backgroundColor: colors[index % colors.length],
+        hidden: !activeYears.includes(parseInt(year)),
+    }));
+
+    const monthLabels = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
+    if (monthlyAdesoesChart) monthlyAdesoesChart.destroy();
+    monthlyAdesoesChart = new Chart(document.getElementById("monthlyAdesoesChart"), {
+        type: "bar",
+        data: { labels: monthLabels, datasets: datasets },
+        options: {
+            maintainAspectRatio: false,
+            interaction: { mode: "index", intersect: false },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function (context) {
+                            let label = context.dataset.label || "";
+                            if (label) { label += ": "; }
+                            if (context.parsed.y !== null) { label += context.parsed.y; }
+                            return label;
+                        },
+                    },
+                },
+                datalabels: {
+                    display: true, align: "center", anchor: "center", color: "#FFFFFF", font: { size: 14, weight: "bold" },
+                    formatter: (value) => (value > 0 ? value : ""),
+                },
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { callback: function (value) { return value >= 1000 ? value / 1000 + " mil" : value; } },
+                },
+            },
+        },
+    });
+}
+
+function updateAdesoesDrillDownCharts(filteredData) {
+    const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const adesoesByYear = {};
+    
+    // A função agora opera apenas sobre 'filteredData', que já é seguro.
+    filteredData.forEach((d) => {
+        const year = d.dt_cadastro_integrante.getFullYear();
+        if (!adesoesByYear[year]) { adesoesByYear[year] = { vendas: 0, posVendas: 0 }; }
+        if (normalizeText(d.venda_posvenda) === "VENDA") {
+            adesoesByYear[year].vendas++;
+        } else if (normalizeText(d.venda_posvenda) === "POS VENDA") {
+            adesoesByYear[year].posVendas++;
+        }
+    });
+
+    const years = Object.keys(adesoesByYear).sort();
+    const adesoesVendasAnual = years.map((year) => adesoesByYear[year].vendas);
+    const adesoesPosVendasAnual = years.map((year) => adesoesByYear[year].posVendas);
+
+    if (yearlyAdesoesStackedChart) yearlyAdesoesStackedChart.destroy();
+    yearlyAdesoesStackedChart = new Chart(document.getElementById("yearlyAdesoesStackedChart"), {
+        type: "bar",
+        data: {
+            labels: years,
+            datasets: [
+                { label: "Pós Venda", data: adesoesPosVendasAnual, backgroundColor: "#007bff" },
+                { label: "Venda", data: adesoesVendasAnual, backgroundColor: "#6c757d" },
+            ],
+        },
+        options: {
+            devicePixelRatio: window.devicePixelRatio,
+            interaction: { mode: "y", intersect: false },
+            maintainAspectRatio: false,
+            indexAxis: "y",
+            scales: { x: { stacked: true }, y: { stacked: true } },
+            plugins: {
+                datalabels: {
+                    color: "white", font: { weight: "bold" },
+                    formatter: (value) => (value > 0 ? value : ""),
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function (context) {
+                            let label = context.dataset.label || "";
+                            if (label) { label += ": "; }
+                            if (context.parsed.x !== null) { label += context.parsed.x; }
+                            return label;
+                        },
+                        footer: function (tooltipItems) {
+                            let sum = tooltipItems.reduce((acc, item) => acc + item.parsed.x, 0);
+                            return "Total: " + sum;
+                        },
+                    },
+                },
+            },
+            onClick: (event, elements) => {
+                if (elements.length > 0) {
+                    const clickedYear = years[elements[0].index];
+                    drawMonthlyAdesoesDetailChart(filteredData, clickedYear);
+                }
+            },
+        },
+    });
+
+    // Lógica para limpar ou desenhar o gráfico mensal
+    if (years.length > 0) {
+        drawMonthlyAdesoesDetailChart(filteredData, years[years.length - 1]);
+    } else {
+        drawMonthlyAdesoesDetailChart([], new Date().getFullYear());
+    }
+}
+
+function drawMonthlyAdesoesDetailChart(data, year) {
+    document.getElementById("monthly-adesoes-stacked-title").textContent = `Adesões por Tipo (Mensal ${year})`;
+    const adesoesByMonth = Array(12).fill(0).map(() => ({ vendas: 0, posVendas: 0 }));
+    
+    const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    data.forEach((d) => {
+        if (d.dt_cadastro_integrante.getFullYear() === parseInt(year)) {
+            const month = d.dt_cadastro_integrante.getMonth();
+            if (normalizeText(d.venda_posvenda) === "VENDA") {
+                adesoesByMonth[month].vendas++;
+            } else if (normalizeText(d.venda_posvenda) === "POS VENDA") {
+                adesoesByMonth[month].posVendas++;
+            }
+        }
+    });
+
+    const adesoesVendasMensal = adesoesByMonth.map((m) => m.vendas);
+    const adesoesPosVendasMensal = adesoesByMonth.map((m) => m.posVendas);
+    const monthLabels = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
+
+    if (monthlyAdesoesStackedChart) monthlyAdesoesStackedChart.destroy();
+    monthlyAdesoesStackedChart = new Chart(document.getElementById("monthlyAdesoesStackedChart"), {
+        type: "bar",
+        data: {
+            labels: monthLabels,
+            datasets: [
+                { label: "Pós Venda", data: adesoesPosVendasMensal, backgroundColor: "#007bff" },
+                { label: "Venda", data: adesoesVendasMensal, backgroundColor: "#6c757d" },
+            ],
+        },
+        options: {
+            devicePixelRatio: window.devicePixelRatio,
+            interaction: { mode: "index", intersect: false },
+            maintainAspectRatio: false,
+            scales: { x: { stacked: true }, y: { stacked: true } },
+            plugins: {
+                datalabels: {
+                    color: "white", font: { weight: "bold" },
+                    formatter: (value) => (value > 0 ? value : ""),
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function (context) {
+                            let label = context.dataset.label || "";
+                            if (label) { label += ": "; }
+                            if (context.parsed.y !== null) { label += context.parsed.y; }
+                            return label;
+                        },
+                        footer: function (tooltipItems) {
+                            let sum = tooltipItems.reduce((acc, item) => acc + item.parsed.y, 0);
+                            return "Total: " + sum;
+                        },
+                    },
+                },
+            },
+        },
+    });
+}
+
+function updateConsultorTable(filteredData) {
+    const performanceMap = new Map();
+    filteredData.forEach((d) => {
+        const key = `${d.nm_unidade}-${d.indicado_por}`;
+        if (!performanceMap.has(key)) {
+            performanceMap.set(key, {
+                unidade: d.nm_unidade,
+                consultor: d.indicado_por,
+                vvr_total: 0,
+                total_adesoes: 0,
+            });
+        }
+        const entry = performanceMap.get(key);
+        entry.vvr_total += d.vl_plano;
+        entry.total_adesoes += 1;
+    });
+
+    const tableData = Array.from(performanceMap.values()).map((item) => [item.unidade, item.consultor, formatCurrency(item.vvr_total), item.total_adesoes]);
+
+    if (consultorDataTable) {
+        consultorDataTable.clear().rows.add(tableData).draw();
+    } else {
+        consultorDataTable = $("#consultor-table").DataTable({
+            data: tableData,
+            pageLength: 10,
+            language: { url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json" },
+            destroy: true,
+            dom: "Bfrtip",
+            buttons: [{
+                extend: "excelHtml5", text: "Exportar para Excel", title: `Relatorio_Consultores_${new Date().toLocaleDateString("pt-BR")}`, className: "excel-button",
+                exportOptions: {
+                    format: {
+                        body: function (data, row, column, node) {
+                            if (column === 2) { return parseFloat(String(data).replace("R$", "").replace(/\./g, "").replace(",", ".").trim()); }
+                            if (column === 3) { return Number(data); }
+                            return data;
+                        },
+                    },
+                },
+            }],
+        });
+    }
+}
+
+function updateDetalhadaAdesoesTable(filteredData) {
+    const tableData = filteredData.map((d) => [
+        d.nm_unidade,
+        d.codigo_integrante,
+        d.nm_integrante,
+        d.dt_cadastro_integrante.toLocaleDateString("pt-BR"),
+        d.id_fundo,
+        d.venda_posvenda,
+        d.indicado_por,
+        d.vl_plano,
+    ]);
+
+    if (detalhadaAdesoesDataTable) {
+        detalhadaAdesoesDataTable.clear().rows.add(tableData).draw();
+    } else {
+        detalhadaAdesoesDataTable = $("#detalhada-adesoes-table").DataTable({
+            data: tableData,
+            columns: [null, null, null, null, null, null, null, { render: (data) => formatCurrency(data) }],
+            pageLength: 10,
+            language: { url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json" },
+            destroy: true,
+            dom: "Bfrtip",
+            buttons: [{
+                extend: "excelHtml5", text: "Exportar para Excel", title: `Relatorio_Adesoes_Detalhadas_${new Date().toLocaleDateString("pt-BR")}`, className: "excel-button",
+                exportOptions: {
+                    format: {
+                        body: function (data, row, column, node) {
+                            if (column === 7) { return parseFloat(String(data).replace("R$", "").replace(/\./g, "").replace(",", ".").trim()); }
+                            return data;
+                        },
+                    },
+                },
+            }],
+        });
+    }
+}
+
+function updateFundosDetalhadosTable(fundosData, selectedUnidades, startDate, endDate) {
+    const filteredData = fundosData.filter((d) => {
+        const isUnitMatch = selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade);
+        const isDateMatch = d.dt_contrato >= startDate && d.dt_contrato < endDate;
+        return isUnitMatch && isDateMatch;
+    });
+
+    const tableData = filteredData.map((d) => [
+        d.nm_unidade,
+        d.id_fundo,
+        d.fundo,
+        formatDate(d.dt_contrato),
+        formatDate(d.dt_cadastro),
+        d.tipo_servico,
+        d.instituicao,
+        formatDate(d.dt_baile),
+    ]);
+
+    if (fundosDetalhadosDataTable) {
+        fundosDetalhadosDataTable.clear().rows.add(tableData).draw();
+    } else {
+        fundosDetalhadosDataTable = $("#fundos-detalhados-table").DataTable({
+            data: tableData,
+            pageLength: 10,
+            language: { url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json" },
+            destroy: true,
+            dom: "Bfrtip",
+            buttons: [{
+                extend: "excelHtml5", text: "Exportar para Excel", title: `Relatorio_Fundos_Detalhados_${new Date().toLocaleDateString("pt-BR")}`, className: "excel-button",
+            }],
+        });
+    }
 }
