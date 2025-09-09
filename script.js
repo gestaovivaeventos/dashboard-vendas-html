@@ -1374,6 +1374,14 @@ function addEventListeners() {
 // ...
 
 function populateFilters() {
+    // Destruir instâncias existentes do multiselect
+    try {
+        $("#unidade-filter").multiselect('destroy');
+        $("#curso-filter").multiselect('destroy');
+    } catch(e) {
+        console.log("Multiselect não existia ainda");
+    }
+
     const unidadeFilter = $("#unidade-filter");
     const cursoFilter = $("#curso-filter");
     unidadeFilter.empty();
@@ -1414,20 +1422,24 @@ function populateFilters() {
             onDeselectAll: updateDashboard,
         });
 
-        cursoFilter.multiselect({
-            enableFiltering: true,
-            includeSelectAllOption: true,
-            selectAllText: "Marcar todos",
-            filterPlaceholder: "Pesquisar...",
-            nonSelectedText: "Todos os cursos",
-            nSelectedText: "cursos",
-            allSelectedText: "Todos selecionados",
-            buttonWidth: "100%",
-            maxHeight: 300,
-            onChange: updateDashboard,
-            onSelectAll: updateDashboard,
-            onDeselectAll: updateDashboard,
-        });
+        // Inicialização do multiselect para cursos com timeout para garantir que o DOM esteja pronto
+        setTimeout(() => {
+            cursoFilter.multiselect({
+                enableFiltering: true,
+                includeSelectAllOption: true,
+                selectAllText: "Marcar todos",
+                filterPlaceholder: "Pesquisar...",
+                nonSelectedText: "Todos os cursos",
+                nSelectedText: "cursos",
+                allSelectedText: "Todos selecionados",
+                buttonWidth: "100%",
+                maxHeight: 300,
+                onChange: updateDashboard,
+                onSelectAll: updateDashboard,
+                onDeselectAll: updateDashboard,
+                buttonClass: 'btn btn-outline-secondary'
+            });
+        }, 100);
 
     } else if (Array.isArray(userAccessLevel)) {
         // CENÁRIO 2: MULTI-FRANQUEADO (vê apenas as suas unidades, mas pode selecionar)
