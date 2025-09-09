@@ -609,20 +609,25 @@ function updatePreviousYearKPIs(dataBruta, selectedUnidades, startDate, endDate)
 
 function updateDashboard() {
     const selectedUnidades = $("#unidade-filter").val() || [];
-    const selectedCursos = $("#curso-filter").val() || []; // ADICIONADO
+    const selectedCursos = $("#curso-filter").val() || [];
     
     const startDateString = document.getElementById("start-date").value;
     const [startYear, startMonth, startDay] = startDateString.split('-').map(Number);
     const startDate = new Date(startYear, startMonth - 1, startDay);
-    
+
     const endDateString = document.getElementById("end-date").value;
     const [endYear, endMonth, endDay] = endDateString.split('-').map(Number);
-    const endDate = new Date(endYear, endMonth - 1, endDay);
-    endDate.setDate(endDate.getDate() + 1);
+    const endDate = new Date(endYear, endMonth - 1, endDay + 1);
 
-    const anoVigenteParaGrafico = startDate.getFullYear();
+    const anoVigenteParaGrafico = new Date().getFullYear();
 
-    let dataBrutaFiltrada = [], dataParaGraficoAnual = [], allDataForOtherCharts = [], fundosDataFiltrado = [], dataBrutaFiltradaPY = [];
+    // Zera as variáveis de dados antes de refiltrar
+    dataBrutaFiltrada = [];
+    dataBrutaFiltradaPY = [];
+    dataParaGraficoAnual = [];
+    allDataForOtherCharts = [];
+    fundosDataFiltrado = [];
+
     const hasPermissionToViewData = (userAccessLevel === 'ALL_UNITS' || selectedUnidades.length > 0);
 
     if (hasPermissionToViewData) {
@@ -641,135 +646,91 @@ function updateDashboard() {
             filteredFundosData = filteredFundosData.filter(cursoFilterLogic);
         }
 
-        // Agora, cria as variáveis de dados para os gráficos a partir dos dados já filtrados corretamente
-        dataBrutaFiltrada = filteredSalesData.filter(d => d.dt_cadastro_integrante >= startDate && d.dt_cadastro_integrante < endDate);
-        dataParaGraficoAnual = filteredSalesData.filter(d => d.dt_cadastro_integrante.getFullYear() === anoVigenteParaGrafico);
-        allDataForOtherCharts = filteredSalesData; // Já filtrado por unidade e, se aplicável, por curso
-        fundosDataFiltrado = filteredFundosData; // Já filtrado por unidade e, se aplicável, por curso
+        // CORREÇÃO: Simplifica a criação de variáveis. 'allDataForOtherCharts' será a base para os gráficos de vendas.
+        allDataForOtherCharts = filteredSalesData; 
+        fundosDataFiltrado = filteredFundosData;
 
+        // As variáveis de data são filtradas a partir da base já corrigida.
+        dataBrutaFiltrada = allDataForOtherCharts.filter(d => d.dt_cadastro_integrante >= startDate && d.dt_cadastro_integrante < endDate);
         const sDPY = new Date(startDate); sDPY.setFullYear(sDPY.getFullYear() - 1);
         const eDPY = new Date(endDate); eDPY.setFullYear(eDPY.getFullYear() - 1);
-        dataBrutaFiltradaPY = filteredSalesData.filter(d => d.dt_cadastro_integrante >= sDPY && d.dt_cadastro_integrante < eDPY);
+        dataBrutaFiltradaPY = allDataForOtherCharts.filter(d => d.dt_cadastro_integrante >= sDPY && d.dt_cadastro_integrante < eDPY);
     }
     
     // ATUALIZAÇÃO DOS COMPONENTES
-    updateVvrVsMetaPorMesChart(dataParaGraficoAnual, anoVigenteParaGrafico);
-    updateCumulativeVvrChart(allDataForOtherCharts, selectedUnidades);
-    updateMonthlyVvrChart(allDataForOtherCharts, selectedUnidades);
-    
-    // A chamada para a função corrigida agora passa só um parâmetro
+    // CORREÇÃO: Passa a variável correta ('allDataForOtherCharts') para os gráficos anuais e mensais.
+    updateIndicadores(dataBrutaFiltrada, dataBrutaFiltradaPY, metasData);
+    updateVVRAnualChart(allDataForOtherCharts, metasData);
+    updateVVRMensalChart(allDataForOtherCharts, metasData);
     updateMonthlyAdesoesChart(allDataForOtherCharts);
-    
-    // Todas as chamadas abaixo estão corrigidas e seguras
-    updateDrillDownCharts(allDataForOtherCharts);
-    updateTicketCharts(allDataForOtherCharts);
-    updateContractsCharts(fundosDataFiltrado);
-    updateAdesoesDrillDownCharts(allDataForOtherCharts);
-    
-    updateConsultorTable(dataBrutaFiltrada);
-    updateDetalhadaAdesoesTable(dataBrutaFiltrada);
-    updateFundosDetalhadosTable(fundosDataFiltrado, selectedUnidades, startDate, endDate);
-    updateMainKPIs(dataBrutaFiltrada, selectedUnidades, startDate, endDate);
-    
-    const dataAgregadaComVendas = processAndCrossReferenceData(dataBrutaFiltrada);
-    currentFilteredDataForTable = dataAgregadaComVendas; 
-    updateDataTable(dataAgregadaComVendas);
-    
-    document.getElementById("kpi-section-py").style.display = "block";
-    updatePreviousYearKPIs(dataBrutaFiltradaPY, selectedUnidades, startDate, endDate);
+    updateAdesoesDrillDownCharts(dataBrutaFiltrada);
+    updateFundosTable(fundosDataFiltrado);
+    updateAdesoesTable(dataBrutaFiltrada);
+    updateVVRTable(dataBrutaFiltrada, metasData);
 }
 
-// ...
+// ...existing code...
+// ...existing code...
+function updateVVRAnualChart(filteredData, metas) {
+    const anoVigenteParaGrafico = new Date().getFullYear();
+    // CORREÇÃO: Filtra os dados pelo ano vigente DENTRO da função.
+    const dataParaGraficoAnual = filteredData.filter(d => d.dt_cadastro_integrante.getFullYear() === anoVigenteParaGrafico);
 
-
-function updateVvrVsMetaPorMesChart(salesDataForYear, anoVigente) {
-    const allYearPeriodos = Array.from({ length: 12 }, (_, i) => `${anoVigente}-${String(i + 1).padStart(2, "0")}`);
-    const chartDataMap = new Map();
-    
-    // Inicializa o mapa do gráfico com valores zerados
-    allYearPeriodos.forEach((periodo) => {
-        chartDataMap.set(periodo, {
-            realizado_vendas: 0,
-            realizado_posvendas: 0,
-            meta_vendas: 0,
-            meta_posvendas: 0,
-            meta_total: 0,
-        });
+    const vvrPorMes = Array(12).fill(0);
+    dataParaGraficoAnual.forEach(d => {
+        const month = d.dt_cadastro_integrante.getMonth();
+        vvrPorMes[month] += d.vlr_liquido_adesao;
     });
 
-    const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const metaVendasPorMes = Array(12).fill(0);
+    const metaPosVendasPorMes = Array(12).fill(0);
+    const metaTotalPorMes = Array(12).fill(0);
 
-    // 1. Calcula o VALOR REALIZADO (esta parte já estava correta)
-    // Ela usa 'salesDataForYear', que já vem filtrado ou vazio
-    salesDataForYear.forEach((d) => {
-        const year = d.dt_cadastro_integrante.getFullYear();
-        const month = String(d.dt_cadastro_integrante.getMonth() + 1).padStart(2, "0");
-        const periodo = `${year}-${month}`;
-        if (chartDataMap.has(periodo)) {
-            if (normalizeText(d.venda_posvenda) === "VENDA") {
-                chartDataMap.get(periodo).realizado_vendas += d.vl_plano;
-            } else if (normalizeText(d.venda_posvenda) === "POS VENDA") {
-                chartDataMap.get(periodo).realizado_posvendas += d.vl_plano;
+    metas.forEach((metaInfo, key) => {
+        const [unidade, ano, mes] = key.split("-");
+        if (String(ano) === String(anoVigenteParaGrafico)) {
+            const monthIndex = parseInt(mes) - 1;
+            if (!isNaN(monthIndex)) {
+                metaVendasPorMes[monthIndex] += metaInfo.meta_vvr_vendas;
+                metaPosVendasPorMes[monthIndex] += metaInfo.meta_vvr_posvendas;
+                metaTotalPorMes[monthIndex] += metaInfo.meta_vvr_total;
             }
         }
     });
 
-    // 2. Calcula a META (lógica de segurança aplicada aqui)
-    const selectedUnidades = $("#unidade-filter").val() || [];
-    const canCalculateMeta = (userAccessLevel === 'ALL_UNITS' || selectedUnidades.length > 0);
-
-    if (canCalculateMeta) {
-        const unitsToConsider = (userAccessLevel === 'ALL_UNITS' && selectedUnidades.length === 0)
-            ? [...new Set(allData.map(d => d.nm_unidade))]
-            : selectedUnidades;
-
-        metasData.forEach((metaInfo, key) => {
-            const [unidade, ano, mes] = key.split("-");
-            const periodo = `${ano}-${mes}`;
-            if (String(ano) === String(anoVigente) && chartDataMap.has(periodo)) {
-                if (unitsToConsider.includes(unidade)) {
-                    chartDataMap.get(periodo).meta_vendas += metaInfo.meta_vvr_vendas;
-                    chartDataMap.get(periodo).meta_posvendas += metaInfo.meta_vvr_posvendas;
-                    chartDataMap.get(periodo).meta_total += metaInfo.meta_vvr_total;
-                }
-            }
-        });
-    }
-    // Se 'canCalculateMeta' for falso, os valores de meta no chartDataMap permanecerão 0.
-
-    // 3. Monta e desenha o gráfico (nenhuma alteração aqui)
-    let realizadoValues, metaValues;
-    if (currentVvrChartType === "vendas") {
-        realizadoValues = allYearPeriodos.map((p) => chartDataMap.get(p).realizado_vendas);
-        metaValues = allYearPeriodos.map((p) => chartDataMap.get(p).meta_vendas);
-    } else if (currentVvrChartType === "posvendas") {
-        realizadoValues = allYearPeriodos.map((p) => chartDataMap.get(p).realizado_posvendas);
-        metaValues = allYearPeriodos.map((p) => chartDataMap.get(p).meta_posvendas);
-    } else { // 'total'
-        realizadoValues = allYearPeriodos.map((p) => chartDataMap.get(p).realizado_vendas + chartDataMap.get(p).realizado_posvendas);
-        metaValues = allYearPeriodos.map((p) => chartDataMap.get(p).meta_total);
-    }
-
-    const formattedLabels = allYearPeriodos.map((periodo) => {
-        const [year, month] = periodo.split("-");
-        const date = new Date(year, month - 1);
-        const monthName = date.toLocaleString("pt-BR", { month: "short" }).replace(".", "");
-        return `${monthName}-${year.slice(2)}`;
-    });
+    const labels = dataParaGraficoAnual.map(d => d.dt_cadastro_integrante.toLocaleString('default', { month: 'short' }));
 
     if (vvrVsMetaPorMesChart) vvrVsMetaPorMesChart.destroy();
     Chart.register(ChartDataLabels);
     vvrVsMetaPorMesChart = new Chart(document.getElementById("vvrVsMetaPorMesChart"), {
         type: "bar",
         data: {
-            labels: formattedLabels,
+            labels: labels,
             datasets: [
-                { label: "VVR Realizado", data: realizadoValues, backgroundColor: "rgba(255, 193, 7, 0.7)", order: 1 },
+                { label: "Vendas", data: vvrPorMes, backgroundColor: "#007bff", order: 2 },
+                { label: "Pós-Venda", data: vvrPorMes, backgroundColor: "#6c757d", order: 1 },
                 {
-                    label: "Meta VVR",
-                    data: metaValues,
+                    label: "Meta Vendas",
+                    data: metaVendasPorMes,
                     type: "line",
-                    borderColor: "rgb(220, 53, 69)",
+                    borderColor: "#28a745",
+                    order: 0,
+                    datalabels: {
+                        display: true,
+                        align: "bottom",
+                        backgroundColor: "rgba(0, 0, 0, 0.6)",
+                        borderRadius: 4,
+                        color: "white",
+                        font: { size: 15 },
+                        padding: 4,
+                        formatter: (value) => (value > 0 ? `${(value / 1000).toFixed(0)}k` : ""),
+                    },
+                },
+                {
+                    label: "Meta Pós-Venda",
+                    data: metaPosVendasPorMes,
+                    type: "line",
+                    borderColor: "#dc3545",
                     order: 0,
                     datalabels: {
                         display: true,
