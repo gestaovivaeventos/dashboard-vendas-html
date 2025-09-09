@@ -381,6 +381,7 @@ async function fetchFundosData() {
         tipo_servico: tipoServicoIndex !== -1 ? row[tipoServicoIndex] || "N/A" : "N/A",
         instituicao: instituicaoIndex !== -1 ? row[instituicaoIndex] || "N/A" : "N/A",
         dt_baile: dtBaileIndex !== -1 ? parsePtBrDate(row[dtBaileIndex]) : null,
+        curso_fundo: cursoFundoIndex !== -1 ? row[cursoFundoIndex] || "" : "",
       };
     }).filter(Boolean);
   } catch (error) {
@@ -632,10 +633,18 @@ function updateDashboard() {
             return unidadeMatch && cursoMatch;
         };
         
+        // Filtrar dados de adesões
         dataBrutaFiltrada = allData.filter(d => filterLogic(d) && d.dt_cadastro_integrante >= startDate && d.dt_cadastro_integrante < endDate);
         dataParaGraficoAnual = allData.filter(d => filterLogic(d) && d.dt_cadastro_integrante.getFullYear() === anoVigenteParaGrafico);
         allDataForOtherCharts = allData.filter(filterLogic);
-        fundosDataFiltrado = fundosData.filter(filterLogic);
+
+        // Filtrar dados de fundos usando dt_contrato
+        fundosDataFiltrado = fundosData.filter(d => {
+            const unidadeMatch = selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade);
+            const cursoMatch = selectedCursos.length === 0 || (d.curso_fundo && selectedCursos.includes(d.curso_fundo));
+            const dateMatch = d.dt_contrato && d.dt_contrato >= startDate && d.dt_contrato < endDate;
+            return unidadeMatch && cursoMatch && dateMatch;
+        });
 
         const sDPY = new Date(startDate); sDPY.setFullYear(sDPY.getFullYear() - 1);
         const eDPY = new Date(endDate); eDPY.setFullYear(eDPY.getFullYear() - 1);
