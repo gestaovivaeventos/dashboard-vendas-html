@@ -635,7 +635,13 @@ function updateDashboard() {
         dataBrutaFiltrada = allData.filter(d => filterLogic(d) && cursoFilterLogic(d) && d.dt_cadastro_integrante >= startDate && d.dt_cadastro_integrante < endDate);
         dataParaGraficoAnual = allData.filter(d => filterLogic(d) && cursoFilterLogic(d) && d.dt_cadastro_integrante.getFullYear() === anoVigenteParaGrafico);
         allDataForOtherCharts = allData.filter(d => filterLogic(d) && cursoFilterLogic(d));
-        fundosDataFiltrado = fundosData.filter(d => filterLogic(d) && cursoFilterLogic(d));
+        
+        // CORREÇÃO: Aplica o filtro de curso em 'fundosData' apenas na página secundária
+        fundosDataFiltrado = fundosData.filter(d => {
+            const unidadeMatch = filterLogic(d);
+            const cursoMatch = cursoFilterLogic(d);
+            return unidadeMatch && cursoMatch;
+        });
 
         const sDPY = new Date(startDate); sDPY.setFullYear(sDPY.getFullYear() - 1);
         const eDPY = new Date(endDate); eDPY.setFullYear(eDPY.getFullYear() - 1);
