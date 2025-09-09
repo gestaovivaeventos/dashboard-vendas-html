@@ -1485,9 +1485,10 @@ function populateFilters() {
         });
 
         // Populate cursos filter
-        const cursosVendas = allData.map((d) => d.curso_fundo || '').filter(c => c && c !== 'N/A');
-        const cursosFundos = fundosData.map((d) => d.curso_fundo || '').filter(c => c && c !== 'N/A');
-        const cursos = [...new Set([...cursosVendas, ...cursosFundos])].sort();
+        const cursos = [...new Set(allData.map((d) => d.nm_curso).filter(Boolean))].sort();
+
+        // Populate fundos filter
+        const fundos = [...new Set(allData.map((d) => d.nm_fundo).filter(Boolean))].sort();
         
         console.log('Cursos encontrados:', cursos); // Para debug
         
