@@ -4,7 +4,50 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
         #sidebar.collapsed { transform: translateX(-100%); }
         #main-content { flex-grow: 1; padding: 20px; margin-left: 350px; transition: margin-left 0.3s ease-in-out; }
         #main-content.full-width { margin-left: 0; }
-        #sidebar-toggle {
+        .date-range-picker {
+    padding: 8px 12px;
+    border: 1px solid #495057;
+    border-radius: 4px;
+    background-color: #343a40;
+    color: #fff;
+    cursor: pointer;
+    width: 100%;
+    text-align: center;
+    font-size: 14px;
+}
+
+.flatpickr-calendar {
+    background-color: #343a40 !important;
+    color: #fff !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+}
+
+.flatpickr-day {
+    color: #fff !important;
+}
+
+.flatpickr-day.selected {
+    background-color: #007bff !important;
+    border-color: #007bff !important;
+}
+
+.flatpickr-day.inRange {
+    background-color: rgba(0, 123, 255, 0.3) !important;
+    border-color: transparent !important;
+}
+
+.flatpickr-current-month,
+.flatpickr-weekdays {
+    color: #fff !important;
+}
+
+.flatpickr-monthDropdown-months {
+    background-color: #343a40 !important;
+    color: #fff !important;
+}
+
+#sidebar-toggle {
     position: fixed;
     top: 20px;
     left: 360px;

@@ -1,5 +1,14 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
+    
+    <!-- Flatpickr -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
+    <script src="date-picker.js"></script>
+<link rel="stylesheet" href="style.css">
+<style>r">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -73,8 +82,9 @@
             <section class="filters" id="filters-section" style="display: none;">
                 <div class="filter-item filter-item-unidades"><select id="unidade-filter" multiple="multiple"></select></div>
                 <div class="filter-item" id="curso-filter-container"><select id="curso-filter" multiple="multiple"></select></div>
-                <div class="filter-item"><input type="date" id="start-date"></div>
-                <div class="filter-item"><input type="date" id="end-date"></div>
+                <div class="filter-item date-range-container">
+                    <input type="text" id="date-range-picker" class="date-range-picker" placeholder="Selecione o período">
+                </div>
             </section>
         </div>
         <div id="main-content">
