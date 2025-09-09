@@ -401,7 +401,7 @@ async function fetchFundosData() {
       return {
         nm_unidade: row[unidadeIndex] || "N/A",
         id_fundo: row[idFundoIndex] || "N/A",
-        fundo: fundoIndex !== -1 ? row[fundoIndex] || "N/A" : "N/A",
+        nm_fundo: fundoIndex !== -1 ? row[fundoIndex] || "N/A" : "N/A",
         dt_contrato: dtContrato,
         dt_cadastro: dtCadastroIndex !== -1 ? parsePtBrDate(row[dtCadastroIndex]) : null,
         tipo_servico: tipoServicoIndex !== -1 ? row[tipoServicoIndex] || "N/A" : "N/A",
@@ -1499,6 +1499,17 @@ function populateFilters() {
             cursoFilter.append($("<option>", { value: c, text: c }));
         });
 
+        // Populate fundos filter
+        const fundosFromVendas = allData.map((d) => d.nm_fundo || '').filter(f => f && f !== 'N/A');
+        const fundosFromFundos = fundosData.map((d) => d.nm_fundo || '').filter(f => f && f !== 'N/A');
+        const fundosUnicos = [...new Set([...fundosFromVendas, ...fundosFromFundos])].sort();
+        
+        console.log('Fundos encontrados:', fundosUnicos); // Para debug
+        
+        fundosUnicos.forEach((f) => {
+            fundoFilter.append($("<option>", { value: f, text: f }));
+        });
+
         unidadeFilter.multiselect({
             enableFiltering: true,
             includeSelectAllOption: true,
@@ -1537,16 +1548,7 @@ function populateFilters() {
             }
         });
 
-        // Populate fundos filter
-        const fundosVendas = allData.map((d) => d.nm_fundo || '').filter(f => f && f !== 'N/A');
-        const fundosNomes = fundosData.map((d) => d.nm_fundo || '').filter(f => f && f !== 'N/A');
-        const fundos = [...new Set([...fundosVendas, ...fundosNomes])].sort();
-        
-        console.log('Fundos encontrados:', fundos); // Para debug
-        
-        fundos.forEach((f) => {
-            fundoFilter.append($("<option>", { value: f, text: f }));
-        });
+
 
         // Inicialização do multiselect para fundos
         fundoFilter.multiselect({
