@@ -1617,6 +1617,80 @@ function populateFilters() {
             buttonWidth: "100%",
         });
         unidadeFilter.multiselect('disable');
+
+        // Filtrar dados apenas da unidade do usuário
+        const dadosUnidade = allData.filter(d => d.nm_unidade === userAccessLevel);
+        const fundosUnidade = fundosData.filter(d => d.nm_unidade === userAccessLevel);
+
+        // Popular filtro de cursos
+        const cursosUnidade = [...new Set([
+            ...dadosUnidade.map(d => d.curso_fundo || ''),
+            ...fundosUnidade.map(d => d.curso_fundo || '')
+        ])].filter(c => c && c !== 'N/A').sort();
+
+        cursosUnidade.forEach(c => {
+            cursoFilter.append($("<option>", { value: c, text: c }));
+        });
+
+        // Popular filtro de fundos
+        const fundosDisponiveis = [...new Set([
+            ...dadosUnidade.map(d => d.nm_fundo || ''),
+            ...fundosUnidade.map(d => d.nm_fundo || '')
+        ])].filter(f => f && f !== 'N/A').sort();
+
+        fundosDisponiveis.forEach(f => {
+            fundoFilter.append($("<option>", { value: f, text: f }));
+        });
+
+        // Configurar multiselect para cursos
+        cursoFilter.multiselect({
+            enableFiltering: true,
+            includeSelectAllOption: true,
+            selectAllText: "Marcar todos",
+            filterPlaceholder: "Pesquisar...",
+            nonSelectedText: "Todos os cursos",
+            nSelectedText: "cursos",
+            allSelectedText: "Todos selecionados",
+            buttonWidth: "100%",
+            maxHeight: 300,
+            onChange: updateDashboard,
+            onSelectAll: updateDashboard,
+            onDeselectAll: updateDashboard,
+            enableCaseInsensitiveFiltering: true,
+            filterBehavior: 'text',
+            dropUp: false,
+            dropRight: false,
+            widthSynchronizationMode: 'ifPopupIsSmaller',
+            templates: {
+                button: '<button type="button" class="multiselect dropdown-toggle" data-toggle="dropdown"><span class="multiselect-selected-text"></span></button>',
+                ul: '<ul class="multiselect-container dropdown-menu" style="width: auto; min-width: 100%;"></ul>'
+            }
+        });
+
+        // Configurar multiselect para fundos
+        fundoFilter.multiselect({
+            enableFiltering: true,
+            includeSelectAllOption: true,
+            selectAllText: "Marcar todos",
+            filterPlaceholder: "Pesquisar...",
+            nonSelectedText: "Todos os fundos",
+            nSelectedText: "fundos",
+            allSelectedText: "Todos selecionados",
+            buttonWidth: "100%",
+            maxHeight: 300,
+            onChange: updateDashboard,
+            onSelectAll: updateDashboard,
+            onDeselectAll: updateDashboard,
+            enableCaseInsensitiveFiltering: true,
+            filterBehavior: 'text',
+            dropUp: false,
+            dropRight: false,
+            widthSynchronizationMode: 'ifPopupIsSmaller',
+            templates: {
+                button: '<button type="button" class="multiselect dropdown-toggle" data-toggle="dropdown"><span class="multiselect-selected-text"></span></button>',
+                ul: '<ul class="multiselect-container dropdown-menu" style="width: auto; min-width: 100%;"></ul>'
+            }
+        });
     }
 
     // Define as datas padrão
