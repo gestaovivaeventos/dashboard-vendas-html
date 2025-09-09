@@ -638,17 +638,12 @@ function updateDashboard() {
         dataParaGraficoAnual = allData.filter(d => filterLogic(d) && d.dt_cadastro_integrante.getFullYear() === anoVigenteParaGrafico);
         allDataForOtherCharts = allData.filter(filterLogic);
 
-        // Filtrar dados de fundos (sem filtro de data para gráficos de contratos)
-        const fundosDataFiltradoSemData = fundosData.filter(d => {
+        // Filtrar dados de fundos usando dt_contrato
+        fundosDataFiltrado = fundosData.filter(d => {
             const unidadeMatch = selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade);
             const cursoMatch = selectedCursos.length === 0 || (d.curso_fundo && selectedCursos.includes(d.curso_fundo));
-            return unidadeMatch && cursoMatch;
-        });
-
-        // Filtrar dados de fundos com data para a tabela
-        fundosDataFiltrado = fundosDataFiltradoSemData.filter(d => {
             const dateMatch = d.dt_contrato && d.dt_contrato >= startDate && d.dt_contrato < endDate;
-            return dateMatch;
+            return unidadeMatch && cursoMatch && dateMatch;
         });
 
         const sDPY = new Date(startDate); sDPY.setFullYear(sDPY.getFullYear() - 1);
@@ -667,7 +662,7 @@ function updateDashboard() {
     // Todas as chamadas abaixo estão corrigidas e seguras
     updateDrillDownCharts(allDataForOtherCharts);
     updateTicketCharts(allDataForOtherCharts);
-    updateContractsCharts(fundosDataFiltradoSemData);
+    updateContractsCharts(fundosDataFiltrado);
     updateAdesoesDrillDownCharts(allDataForOtherCharts);
     
     updateConsultorTable(dataBrutaFiltrada);
@@ -1228,8 +1223,15 @@ function drawMonthlyTicketChart(data, year) {
 
 function updateContractsCharts(filteredData) {
     const contractsByYear = {};
-    // A função agora opera apenas sobre 'filteredData', que já é seguro.
-    filteredData.forEach((d) => {
+    // Aplicar apenas os filtros de unidade e curso, ignorando o filtro de data
+    const selectedUnidades = $("#unidade-filter").val() || [];
+    const selectedCursos = $("#curso-filter").val() || [];
+    
+    fundosData.filter(d => {
+        const unidadeMatch = selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade);
+        const cursoMatch = selectedCursos.length === 0 || (d.curso_fundo && selectedCursos.includes(d.curso_fundo));
+        return unidadeMatch && cursoMatch;
+    }).forEach((d) => {
         const year = d.dt_contrato.getFullYear();
         if (!contractsByYear[year]) { contractsByYear[year] = 0; }
         contractsByYear[year]++;
@@ -1277,11 +1279,17 @@ function drawMonthlyContractsChart(data, year) {
     document.getElementById("monthly-contracts-title").textContent = `Contratos Realizados Total Mensal (${year})`;
     const contractsByMonth = Array(12).fill(0);
 
-    data.forEach((d) => {
-        if (d.dt_contrato.getFullYear() === parseInt(year)) {
-            const month = d.dt_contrato.getMonth();
-            contractsByMonth[month]++;
-        }
+    // Aplicar apenas os filtros de unidade e curso, ignorando o filtro de data
+    const selectedUnidades = $("#unidade-filter").val() || [];
+    const selectedCursos = $("#curso-filter").val() || [];
+    
+    fundosData.filter(d => {
+        const unidadeMatch = selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade);
+        const cursoMatch = selectedCursos.length === 0 || (d.curso_fundo && selectedCursos.includes(d.curso_fundo));
+        return unidadeMatch && cursoMatch && d.dt_contrato.getFullYear() === parseInt(year);
+    }).forEach((d) => {
+        const month = d.dt_contrato.getMonth();
+        contractsByMonth[month]++;
     });
 
     const monthLabels = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
