@@ -303,6 +303,7 @@ async function fetchAllSalesDataFromSheet() {
         const codigoIntegranteIndex = headers.indexOf("codigo_integrante");
         const nomeIntegranteIndex = headers.indexOf("nm_integrante");
         const idFundoIndex = headers.indexOf("id_fundo");
+        const cursoFundoIndex = headers.indexOf("curso_fundo");
 
         return rows.slice(1).map((row) => {
             const dateValue = parseDate(row[dataIndex]);
@@ -316,6 +317,7 @@ async function fetchAllSalesDataFromSheet() {
                 codigo_integrante: codigoIntegranteIndex !== -1 ? row[codigoIntegranteIndex] || "N/A" : "N/A",
                 nm_integrante: nomeIntegranteIndex !== -1 ? row[nomeIntegranteIndex] || "N/A" : "N/A",
                 id_fundo: idFundoIndex !== -1 ? row[idFundoIndex] || "N/A" : "N/A",
+                curso_fundo: cursoFundoIndex !== -1 ? row[cursoFundoIndex] || "" : "",
             };
         }).filter(Boolean);
     } catch (error) {
@@ -348,6 +350,7 @@ async function fetchFundosData() {
     const dtCadastroIndex = headers.indexOf("dt_cadastro_fundo");
     const tipoServicoIndex = headers.indexOf("tp_servico");
     const instituicaoIndex = headers.indexOf("nm_instituicao");
+    const cursoFundoIndex = headers.indexOf("curso_fundo");
     const dtBaileIndex = headers.indexOf("dt_baile");
 
     if (unidadeIndex === -1 || idFundoIndex === -1 || dtContratoIndex === -1) {
@@ -1399,9 +1402,11 @@ function populateFilters() {
         });
 
         // Populate cursos filter
-        const cursosVendas = allData.map((d) => d.curso_fundo).filter(c => c);
-        const cursosFundos = fundosData.map((d) => d.curso_fundo).filter(c => c);
+        const cursosVendas = allData.map((d) => d.curso_fundo || '').filter(c => c && c !== 'N/A');
+        const cursosFundos = fundosData.map((d) => d.curso_fundo || '').filter(c => c && c !== 'N/A');
         const cursos = [...new Set([...cursosVendas, ...cursosFundos])].sort();
+        
+        console.log('Cursos encontrados:', cursos); // Para debug
         
         cursos.forEach((c) => {
             cursoFilter.append($("<option>", { value: c, text: c }));
