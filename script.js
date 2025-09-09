@@ -621,104 +621,125 @@ function updateDashboard() {
 
     const anoVigenteParaGrafico = new Date().getFullYear();
 
-    // Zera as variáveis de dados antes de refiltrar
     let dataBrutaFiltrada = [];
     let dataBrutaFiltradaPY = [];
-    let dataParaGraficoAnual = [];
-    let allDataForOtherCharts = [];
     let fundosDataFiltrado = [];
+    let salesDataFilteredForCharts = [];
 
     const hasPermissionToViewData = (userAccessLevel === 'ALL_UNITS' || selectedUnidades.length > 0);
 
     if (hasPermissionToViewData) {
         const filterLogicUnidade = d => (selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade));
-        
-        const isSecondaryPage = document.getElementById('btn-page2').classList.contains('active');
         const cursoFilterLogic = d => selectedCursos.length === 0 || selectedCursos.includes(d.curso_fundo);
 
-        // Define os dados base, aplicando o filtro de unidade
-        let baseSalesData = allData.filter(filterLogicUnidade);
-        let baseFundosData = fundosData.filter(filterLogicUnidade);
+        // Aplica filtro de unidade e curso
+        let baseSalesData = allData.filter(filterLogicUnidade).filter(cursoFilterLogic);
+        let baseFundosData = fundosData.filter(filterLogicUnidade).filter(cursoFilterLogic);
 
-        // Se estiver na página secundária, aplica o filtro de curso sobre os dados base
-        if (isSecondaryPage) {
-            baseSalesData = baseSalesData.filter(cursoFilterLogic);
-            baseFundosData = baseFundosData.filter(cursoFilterLogic);
-        }
-
-        // Recria as variáveis para os gráficos a partir dos dados base corretamente filtrados
+        // Dados para os KPIs e tabelas (período selecionado)
         dataBrutaFiltrada = baseSalesData.filter(d => d.dt_cadastro_integrante >= startDate && d.dt_cadastro_integrante < endDate);
-        dataParaGraficoAnual = baseSalesData.filter(d => d.dt_cadastro_integrante.getFullYear() === anoVigenteParaGrafico);
-        allDataForOtherCharts = baseSalesData;
-        fundosDataFiltrado = baseFundosData;
-
+        
+        // Dados para os KPIs do ano anterior
         const sDPY = new Date(startDate); sDPY.setFullYear(sDPY.getFullYear() - 1);
         const eDPY = new Date(endDate); eDPY.setFullYear(eDPY.getFullYear() - 1);
-        dataBrutaFiltradaPY = baseSalesData.filter(d => d.dt_cadastro_integrante >= sDPY && d.dt_cadastro_integrante < eDPY);
+        dataBrutaFiltradaPY = allData.filter(filterLogicUnidade).filter(cursoFilterLogic) // Re-filtra os dados completos para o período PY
+                                     .filter(d => d.dt_cadastro_integrante >= sDPY && d.dt_cadastro_integrante < eDPY);
+
+        // Dados para os gráficos (geralmente todo o histórico filtrado por unidade/curso)
+        salesDataFilteredForCharts = baseSalesData;
+        fundosDataFiltrado = baseFundosData;
     }
     
-    // ATUALIZAÇÃO DOS COMPONENTES (usando as variáveis corretas que cada função já esperava)
-    updateIndicadores(dataBrutaFiltrada, dataBrutaFiltradaPY, metasData);
-    updateVVRAnualChart(dataParaGraficoAnual, metasData);
+    // ATUALIZAÇÃO DOS COMPONENTES
+    updateMainKPIs(dataBrutaFiltrada, selectedUnidades, startDate, endDate);
+    updatePreviousYearKPIs(dataBrutaFiltradaPY, selectedUnidades, new Date(startDate.getFullYear() - 1, startDate.getMonth(), startDate.getDate()), new Date(endDate.getFullYear() - 1, endDate.getMonth(), endDate.getDate()));
+    
+    const dataParaGraficoAnual = salesDataFilteredForCharts.filter(d => d.dt_cadastro_integrante.getFullYear() === anoVigenteParaGrafico);
+    updateVVRAnualChart(dataParaGraficoAnual, metasData, selectedUnidades, anoVigenteParaGrafico);
+    
     updateVVRMensalChart(dataBrutaFiltrada, metasData);
-    updateMonthlyAdesoesChart(allDataForOtherCharts);
-    updateAdesoesDrillDownCharts(dataBrutaFiltrada);
-    updateFundosTable(fundosDataFiltrado);
+    
+    updateCumulativeVvrChart(salesDataFilteredForCharts);
+    updateMonthlyVvrChart(salesDataFilteredForCharts);
+    updateDrillDownCharts(salesDataFilteredForCharts);
+    updateTicketMedioCharts(salesDataFilteredForCharts);
+    updateContractsCharts(salesDataFilteredForCharts);
+    updateAdesoesCharts(salesDataFilteredForCharts);
+
     updateAdesoesTable(dataBrutaFiltrada);
+    updateConsultorTable(dataBrutaFiltrada);
+    updateFundosTable(fundosDataFiltrado);
     updateVVRTable(dataBrutaFiltrada, metasData);
 }
 
 // ...existing code...
 // ...existing code...
-function updateVVRAnualChart(dataParaGraficoAnual, metas) {
+function updateVVRAnualChart(dataParaGraficoAnual, metas, selectedUnidades, anoVigente) {
     const vvrPorMes = Array(12).fill(0);
+    const vvrVendasPorMes = Array(12).fill(0);
+    const vvrPosVendasPorMes = Array(12).fill(0);
+
+    const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
     dataParaGraficoAnual.forEach(d => {
         const month = d.dt_cadastro_integrante.getMonth();
-        vvrPorMes[month] += d.vlr_liquido_adesao;
+        vvrPorMes[month] += d.vl_plano;
+        if (normalizeText(d.venda_posvenda) === "VENDA") {
+            vvrVendasPorMes[month] += d.vl_plano;
+        } else if (normalizeText(d.venda_posvenda) === "POS VENDA") {
+            vvrPosVendasPorMes[month] += d.vl_plano;
+        }
     });
 
     const metaVendasPorMes = Array(12).fill(0);
     const metaPosVendasPorMes = Array(12).fill(0);
-    const metaTotalPorMes = Array(12).fill(0);
+    
+    const unitsToConsider = (userAccessLevel === 'ALL_UNITS' && selectedUnidades.length === 0)
+        ? [...new Set(allData.map(d => d.nm_unidade))]
+        : selectedUnidades;
 
     metas.forEach((metaInfo, key) => {
         const [unidade, ano, mes] = key.split("-");
-        if (String(ano) === String(anoVigenteParaGrafico)) {
+        if (String(ano) === String(anoVigente) && unitsToConsider.includes(unidade)) {
             const monthIndex = parseInt(mes) - 1;
             if (!isNaN(monthIndex)) {
                 metaVendasPorMes[monthIndex] += metaInfo.meta_vvr_vendas;
                 metaPosVendasPorMes[monthIndex] += metaInfo.meta_vvr_posvendas;
-                metaTotalPorMes[monthIndex] += metaInfo.meta_vvr_total;
             }
         }
     });
 
-    const labels = dataParaGraficoAnual.map(d => d.dt_cadastro_integrante.toLocaleString('default', { month: 'short' }));
+    const labels = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
     if (vvrVsMetaPorMesChart) vvrVsMetaPorMesChart.destroy();
-    Chart.register(ChartDataLabels);
+    
     vvrVsMetaPorMesChart = new Chart(document.getElementById("vvrVsMetaPorMesChart"), {
         type: "bar",
         data: {
             labels: labels,
             datasets: [
-                { label: "Vendas", data: vvrPorMes, backgroundColor: "#007bff", order: 2 },
-                { label: "Pós-Venda", data: vvrPorMes, backgroundColor: "#6c757d", order: 1 },
+                { 
+                    label: "Vendas", 
+                    data: vvrVendasPorMes, 
+                    backgroundColor: "#007bff", 
+                    stack: 'Stack 0',
+                },
+                { 
+                    label: "Pós-Venda", 
+                    data: vvrPosVendasPorMes, 
+                    backgroundColor: "#6c757d", 
+                    stack: 'Stack 0',
+                },
                 {
                     label: "Meta Vendas",
                     data: metaVendasPorMes,
                     type: "line",
                     borderColor: "#28a745",
-                    order: 0,
+                    backgroundColor: "#28a745",
+                    fill: false,
+                    tension: 0.1,
                     datalabels: {
-                        display: true,
-                        align: "bottom",
-                        backgroundColor: "rgba(0, 0, 0, 0.6)",
-                        borderRadius: 4,
-                        color: "white",
-                        font: { size: 15 },
-                        padding: 4,
-                        formatter: (value) => (value > 0 ? `${(value / 1000).toFixed(0)}k` : ""),
+                        display: false
                     },
                 },
                 {
@@ -726,16 +747,11 @@ function updateVVRAnualChart(dataParaGraficoAnual, metas) {
                     data: metaPosVendasPorMes,
                     type: "line",
                     borderColor: "#dc3545",
-                    order: 0,
+                    backgroundColor: "#dc3545",
+                    fill: false,
+                    tension: 0.1,
                     datalabels: {
-                        display: true,
-                        align: "bottom",
-                        backgroundColor: "rgba(0, 0, 0, 0.6)",
-                        borderRadius: 4,
-                        color: "white",
-                        font: { size: 15 },
-                        padding: 4,
-                        formatter: (value) => (value > 0 ? `${(value / 1000).toFixed(0)}k` : ""),
+                        display: false
                     },
                 },
             ],
@@ -747,7 +763,24 @@ function updateVVRAnualChart(dataParaGraficoAnual, metas) {
                 datalabels: {
                     anchor: "end",
                     align: "end",
-                    formatter: (value) => (value >= 1000 ? `${(value / 1000).toFixed(0)}k` : ""),
+                    formatter: (value, context) => {
+                         // Mostra o total da barra empilhada
+                        if (context.dataset.stack) {
+                            const datasetArray = context.chart.data.datasets;
+                            const stackName = context.dataset.stack;
+                            if (context.datasetIndex === datasetArray.findIndex(ds => ds.stack === stackName && !ds.hidden)) {
+                                let total = 0;
+                                datasetArray.forEach(ds => {
+                                    if (ds.stack === stackName && !ds.hidden) {
+                                        total += ds.data[context.dataIndex] || 0;
+                                    }
+                                });
+                                return total > 1000 ? `${(total / 1000).toFixed(0)}k` : (total > 0 ? total.toFixed(0) : '');
+                            }
+                            return '';
+                        }
+                        return value > 1000 ? `${(value / 1000).toFixed(0)}k` : (value > 0 ? value.toFixed(0) : '');
+                    },
                     color: "#F8F9FA",
                     font: { weight: "bold" },
                 },
@@ -762,7 +795,22 @@ function updateVVRAnualChart(dataParaGraficoAnual, metas) {
                     },
                 },
             },
-            scales: { y: { beginAtZero: true } },
+            scales: { 
+                y: { 
+                    beginAtZero: true,
+                    stacked: true,
+                    ticks: {
+                        callback: function(value) {
+                            if (value >= 1000000) return `${value / 1000000}M`;
+                            if (value >= 1000) return `${value / 1000}k`;
+                            return value;
+                        }
+                    }
+                },
+                x: {
+                    stacked: true
+                }
+            },
         },
     });
 }
@@ -774,13 +822,11 @@ function updateVVRAnualChart(dataParaGraficoAnual, metas) {
 
 // ... cole o restante das suas funções originais aqui (a partir de updateCumulativeVvrChart) ...
 
-function updateCumulativeVvrChart(historicalData, selectedUnidades) {
+function updateCumulativeVvrChart(filteredData) {
     const selectorContainer = document.getElementById("cumulative-chart-selector");
-    const unitsToConsider = selectedUnidades.length > 0 ? selectedUnidades : [...new Set(allData.map((d) => d.nm_unidade))];
-    const filteredHistoricalData = historicalData.filter((d) => unitsToConsider.includes(d.nm_unidade));
     
     const salesByYearMonth = {};
-    const uniqueYears = [...new Set(filteredHistoricalData.map((d) => d.dt_cadastro_integrante.getFullYear()))].sort();
+    const uniqueYears = [...new Set(filteredData.map((d) => d.dt_cadastro_integrante.getFullYear()))].sort();
     
     if (selectorContainer.children.length === 0) {
         uniqueYears.forEach((year) => {
@@ -799,7 +845,7 @@ function updateCumulativeVvrChart(historicalData, selectedUnidades) {
     }
 
     const activeYears = Array.from(selectorContainer.querySelectorAll("button.active")).map((btn) => parseInt(btn.dataset.year));
-    filteredHistoricalData.forEach((d) => {
+    filteredData.forEach((d) => {
         const year = d.dt_cadastro_integrante.getFullYear();
         const month = d.dt_cadastro_integrante.getMonth();
         if (!salesByYearMonth[year]) { salesByYearMonth[year] = Array(12).fill(0); }
@@ -856,13 +902,11 @@ function updateCumulativeVvrChart(historicalData, selectedUnidades) {
     });
 }
 
-function updateMonthlyVvrChart(historicalData, selectedUnidades) {
+function updateMonthlyVvrChart(filteredData) {
     const selectorContainer = document.getElementById("monthly-chart-selector");
-    const unitsToConsider = selectedUnidades.length > 0 ? selectedUnidades : [...new Set(allData.map((d) => d.nm_unidade))];
-    const filteredHistoricalData = historicalData.filter((d) => unitsToConsider.includes(d.nm_unidade));
     
     const salesByYearMonth = {};
-    const uniqueYears = [...new Set(filteredHistoricalData.map((d) => d.dt_cadastro_integrante.getFullYear()))].sort();
+    const uniqueYears = [...new Set(filteredData.map((d) => d.dt_cadastro_integrante.getFullYear()))].sort();
 
     if (selectorContainer.children.length === 0) {
         uniqueYears.forEach((year) => {
@@ -881,7 +925,7 @@ function updateMonthlyVvrChart(historicalData, selectedUnidades) {
     }
 
     const activeYears = Array.from(selectorContainer.querySelectorAll("button.active")).map((btn) => parseInt(btn.dataset.year));
-    filteredHistoricalData.forEach((d) => {
+    filteredData.forEach((d) => {
         const year = d.dt_cadastro_integrante.getFullYear();
         const month = d.dt_cadastro_integrante.getMonth();
         if (!salesByYearMonth[year]) { salesByYearMonth[year] = Array(12).fill(0); }
@@ -939,7 +983,6 @@ function updateDrillDownCharts(filteredData) {
     const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     const salesByYear = {};
 
-    // A função agora opera apenas sobre 'filteredData', que já é seguro.
     filteredData.forEach((d) => {
         const year = d.dt_cadastro_integrante.getFullYear();
         if (!salesByYear[year]) { salesByYear[year] = { vendas: 0, posVendas: 0 }; }
