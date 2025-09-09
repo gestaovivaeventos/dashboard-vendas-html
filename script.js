@@ -50,6 +50,7 @@ let allData = [],
   fundosData = [],
   metasData = new Map(),
   cursosUnicos = new Set(),
+  fundosUnicos = new Set(),
   dataTable,
   vvrVsMetaPorMesChart,
   cumulativeVvrChart,
@@ -636,6 +637,7 @@ function updatePreviousYearKPIs(dataBruta, selectedUnidades, startDate, endDate)
 function updateDashboard() {
     const selectedUnidades = $("#unidade-filter").val() || [];
     const selectedCursos = $("#curso-filter").val() || [];
+    const selectedFundos = $("#fundo-filter").val() || [];
     
     const startDateString = document.getElementById("start-date").value;
     const [startYear, startMonth, startDay] = startDateString.split('-').map(Number);
@@ -655,7 +657,8 @@ function updateDashboard() {
         const filterLogic = d => {
             const unidadeMatch = selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade);
             const cursoMatch = selectedCursos.length === 0 || (d.curso_fundo && selectedCursos.includes(d.curso_fundo));
-            return unidadeMatch && cursoMatch;
+            const fundoMatch = selectedFundos.length === 0 || (d.nm_fundo && selectedFundos.includes(d.nm_fundo));
+            return unidadeMatch && cursoMatch && fundoMatch;
         };
         
         // Filtrar dados de adesões
@@ -667,8 +670,9 @@ function updateDashboard() {
         fundosDataFiltrado = fundosData.filter(d => {
             const unidadeMatch = selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade);
             const cursoMatch = selectedCursos.length === 0 || (d.curso_fundo && selectedCursos.includes(d.curso_fundo));
+            const fundoMatch = selectedFundos.length === 0 || (d.nm_fundo && selectedFundos.includes(d.nm_fundo));
             const dateMatch = d.dt_contrato && d.dt_contrato >= startDate && d.dt_contrato < endDate;
-            return unidadeMatch && cursoMatch && dateMatch;
+            return unidadeMatch && cursoMatch && fundoMatch && dateMatch;
         });
 
         const sDPY = new Date(startDate); sDPY.setFullYear(sDPY.getFullYear() - 1);
@@ -1461,14 +1465,17 @@ function populateFilters() {
     try {
         $("#unidade-filter").multiselect('destroy');
         $("#curso-filter").multiselect('destroy');
+        $("#fundo-filter").multiselect('destroy');
     } catch(e) {
         console.log("Multiselect não existia ainda");
     }
 
     const unidadeFilter = $("#unidade-filter");
     const cursoFilter = $("#curso-filter");
+    const fundoFilter = $("#fundo-filter");
     unidadeFilter.empty();
     cursoFilter.empty();
+    fundoFilter.empty();
 
     if (userAccessLevel === "ALL_UNITS") {
         // CENÁRIO 1: FRANQUEADORA (vê todas as unidades)
@@ -1525,6 +1532,38 @@ function populateFilters() {
             onDeselectAll: updateDashboard,
             enableCaseInsensitiveFiltering: true, // Habilita pesquisa case-insensitive
             filterBehavior: 'text', // Pesquisa no texto visível, não no valor
+            templates: {
+                button: '<button type="button" class="multiselect dropdown-toggle" data-toggle="dropdown"><span class="multiselect-selected-text"></span></button>',
+            }
+        });
+
+        // Populate fundos filter
+        const fundosVendas = allData.map((d) => d.nm_fundo || '').filter(f => f && f !== 'N/A');
+        const fundosNomes = fundosData.map((d) => d.nm_fundo || '').filter(f => f && f !== 'N/A');
+        const fundos = [...new Set([...fundosVendas, ...fundosNomes])].sort();
+        
+        console.log('Fundos encontrados:', fundos); // Para debug
+        
+        fundos.forEach((f) => {
+            fundoFilter.append($("<option>", { value: f, text: f }));
+        });
+
+        // Inicialização do multiselect para fundos
+        fundoFilter.multiselect({
+            enableFiltering: true,
+            includeSelectAllOption: true,
+            selectAllText: "Marcar todos",
+            filterPlaceholder: "Pesquisar...",
+            nonSelectedText: "Todos os fundos",
+            nSelectedText: "fundos",
+            allSelectedText: "Todos selecionados",
+            buttonWidth: "100%",
+            maxHeight: 300,
+            onChange: updateDashboard,
+            onSelectAll: updateDashboard,
+            onDeselectAll: updateDashboard,
+            enableCaseInsensitiveFiltering: true,
+            filterBehavior: 'text',
             templates: {
                 button: '<button type="button" class="multiselect dropdown-toggle" data-toggle="dropdown"><span class="multiselect-selected-text"></span></button>',
                 ul: '<ul class="multiselect-container dropdown-menu"></ul>',
