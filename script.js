@@ -654,7 +654,7 @@ function updateDashboard() {
     if (hasPermissionToViewData) {
         const filterLogic = d => {
             const unidadeMatch = selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade);
-            const cursoMatch = selectedCursos.length === 0 || (d.curso_fundo && selectedCursos.includes(d.curso_fundo));
+            const cursoMatch = selectedCursos.length === 0 || selectedCursos.includes(d.curso_fundo);
             return unidadeMatch && cursoMatch;
         };
         
@@ -666,7 +666,7 @@ function updateDashboard() {
         // Filtrar dados de fundos usando dt_contrato
         fundosDataFiltrado = fundosData.filter(d => {
             const unidadeMatch = selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade);
-            const cursoMatch = selectedCursos.length === 0 || (d.curso_fundo && selectedCursos.includes(d.curso_fundo));
+            const cursoMatch = selectedCursos.length === 0 || selectedCursos.includes(d.curso_fundo);
             const dateMatch = d.dt_contrato && d.dt_contrato >= startDate && d.dt_contrato < endDate;
             return unidadeMatch && cursoMatch && dateMatch;
         });
@@ -1461,17 +1461,14 @@ function populateFilters() {
     try {
         $("#unidade-filter").multiselect('destroy');
         $("#curso-filter").multiselect('destroy');
-        $("#fundo-filter").multiselect('destroy');
     } catch(e) {
         console.log("Multiselect não existia ainda");
     }
 
     const unidadeFilter = $("#unidade-filter");
     const cursoFilter = $("#curso-filter");
-    const fundoFilter = $("#fundo-filter");
     unidadeFilter.empty();
     cursoFilter.empty();
-    fundoFilter.empty();
 
     if (userAccessLevel === "ALL_UNITS") {
         // CENÁRIO 1: FRANQUEADORA (vê todas as unidades)
@@ -1496,16 +1493,7 @@ function populateFilters() {
             cursoFilter.append($("<option>", { value: c, text: c }));
         });
 
-        // Popular filtro de fundos
-        const fundosAdesoes = allData.map((d) => d.nm_fundo || '').filter(f => f && f !== 'N/A');
-        const fundosDaBaseFundos = fundosData.map((d) => d.nm_fundo || '').filter(f => f && f !== 'N/A');
-        const fundosUnicos = [...new Set([...fundosAdesoes, ...fundosDaBaseFundos])].sort();
 
-        console.log('Fundos encontrados:', fundosUnicos); // Para debug
-
-        fundosUnicos.forEach((f) => {
-            fundoFilter.append($("<option>", { value: f, text: f }));
-        });
 
         unidadeFilter.multiselect({
             enableFiltering: true,
