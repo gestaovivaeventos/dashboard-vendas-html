@@ -1523,8 +1523,14 @@ function populateFilters() {
             onChange: updateDashboard,
             onSelectAll: updateDashboard,
             onDeselectAll: updateDashboard,
-            enableCaseInsensitiveFiltering: true, // Habilita pesquisa case-insensitive
-            filterBehavior: 'text' // Pesquisa no texto visível, não no valor
+            enableCaseInsensitiveFiltering: true,
+            filterBehavior: 'text',
+            dropUp: false,
+            dropRight: false,
+            widthSynchronizationMode: 'ifPopupIsSmaller',
+            templates: {
+                ul: '<ul class="multiselect-container dropdown-menu" style="width: auto; min-width: 100%;"></ul>'
+            }
         });
 
         // Inicialização do multiselect para cursos com timeout para garantir que o DOM esteja pronto
@@ -1541,10 +1547,14 @@ function populateFilters() {
             onChange: updateDashboard,
             onSelectAll: updateDashboard,
             onDeselectAll: updateDashboard,
-            enableCaseInsensitiveFiltering: true, // Habilita pesquisa case-insensitive
-            filterBehavior: 'text', // Pesquisa no texto visível, não no valor
+            enableCaseInsensitiveFiltering: true,
+            filterBehavior: 'text',
+            dropUp: false,
+            dropRight: false,
+            widthSynchronizationMode: 'ifPopupIsSmaller',
             templates: {
                 button: '<button type="button" class="multiselect dropdown-toggle" data-toggle="dropdown"><span class="multiselect-selected-text"></span></button>',
+                ul: '<ul class="multiselect-container dropdown-menu" style="width: auto; min-width: 100%;"></ul>'
             }
         });
 
@@ -1566,14 +1576,15 @@ function populateFilters() {
             onDeselectAll: updateDashboard,
             enableCaseInsensitiveFiltering: true,
             filterBehavior: 'text',
+            dropUp: false,
+            dropRight: false,
+            widthSynchronizationMode: 'ifPopupIsSmaller',
             templates: {
                 button: '<button type="button" class="multiselect dropdown-toggle" data-toggle="dropdown"><span class="multiselect-selected-text"></span></button>',
-                ul: '<ul class="multiselect-container dropdown-menu"></ul>',
+                ul: '<ul class="multiselect-container dropdown-menu" style="width: auto; min-width: 100%;"></ul>',
                 filter: '<li class="multiselect-item filter"><div class="input-group"><input class="form-control multiselect-search" type="text"></div></li>',
                 filterClearBtn: '<span class="input-group-btn"><button class="btn btn-default multiselect-clear-filter" type="button"><i class="fas fa-times"></i></button></span>'
-            },
-            dropRight: true,
-            dropUp: false
+            }
         });
 
     } else if (Array.isArray(userAccessLevel)) {

@@ -7,6 +7,32 @@ body {
 }
         .dashboard-wrapper { display: flex; }
         #sidebar { width: 350px; height: 100vh; background-color: #343A40; padding: 20px; position: fixed; top: 0; left: 0; overflow-y: auto; transition: transform 0.3s ease-in-out; z-index: 1000; }
+
+/* Estilos para os dropdowns do multiselect */
+.multiselect-container {
+    position: absolute !important;
+    max-width: none !important;
+    width: auto !important;
+    min-width: 100% !important;
+    margin-top: 1px !important;
+}
+
+.multiselect-container.dropdown-menu {
+    background-color: #343A40;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.multiselect-container > li > a {
+    padding: 3px 20px;
+    clear: both;
+    white-space: normal;
+}
+
+.btn-group {
+    width: 100%;
+    position: relative;
+}
         #sidebar.collapsed { transform: translateX(-100%); }
         #main-content { flex-grow: 1; padding: 20px; margin-left: 350px; transition: margin-left 0.3s ease-in-out; }
         #main-content.full-width { margin-left: 0; }
