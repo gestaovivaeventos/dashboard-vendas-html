@@ -1919,7 +1919,7 @@ function updateFundosDetalhadosTable(fundosData, selectedUnidades, startDate, en
     const tableData = filteredData.map((d) => [
         d.nm_unidade,
         d.id_fundo,
-        d.fundo,
+        d.nm_fundo,
         formatDate(d.dt_contrato),
         formatDate(d.dt_cadastro),
         d.tipo_servico,
