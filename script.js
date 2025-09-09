@@ -1460,87 +1460,23 @@ function addEventListeners() {
 
 // ...
 
-function updateDependentFilters(selectedUnidades = []) {
-    const cursoFilter = $("#curso-filter");
-    const fundoFilter = $("#fundo-filter");
-    
-    // Destruir apenas os filtros dependentes
+function populateFilters(selectedUnidades = []) {
+    // Destruir instâncias existentes do multiselect
     try {
-        cursoFilter.multiselect('destroy');
-        fundoFilter.multiselect('destroy');
+        $("#unidade-filter").multiselect('destroy');
+        $("#curso-filter").multiselect('destroy');
+        $("#fundo-filter").multiselect('destroy');
     } catch(e) {
         console.log("Multiselect não existia ainda");
     }
 
-    // Limpa os filtros dependentes
+    const unidadeFilter = $("#unidade-filter");
+    const cursoFilter = $("#curso-filter");
+    const fundoFilter = $("#fundo-filter");
+    
+    // Limpa apenas os filtros dependentes
     cursoFilter.empty();
     fundoFilter.empty();
-
-    // Filtra os dados com base nas unidades selecionadas
-    const dadosFiltrados = allData.filter(d => selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade));
-    const fundosFiltrados = fundosData.filter(d => selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade));
-
-    // Atualiza o filtro de cursos
-    const cursosVendas = dadosFiltrados.map((d) => d.curso_fundo || '').filter(c => c && c !== 'N/A');
-    const cursosFundos = fundosFiltrados.map((d) => d.curso_fundo || '').filter(c => c && c !== 'N/A');
-    const cursos = [...new Set([...cursosVendas, ...cursosFundos])].sort();
-    
-    cursos.forEach((c) => {
-        cursoFilter.append($("<option>", { value: c, text: c }));
-    });
-
-    // Atualiza o filtro de fundos
-    const fundosFromVendas = dadosFiltrados.map((d) => d.nm_fundo || '').filter(f => f && f !== 'N/A');
-    const fundosFromFundos = fundosFiltrados.map((d) => d.nm_fundo || '').filter(f => f && f !== 'N/A');
-    const fundosUnicos = [...new Set([...fundosFromVendas, ...fundosFromFundos])].sort();
-    
-    fundosUnicos.forEach((f) => {
-        fundoFilter.append($("<option>", { value: f, text: f }));
-    });
-
-    // Reinicializa os filtros dependentes
-    initializeFilterMultiselect(cursoFilter, "cursos");
-    initializeFilterMultiselect(fundoFilter, "fundos");
-}
-
-function initializeFilterMultiselect(filter, type) {
-    filter.multiselect({
-        enableFiltering: true,
-        includeSelectAllOption: true,
-        selectAllText: "Marcar todos",
-        filterPlaceholder: "Pesquisar...",
-        nonSelectedText: `Todos os ${type}`,
-        nSelectedText: type,
-        allSelectedText: "Todos selecionados",
-        buttonWidth: "100%",
-        maxHeight: 300,
-        onChange: updateDashboard,
-        onSelectAll: updateDashboard,
-        onDeselectAll: updateDashboard,
-        enableCaseInsensitiveFiltering: true,
-        filterBehavior: 'text',
-        dropUp: false,
-        dropRight: false,
-        widthSynchronizationMode: 'ifPopupIsSmaller',
-        closeOnSelect: false,
-        templates: {
-            button: '<button type="button" class="multiselect dropdown-toggle" data-toggle="dropdown"><span class="multiselect-selected-text"></span></button>',
-            ul: '<ul class="multiselect-container dropdown-menu" style="width: auto; min-width: 100%;"></ul>'
-        }
-    });
-}
-
-function populateFilters() {
-    const unidadeFilter = $("#unidade-filter");
-    
-    // Destruir apenas se ainda não foi inicializado
-    if (unidadeFilter.find('option').length === 0) {
-        try {
-            unidadeFilter.multiselect('destroy');
-        } catch(e) {
-            console.log("Multiselect não existia ainda");
-        }
-        unidadeFilter.empty();
 
     if (userAccessLevel === "ALL_UNITS") {
         // Popula o filtro de unidades apenas uma vez
