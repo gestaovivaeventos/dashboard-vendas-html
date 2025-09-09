@@ -95,35 +95,38 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
     align-items: center !important;
     margin: 0 !important;
     width: 100% !important;
+    padding: 4px 8px !important;
 }
 
 /* Ajuste do texto ao lado do checkbox */
 .multiselect-container > li > a label span {
-    margin-left: 4px !important;
     white-space: nowrap !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
+    line-height: 1.2 !important;
 }
 
 .multiselect-container > li > a {
     position: relative !important;
-    padding: 8px 12px !important;
+    padding: 0 !important;
     display: block !important;
+    text-decoration: none !important;
 }
 
 .multiselect-container > li > a label {
-    display: block !important;
+    display: flex !important;
+    align-items: center !important;
     margin: 0 !important;
-    padding-left: 25px !important;
+    padding: 0 !important;
     position: relative !important;
     cursor: pointer !important;
+    min-height: 24px !important;
 }
 
 .multiselect-container > li > a label input[type="checkbox"] {
-    position: absolute !important;
-    left: 0 !important;
-    top: 50% !important;
-    transform: translateY(-50%) !important;
+    position: relative !important;
+    margin: 0 8px 0 0 !important;
+    flex-shrink: 0 !important;
     accent-color: #fd7e14 !important;
     -webkit-appearance: none !important;
     -moz-appearance: none !important;
@@ -136,7 +139,6 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
     outline: none !important;
     cursor: pointer !important;
     background: white !important;
-    margin: 0 !important;
 }
 
 .multiselect-container > li > a label input[type="checkbox"]:checked {
