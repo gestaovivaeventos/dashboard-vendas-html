@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard de Vendas</title>
+    
+    <!-- Fontes -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Orbitron:wght@700&display=swap" rel="stylesheet">
     <!-- jQuery primeiro -->
     <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
     
@@ -55,13 +58,16 @@
 
 </head>
 <body>
-    <div id="login-overlay" class="login-overlay">
-        <div id="login-box" class="login-box">
-            <img src="logo_viva.png" alt="Logo Viva Eventos" id="login-logo" class="login-logo">
-            <h2>Digite o Código de Acesso</h2>
-            <input type="password" inputmode="numeric" pattern="[0-9]*" id="access-code-input" class="form-control" value="20250">
-            <button id="access-code-button" class="btn btn-warning btn-block">Liberar Acesso</button>
-            <p id="login-error-message"></p>
+    <div id="login-screen">
+        <div id="login-container">
+            <h1 class="page-title">DASHBOARD DE VENDAS</h1>
+            <div class="access-control">
+                <label>Digite o Código de Acesso</label>
+                <input type="number" id="access-code-input" inputmode="numeric" pattern="[0-9]*">
+                <button id="access-code-button">Liberar Acesso</button>
+                <p id="error-message">Código inválido. Tente novamente.</p>
+            </div>
+            <img src="logo_viva.png" alt="Logo Viva Eventos" id="company-logo-login">
         </div>
     </div>
 

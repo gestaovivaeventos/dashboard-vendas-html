@@ -1,5 +1,45 @@
 // Arquivo: script.js (do Dashboard de Vendas) - VERSÃO COMPLETA E CORRIGIDA
 
+// Configuração do login
+$(document).ready(function() {
+    const errorMessage = $('#error-message');
+    
+    // Função para tentar fazer login
+    function tentarLogin() {
+        const codigoDigitado = $('#access-code-input').val();
+        
+        if(codigoDigitado === '20250') {
+            // Esconde a tela de login com fade
+            $('#login-screen').fadeOut(400, function() {
+                // Mostra o dashboard
+                $('.dashboard-wrapper').fadeIn(400);
+            });
+            
+            // Salva o estado de login
+            sessionStorage.setItem('dashboardLogado', 'true');
+        } else {
+            errorMessage.fadeIn();
+            $('#access-code-input').val('').focus();
+        }
+    }
+
+    // Click no botão de login
+    $('#access-code-button').click(tentarLogin);
+
+    // Enter no input
+    $('#access-code-input').keypress(function(e) {
+        if(e.which == 13) {
+            tentarLogin();
+        }
+    });
+
+    // Verifica se já está logado
+    if(sessionStorage.getItem('dashboardLogado') === 'true') {
+        $('#login-screen').hide();
+        $('.dashboard-wrapper').show();
+    }
+});
+
 // --- CONFIGURAÇÕES GLOBAIS ---
 const SALES_SPREADSHEET_ID = "1HXyq_r2ssJ5c7wXdrBUc-WdqrlCfiZYE1EuIWbIDg0U";
 const SALES_SHEET_NAME = "ADESOES";
