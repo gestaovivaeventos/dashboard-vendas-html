@@ -1423,23 +1423,28 @@ function populateFilters() {
         });
 
         // Inicialização do multiselect para cursos com timeout para garantir que o DOM esteja pronto
-        setTimeout(() => {
-            cursoFilter.multiselect({
-                enableFiltering: true,
-                includeSelectAllOption: true,
-                selectAllText: "Marcar todos",
-                filterPlaceholder: "Pesquisar...",
-                nonSelectedText: "Todos os cursos",
-                nSelectedText: "cursos",
-                allSelectedText: "Todos selecionados",
-                buttonWidth: "100%",
-                maxHeight: 300,
-                onChange: updateDashboard,
-                onSelectAll: updateDashboard,
-                onDeselectAll: updateDashboard,
-                buttonClass: 'btn btn-outline-secondary'
-            });
-        }, 100);
+        cursoFilter.multiselect('destroy').multiselect({
+            enableFiltering: true,
+            includeSelectAllOption: true,
+            selectAllText: "Marcar todos",
+            filterPlaceholder: "Pesquisar...",
+            nonSelectedText: "Todos os cursos",
+            nSelectedText: "cursos",
+            allSelectedText: "Todos selecionados",
+            buttonWidth: "100%",
+            maxHeight: 300,
+            onChange: updateDashboard,
+            onSelectAll: updateDashboard,
+            onDeselectAll: updateDashboard,
+            templates: {
+                button: '<button type="button" class="multiselect dropdown-toggle" data-toggle="dropdown"><span class="multiselect-selected-text"></span></button>',
+                ul: '<ul class="multiselect-container dropdown-menu"></ul>',
+                filter: '<li class="multiselect-item filter"><div class="input-group"><input class="form-control multiselect-search" type="text"></div></li>',
+                filterClearBtn: '<span class="input-group-btn"><button class="btn btn-default multiselect-clear-filter" type="button"><i class="fas fa-times"></i></button></span>'
+            },
+            dropRight: true,
+            dropUp: false
+        });
 
     } else if (Array.isArray(userAccessLevel)) {
         // CENÁRIO 2: MULTI-FRANQUEADO (vê apenas as suas unidades, mas pode selecionar)

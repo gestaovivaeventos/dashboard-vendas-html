@@ -39,6 +39,51 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
 }
+
+/* Estilos para o multiselect */
+.multiselect-container {
+    background-color: #343A40 !important;
+    border: 1px solid #495057 !important;
+    border-radius: 4px !important;
+    padding: 5px !important;
+    max-height: 300px !important;
+    overflow-y: auto !important;
+}
+
+.multiselect-container > li > a {
+    color: #F8F9FA !important;
+    padding: 8px 12px !important;
+}
+
+.multiselect-container > li > a:hover {
+    background-color: #495057 !important;
+}
+
+.multiselect-container > li.active > a {
+    background-color: #007bff !important;
+}
+
+.btn-group {
+    width: 100% !important;
+    display: block !important;
+}
+
+.multiselect.dropdown-toggle {
+    background-color: #343A40 !important;
+    color: #F8F9FA !important;
+    border: 1px solid #495057 !important;
+    width: 100% !important;
+    text-align: left !important;
+    position: relative !important;
+    padding: 8px 12px !important;
+}
+
+.multiselect.dropdown-toggle::after {
+    position: absolute !important;
+    right: 12px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+}
 .page-navigation button:hover {
     background-image: linear-gradient(to bottom, #8a9198, #5a6268);
 }
