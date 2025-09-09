@@ -1357,7 +1357,16 @@ function updateDataTable(data) {
             meta = d.meta_vvr_total;
         }
         const atingimentoVvr = meta > 0 ? realizado / meta : 0;
-        return [d.unidade, d.periodo, formatCurrency(realizado), formatCurrency(meta), formatPercent(atingimentoVvr)];
+        // Função para formatar a data de YYYY-MM para mmm/YYYY
+        const formatPeriodo = (periodo) => {
+            const [ano, mes] = periodo.split('-');
+            const date = new Date(ano, parseInt(mes) - 1);
+            return date.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' })
+                      .replace('.', '')  // Remove o ponto do mês abreviado
+                      .toLowerCase();     // Deixa em minúsculo
+        };
+
+        return [d.unidade, formatPeriodo(d.periodo), formatCurrency(realizado), formatCurrency(meta), formatPercent(atingimentoVvr)];
     }).sort((a, b) => String(a[1]).localeCompare(String(b[0])));
 
     if (dataTable) {
@@ -1376,6 +1385,8 @@ function updateDataTable(data) {
                         body: function (data, row, column, node) {
                             if (column === 2 || column === 3) { return parseFloat(data.replace("R$", "").replace(/\./g, "").replace(",", ".").trim()); }
                             if (column === 4) { return parseFloat(data.replace("%", "").replace(",", ".").trim()) / 100; }
+                            // Mantém a formatação da data para o Excel
+                            if (column === 1) { return data; }
                             return data;
                         },
                     },
