@@ -4,20 +4,10 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
         #sidebar.collapsed { transform: translateX(-100%); }
         #main-content { flex-grow: 1; padding: 20px; margin-left: 350px; transition: margin-left 0.3s ease-in-out; }
         #main-content.full-width { margin-left: 0; }
-        .date-range-picker {
-    padding: 8px 12px;
-    border: 1px solid #495057;
-    border-radius: 4px;
-    background-color: #343a40;
-    color: #fff;
-    cursor: pointer;
-    width: 100%;
-    text-align: center;
-    font-size: 14px;
-}
-
-.flatpickr-calendar {
-    background-color: #343a40 !important;
+        #sidebar-toggle {
+    position: fixed;
+    top: 20px;
+    left: 360px;
     color: #fff !important;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     border-radius: 4px;

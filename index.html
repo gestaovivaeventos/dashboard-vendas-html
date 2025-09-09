@@ -4,21 +4,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard de Vendas</title>
-
     <!-- jQuery primeiro -->
     <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
     
     <!-- Bootstrap CSS e JS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.2/css/bootstrap.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.2/js/bootstrap.bundle.min.js"></script>
-
-    <!-- Flatpickr -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
-
-    <!-- Estilos customizados -->
-    <link rel="stylesheet" href="login-styles.css">
+    
+    <!-- Multiselect CSS e JS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/1.1.2/css/bootstrap-multiselect.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/1.1.2/js/bootstrap-multiselect.js"></script>
+    
+    <!-- Outros scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.css">
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.js"></script>
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.dataTables.min.css">
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
     <link rel="stylesheet" href="style.css">
     
     <!-- Multiselect CSS e JS -->
@@ -83,9 +89,8 @@
             <section class="filters" id="filters-section" style="display: none;">
                 <div class="filter-item filter-item-unidades"><select id="unidade-filter" multiple="multiple"></select></div>
                 <div class="filter-item" id="curso-filter-container"><select id="curso-filter" multiple="multiple"></select></div>
-                <div class="filter-item date-range-container">
-                    <input type="text" id="date-range-picker" class="date-range-picker" placeholder="Selecione o período">
-                </div>
+                <div class="filter-item"><input type="date" id="start-date"></div>
+                <div class="filter-item"><input type="date" id="end-date"></div>
             </section>
         </div>
         <div id="main-content">
