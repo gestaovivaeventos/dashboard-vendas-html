@@ -25,6 +25,13 @@
     <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
+    
+    <!-- Flatpickr -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" type="text/css" href="https://npmcdn.com/flatpickr/dist/themes/dark.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
+    
     <link rel="stylesheet" href="style.css">
     
     <!-- Multiselect CSS e JS -->
@@ -50,6 +57,55 @@
     #company-logo {
         height: 70px; /* Ajuste a altura do logo aqui */
         width: auto;
+    }
+
+    /* Estilos do seletor de datas */
+    .date-range-container {
+        position: relative;
+    }
+
+    .date-range-input {
+        width: 100%;
+        padding: 10px 15px;
+        background-color: #343a40;
+        border: 1px solid #495057;
+        border-radius: 4px;
+        color: #fff;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .date-range-input:hover {
+        border-color: #6c757d;
+    }
+
+    .date-range-input:focus {
+        outline: none;
+        border-color: #ffc107;
+        box-shadow: 0 0 0 2px rgba(255, 193, 7, 0.25);
+    }
+
+    /* Customização do Flatpickr */
+    .flatpickr-calendar {
+        border: none !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+    }
+
+    .flatpickr-day.selected {
+        background: #ffc107 !important;
+        border-color: #ffc107 !important;
+        color: #000 !important;
+    }
+
+    .flatpickr-day.inRange {
+        background: rgba(255, 193, 7, 0.2) !important;
+        border-color: transparent !important;
+        color: #fff !important;
+    }
+
+    .flatpickr-day:hover {
+        background: rgba(255, 193, 7, 0.3) !important;
     }
 </style>
 
@@ -89,8 +145,11 @@
             <section class="filters" id="filters-section" style="display: none;">
                 <div class="filter-item filter-item-unidades"><select id="unidade-filter" multiple="multiple"></select></div>
                 <div class="filter-item" id="curso-filter-container"><select id="curso-filter" multiple="multiple"></select></div>
-                <div class="filter-item"><input type="date" id="start-date"></div>
-                <div class="filter-item"><input type="date" id="end-date"></div>
+                <div class="filter-item date-range-container">
+                    <input type="text" id="date-range" class="date-range-input" placeholder="Selecione o período" readonly>
+                    <input type="hidden" id="start-date">
+                    <input type="hidden" id="end-date">
+                </div>
             </section>
         </div>
         <div id="main-content">

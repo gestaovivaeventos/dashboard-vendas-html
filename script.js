@@ -2,6 +2,31 @@
 
 // --- CONFIGURAÇÕES GLOBAIS ---
 const SALES_SPREADSHEET_ID = "1HXyq_r2ssJ5c7wXdrBUc-WdqrlCfiZYE1EuIWbIDg0U";
+
+// Configuração do seletor de datas
+document.addEventListener('DOMContentLoaded', function() {
+    const hoje = new Date();
+    const primeiroDiaMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+    
+    flatpickr("#date-range", {
+        mode: "range",
+        dateFormat: "d/m/Y",
+        defaultDate: [primeiroDiaMes, hoje],
+        locale: "pt",
+        theme: "dark",
+        showMonths: 2,
+        rangeSeparator: " até ",
+        disableMobile: true,
+        onChange: function(selectedDates) {
+            if (selectedDates.length === 2) {
+                document.getElementById('start-date').value = selectedDates[0].toISOString().split('T')[0];
+                document.getElementById('end-date').value = selectedDates[1].toISOString().split('T')[0];
+                // Dispara o evento de mudança para atualizar os dados
+                document.getElementById('start-date').dispatchEvent(new Event('change'));
+            }
+        }
+    });
+});
 const SALES_SHEET_NAME = "ADESOES";
 const FUNDOS_SHEET_NAME = "FUNDOS";
 const METAS_SPREADSHEET_ID = "1KywSOsTn7qUdVp2dLthWD3Y27RsE1aInk6hRJhp7BFw";
