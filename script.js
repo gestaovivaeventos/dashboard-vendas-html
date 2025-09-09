@@ -1461,14 +1461,17 @@ function populateFilters() {
     try {
         $("#unidade-filter").multiselect('destroy');
         $("#curso-filter").multiselect('destroy');
+        $("#fundo-filter").multiselect('destroy');
     } catch(e) {
         console.log("Multiselect não existia ainda");
     }
 
     const unidadeFilter = $("#unidade-filter");
     const cursoFilter = $("#curso-filter");
+    const fundoFilter = $("#fundo-filter");
     unidadeFilter.empty();
     cursoFilter.empty();
+    fundoFilter.empty();
 
     if (userAccessLevel === "ALL_UNITS") {
         // CENÁRIO 1: FRANQUEADORA (vê todas as unidades)
@@ -1490,6 +1493,17 @@ function populateFilters() {
         
         cursos.forEach((c) => {
             cursoFilter.append($("<option>", { value: c, text: c }));
+        });
+
+        // Popular filtro de fundos
+        const fundosAdesoes = allData.map((d) => d.nm_fundo || '').filter(f => f && f !== 'N/A');
+        const fundosDaBaseFundos = fundosData.map((d) => d.nm_fundo || '').filter(f => f && f !== 'N/A');
+        const fundosUnicos = [...new Set([...fundosAdesoes, ...fundosDaBaseFundos])].sort();
+
+        console.log('Fundos encontrados:', fundosUnicos); // Para debug
+
+        fundosUnicos.forEach((f) => {
+            fundoFilter.append($("<option>", { value: f, text: f }));
         });
 
         unidadeFilter.multiselect({
