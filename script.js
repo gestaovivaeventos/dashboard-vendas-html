@@ -626,29 +626,30 @@ function updateDashboard() {
     const hasPermissionToViewData = (userAccessLevel === 'ALL_UNITS' || selectedUnidades.length > 0);
 
     if (hasPermissionToViewData) {
-        const filterLogic = d => (selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade));
+        const filterLogicUnidade = d => (selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade));
         
-        // Lógica de filtro de curso
         const isSecondaryPage = document.getElementById('btn-page2').classList.contains('active');
-        const cursoFilterLogic = d => !isSecondaryPage || selectedCursos.length === 0 || selectedCursos.includes(d.curso_fundo);
+        const cursoFilterLogic = d => selectedCursos.length === 0 || selectedCursos.includes(d.curso_fundo);
 
-        // CORREÇÃO: Aplicar o filtro de curso apenas na página secundária para os dados de vendas
-        const baseData = isSecondaryPage ? allData.filter(cursoFilterLogic) : allData;
+        // Filtra os dados base (vendas e fundos) pela unidade selecionada
+        let filteredSalesData = allData.filter(filterLogicUnidade);
+        let filteredFundosData = fundosData.filter(filterLogicUnidade);
 
-        dataBrutaFiltrada = baseData.filter(d => filterLogic(d) && d.dt_cadastro_integrante >= startDate && d.dt_cadastro_integrante < endDate);
-        dataParaGraficoAnual = baseData.filter(d => filterLogic(d) && d.dt_cadastro_integrante.getFullYear() === anoVigenteParaGrafico);
-        allDataForOtherCharts = baseData.filter(filterLogic);
-        
-        // CORREÇÃO: Aplica o filtro de curso em 'fundosData' apenas na página secundária
-        fundosDataFiltrado = fundosData.filter(d => {
-            const unidadeMatch = filterLogic(d);
-            const cursoMatch = cursoFilterLogic(d);
-            return unidadeMatch && cursoMatch;
-        });
+        // Se estiver na página secundária, aplica o filtro de curso
+        if (isSecondaryPage) {
+            filteredSalesData = filteredSalesData.filter(cursoFilterLogic);
+            filteredFundosData = filteredFundosData.filter(cursoFilterLogic);
+        }
+
+        // Agora, cria as variáveis de dados para os gráficos a partir dos dados já filtrados corretamente
+        dataBrutaFiltrada = filteredSalesData.filter(d => d.dt_cadastro_integrante >= startDate && d.dt_cadastro_integrante < endDate);
+        dataParaGraficoAnual = filteredSalesData.filter(d => d.dt_cadastro_integrante.getFullYear() === anoVigenteParaGrafico);
+        allDataForOtherCharts = filteredSalesData; // Já filtrado por unidade e, se aplicável, por curso
+        fundosDataFiltrado = filteredFundosData; // Já filtrado por unidade e, se aplicável, por curso
 
         const sDPY = new Date(startDate); sDPY.setFullYear(sDPY.getFullYear() - 1);
         const eDPY = new Date(endDate); eDPY.setFullYear(eDPY.getFullYear() - 1);
-        dataBrutaFiltradaPY = baseData.filter(d => filterLogic(d) && d.dt_cadastro_integrante >= sDPY && d.dt_cadastro_integrante < eDPY);
+        dataBrutaFiltradaPY = filteredSalesData.filter(d => d.dt_cadastro_integrante >= sDPY && d.dt_cadastro_integrante < eDPY);
     }
     
     // ATUALIZAÇÃO DOS COMPONENTES
