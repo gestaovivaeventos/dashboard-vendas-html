@@ -24,6 +24,7 @@ let accessDataFromSheet = new Map(); // NOVO: Armazenará os códigos da planilh
 let allData = [],
   fundosData = [],
   metasData = new Map(),
+  cursosUnicos = new Set(),
   dataTable,
   vvrVsMetaPorMesChart,
   cumulativeVvrChart,
@@ -605,6 +606,7 @@ function updatePreviousYearKPIs(dataBruta, selectedUnidades, startDate, endDate)
 
 function updateDashboard() {
     const selectedUnidades = $("#unidade-filter").val() || [];
+    const selectedCursos = $("#curso-filter").val() || [];
     
     const startDateString = document.getElementById("start-date").value;
     const [startYear, startMonth, startDay] = startDateString.split('-').map(Number);
@@ -621,7 +623,11 @@ function updateDashboard() {
     const hasPermissionToViewData = (userAccessLevel === 'ALL_UNITS' || selectedUnidades.length > 0);
 
     if (hasPermissionToViewData) {
-        const filterLogic = d => (selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade));
+        const filterLogic = d => {
+            const unidadeMatch = selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade);
+            const cursoMatch = selectedCursos.length === 0 || (d.curso_fundo && selectedCursos.includes(d.curso_fundo));
+            return unidadeMatch && cursoMatch;
+        };
         
         dataBrutaFiltrada = allData.filter(d => filterLogic(d) && d.dt_cadastro_integrante >= startDate && d.dt_cadastro_integrante < endDate);
         dataParaGraficoAnual = allData.filter(d => filterLogic(d) && d.dt_cadastro_integrante.getFullYear() === anoVigenteParaGrafico);
@@ -1369,7 +1375,9 @@ function addEventListeners() {
 
 function populateFilters() {
     const unidadeFilter = $("#unidade-filter");
+    const cursoFilter = $("#curso-filter");
     unidadeFilter.empty();
+    cursoFilter.empty();
 
     if (userAccessLevel === "ALL_UNITS") {
         // CENÁRIO 1: FRANQUEADORA (vê todas as unidades)
@@ -1377,8 +1385,18 @@ function populateFilters() {
         const unidadesFundos = fundosData.map((d) => d.nm_unidade);
         const unidades = [...new Set([...unidadesVendas, ...unidadesFundos])].sort();
         
+        // Populate unidades filter
         unidades.forEach((u) => {
             unidadeFilter.append($("<option>", { value: u, text: u }));
+        });
+
+        // Populate cursos filter
+        const cursosVendas = allData.map((d) => d.curso_fundo).filter(c => c);
+        const cursosFundos = fundosData.map((d) => d.curso_fundo).filter(c => c);
+        const cursos = [...new Set([...cursosVendas, ...cursosFundos])].sort();
+        
+        cursos.forEach((c) => {
+            cursoFilter.append($("<option>", { value: c, text: c }));
         });
 
         unidadeFilter.multiselect({
@@ -1389,6 +1407,21 @@ function populateFilters() {
             nonSelectedText: "Todas as unidades",
             nSelectedText: "unidades",
             allSelectedText: "Todas selecionadas",
+            buttonWidth: "100%",
+            maxHeight: 300,
+            onChange: updateDashboard,
+            onSelectAll: updateDashboard,
+            onDeselectAll: updateDashboard,
+        });
+
+        cursoFilter.multiselect({
+            enableFiltering: true,
+            includeSelectAllOption: true,
+            selectAllText: "Marcar todos",
+            filterPlaceholder: "Pesquisar...",
+            nonSelectedText: "Todos os cursos",
+            nSelectedText: "cursos",
+            allSelectedText: "Todos selecionados",
             buttonWidth: "100%",
             maxHeight: 300,
             onChange: updateDashboard,
