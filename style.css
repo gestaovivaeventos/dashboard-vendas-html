@@ -11,22 +11,24 @@ body {
 /* Estilos para os dropdowns do multiselect */
 .multiselect-container {
     position: absolute !important;
-    max-width: none !important;
-    width: auto !important;
+    width: 100% !important; /* Garante que o dropdown tenha a mesma largura do botão */
     min-width: 100% !important;
     margin-top: 1px !important;
+    box-sizing: border-box; /* Garante que padding não afete a largura final */
 }
 
 .multiselect-container.dropdown-menu {
     background-color: #343A40;
     max-height: 300px;
     overflow-y: auto;
+    overflow-x: hidden; /* Esconde o overflow horizontal */
 }
 
 .multiselect-container > li > a {
     padding: 3px 20px;
     clear: both;
-    white-space: normal;
+    white-space: normal; /* Permite que o texto quebre a linha */
+    word-wrap: break-word; /* Força a quebra de palavras longas */
 }
 
 .btn-group {
