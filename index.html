@@ -1,24 +1,25 @@
 <!DOCTYPE html>
-<html lang="    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
-    
-    <!-- Flatpickr -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
-    <script src="date-picker.js"></script>
-<link rel="stylesheet" href="style.css">
-<style>r">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard de Vendas</title>
+
     <!-- jQuery primeiro -->
     <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
     
     <!-- Bootstrap CSS e JS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.2/css/bootstrap.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.2/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Flatpickr -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
+
+    <!-- Estilos customizados -->
+    <link rel="stylesheet" href="login-styles.css">
+    <link rel="stylesheet" href="style.css">
     
     <!-- Multiselect CSS e JS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/1.1.2/css/bootstrap-multiselect.css">
@@ -48,14 +49,14 @@
 
 </head>
 <body>
-    <div id="login-overlay">
-        <div id="login-box">
+    <div id="login-overlay" class="login-overlay">
+        <div id="login-box" class="login-box">
+            <img src="logo_viva.png" alt="Logo Viva Eventos" id="login-logo" class="login-logo">
             <h2>Digite o Código de Acesso</h2>
-          <input type="text" inputmode="numeric" pattern="[0-9]*" id="access-code-input" placeholder="Digite o código">
-            <button id="access-code-button">Liberar Acesso</button>
+            <input type="password" inputmode="numeric" pattern="[0-9]*" id="access-code-input" class="form-control" value="20250">
+            <button id="access-code-button" class="btn btn-warning btn-block">Liberar Acesso</button>
             <p id="login-error-message"></p>
         </div>
-        <img src="logo_viva.png" alt="Logo Viva Eventos" id="login-logo">
     </div>
 
     <div class="dashboard-wrapper" style="display: none;">
@@ -304,6 +305,41 @@
         </div>
     </div>
 
-<script src="script.js"></script>
+    <script src="script.js"></script>
+    <script src="date-picker.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Função para liberar acesso
+            $('#access-code-button').click(function() {
+                const codigoDigitado = $('#access-code-input').val();
+                
+                if(codigoDigitado === '20250') {
+                    // Esconde a tela de login
+                    $('#login-overlay').fadeOut();
+                    // Mostra o dashboard
+                    $('.dashboard-wrapper').fadeIn();
+                    
+                    // Salva o estado de login
+                    sessionStorage.setItem('dashboardLogado', 'true');
+                } else {
+                    $('#login-error-message').text('Código de acesso inválido!');
+                }
+            });
+
+            // Verifica se já está logado
+            const estaLogado = sessionStorage.getItem('dashboardLogado');
+            if(estaLogado === 'true') {
+                $('#login-overlay').hide();
+                $('.dashboard-wrapper').show();
+            }
+
+            // Permite usar Enter para submeter o código
+            $('#access-code-input').keypress(function(e) {
+                if(e.which == 13) { // 13 é o código da tecla Enter
+                    $('#access-code-button').click();
+                }
+            });
+        });
+    </script>
 </body>
 </html>
