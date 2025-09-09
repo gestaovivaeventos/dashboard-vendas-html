@@ -1361,9 +1361,10 @@ function updateDataTable(data) {
         const formatPeriodo = (periodo) => {
             const [ano, mes] = periodo.split('-');
             const date = new Date(ano, parseInt(mes) - 1);
-            return date.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' })
-                      .replace('.', '')  // Remove o ponto do mês abreviado
-                      .toLowerCase();     // Deixa em minúsculo
+            const mesAbreviado = date.toLocaleDateString('pt-BR', { month: 'short' })
+                .replace('.', '')  // Remove o ponto do mês abreviado
+                .toLowerCase();    // Deixa em minúsculo
+            return `${mesAbreviado}/${ano}`;
         };
 
         return [d.unidade, formatPeriodo(d.periodo), formatCurrency(realizado), formatCurrency(meta), formatPercent(atingimentoVvr)];
