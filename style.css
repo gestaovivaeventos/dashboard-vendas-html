@@ -42,8 +42,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 
 /* Estilos para o multiselect */
 .multiselect-container {
-    background-color: #343A40 !important;
-    border: 1px solid #495057 !important;
+    background-color: #FFFFFF !important;
+    border: 1px solid #dee2e6 !important;
     border-radius: 4px !important;
     padding: 5px !important;
     max-height: 300px !important;
@@ -51,16 +51,29 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 }
 
 .multiselect-container > li > a {
-    color: #F8F9FA !important;
+    color: #212529 !important;
     padding: 8px 12px !important;
 }
 
 .multiselect-container > li > a:hover {
-    background-color: #495057 !important;
+    background-color: #fff3e0 !important;
 }
 
 .multiselect-container > li.active > a {
-    background-color: #007bff !important;
+    background-color: #fd7e14 !important;
+    color: #FFFFFF !important;
+}
+
+.multiselect-container > li.active > a:hover {
+    background-color: #fd7e14 !important;
+}
+
+.multiselect-container > li > a label {
+    padding: 3px 10px 3px 25px !important;
+}
+
+.multiselect-container > li > a label input[type="checkbox"] {
+    margin-left: -20px !important;
 }
 
 .btn-group {
@@ -69,13 +82,20 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 }
 
 .multiselect.dropdown-toggle {
-    background-color: #343A40 !important;
-    color: #F8F9FA !important;
-    border: 1px solid #495057 !important;
+    background-color: #FFFFFF !important;
+    color: #212529 !important;
+    border: 1px solid #dee2e6 !important;
     width: 100% !important;
     text-align: left !important;
     position: relative !important;
     padding: 8px 12px !important;
+}
+
+/* Estilo para o input de pesquisa */
+.multiselect-container .input-group input.multiselect-search {
+    background-color: #FFFFFF !important;
+    color: #212529 !important;
+    border: 1px solid #dee2e6 !important;
 }
 
 .multiselect.dropdown-toggle::after {
