@@ -1460,7 +1460,7 @@ function addEventListeners() {
 
 // ...
 
-function populateFilters() {
+function populateFilters(selectedUnidades = []) {
     // Destruir instâncias existentes do multiselect
     try {
         $("#unidade-filter").multiselect('destroy');
@@ -1473,43 +1473,47 @@ function populateFilters() {
     const unidadeFilter = $("#unidade-filter");
     const cursoFilter = $("#curso-filter");
     const fundoFilter = $("#fundo-filter");
-    unidadeFilter.empty();
+    
+    // Limpa apenas os filtros dependentes
     cursoFilter.empty();
     fundoFilter.empty();
 
     if (userAccessLevel === "ALL_UNITS") {
-        // CENÁRIO 1: FRANQUEADORA (vê todas as unidades)
-        const unidadesVendas = allData.map((d) => d.nm_unidade);
-        const unidadesFundos = fundosData.map((d) => d.nm_unidade);
-        const unidades = [...new Set([...unidadesVendas, ...unidadesFundos])].sort();
+        // Popula o filtro de unidades apenas uma vez
+        if (unidadeFilter.find('option').length === 0) {
+            const unidadesVendas = allData.map((d) => d.nm_unidade);
+            const unidadesFundos = fundosData.map((d) => d.nm_unidade);
+            const unidades = [...new Set([...unidadesVendas, ...unidadesFundos])].sort();
+            unidades.forEach((u) => {
+                unidadeFilter.append($("<option>", { value: u, text: u }));
+            });
+        }
+
+        // Filtra os dados com base nas unidades selecionadas
+        const unidadesFiltradas = selectedUnidades.length > 0 ? selectedUnidades : [...new Set(allData.map(d => d.nm_unidade), ...fundosData.map(d => d.nm_unidade))];
         
-        // Populate unidades filter
-        unidades.forEach((u) => {
-            unidadeFilter.append($("<option>", { value: u, text: u }));
-        });
+        const dadosFiltrados = allData.filter(d => unidadesFiltradas.includes(d.nm_unidade));
+        const fundosFiltrados = fundosData.filter(d => unidadesFiltradas.includes(d.nm_unidade));
 
         // Populate cursos filter
-        const cursosVendas = allData.map((d) => d.curso_fundo || '').filter(c => c && c !== 'N/A');
-        const cursosFundos = fundosData.map((d) => d.curso_fundo || '').filter(c => c && c !== 'N/A');
+        const cursosVendas = dadosFiltrados.map((d) => d.curso_fundo || '').filter(c => c && c !== 'N/A');
+        const cursosFundos = fundosFiltrados.map((d) => d.curso_fundo || '').filter(c => c && c !== 'N/A');
         const cursos = [...new Set([...cursosVendas, ...cursosFundos])].sort();
-        
-        console.log('Cursos encontrados:', cursos); // Para debug
         
         cursos.forEach((c) => {
             cursoFilter.append($("<option>", { value: c, text: c }));
         });
 
         // Populate fundos filter
-        const fundosFromVendas = allData.map((d) => d.nm_fundo || '').filter(f => f && f !== 'N/A');
-        const fundosFromFundos = fundosData.map((d) => d.nm_fundo || '').filter(f => f && f !== 'N/A');
+        const fundosFromVendas = dadosFiltrados.map((d) => d.nm_fundo || '').filter(f => f && f !== 'N/A');
+        const fundosFromFundos = fundosFiltrados.map((d) => d.nm_fundo || '').filter(f => f && f !== 'N/A');
         const fundosUnicos = [...new Set([...fundosFromVendas, ...fundosFromFundos])].sort();
-        
-        console.log('Fundos encontrados:', fundosUnicos); // Para debug
         
         fundosUnicos.forEach((f) => {
             fundoFilter.append($("<option>", { value: f, text: f }));
         });
 
+        // Recria os multiselects
         unidadeFilter.multiselect({
             enableFiltering: true,
             includeSelectAllOption: true,
@@ -1520,9 +1524,20 @@ function populateFilters() {
             allSelectedText: "Todas selecionadas",
             buttonWidth: "100%",
             maxHeight: 300,
-            onChange: updateDashboard,
-            onSelectAll: updateDashboard,
-            onDeselectAll: updateDashboard,
+            onChange: function(option, checked) {
+                const selectedOptions = $('#unidade-filter').val();
+                populateFilters(selectedOptions);
+                updateDashboard();
+            },
+            onSelectAll: function() {
+                const selectedOptions = $('#unidade-filter').val();
+                populateFilters(selectedOptions);
+                updateDashboard();
+            },
+            onDeselectAll: function() {
+                populateFilters([]);
+                updateDashboard();
+            },
             enableCaseInsensitiveFiltering: true,
             filterBehavior: 'text',
             dropUp: false,
@@ -1533,8 +1548,7 @@ function populateFilters() {
             }
         });
 
-        // Inicialização do multiselect para cursos com timeout para garantir que o DOM esteja pronto
-        cursoFilter.multiselect('destroy').multiselect({
+        cursoFilter.multiselect({
             enableFiltering: true,
             includeSelectAllOption: true,
             selectAllText: "Marcar todos",
