@@ -639,7 +639,9 @@ function updatePreviousYearKPIs(dataBruta, selectedUnidades, startDate, endDate)
 // ...
 
 function updateDashboard() {
+    console.log('updateDashboard called');
     const selectedUnidades = $("#unidade-filter").val() || [];
+    console.log('Selected unidades in updateDashboard:', selectedUnidades);
     const selectedCursos = $("#curso-filter").val() || [];
     const selectedFundos = $("#fundo-filter").val() || [];
     
@@ -1460,23 +1462,145 @@ function addEventListeners() {
     });
 }
 
+// Função para atualizar filtros dependentes quando as unidades mudam
+function updateDependentFilters(selectedUnidades = []) {
+    console.log('updateDependentFilters called with:', selectedUnidades);
+    const cursoFilter = $("#curso-filter");
+    const fundoFilter = $("#fundo-filter");
+    
+    // Destruir instâncias existentes
+    try {
+        cursoFilter.multiselect('destroy');
+        fundoFilter.multiselect('destroy');
+    } catch(e) {
+        console.log("Multiselect de filtros dependentes não existia ainda");
+    }
+    
+    // Limpar opções
+    cursoFilter.empty();
+    fundoFilter.empty();
+    
+    // Determinar quais unidades usar para filtrar
+    let unidadesFiltradas = [];
+    if (userAccessLevel === "ALL_UNITS") {
+        unidadesFiltradas = selectedUnidades.length > 0 ? selectedUnidades : [...new Set([...allData.map(d => d.nm_unidade), ...fundosData.map(d => d.nm_unidade)])];
+    } else if (Array.isArray(userAccessLevel)) {
+        unidadesFiltradas = selectedUnidades.length > 0 ? selectedUnidades.filter(u => userAccessLevel.includes(u)) : userAccessLevel;
+    } else {
+        unidadesFiltradas = [userAccessLevel];
+    }
+    
+    // Filtrar dados com base nas unidades
+    const dadosFiltrados = allData.filter(d => unidadesFiltradas.includes(d.nm_unidade));
+    const fundosFiltrados = fundosData.filter(d => unidadesFiltradas.includes(d.nm_unidade));
+    
+    // Popular filtro de cursos
+    const cursosVendas = dadosFiltrados.map((d) => d.curso_fundo || '').filter(c => c && c !== 'N/A');
+    const cursosFundos = fundosFiltrados.map((d) => d.curso_fundo || '').filter(c => c && c !== 'N/A');
+    const cursos = [...new Set([...cursosVendas, ...cursosFundos])].sort();
+    
+    cursos.forEach((c) => {
+        cursoFilter.append($("<option>", { value: c, text: c }));
+    });
+    
+    // Popular filtro de fundos
+    const fundosFromVendas = dadosFiltrados.map((d) => d.nm_fundo || '').filter(f => f && f !== 'N/A');
+    const fundosFromFundos = fundosFiltrados.map((d) => d.nm_fundo || '').filter(f => f && f !== 'N/A');
+    const fundosUnicos = [...new Set([...fundosFromVendas, ...fundosFromFundos])].sort();
+    
+    fundosUnicos.forEach((f) => {
+        fundoFilter.append($("<option>", { value: f, text: f }));
+    });
+    
+    // Recriar multiselects para cursos
+    cursoFilter.multiselect({
+        enableFiltering: true,
+        includeSelectAllOption: true,
+        selectAllText: "Marcar todos",
+        filterPlaceholder: "Pesquisar...",
+        nonSelectedText: "Todos os cursos",
+        nSelectedText: "cursos",
+        allSelectedText: "Todos selecionados",
+        buttonWidth: "100%",
+        maxHeight: 300,
+        onChange: updateDashboard,
+        onSelectAll: updateDashboard,
+        onDeselectAll: updateDashboard,
+        enableCaseInsensitiveFiltering: true,
+        filterBehavior: 'text',
+        dropUp: false,
+        dropRight: false,
+        widthSynchronizationMode: 'ifPopupIsSmaller',
+        templates: {
+            button: '<button type="button" class="multiselect dropdown-toggle" data-toggle="dropdown"><span class="multiselect-selected-text"></span></button>',
+            ul: '<ul class="multiselect-container dropdown-menu" style="width: auto; min-width: 100%;"></ul>'
+        }
+    });
+    
+    // Recriar multiselects para fundos
+    fundoFilter.multiselect({
+        enableFiltering: true,
+        includeSelectAllOption: true,
+        selectAllText: "Marcar todos",
+        filterPlaceholder: "Pesquisar...",
+        nonSelectedText: "Todos os fundos",
+        nSelectedText: "fundos",
+        allSelectedText: "Todos selecionados",
+        buttonWidth: "100%",
+        maxHeight: 300,
+        onChange: updateDashboard,
+        onSelectAll: updateDashboard,
+        onDeselectAll: updateDashboard,
+        enableCaseInsensitiveFiltering: true,
+        filterBehavior: 'text',
+        dropUp: false,
+        dropRight: false,
+        widthSynchronizationMode: 'ifPopupIsSmaller',
+        closeOnSelect: false,
+        templates: {
+            button: '<button type="button" class="multiselect dropdown-toggle" data-toggle="dropdown"><span class="multiselect-selected-text"></span></button>',
+            ul: '<ul class="multiselect-container dropdown-menu" style="width: auto; min-width: 100%;"></ul>',
+            filter: '<li class="multiselect-item filter"><div class="input-group"><input class="form-control multiselect-search" type="text"></div></li>',
+            filterClearBtn: '<span class="input-group-btn"><button class="btn btn-default multiselect-clear-filter" type="button"><i class="fas fa-times"></i></button></span>'
+        }
+    });
+}
+
 // Arquivo: script.js (do Dashboard de Vendas)
 
 // ...
 
 function populateFilters(selectedUnidades = []) {
+    console.log('populateFilters called with:', selectedUnidades);
+    console.log('userAccessLevel:', userAccessLevel);
+    console.log('allData length:', allData.length);
+    console.log('fundosData length:', fundosData.length);
+    
     // Destruir instâncias existentes do multiselect
     try {
         $("#unidade-filter").multiselect('destroy');
         $("#curso-filter").multiselect('destroy');
         $("#fundo-filter").multiselect('destroy');
     } catch(e) {
-        console.log("Multiselect não existia ainda");
+        console.log("Multiselect não existia ainda:", e);
     }
 
     const unidadeFilter = $("#unidade-filter");
     const cursoFilter = $("#curso-filter");
     const fundoFilter = $("#fundo-filter");
+    
+    console.log('jQuery found unidade filter?', unidadeFilter.length > 0);
+    console.log('Multiselect plugin available?', typeof unidadeFilter.multiselect === 'function');
+    
+    if (unidadeFilter.length === 0) {
+        console.error('Elemento #unidade-filter não encontrado!');
+        return;
+    }
+    
+    if (typeof unidadeFilter.multiselect !== 'function') {
+        console.error('Plugin multiselect não está disponível!');
+        return;
+    }
     
     // Limpa apenas os filtros dependentes
     cursoFilter.empty();
@@ -1518,40 +1642,47 @@ function populateFilters(selectedUnidades = []) {
         });
 
         // Recria os multiselects
-        unidadeFilter.multiselect({
-            enableFiltering: true,
-            includeSelectAllOption: true,
-            selectAllText: "Marcar todos",
-            filterPlaceholder: "Pesquisar...",
-            nonSelectedText: "Todas as unidades",
-            nSelectedText: "unidades",
-            allSelectedText: "Todas selecionadas",
-            buttonWidth: "100%",
-            maxHeight: 300,
-            onChange: function(option, checked) {
-                const selectedOptions = $('#unidade-filter').val() || [];
-                updateDependentFilters(selectedOptions);
-                updateDashboard();
-            },
-            onSelectAll: function() {
-                const selectedOptions = $('#unidade-filter').val() || [];
-                updateDependentFilters(selectedOptions);
-                updateDashboard();
-            },
-            onDeselectAll: function() {
-                updateDependentFilters([]);
-                updateDashboard();
-            },
-            enableCaseInsensitiveFiltering: true,
-            filterBehavior: 'text',
-            dropUp: false,
-            dropRight: false,
-            widthSynchronizationMode: 'ifPopupIsSmaller',
-            closeOnSelect: false,
-            templates: {
-                ul: '<ul class="multiselect-container dropdown-menu" style="width: auto; min-width: 100%;"></ul>'
-            }
-        });
+        setTimeout(() => {
+            unidadeFilter.multiselect({
+                enableFiltering: true,
+                includeSelectAllOption: true,
+                selectAllText: "Marcar todos",
+                filterPlaceholder: "Pesquisar...",
+                nonSelectedText: "Todas as unidades",
+                nSelectedText: "unidades",
+                allSelectedText: "Todas selecionadas",
+                buttonWidth: "100%",
+                maxHeight: 300,
+                onChange: function(option, checked) {
+                    console.log('Unidade onChange triggered:', option.val(), checked);
+                    const selectedOptions = $('#unidade-filter').val() || [];
+                    console.log('Selected unidades:', selectedOptions);
+                    updateDependentFilters(selectedOptions);
+                    updateDashboard();
+                },
+                onSelectAll: function() {
+                    console.log('Unidade onSelectAll triggered');
+                    const selectedOptions = $('#unidade-filter').val() || [];
+                    console.log('All selected unidades:', selectedOptions);
+                    updateDependentFilters(selectedOptions);
+                    updateDashboard();
+                },
+                onDeselectAll: function() {
+                    console.log('Unidade onDeselectAll triggered');
+                    updateDependentFilters([]);
+                    updateDashboard();
+                },
+                enableCaseInsensitiveFiltering: true,
+                filterBehavior: 'text',
+                dropUp: false,
+                dropRight: false,
+                widthSynchronizationMode: 'ifPopupIsSmaller',
+                closeOnSelect: false,
+                templates: {
+                    ul: '<ul class="multiselect-container dropdown-menu" style="width: auto; min-width: 100%;"></ul>'
+                }
+            });
+        }, 50);
 
         cursoFilter.multiselect({
             enableFiltering: true,
@@ -1609,34 +1740,49 @@ function populateFilters(selectedUnidades = []) {
 
     } else if (Array.isArray(userAccessLevel)) {
         // CENÁRIO 2: MULTI-FRANQUEADO (vê apenas as suas unidades, mas pode selecionar)
+        console.log('Setting up multi-franchise filter for:', userAccessLevel);
         userAccessLevel.forEach((u) => {
             unidadeFilter.append($("<option>", { value: u, text: u, selected: true }));
         });
 
-        unidadeFilter.multiselect({
-            enableFiltering: true,
-            includeSelectAllOption: true,
-            selectAllText: "Marcar todas",
-            filterPlaceholder: "Pesquisar...",
-            nonSelectedText: "Nenhuma unidade",
-            nSelectedText: "unidades",
-            allSelectedText: "Todas as minhas unidades",
-            buttonWidth: "100%",
-            maxHeight: 300,
-            onChange: updateDashboard,
-            onSelectAll: updateDashboard,
-            onDeselectAll: updateDashboard,
-            enableCaseInsensitiveFiltering: true, // Habilita pesquisa case-insensitive
-            filterBehavior: 'text' // Pesquisa no texto visível, não no valor
-        });
+        setTimeout(() => {
+            unidadeFilter.multiselect({
+                enableFiltering: true,
+                includeSelectAllOption: true,
+                selectAllText: "Marcar todas",
+                filterPlaceholder: "Pesquisar...",
+                nonSelectedText: "Nenhuma unidade",
+                nSelectedText: "unidades",
+                allSelectedText: "Todas as minhas unidades",
+                buttonWidth: "100%",
+                maxHeight: 300,
+                onChange: function(option, checked) {
+                    console.log('Multi-franchise onChange:', option.val(), checked);
+                    updateDashboard();
+                },
+                onSelectAll: function() {
+                    console.log('Multi-franchise onSelectAll');
+                    updateDashboard();
+                },
+                onDeselectAll: function() {
+                    console.log('Multi-franchise onDeselectAll');
+                    updateDashboard();
+                },
+                enableCaseInsensitiveFiltering: true, // Habilita pesquisa case-insensitive
+                filterBehavior: 'text' // Pesquisa no texto visível, não no valor
+            });
+        }, 50);
 
     } else {
         // CENÁRIO 3: FRANQUEADO DE UNIDADE ÚNICA (filtro travado)
+        console.log('Setting up single-franchise filter for:', userAccessLevel);
         unidadeFilter.append($("<option>", { value: userAccessLevel, text: userAccessLevel, selected: true }));
-        unidadeFilter.multiselect({
-            buttonWidth: "100%",
-        });
-        unidadeFilter.multiselect('disable');
+        setTimeout(() => {
+            unidadeFilter.multiselect({
+                buttonWidth: "100%",
+            });
+            unidadeFilter.multiselect('disable');
+        }, 50);
 
         // Filtrar dados apenas da unidade do usuário
         const dadosUnidade = allData.filter(d => d.nm_unidade === userAccessLevel);
