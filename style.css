@@ -109,7 +109,7 @@ body {
 
 /* Estilos modernos para o multiselect */
 .multiselect-container {
-    background-color: #212529 !important;
+    background-color: #2C3E50 !important;
     border: 2px solid #495057 !important;
     border-radius: 8px !important;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
@@ -120,19 +120,20 @@ body {
 }
 
 .multiselect-container.dropdown-menu {
-    background-color: #212529;
+    background-color: #2C3E50;
     border: 2px solid #495057;
     border-radius: 8px;
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
 }
 
 .multiselect-container > li > a {
-    color: #F8F9FA !important;
+    color: #FFFFFF !important;
     padding: 10px 16px !important;
     border-radius: 6px !important;
     margin: 2px 4px !important;
     transition: all 0.2s ease !important;
     font-weight: 500 !important;
+    background-color: transparent !important;
 }
 
 .multiselect-container > li > a:hover {
@@ -156,11 +157,44 @@ body {
     padding: 0 !important;
     margin: 0 !important;
     font-weight: inherit !important;
+    color: inherit !important;
 }
 
 .multiselect-container > li > a label input[type="checkbox"] {
     margin-right: 8px !important;
     accent-color: #FFC107 !important;
+}
+
+/* Garantir visibilidade do texto em todos os estados */
+.multiselect-container li a {
+    color: #FFFFFF !important;
+}
+
+.multiselect-container li a span {
+    color: #FFFFFF !important;
+}
+
+.multiselect-container li.multiselect-item-unchecked a {
+    color: #FFFFFF !important;
+}
+
+.multiselect-container li.multiselect-item-checked a {
+    background: linear-gradient(135deg, #FFC107 0%, #FFD54F 100%) !important;
+    color: #212529 !important;
+}
+
+/* Estilo para o texto do "Marcar todos" */
+.multiselect-container li.multiselect-group a {
+    color: #FFC107 !important;
+    font-weight: 600 !important;
+    background-color: rgba(255, 193, 7, 0.1) !important;
+}
+
+/* Estilo para o filtro de pesquisa */
+.multiselect-container li.multiselect-filter {
+    background-color: #343A40 !important;
+    border-bottom: 1px solid #495057 !important;
+    margin-bottom: 4px !important;
 }
 
 .btn-group {
@@ -216,17 +250,49 @@ body {
 /* Estilo para o input de pesquisa */
 .multiselect-container .input-group input.multiselect-search {
     background-color: #343A40 !important;
-    color: #F8F9FA !important;
+    color: #FFFFFF !important;
     border: 1px solid #495057 !important;
     border-radius: 6px !important;
     padding: 8px 12px !important;
     margin: 8px 4px !important;
 }
 
+.multiselect-container .input-group input.multiselect-search::placeholder {
+    color: #ADB5BD !important;
+    opacity: 1 !important;
+}
+
 .multiselect-container .input-group input.multiselect-search:focus {
     border-color: #FFC107 !important;
     box-shadow: 0 0 0 2px rgba(255, 193, 7, 0.25) !important;
     outline: none !important;
+    color: #FFFFFF !important;
+}
+
+/* Regras adicionais para forçar visibilidade do texto */
+.multiselect-container *,
+.multiselect-container li,
+.multiselect-container li a,
+.multiselect-container li a label,
+.multiselect-container li label {
+    color: #FFFFFF !important;
+}
+
+.multiselect-container li:hover a,
+.multiselect-container li:hover a *,
+.multiselect-container li.active a,
+.multiselect-container li.active a * {
+    color: #212529 !important;
+}
+
+/* Cor específica para texto não selecionado */
+.multiselect-container li:not(.active):not(:hover) a {
+    color: #FFFFFF !important;
+    background: transparent !important;
+}
+
+.multiselect-container li:not(.active):not(:hover) a * {
+    color: #FFFFFF !important;
 }
 .page-navigation button:hover {
     background-image: linear-gradient(to bottom, #8a9198, #5a6268);
