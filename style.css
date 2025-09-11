@@ -107,40 +107,60 @@ body {
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
 }
 
-/* Estilos para o multiselect */
+/* Estilos modernos para o multiselect */
 .multiselect-container {
-    background-color: #FFFFFF !important;
-    border: 1px solid #dee2e6 !important;
-    border-radius: 4px !important;
-    padding: 5px !important;
-    max-height: 300px !important;
+    background-color: #212529 !important;
+    border: 2px solid #495057 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+    padding: 8px !important;
+    max-height: 350px !important;
     overflow-y: auto !important;
+    margin-top: 2px !important;
+}
+
+.multiselect-container.dropdown-menu {
+    background-color: #212529;
+    border: 2px solid #495057;
+    border-radius: 8px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
 }
 
 .multiselect-container > li > a {
-    color: #212529 !important;
-    padding: 8px 12px !important;
+    color: #F8F9FA !important;
+    padding: 10px 16px !important;
+    border-radius: 6px !important;
+    margin: 2px 4px !important;
+    transition: all 0.2s ease !important;
+    font-weight: 500 !important;
 }
 
 .multiselect-container > li > a:hover {
-    background-color: #fff3e0 !important;
+    background: linear-gradient(135deg, #FFC107 0%, #FFD54F 100%) !important;
+    color: #212529 !important;
+    transform: translateX(4px) !important;
 }
 
 .multiselect-container > li.active > a {
-    background-color: #fd7e14 !important;
-    color: #FFFFFF !important;
+    background: linear-gradient(135deg, #FFC107 0%, #FFD54F 100%) !important;
+    color: #212529 !important;
+    font-weight: 600 !important;
 }
 
 .multiselect-container > li.active > a:hover {
-    background-color: #fd7e14 !important;
+    background: linear-gradient(135deg, #FFD54F 0%, #FFC107 100%) !important;
+    color: #212529 !important;
 }
 
 .multiselect-container > li > a label {
-    padding: 3px 10px 3px 25px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    font-weight: inherit !important;
 }
 
 .multiselect-container > li > a label input[type="checkbox"] {
-    margin-left: -20px !important;
+    margin-right: 8px !important;
+    accent-color: #FFC107 !important;
 }
 
 .btn-group {
@@ -149,27 +169,64 @@ body {
 }
 
 .multiselect.dropdown-toggle {
-    background-color: #FFFFFF !important;
-    color: #212529 !important;
-    border: 1px solid #dee2e6 !important;
+    background: linear-gradient(135deg, #212529 0%, #343A40 100%) !important;
+    color: #F8F9FA !important;
+    border: 2px solid #495057 !important;
+    border-radius: 8px !important;
     width: 100% !important;
     text-align: left !important;
     position: relative !important;
-    padding: 8px 12px !important;
+    padding: 12px 16px !important;
+    font-weight: 500 !important;
+    transition: all 0.3s ease !important;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+}
+
+.multiselect.dropdown-toggle:hover {
+    border-color: #FFC107 !important;
+    box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.15), inset 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+    transform: translateY(-1px) !important;
+}
+
+.multiselect.dropdown-toggle:focus,
+.multiselect.dropdown-toggle.focus {
+    border-color: #FFC107 !important;
+    box-shadow: 0 0 0 4px rgba(255, 193, 7, 0.25), inset 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+    transform: translateY(-1px) !important;
+}
+
+/* Ícone da seta do dropdown */
+.multiselect.dropdown-toggle::after {
+    content: "▼" !important;
+    border: none !important;
+    position: absolute !important;
+    right: 16px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    font-size: 12px !important;
+    color: #ADB5BD !important;
+    transition: all 0.3s ease !important;
+}
+
+.multiselect.dropdown-toggle[aria-expanded="true"]::after {
+    transform: translateY(-50%) rotate(180deg) !important;
+    color: #FFC107 !important;
 }
 
 /* Estilo para o input de pesquisa */
 .multiselect-container .input-group input.multiselect-search {
-    background-color: #FFFFFF !important;
-    color: #212529 !important;
-    border: 1px solid #dee2e6 !important;
+    background-color: #343A40 !important;
+    color: #F8F9FA !important;
+    border: 1px solid #495057 !important;
+    border-radius: 6px !important;
+    padding: 8px 12px !important;
+    margin: 8px 4px !important;
 }
 
-.multiselect.dropdown-toggle::after {
-    position: absolute !important;
-    right: 12px !important;
-    top: 50% !important;
-    transform: translateY(-50%) !important;
+.multiselect-container .input-group input.multiselect-search:focus {
+    border-color: #FFC107 !important;
+    box-shadow: 0 0 0 2px rgba(255, 193, 7, 0.25) !important;
+    outline: none !important;
 }
 .page-navigation button:hover {
     background-image: linear-gradient(to bottom, #8a9198, #5a6268);
@@ -216,7 +273,155 @@ body {
         .header { display: flex; justify-content: space-between; align-items: center; flex-direction: row; }
         #company-logo { height: 100px; width: auto; }
         h1, h2 { margin-top: 0; border-bottom: 2px solid #495057; padding-bottom: 10px; }
-        .filters { display: flex; flex-direction: column; gap: 20px; align-items: stretch; }
+        .filters { 
+            display: flex; 
+            flex-direction: row; 
+            gap: 15px; 
+            align-items: center; 
+            flex-wrap: wrap;
+            background: linear-gradient(135deg, #343A40 0%, #495057 100%);
+            padding: 25px 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Estilo para cada item de filtro */
+        .filter-item {
+            flex: 1;
+            min-width: 200px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        /* Labels dos filtros */
+        .filter-label {
+            color: #F8F9FA;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: color 0.3s ease;
+        }
+
+        .filter-item:hover .filter-label {
+            color: #FFC107;
+        }
+
+        /* Estilo específico para o filtro de data */
+        .date-range-container {
+            min-width: 250px;
+        }
+
+        .date-range-input {
+            width: 100%;
+            padding: 12px 16px;
+            background: linear-gradient(135deg, #212529 0%, #343A40 100%);
+            border: 2px solid #495057;
+            border-radius: 8px;
+            color: #F8F9FA;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+
+        .date-range-input:hover {
+            border-color: #FFC107;
+            box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.15), inset 0 2px 4px rgba(0, 0, 0, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .date-range-input:focus {
+            outline: none;
+            border-color: #FFC107;
+            box-shadow: 0 0 0 4px rgba(255, 193, 7, 0.25), inset 0 2px 4px rgba(0, 0, 0, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .date-range-input::placeholder {
+            color: #ADB5BD;
+            font-weight: 400;
+        }
+
+        /* Ícone do calendário no input de data */
+        .date-range-input::before {
+            content: "📅";
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+        }
+
+        /* Melhorias visuais adicionais para os filtros */
+        .filters::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #FFC107, #FFD54F, #FFC107);
+            border-radius: 12px 12px 0 0;
+        }
+
+        .filters {
+            position: relative;
+        }
+
+        /* Responsividade para telas menores */
+        @media (max-width: 768px) {
+            .filters {
+                flex-direction: column;
+                gap: 15px;
+                padding: 20px;
+            }
+            
+            .filter-item,
+            .date-range-container {
+                min-width: 100%;
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 1200px) {
+            .filters {
+                gap: 12px;
+            }
+            
+            .filter-item {
+                min-width: 180px;
+            }
+            
+            .date-range-container {
+                min-width: 220px;
+            }
+        }
+
+        /* Animação sutil nos filtros */
+        .filter-item {
+            animation: filterFadeIn 0.5s ease-out;
+        }
+
+        @keyframes filterFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
         
         .chart-wrapper {
             position: relative;

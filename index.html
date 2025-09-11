@@ -152,13 +152,23 @@
 
             <section class="filters" id="filters-section" style="display: none;">
                 <div class="filter-item date-range-container">
+                    <label class="filter-label">📅 Período</label>
                     <input type="text" id="date-range" class="date-range-input" placeholder="Selecione o período" readonly>
                     <input type="hidden" id="start-date">
                     <input type="hidden" id="end-date">
                 </div>
-                <div class="filter-item filter-item-unidades"><select id="unidade-filter" multiple="multiple"></select></div>
-                <div class="filter-item" id="curso-filter-container"><select id="curso-filter" multiple="multiple"></select></div>
-                <div class="filter-item" id="fundo-filter-container"><select id="fundo-filter" multiple="multiple"></select></div>
+                <div class="filter-item filter-item-unidades">
+                    <label class="filter-label">🏢 Unidades</label>
+                    <select id="unidade-filter" multiple="multiple"></select>
+                </div>
+                <div class="filter-item" id="curso-filter-container">
+                    <label class="filter-label">📚 Cursos</label>
+                    <select id="curso-filter" multiple="multiple"></select>
+                </div>
+                <div class="filter-item" id="fundo-filter-container">
+                    <label class="filter-label">💰 Fundos</label>
+                    <select id="fundo-filter" multiple="multiple"></select>
+                </div>
             </section>
         </div>
         <div id="main-content">
