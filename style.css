@@ -255,6 +255,7 @@ body {
     border-radius: 6px !important;
     padding: 8px 12px !important;
     margin: 8px 4px !important;
+    font-size: 14px !important;
 }
 
 .multiselect-container .input-group input.multiselect-search::placeholder {
@@ -267,6 +268,22 @@ body {
     box-shadow: 0 0 0 2px rgba(255, 193, 7, 0.25) !important;
     outline: none !important;
     color: #FFFFFF !important;
+    background-color: #343A40 !important;
+}
+
+/* Regras específicas para forçar visibilidade do texto no input de pesquisa */
+.multiselect-container input[type="text"],
+.multiselect-container input.multiselect-search,
+.multiselect-container .form-control {
+    color: #FFFFFF !important;
+    background-color: #343A40 !important;
+}
+
+/* Sobrescrever qualquer estilo do Bootstrap que possa estar interferindo */
+.multiselect-container .input-group .form-control {
+    color: #FFFFFF !important;
+    background-color: #343A40 !important;
+    border-color: #495057 !important;
 }
 
 /* Regras adicionais para forçar visibilidade do texto */
@@ -293,6 +310,51 @@ body {
 
 .multiselect-container li:not(.active):not(:hover) a * {
     color: #FFFFFF !important;
+}
+
+/* Regras adicionais específicas para a barra de pesquisa */
+.multiselect-container li.multiselect-item.filter input,
+.multiselect-container li.filter input,
+.multiselect-container .multiselect-search {
+    color: #FFFFFF !important;
+    background-color: #343A40 !important;
+    border: 1px solid #495057 !important;
+}
+
+/* Forçar cor do texto em qualquer estado do input */
+.multiselect-container input:not(:focus),
+.multiselect-container input:focus,
+.multiselect-container input:active,
+.multiselect-container input:hover {
+    color: #FFFFFF !important;
+    background-color: #343A40 !important;
+}
+
+/* Garantir que o texto digitado seja visível */
+.multiselect-container input[value] {
+    color: #FFFFFF !important;
+}
+
+/* Regra universal para todos os inputs dentro do multiselect */
+.multiselect-container * {
+    color: inherit;
+}
+
+.multiselect-container input,
+.multiselect-container input[type="text"],
+.multiselect-container .form-control,
+.multiselect-container .multiselect-search {
+    color: #FFFFFF !important;
+    background-color: #343A40 !important;
+    border-color: #495057 !important;
+    caret-color: #FFC107 !important;
+}
+
+/* Sobrescrever estilos do Bootstrap com alta especificidade */
+.multiselect-container.dropdown-menu input.form-control.multiselect-search {
+    color: #FFFFFF !important;
+    background-color: #343A40 !important;
+    -webkit-text-fill-color: #FFFFFF !important;
 }
 .page-navigation button:hover {
     background-image: linear-gradient(to bottom, #8a9198, #5a6268);
