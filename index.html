@@ -32,6 +32,11 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
     
+    <!-- Fontes Google para a tela de login -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    
     <link rel="stylesheet" href="style.css">
     
     <!-- Multiselect CSS e JS -->
@@ -112,13 +117,16 @@
 </head>
 <body>
     <div id="login-overlay">
-        <div id="login-box">
-            <h2>Digite o Código de Acesso</h2>
-            <input type="text" inputmode="numeric" pattern="[0-9]*" id="access-code-input" placeholder="Digite o código">
-            <button id="access-code-button">Liberar Acesso</button>
-            <p id="login-error-message"></p>
+        <div id="login-container">
+            <h1 class="page-title">Dashboard de Vendas</h1>
+            <section class="access-control" id="access-section">
+                <label for="access-code">Digite seu Login de Acesso</label>
+                <input type="text" id="access-code" maxlength="20" placeholder="Insira seu login">
+                <button id="submit-code">Liberar Acesso</button>
+                <p id="error-message">Login inválido!</p>
+            </section>
+            <img id="company-logo-login" src="logo_viva.png" alt="Logo Viva Eventos">
         </div>
-        <img src="logo_viva.png" alt="Logo Viva Eventos" id="login-logo">
     </div>
 
     <div class="dashboard-wrapper" style="display: none;">
@@ -374,36 +382,8 @@
     <script src="date-picker.js"></script>
     <script>
         $(document).ready(function() {
-            // Função para liberar acesso
-            $('#access-code-button').click(function() {
-                const codigoDigitado = $('#access-code-input').val();
-                
-                if(codigoDigitado === '20250') {
-                    // Esconde a tela de login
-                    $('#login-overlay').fadeOut();
-                    // Mostra o dashboard
-                    $('.dashboard-wrapper').fadeIn();
-                    
-                    // Salva o estado de login
-                    sessionStorage.setItem('dashboardLogado', 'true');
-                } else {
-                    $('#login-error-message').text('Código de acesso inválido!');
-                }
-            });
-
-            // Verifica se já está logado
-            const estaLogado = sessionStorage.getItem('dashboardLogado');
-            if(estaLogado === 'true') {
-                $('#login-overlay').hide();
-                $('.dashboard-wrapper').show();
-            }
-
-            // Permite usar Enter para submeter o código
-            $('#access-code-input').keypress(function(e) {
-                if(e.which == 13) { // 13 é o código da tecla Enter
-                    $('#access-code-button').click();
-                }
-            });
+            // Remove a lógica de login antiga - agora é gerenciada pelo script.js
+            // A autenticação é feita através da planilha de acesso compartilhada
         });
     </script>
 </body>

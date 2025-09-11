@@ -104,29 +104,30 @@ async function fetchAccessData() {
         const rows = data.values || [];
         
         accessDataFromSheet.clear();
-        // Passo 1: Agrupa as unidades por código
+        // Agora captura as colunas: unitName, accessCode, accessLevel, userName, setor, login
         rows.slice(1).forEach(row => {
-            const [unitName, accessCode, accessLevel] = row;
+            const [unitName, accessCode, accessLevel, userName, setor, login] = row;
             
-            if (accessCode) {
-                const code = accessCode.trim();
-                
+            // Prioriza o login se existir, senão usa o accessCode
+            const userLogin = login && login.trim() ? login.trim() : (accessCode ? accessCode.trim() : null);
+            
+            if (userLogin) {
                 if (accessLevel === '1') {
-                    accessDataFromSheet.set(code, 'ALL_UNITS');
+                    accessDataFromSheet.set(userLogin, 'ALL_UNITS');
                 } else if (unitName) {
                     const unit = unitName.trim();
-                    if (!accessDataFromSheet.has(code)) {
-                        accessDataFromSheet.set(code, []); // Inicia como um array
+                    if (!accessDataFromSheet.has(userLogin)) {
+                        accessDataFromSheet.set(userLogin, []); // Inicia como um array
                     }
                     // Adiciona a unidade ao array do código correspondente
-                    if(accessDataFromSheet.get(code) !== 'ALL_UNITS') {
-                       accessDataFromSheet.get(code).push(unit);
+                    if(accessDataFromSheet.get(userLogin) !== 'ALL_UNITS') {
+                       accessDataFromSheet.get(userLogin).push(unit);
                     }
                 }
             }
         });
 
-        // Passo 2: Simplifica os arrays de item único para strings
+        // Simplifica os arrays de item único para strings
         // Isso facilita a lógica depois: o tipo da variável (array ou string) define o tipo de usuário
         for (let [code, units] of accessDataFromSheet.entries()) {
             if (Array.isArray(units) && units.length === 1) {
@@ -137,7 +138,7 @@ async function fetchAccessData() {
         return true;
     } catch (error) {
         console.error("Erro ao buscar dados da planilha de acesso:", error);
-        const errorMessage = document.getElementById("login-error-message");
+        const errorMessage = document.getElementById("error-message");
         if(errorMessage) {
             errorMessage.textContent = 'Erro de comunicação com o servidor de acesso.';
         }
@@ -196,18 +197,21 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     if (!loggedInFromUrl) {
-        const accessCodeInput = document.getElementById("access-code-input");
-        const accessCodeButton = document.getElementById("access-code-button");
-        const errorMessage = document.getElementById("login-error-message");
+        const accessCodeInput = document.getElementById("access-code");
+        const accessCodeButton = document.getElementById("submit-code");
+        const errorMessage = document.getElementById("error-message");
 
         accessCodeInput.focus();
 
         const attemptLogin = () => {
             const code = accessCodeInput.value.trim();
             if (!proceedWithLogin(code)) {
-                errorMessage.textContent = "Código de acesso inválido.";
+                errorMessage.textContent = "Login inválido!";
+                errorMessage.style.display = "block";
                 accessCodeInput.value = "";
                 accessCodeInput.focus();
+            } else {
+                errorMessage.style.display = "none";
             }
         };
 
