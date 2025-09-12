@@ -2878,17 +2878,64 @@ function updateFunilIndicators(startDate, endDate, selectedUnidades) {
         console.error("❌ Elemento 'funil-leads-perdidos' não encontrado");
     }
     
-    // Por enquanto, outros cards ficam zerados
-    const otherCards = [
-        "funil-leads-desqualificados"
-    ];
+    // PASSO 10: Calcular e atualizar o card "Leads Descartados/Desqualificados"
+    // Regra: Mesma lógica dos perdidos, mas considera APENAS os que começam com "Descarte"
     
-    otherCards.forEach(cardId => {
-        const element = document.getElementById(cardId);
-        if (element) {
-            element.textContent = "0";
+    const leadsDescartados = dadosFinaisFiltrados.filter(item => {
+        if (!item.titulo || item.titulo.trim() === '') return false; // tem título válido
+        
+        // 1. Verificar se está realmente na fase 7.2 Perdido
+        const estaNaFasePerdido = item.fase_perdido && 
+                                 item.fase_perdido.trim() !== '' && 
+                                 (item.fase_perdido.includes("7.2") || 
+                                  item.fase_perdido.toLowerCase().includes("perdido"));
+        
+        if (!estaNaFasePerdido) {
+            return false;
         }
+        
+        // 2. Deve ter motivo da perda preenchido
+        if (!item.concat_motivo_perda || item.concat_motivo_perda.trim() === '') {
+            return false;
+        }
+        
+        // 3. Aplicar a regra do campo auxiliar e verificar se começa com "Descarte"
+        const campoAuxiliar = getCampoAuxiliar(item.concat_motivo_perda);
+        const comecaComDescarte = campoAuxiliar.startsWith("Descarte");
+        
+        if (comecaComDescarte) {
+            console.log("✅ Lead descartado válido:", {
+                titulo: item.titulo,
+                concat_motivo_perda: item.concat_motivo_perda,
+                campo_auxiliar: campoAuxiliar,
+                criado_em: item.criado_em,
+                unidade: item.nm_unidade
+            });
+            return true; // INCLUIR os que começam com "Descarte"
+        }
+        
+        return false; // Descartar todos os outros
     });
+    
+    const totalLeadsDescartados = leadsDescartados.length;
+    console.log("📊 Total de Leads Descartados válidos (período filtrado):", totalLeadsDescartados);
+    
+    // Mostrar amostra dos dados de leads descartados
+    if (leadsDescartados.length > 0) {
+        console.log("🔍 Amostra dos Leads Descartados válidos:");
+        leadsDescartados.slice(0, 5).forEach((item, index) => {
+            console.log(`  ${index + 1}. Título: "${item.titulo}" | Motivo: "${item.concat_motivo_perda}" | Data: "${item.criado_em}"`);
+        });
+    }
+    
+    // Atualizar o card de Leads Descartados
+    const leadsDescartadosCardElement = document.getElementById("funil-leads-desqualificados");
+    if (leadsDescartadosCardElement) {
+        leadsDescartadosCardElement.textContent = totalLeadsDescartados.toString();
+        console.log("✅ Card 'Leads Descartados/Desqualificados' atualizado com:", totalLeadsDescartados);
+    } else {
+        console.error("❌ Elemento 'funil-leads-desqualificados' não encontrado");
+    }
     
     console.log("=== FIM updateFunilIndicators ===");
 }
