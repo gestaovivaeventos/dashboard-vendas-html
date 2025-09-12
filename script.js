@@ -2506,44 +2506,45 @@ function updateFunilIndicators(startDate, endDate, selectedUnidades) {
     if (selectedUnidades && selectedUnidades.length > 0) {
         console.log("🔍 Filtrando por unidades:", selectedUnidades);
         
-        // Verifica se estamos na página do funil para incluir todas as unidades do funil
-        const isFunilPage = document.getElementById('btn-page3')?.classList.contains('active') || 
-                           document.getElementById('page3')?.classList.contains('active');
+        // Verificar se estamos na página do funil - melhorando a detecção
+        const btnFunil = document.getElementById('btn-page3');
+        const pageFunil = document.getElementById('page3');
+        const isFunilPage = (btnFunil && btnFunil.classList.contains('active')) || 
+                           (pageFunil && (pageFunil.style.display === 'block' || pageFunil.classList.contains('active')));
         
-        let unidadesParaFiltro = [...selectedUnidades];
+        console.log("🔍 Detecção da página do funil:", {
+            btnFunilActive: btnFunil?.classList.contains('active'),
+            pageFunilDisplay: pageFunil?.style.display,
+            pageFunilClass: pageFunil?.classList.contains('active'),
+            isFunilPage: isFunilPage
+        });
         
-        if (isFunilPage && funilData) {
-            // Na página do funil, adiciona todas as unidades do funil às unidades permitidas
-            const unidadesFunil = [...new Set(funilData.map(d => d.nm_unidade).filter(Boolean))];
-            unidadesParaFiltro = [...new Set([...selectedUnidades, ...unidadesFunil])];
-            
-            console.log("🏢 Página do funil: incluindo unidades do funil:", {
-                selecionadas: selectedUnidades.length,
-                doFunil: unidadesFunil.length,
-                total: unidadesParaFiltro.length,
-                unidadesFunil: unidadesFunil
+        if (isFunilPage) {
+            console.log("🏢 PÁGINA DO FUNIL DETECTADA: Ignorando filtro de unidade para o funil");
+            // Na página do funil, não aplicar filtro de unidade - mostrar todos os dados do funil
+            dadosFinaisFiltrados = dadosFiltradosPorData;
+        } else {
+            console.log("🏢 Página normal: Aplicando filtro de unidade");
+            dadosFinaisFiltrados = dadosFiltradosPorData.filter(item => {
+                const unidadeItem = item.nm_unidade;
+                if (!unidadeItem) {
+                    console.log("⚠️ Item sem unidade:", item);
+                    return false;
+                }
+                
+                const pertenceUnidade = selectedUnidades.includes(unidadeItem);
+                
+                if (!pertenceUnidade) {
+                    console.log("❌ Unidade não está no filtro:", {
+                        titulo: item.titulo,
+                        unidade: unidadeItem,
+                        unidadesPermitidas: selectedUnidades
+                    });
+                }
+                
+                return pertenceUnidade;
             });
         }
-        
-        dadosFinaisFiltrados = dadosFiltradosPorData.filter(item => {
-            const unidadeItem = item.nm_unidade;
-            if (!unidadeItem) {
-                console.log("⚠️ Item sem unidade:", item);
-                return false;
-            }
-            
-            const pertenceUnidade = unidadesParaFiltro.includes(unidadeItem);
-            
-            if (!pertenceUnidade) {
-                console.log("❌ Unidade não está no filtro:", {
-                    titulo: item.titulo,
-                    unidade: unidadeItem,
-                    unidadesPermitidas: unidadesParaFiltro
-                });
-            }
-            
-            return pertenceUnidade;
-        });
         
         console.log("📊 Dados após filtro de unidade:", dadosFinaisFiltrados.length, "registros");
     } else {
