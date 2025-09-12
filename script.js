@@ -3099,15 +3099,13 @@ function updateCaptacoesTable(dados) {
     
     // Adicionar linha de resumo/total
     const trTotal = document.createElement('tr');
-    trTotal.style.borderTop = '2px solid #ffc107';
-    trTotal.style.fontWeight = 'bold';
-    trTotal.style.backgroundColor = 'rgba(255, 193, 7, 0.1)';
+    trTotal.className = 'captacoes-table-footer';
     
     trTotal.innerHTML = `
-        <td style="text-align: center; color: #ffc107;">TOTAL GERAL</td>
-        <td style="text-align: center; color: #ffc107;">-</td>
-        <td style="text-align: center; color: #ffc107; background-color: rgba(255, 193, 7, 0.2);">${totalPercentual.toFixed(1)}%</td>
-        <td style="text-align: center; color: #ffc107; background-color: rgba(255, 193, 7, 0.2);">${totalAbsoluto}</td>
+        <td>TOTAL GERAL</td>
+        <td>-</td>
+        <td>${totalPercentual.toFixed(1)}%</td>
+        <td>${totalAbsoluto}</td>
     `;
     
     tbody.appendChild(trTotal);
@@ -3160,12 +3158,21 @@ function updateCaptacoesChart(dados) {
         },
         options: {
             responsive: true,
-            maintainAspectRatio: false,
+            maintainAspectRatio: true,
+            aspectRatio: 1, // Gráfico quadrado
+            layout: {
+                padding: {
+                    top: 20,
+                    bottom: 20,
+                    left: 20,
+                    right: 20
+                }
+            },
             plugins: {
                 legend: {
                     position: 'bottom',
                     labels: {
-                        color: '#F8F9FA',
+                        color: '#FFFFFF', // Legenda branca
                         font: {
                             size: 11
                         },
@@ -3183,7 +3190,8 @@ function updateCaptacoesChart(dados) {
                                         lineWidth: dataset.borderWidth,
                                         pointStyle: 'circle',
                                         hidden: false,
-                                        index: index
+                                        index: index,
+                                        fontColor: '#FFFFFF' // Forçar cor branca
                                     };
                                 });
                             }
