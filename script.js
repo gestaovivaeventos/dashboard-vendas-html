@@ -3162,21 +3162,21 @@ function updateCaptacoesChart(dados) {
             aspectRatio: 1, // Gráfico quadrado
             layout: {
                 padding: {
-                    top: 10,
-                    bottom: 10,
-                    left: 10,
-                    right: 10
+                    top: 5,
+                    bottom: 5,
+                    left: 5,
+                    right: 5
                 }
             },
             plugins: {
                 legend: {
-                    position: 'bottom',
+                    position: 'right', // Legenda à direita
                     labels: {
                         color: '#FFFFFF', // Legenda branca
                         font: {
-                            size: 11
+                            size: 12
                         },
-                        padding: 10,
+                        padding: 15,
                         usePointStyle: true,
                         generateLabels: function(chart) {
                             const data = chart.data;

@@ -500,6 +500,9 @@ body {
             border-radius: 8px;
             padding: 20px;
             border: 1px solid #495057;
+            height: 500px; /* Altura fixa para ambos containers */
+            display: flex;
+            flex-direction: column;
         }
 
         .captacoes-subtitle {
@@ -514,10 +517,14 @@ body {
 
         .captacoes-table-wrapper {
             overflow-x: auto;
-            max-height: 400px; /* Altura para aproximadamente 10 linhas */
+            max-height: none; /* Remover limite de altura */
             overflow-y: auto;
             border: 1px solid #495057;
             border-radius: 8px;
+            height: 100%; /* Ocupar toda a altura do container */
+            display: flex;
+            flex-direction: column;
+            flex: 1; /* Expandir para ocupar espaço disponível */
         }
 
         .captacoes-table {
@@ -601,16 +608,17 @@ body {
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 400px;
+            height: 100%;
             width: 100%;
-            padding: 15px;
+            padding: 10px;
+            flex: 1;
         }
 
         #captacoesChart {
             width: 100% !important;
             height: 100% !important;
-            max-width: 380px;
-            max-height: 380px;
+            max-width: 450px;
+            max-height: 400px;
         }
 
         /* Forçar cor branca na legenda do gráfico de captações */
