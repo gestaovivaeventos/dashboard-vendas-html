@@ -3162,10 +3162,10 @@ function updateCaptacoesChart(dados) {
             aspectRatio: 1, // Gráfico quadrado
             layout: {
                 padding: {
-                    top: 20,
-                    bottom: 20,
-                    left: 20,
-                    right: 20
+                    top: 10,
+                    bottom: 10,
+                    left: 10,
+                    right: 10
                 }
             },
             plugins: {

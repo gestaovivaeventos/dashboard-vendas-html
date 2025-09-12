@@ -601,16 +601,16 @@ body {
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 350px;
+            height: 400px;
             width: 100%;
-            padding: 20px;
+            padding: 15px;
         }
 
         #captacoesChart {
             width: 100% !important;
             height: 100% !important;
-            max-width: 300px;
-            max-height: 300px;
+            max-width: 380px;
+            max-height: 380px;
         }
 
         /* Forçar cor branca na legenda do gráfico de captações */
