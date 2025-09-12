@@ -530,6 +530,7 @@ async function fetchFunilData() {
     const qualificacaoComissaoIndex = 57; // Coluna BF - Primeira vez que entrou na fase 1.2 Qualificação Comissão
     const diagnosticoRealizadoIndex = 59; // Coluna BH - Primeira vez que entrou na fase 2.1 Diagnóstico Realizado
     const propostaEnviadaIndex = 61; // Coluna BJ - Primeira vez que entrou na fase 3.1 Proposta Enviada
+    const fechamentoComissaoIndex = 64; // Coluna BM - Primeira vez que entrou na fase 4.1 Fechamento Comissão
     
     // Vamos procurar a coluna nm_unidade dinamicamente no header
     let unidadeIndex = -1;
@@ -545,7 +546,7 @@ async function fetchFunilData() {
       unidadeIndex = 72;
     }
     
-    console.log("Índices - Título:", tituloIndex, "Criado em:", criadoEmIndex, "Qualificação Comissão:", qualificacaoComissaoIndex, "Diagnóstico Realizado:", diagnosticoRealizadoIndex, "Proposta Enviada:", propostaEnviadaIndex, "Unidade:", unidadeIndex);
+    console.log("Índices - Título:", tituloIndex, "Criado em:", criadoEmIndex, "Qualificação Comissão:", qualificacaoComissaoIndex, "Diagnóstico Realizado:", diagnosticoRealizadoIndex, "Proposta Enviada:", propostaEnviadaIndex, "Fechamento Comissão:", fechamentoComissaoIndex, "Unidade:", unidadeIndex);
     
     if (rows.length > 1) {
       console.log("Segunda linha como exemplo:", rows[1]);
@@ -554,6 +555,7 @@ async function fetchFunilData() {
       console.log("Qualificação Comissão (BF):", rows[1][qualificacaoComissaoIndex]);
       console.log("Diagnóstico Realizado (BH):", rows[1][diagnosticoRealizadoIndex]);
       console.log("Proposta Enviada (BJ):", rows[1][propostaEnviadaIndex]);
+      console.log("Fechamento Comissão (BM):", rows[1][fechamentoComissaoIndex]);
       console.log("Unidade (BU):", rows[1][unidadeIndex]);
     }
     
@@ -565,6 +567,7 @@ async function fetchFunilData() {
       qualificacao_comissao: row[qualificacaoComissaoIndex] || '',
       diagnostico_realizado: row[diagnosticoRealizadoIndex] || '',
       proposta_enviada: row[propostaEnviadaIndex] || '',
+      fechamento_comissao: row[fechamentoComissaoIndex] || '',
       nm_unidade: row[unidadeIndex] || '',
       row_data: row
     }));
@@ -2710,9 +2713,49 @@ function updateFunilIndicators(startDate, endDate, selectedUnidades) {
         console.error("❌ Elemento 'funil-propostas-enviadas' não encontrado");
     }
     
+    // PASSO 8: Calcular e atualizar o card "Contratos Fechados Comissão"
+    // Regra: COUNT(Primeira vez que entrou na fase 4.1 Fechamento Comissão)
+    // IMPORTANTE: Só contar quando a data de criação está no período (dadosFinaisFiltrados já tem isso)
+    const leadsComFechamentoComissao = dadosFinaisFiltrados.filter(item => {
+        if (!item.titulo || item.titulo.trim() === '') return false; // tem título válido
+        
+        const temFechamentoComissao = item.fechamento_comissao && item.fechamento_comissao.trim() !== '';
+        
+        if (temFechamentoComissao) {
+            console.log("✅ Lead com fechamento comissão:", {
+                titulo: item.titulo,
+                fechamento_comissao: item.fechamento_comissao,
+                criado_em: item.criado_em,
+                unidade: item.nm_unidade
+            });
+        }
+        
+        return temFechamentoComissao;
+    });
+    
+    const totalFechamentoComissao = leadsComFechamentoComissao.length;
+    console.log("📊 Total de leads com Fechamento Comissão (período filtrado):", totalFechamentoComissao);
+    
+    // Mostrar amostra dos dados de fechamento comissão
+    if (leadsComFechamentoComissao.length > 0) {
+        console.log("🔍 Amostra dos leads com Fechamento Comissão:");
+        leadsComFechamentoComissao.slice(0, 5).forEach((item, index) => {
+            console.log(`  ${index + 1}. Título: "${item.titulo}" | Fechamento: "${item.fechamento_comissao}" | Data: "${item.criado_em}" | Unidade: "${item.nm_unidade}"`);
+        });
+    }
+    
+    // Atualizar o card de Contratos Fechados Comissão
+    const contratosCardElement = document.getElementById("funil-contratos-fechados");
+    if (contratosCardElement) {
+        contratosCardElement.textContent = totalFechamentoComissao.toString();
+        console.log("✅ Card 'Contratos Fechados Comissão' atualizado com:", totalFechamentoComissao);
+    } else {
+        console.error("❌ Elemento 'funil-contratos-fechados' não encontrado");
+    }
+    
     // Por enquanto, outros cards ficam zerados
     const otherCards = [
-        "funil-contratos-fechados", "funil-leads-perdidos", "funil-leads-desqualificados"
+        "funil-leads-perdidos", "funil-leads-desqualificados"
     ];
     
     otherCards.forEach(cardId => {
