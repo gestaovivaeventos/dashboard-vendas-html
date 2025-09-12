@@ -3174,7 +3174,7 @@ function updateCaptacoesChart(dados) {
                     labels: {
                         color: '#FFFFFF', // Legenda branca
                         font: {
-                            size: 12
+                            size: 16 // Fonte maior para legenda
                         },
                         padding: 15,
                         usePointStyle: true,
@@ -3205,6 +3205,12 @@ function updateCaptacoesChart(dados) {
                     bodyColor: '#F8F9FA',
                     borderColor: '#495057',
                     borderWidth: 1,
+                    titleFont: {
+                        size: 16 // Fonte maior para título do tooltip
+                    },
+                    bodyFont: {
+                        size: 14 // Fonte maior para corpo do tooltip
+                    },
                     callbacks: {
                         label: function(context) {
                             const item = dados[context.dataIndex];
