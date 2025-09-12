@@ -441,11 +441,11 @@ body {
 
         /* Cards da linha inferior centralizados */
         .funil-card-wide:nth-of-type(6) {
-            grid-column: 2 / span 3; /* 3 colunas, posicionado no centro-esquerda */
+            grid-column: 3 / span 3; /* Movido mais para a direita - colunas 3-5 */
         }
 
         .funil-card-wide:nth-of-type(7) {
-            grid-column: 6 / span 3; /* 3 colunas, posicionado no centro-direita */
+            grid-column: 6 / span 3; /* Mantém posição - colunas 6-8 */
         }
 
         .funil-card-highlight {
