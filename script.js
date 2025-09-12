@@ -527,6 +527,7 @@ async function fetchFunilData() {
     // Encontrar índices das colunas importantes
     const tituloIndex = 0; // Coluna A - Título
     const criadoEmIndex = 12; // Coluna M - Data criação
+    const qualificacaoComissaoIndex = 57; // Coluna BF - Primeira vez que entrou na fase 1.2 Qualificação Comissão
     
     // Vamos procurar a coluna nm_unidade dinamicamente no header
     let unidadeIndex = -1;
@@ -542,12 +543,13 @@ async function fetchFunilData() {
       unidadeIndex = 72;
     }
     
-    console.log("Índices - Título:", tituloIndex, "Criado em:", criadoEmIndex, "Unidade:", unidadeIndex);
+    console.log("Índices - Título:", tituloIndex, "Criado em:", criadoEmIndex, "Qualificação Comissão:", qualificacaoComissaoIndex, "Unidade:", unidadeIndex);
     
     if (rows.length > 1) {
       console.log("Segunda linha como exemplo:", rows[1]);
       console.log("Título (A):", rows[1][tituloIndex]);
       console.log("Criado em (M):", rows[1][criadoEmIndex]);
+      console.log("Qualificação Comissão (BF):", rows[1][qualificacaoComissaoIndex]);
       console.log("Unidade (BU):", rows[1][unidadeIndex]);
     }
     
@@ -556,6 +558,7 @@ async function fetchFunilData() {
       id: index + 1,
       titulo: row[tituloIndex] || '',
       criado_em: row[criadoEmIndex] || '',
+      qualificacao_comissao: row[qualificacaoComissaoIndex] || '',
       nm_unidade: row[unidadeIndex] || '',
       row_data: row
     }));
@@ -2414,7 +2417,7 @@ function updateFunilIndicators(startDate, endDate, selectedUnidades) {
         console.log("❌ Sem dados do funil para processar");
         // Zerar todos os cards
         document.getElementById("funil-total-leads").textContent = "0";
-        document.getElementById("funil-qualificados").textContent = "0";
+        document.getElementById("funil-qualificacao-comissao").textContent = "0";
         document.getElementById("funil-propostas").textContent = "0";
         document.getElementById("funil-propostas-enviadas").textContent = "0";
         document.getElementById("funil-contratos-fechados").textContent = "0";
@@ -2572,9 +2575,36 @@ function updateFunilIndicators(startDate, endDate, selectedUnidades) {
         console.error("❌ Elemento 'funil-total-leads' não encontrado");
     }
     
+    // PASSO 5: Calcular e atualizar o card "Qualificação Comissão"
+    // Contar apenas registros que têm valor preenchido na coluna qualificacao_comissao
+    const leadsComQualificacaoComissao = dadosFinaisFiltrados.filter(item => {
+        return item.titulo && item.titulo.trim() !== '' && // tem título válido
+               item.qualificacao_comissao && item.qualificacao_comissao.trim() !== ''; // tem qualificação preenchida
+    });
+    
+    const totalQualificacaoComissao = leadsComQualificacaoComissao.length;
+    console.log("📊 Total de leads com Qualificação Comissão preenchida:", totalQualificacaoComissao);
+    
+    // Mostrar amostra dos dados de qualificação comissão
+    if (leadsComQualificacaoComissao.length > 0) {
+        console.log("🔍 Amostra dos leads com Qualificação Comissão:");
+        leadsComQualificacaoComissao.slice(0, 5).forEach((item, index) => {
+            console.log(`  ${index + 1}. Título: "${item.titulo}" | Qualificação: "${item.qualificacao_comissao}" | Unidade: "${item.nm_unidade}"`);
+        });
+    }
+    
+    // Atualizar o card de Qualificação Comissão
+    const qualificacaoCardElement = document.getElementById("funil-qualificacao-comissao");
+    if (qualificacaoCardElement) {
+        qualificacaoCardElement.textContent = totalQualificacaoComissao.toString();
+        console.log("✅ Card 'Qualificação Comissão' atualizado com:", totalQualificacaoComissao);
+    } else {
+        console.error("❌ Elemento 'funil-qualificacao-comissao' não encontrado");
+    }
+    
     // Por enquanto, outros cards ficam zerados
     const otherCards = [
-        "funil-qualificados", "funil-propostas", "funil-propostas-enviadas",
+        "funil-propostas", "funil-propostas-enviadas",
         "funil-contratos-fechados", "funil-leads-perdidos", "funil-leads-desqualificados"
     ];
     
