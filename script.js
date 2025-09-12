@@ -1747,6 +1747,9 @@ function populateFilters(selectedUnidades = []) {
     fundoFilter.empty();
 
     if (userAccessLevel === "ALL_UNITS") {
+        // Salva as seleções atuais antes de recriar o filtro
+        const currentSelectedValues = unidadeFilter.val() || [];
+        
         // Verifica se estamos na página do funil para incluir "Sem unidade"
         const isFunilPage = document.getElementById('btn-page3')?.classList.contains('active') || 
                            document.getElementById('page3')?.classList.contains('active');
@@ -1775,7 +1778,12 @@ function populateFilters(selectedUnidades = []) {
             }
             
             unidades.forEach((u) => {
-                unidadeFilter.append($("<option>", { value: u, text: u }));
+                const isSelected = currentSelectedValues.includes(u);
+                unidadeFilter.append($("<option>", { 
+                    value: u, 
+                    text: u,
+                    selected: isSelected 
+                }));
             });
         }
 
@@ -1805,45 +1813,53 @@ function populateFilters(selectedUnidades = []) {
 
         // Recria os multiselects
         setTimeout(() => {
-            unidadeFilter.multiselect({
-                enableFiltering: true,
-                includeSelectAllOption: true,
-                selectAllText: "Marcar todos",
-                filterPlaceholder: "Pesquisar...",
-                nonSelectedText: "Todas as unidades",
-                nSelectedText: "unidades",
-                allSelectedText: "Todas selecionadas",
-                buttonWidth: "100%",
-                maxHeight: 300,
-                onChange: function(option, checked) {
-                    console.log('Unidade onChange triggered:', option.val(), checked);
-                    const selectedOptions = $('#unidade-filter').val() || [];
-                    console.log('Selected unidades:', selectedOptions);
-                    updateDependentFilters(selectedOptions);
-                    updateDashboard();
-                },
-                onSelectAll: function() {
-                    console.log('Unidade onSelectAll triggered');
-                    const selectedOptions = $('#unidade-filter').val() || [];
-                    console.log('All selected unidades:', selectedOptions);
-                    updateDependentFilters(selectedOptions);
-                    updateDashboard();
-                },
-                onDeselectAll: function() {
-                    console.log('Unidade onDeselectAll triggered');
-                    updateDependentFilters([]);
-                    updateDashboard();
-                },
-                enableCaseInsensitiveFiltering: true,
-                filterBehavior: 'text',
-                dropUp: false,
-                dropRight: false,
-                widthSynchronizationMode: 'ifPopupIsSmaller',
-                closeOnSelect: false,
-                templates: {
-                    ul: '<ul class="multiselect-container dropdown-menu" style="width: auto; min-width: 100%;"></ul>'
+            // Só recria o multiselect de unidades se foi recriado (quando mudou o conteúdo)
+            if ((shouldIncludeSemuUnidade && !hasSemuUnidade) || (!shouldIncludeSemuUnidade && hasSemuUnidade) || currentOptions.length === 0) {
+                unidadeFilter.multiselect({
+                    enableFiltering: true,
+                    includeSelectAllOption: true,
+                    selectAllText: "Marcar todos",
+                    filterPlaceholder: "Pesquisar...",
+                    nonSelectedText: "Todas as unidades",
+                    nSelectedText: "unidades",
+                    allSelectedText: "Todas selecionadas",
+                    buttonWidth: "100%",
+                    maxHeight: 300,
+                    onChange: function(option, checked) {
+                        console.log('Unidade onChange triggered:', option.val(), checked);
+                        const selectedOptions = $('#unidade-filter').val() || [];
+                        console.log('Selected unidades:', selectedOptions);
+                        updateDependentFilters(selectedOptions);
+                        updateDashboard();
+                    },
+                    onSelectAll: function() {
+                        console.log('Unidade onSelectAll triggered');
+                        const selectedOptions = $('#unidade-filter').val() || [];
+                        console.log('All selected unidades:', selectedOptions);
+                        updateDependentFilters(selectedOptions);
+                        updateDashboard();
+                    },
+                    onDeselectAll: function() {
+                        console.log('Unidade onDeselectAll triggered');
+                        updateDependentFilters([]);
+                        updateDashboard();
+                    },
+                    enableCaseInsensitiveFiltering: true,
+                    filterBehavior: 'text',
+                    dropUp: false,
+                    dropRight: false,
+                    widthSynchronizationMode: 'ifPopupIsSmaller',
+                    closeOnSelect: false,
+                    templates: {
+                        ul: '<ul class="multiselect-container dropdown-menu" style="width: auto; min-width: 100%;"></ul>'
+                    }
+                });
+                
+                // Força a atualização das seleções no multiselect
+                if (currentSelectedValues.length > 0) {
+                    unidadeFilter.multiselect('select', currentSelectedValues);
                 }
-            });
+            }
         }, 50);
 
         cursoFilter.multiselect({
