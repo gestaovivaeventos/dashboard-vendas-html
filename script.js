@@ -528,6 +528,8 @@ async function fetchFunilData() {
     const tituloIndex = 0; // Coluna A - Título
     const criadoEmIndex = 12; // Coluna M - Data criação
     const qualificacaoComissaoIndex = 57; // Coluna BF - Primeira vez que entrou na fase 1.2 Qualificação Comissão
+    const diagnosticoRealizadoIndex = 58; // Coluna BG - Primeira vez que entrou na fase 2.1 Diagnóstico Realizado
+    const propostaEnviadaIndex = 59; // Coluna BH - Primeira vez que entrou na fase 3.1 Proposta Enviada
     
     // Vamos procurar a coluna nm_unidade dinamicamente no header
     let unidadeIndex = -1;
@@ -543,13 +545,15 @@ async function fetchFunilData() {
       unidadeIndex = 72;
     }
     
-    console.log("Índices - Título:", tituloIndex, "Criado em:", criadoEmIndex, "Qualificação Comissão:", qualificacaoComissaoIndex, "Unidade:", unidadeIndex);
+    console.log("Índices - Título:", tituloIndex, "Criado em:", criadoEmIndex, "Qualificação Comissão:", qualificacaoComissaoIndex, "Diagnóstico Realizado:", diagnosticoRealizadoIndex, "Proposta Enviada:", propostaEnviadaIndex, "Unidade:", unidadeIndex);
     
     if (rows.length > 1) {
       console.log("Segunda linha como exemplo:", rows[1]);
       console.log("Título (A):", rows[1][tituloIndex]);
       console.log("Criado em (M):", rows[1][criadoEmIndex]);
       console.log("Qualificação Comissão (BF):", rows[1][qualificacaoComissaoIndex]);
+      console.log("Diagnóstico Realizado (BG):", rows[1][diagnosticoRealizadoIndex]);
+      console.log("Proposta Enviada (BH):", rows[1][propostaEnviadaIndex]);
       console.log("Unidade (BU):", rows[1][unidadeIndex]);
     }
     
@@ -559,6 +563,8 @@ async function fetchFunilData() {
       titulo: row[tituloIndex] || '',
       criado_em: row[criadoEmIndex] || '',
       qualificacao_comissao: row[qualificacaoComissaoIndex] || '',
+      diagnostico_realizado: row[diagnosticoRealizadoIndex] || '',
+      proposta_enviada: row[propostaEnviadaIndex] || '',
       nm_unidade: row[unidadeIndex] || '',
       row_data: row
     }));
@@ -2418,7 +2424,7 @@ function updateFunilIndicators(startDate, endDate, selectedUnidades) {
         // Zerar todos os cards
         document.getElementById("funil-total-leads").textContent = "0";
         document.getElementById("funil-qualificacao-comissao").textContent = "0";
-        document.getElementById("funil-propostas").textContent = "0";
+        document.getElementById("funil-reuniao-realizada").textContent = "0";
         document.getElementById("funil-propostas-enviadas").textContent = "0";
         document.getElementById("funil-contratos-fechados").textContent = "0";
         document.getElementById("funil-leads-perdidos").textContent = "0";
@@ -2602,9 +2608,52 @@ function updateFunilIndicators(startDate, endDate, selectedUnidades) {
         console.error("❌ Elemento 'funil-qualificacao-comissao' não encontrado");
     }
     
+    // PASSO 6: Calcular e atualizar o card "Reunião Realizada"
+    // Regra: Se "Diagnóstico Realizado" é NULL E "Proposta Enviada" é NULL = 0, senão = 1
+    const leadsComReuniaoRealizada = dadosFinaisFiltrados.filter(item => {
+        if (!item.titulo || item.titulo.trim() === '') return false; // tem título válido
+        
+        const diagnosticoVazio = !item.diagnostico_realizado || item.diagnostico_realizado.trim() === '';
+        const propostaVazia = !item.proposta_enviada || item.proposta_enviada.trim() === '';
+        
+        // Se AMBOS são vazios/NULL, retorna false (não conta)
+        // Se pelo menos UM tem valor, retorna true (conta)
+        const temReuniaoRealizada = !(diagnosticoVazio && propostaVazia);
+        
+        if (temReuniaoRealizada) {
+            console.log("✅ Lead com reunião realizada:", {
+                titulo: item.titulo,
+                diagnostico: item.diagnostico_realizado || 'NULL',
+                proposta: item.proposta_enviada || 'NULL'
+            });
+        }
+        
+        return temReuniaoRealizada;
+    });
+    
+    const totalReuniaoRealizada = leadsComReuniaoRealizada.length;
+    console.log("📊 Total de leads com Reunião Realizada:", totalReuniaoRealizada);
+    
+    // Mostrar amostra dos dados de reunião realizada
+    if (leadsComReuniaoRealizada.length > 0) {
+        console.log("🔍 Amostra dos leads com Reunião Realizada:");
+        leadsComReuniaoRealizada.slice(0, 5).forEach((item, index) => {
+            console.log(`  ${index + 1}. Título: "${item.titulo}" | Diagnóstico: "${item.diagnostico_realizado || 'NULL'}" | Proposta: "${item.proposta_enviada || 'NULL'}"`);
+        });
+    }
+    
+    // Atualizar o card de Reunião Realizada
+    const reuniaoCardElement = document.getElementById("funil-reuniao-realizada");
+    if (reuniaoCardElement) {
+        reuniaoCardElement.textContent = totalReuniaoRealizada.toString();
+        console.log("✅ Card 'Reunião Realizada' atualizado com:", totalReuniaoRealizada);
+    } else {
+        console.error("❌ Elemento 'funil-reuniao-realizada' não encontrado");
+    }
+    
     // Por enquanto, outros cards ficam zerados
     const otherCards = [
-        "funil-propostas", "funil-propostas-enviadas",
+        "funil-propostas-enviadas",
         "funil-contratos-fechados", "funil-leads-perdidos", "funil-leads-desqualificados"
     ];
     
