@@ -3131,7 +3131,7 @@ function updateCaptacoesChart(dados) {
     captacoesChartInstance = new Chart(ctx, {
         type: 'pie',
         data: {
-            labels: labels,
+            labels: labels.map((label, index) => `${label} (${dados[index].percentual}%)`),
             datasets: [{
                 data: valores,
                 backgroundColor: backgroundColor,
@@ -3148,10 +3148,28 @@ function updateCaptacoesChart(dados) {
                     labels: {
                         color: '#F8F9FA',
                         font: {
-                            size: 12
+                            size: 11
                         },
-                        padding: 15,
-                        usePointStyle: true
+                        padding: 10,
+                        usePointStyle: true,
+                        generateLabels: function(chart) {
+                            const data = chart.data;
+                            if (data.labels.length && data.datasets.length) {
+                                return data.labels.map((label, index) => {
+                                    const dataset = data.datasets[0];
+                                    return {
+                                        text: label,
+                                        fillStyle: dataset.backgroundColor[index],
+                                        strokeStyle: dataset.borderColor,
+                                        lineWidth: dataset.borderWidth,
+                                        pointStyle: 'circle',
+                                        hidden: false,
+                                        index: index
+                                    };
+                                });
+                            }
+                            return [];
+                        }
                     }
                 },
                 tooltip: {
@@ -3163,7 +3181,7 @@ function updateCaptacoesChart(dados) {
                     callbacks: {
                         label: function(context) {
                             const item = dados[context.dataIndex];
-                            return `${context.label}: ${item.total} (${item.percentual}%)`;
+                            return `${item.tipo}: ${item.total} leads (${item.percentual}%)`;
                         }
                     }
                 }
