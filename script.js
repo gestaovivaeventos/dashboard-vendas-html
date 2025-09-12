@@ -2519,32 +2519,31 @@ function updateFunilIndicators(startDate, endDate, selectedUnidades) {
             isFunilPage: isFunilPage
         });
         
-        if (isFunilPage) {
-            console.log("🏢 PÁGINA DO FUNIL DETECTADA: Ignorando filtro de unidade para o funil");
-            // Na página do funil, não aplicar filtro de unidade - mostrar todos os dados do funil
-            dadosFinaisFiltrados = dadosFiltradosPorData;
-        } else {
-            console.log("🏢 Página normal: Aplicando filtro de unidade");
-            dadosFinaisFiltrados = dadosFiltradosPorData.filter(item => {
-                const unidadeItem = item.nm_unidade;
-                if (!unidadeItem) {
-                    console.log("⚠️ Item sem unidade:", item);
-                    return false;
-                }
-                
-                const pertenceUnidade = selectedUnidades.includes(unidadeItem);
-                
-                if (!pertenceUnidade) {
-                    console.log("❌ Unidade não está no filtro:", {
-                        titulo: item.titulo,
-                        unidade: unidadeItem,
-                        unidadesPermitidas: selectedUnidades
-                    });
-                }
-                
-                return pertenceUnidade;
-            });
-        }
+        // Aplicar filtro de unidade normalmente em todas as páginas, incluindo funil
+        dadosFinaisFiltrados = dadosFiltradosPorData.filter(item => {
+            const unidadeItem = item.nm_unidade;
+            if (!unidadeItem) {
+                console.log("⚠️ Item sem unidade:", item);
+                return false;
+            }
+            
+            const pertenceUnidade = selectedUnidades.includes(unidadeItem);
+            
+            if (!pertenceUnidade) {
+                console.log("❌ Unidade não está no filtro:", {
+                    titulo: item.titulo,
+                    unidade: unidadeItem,
+                    unidadesPermitidas: selectedUnidades
+                });
+            } else {
+                console.log("✅ Unidade aceita:", {
+                    titulo: item.titulo,
+                    unidade: unidadeItem
+                });
+            }
+            
+            return pertenceUnidade;
+        });
         
         console.log("📊 Dados após filtro de unidade:", dadosFinaisFiltrados.length, "registros");
     } else {
