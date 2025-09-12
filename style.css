@@ -434,11 +434,22 @@ body {
 
         .funil-card-wide {
             grid-column: span 2;
+            /* Centralizando os cards da linha inferior */
+        }
+
+        /* Cards da linha inferior centralizados */
+        .funil-card-wide:nth-of-type(6) {
+            grid-column: 2 / span 2; /* Starts at column 2, spans 2 columns */
+        }
+
+        .funil-card-wide:nth-of-type(7) {
+            grid-column: 4 / span 2; /* Starts at column 4, spans 2 columns */
         }
 
         .funil-card-highlight {
-            border: 2px solid #ffc107;
-            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            /* Mesma cor de fundo dos outros cards */
+            background: linear-gradient(135deg, #343a40 0%, #495057 100%);
+            border: 1px solid #495057;
         }
 
         .funil-card-title {
