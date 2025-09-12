@@ -551,13 +551,31 @@ async function fetchFunilData() {
       console.log("Unidade (BU):", rows[1][unidadeIndex]);
     }
     
-    const processedData = rows.slice(1).map((row, index) => ({
+    // Primeiro, processar todos os dados sem filtrar
+    const allProcessedData = rows.slice(1).map((row, index) => ({
       id: index + 1,
       titulo: row[tituloIndex] || '',
       criado_em: row[criadoEmIndex] || '',
       nm_unidade: row[unidadeIndex] || '',
       row_data: row
-    })).filter(item => item.titulo && item.titulo.trim() !== '');
+    }));
+    
+    console.log("📊 Total de linhas processadas (sem filtro):", allProcessedData.length);
+    
+    // Agora filtrar apenas os com título válido
+    const processedData = allProcessedData.filter(item => item.titulo && item.titulo.trim() !== '');
+    
+    console.log("📊 Registros com título válido:", processedData.length);
+    console.log("📊 Registros removidos por título vazio:", allProcessedData.length - processedData.length);
+    
+    // Debug: mostrar alguns registros sem título
+    const semTitulo = allProcessedData.filter(item => !item.titulo || item.titulo.trim() === '');
+    if (semTitulo.length > 0) {
+      console.log("⚠️ Amostra de registros sem título (removidos):");
+      semTitulo.slice(0, 3).forEach((item, index) => {
+        console.log(`  ${index + 1}. Linha ${item.id}: título="${item.titulo}" | unidade="${item.nm_unidade}" | criado="${item.criado_em}"`);
+      });
+    }
     
     console.log("Dados processados:", processedData.length, "registros válidos");
     if (processedData.length > 0) {
@@ -581,18 +599,6 @@ async function fetchFunilData() {
         criado_em: item.criado_em
       })));
     }
-    
-    console.log("=== FIM fetchFunilData ===");
-    return processedData;
-  
-  console.log("FUNIL_SPREADSHEET_ID:", FUNIL_SPREADSHEET_ID);
-  console.log("FUNIL_SHEET_NAME:", FUNIL_SHEET_NAME);
-  console.log("API_KEY existe:", !!API_KEY);
-  
-  if (!FUNIL_SPREADSHEET_ID || !FUNIL_SHEET_NAME || !API_KEY) {
-    console.error("❌ Configurações da planilha do funil incompletas.");
-    return [];
-  }
     
     console.log("=== FIM fetchFunilData ===");
     return processedData;
@@ -2441,36 +2447,63 @@ function updateFunilIndicators(startDate, endDate, selectedUnidades) {
     
     console.log("✅ Dados disponíveis:", funilData.length, "registros");
     
+    // Debug: verificar quantos registros têm títulos válidos
+    const registrosComTitulo = funilData.filter(item => item.titulo && item.titulo.trim() !== '');
+    console.log("📋 Registros com título válido:", registrosComTitulo.length, "de", funilData.length, "total");
+    
+    // Debug: verificar quantos registros têm datas válidas
+    const registrosComData = funilData.filter(item => item.criado_em && item.criado_em.trim() !== '');
+    console.log("📅 Registros com data de criação:", registrosComData.length, "de", funilData.length, "total");
+    
     // Função para converter data DD/MM/YYYY para objeto Date
     const parseDate = (dateString) => {
         if (!dateString || typeof dateString !== 'string') return null;
+        
+        // Tenta primeiro o formato DD/MM/YYYY
         const parts = dateString.match(/(\d{2})\/(\d{2})\/(\d{4})/);
         if (parts) {
             return new Date(parts[3], parts[2] - 1, parts[1]); // ano, mês-1, dia
         }
-        return null;
+        
+        // Fallback: tenta outros formatos
+        const date = new Date(dateString);
+        return isNaN(date) ? null : date;
     };
     
     // PASSO 1: FILTRAR POR PERÍODO DE DATA
     let dadosFiltradosPorData = funilData.filter(item => {
         if (!item.criado_em) {
+            console.log("⚠️ Item sem data de criação:", item.titulo);
             return false; // Excluir itens sem data
         }
         
         const dataItem = parseDate(item.criado_em);
         if (!dataItem) {
-            console.log("⚠️ Data inválida:", item.criado_em);
+            console.log("⚠️ Data inválida encontrada:", {
+                titulo: item.titulo,
+                dataOriginal: item.criado_em,
+                unidade: item.nm_unidade
+            });
             return false;
         }
         
         // Verificar se a data está dentro do período
         const dentroIntervalo = dataItem >= startDate && dataItem < endDate;
         
-        if (dentroIntervalo) {
+        if (!dentroIntervalo) {
+            console.log("📅 Data fora do intervalo:", {
+                titulo: item.titulo,
+                data: item.criado_em,
+                dataParsed: dataItem.toLocaleDateString('pt-BR'),
+                unidade: item.nm_unidade,
+                startDate: startDate.toLocaleDateString('pt-BR'),
+                endDate: endDate.toLocaleDateString('pt-BR')
+            });
+        } else {
             console.log("✅ Data válida:", {
                 titulo: item.titulo,
                 data: item.criado_em,
-                dataParsed: dataItem,
+                dataParsed: dataItem.toLocaleDateString('pt-BR'),
                 unidade: item.nm_unidade
             });
         }
@@ -2478,7 +2511,13 @@ function updateFunilIndicators(startDate, endDate, selectedUnidades) {
         return dentroIntervalo;
     });
     
-    console.log(`📅 Dados após filtro de data (${startDate.toLocaleDateString('pt-BR')} a ${endDate.toLocaleDateString('pt-BR')}):`, dadosFiltradosPorData.length, "registros");
+    console.log("� Dados após filtro de data (${startDate.toLocaleDateString('pt-BR')} a ${endDate.toLocaleDateString('pt-BR')}):", dadosFiltradosPorData.length, "registros");
+    
+    // Debug detalhado: mostrar TODOS os registros que passaram pelo filtro de data
+    console.log("🔍 TODOS os registros após filtro de data:");
+    dadosFiltradosPorData.forEach((item, index) => {
+      console.log(`  ${index + 1}. "${item.titulo}" | ${item.criado_em} | ${item.nm_unidade}`);
+    });
     
     // PASSO 2: FILTRAR POR UNIDADE (se selecionadas)
     let dadosFinaisFiltrados = dadosFiltradosPorData;
