@@ -388,9 +388,54 @@
                 <div id="page3" class="page-content">
                     <div class="page-header">
                         <h1>Funil de Vendas</h1>
-                        <p>Dashboard em desenvolvimento - Em breve teremos os gráficos e indicadores do funil de vendas.</p>
+                        <p>Indicadores operacionais do funil de vendas</p>
                     </div>
-                    <!-- Conteúdo do funil de vendas será adicionado aqui -->
+                    
+                    <!-- Indicadores Operacionais do Funil -->
+                    <section class="kpi-container" id="funil-indicators-section" style="display: block;">
+                        <h2 style="grid-column: span 12; font-size: 1.4em; color: #ffc107; margin-bottom: 20px;">INDICADORES OPERACIONAIS (FUNIL)</h2>
+                        <div class="funil-indicators-grid">
+                            <!-- Linha superior -->
+                            <div class="funil-indicator-card">
+                                <span class="funil-card-title">TOTAL DE LEADS CRIADOS</span>
+                                <span class="funil-card-value" id="funil-total-leads">282</span>
+                            </div>
+                            <div class="funil-indicator-card">
+                                <span class="funil-card-title">QUALIFICADOS E EM PROSPECÇÃO</span>
+                                <span class="funil-card-value" id="funil-qualificados">120</span>
+                            </div>
+                            <div class="funil-indicator-card">
+                                <span class="funil-card-title">PROPOSTAS CRIADAS</span>
+                                <span class="funil-card-value" id="funil-propostas">45</span>
+                            </div>
+                            <div class="funil-indicator-card">
+                                <span class="funil-card-title">PROPOSTAS ENVIADAS</span>
+                                <span class="funil-card-value" id="funil-propostas-enviadas">23</span>
+                            </div>
+                            <div class="funil-indicator-card">
+                                <span class="funil-card-title">CONTRATOS FECHADOS/GANHOU</span>
+                                <span class="funil-card-value" id="funil-contratos-fechados">3</span>
+                            </div>
+                            
+                            <!-- Linha inferior -->
+                            <div class="funil-indicator-card funil-card-wide">
+                                <span class="funil-card-title">LEADS PERDIDOS</span>
+                                <span class="funil-card-value" id="funil-leads-perdidos">24</span>
+                            </div>
+                            <div class="funil-indicator-card funil-card-wide funil-card-highlight">
+                                <span class="funil-card-title">LEADS DESQUALIFICADOS</span>
+                                <span class="funil-card-value" id="funil-leads-desqualificados">25</span>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Seção de Captações (placeholder para futuro) -->
+                    <section class="kpi-container" id="funil-captacoes-section" style="display: block;">
+                        <h2 style="grid-column: span 12; font-size: 1.4em; color: #ffc107; margin-bottom: 20px;">CAPTAÇÕES</h2>
+                        <div class="funil-captacoes-placeholder">
+                            <p>Seção em desenvolvimento - Indicadores de captações serão adicionados em breve</p>
+                        </div>
+                    </section>
                 </div>
             </div>
         </div>
