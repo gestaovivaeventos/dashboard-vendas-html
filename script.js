@@ -34,7 +34,7 @@ const METAS_SHEET_NAME = "metas";
 
 // --- CONFIGURAÇÕES DA PLANILHA DO FUNIL ---
 const FUNIL_SPREADSHEET_ID = "1t67xdPLHB34pZw8WzBUphGRqFye0ZyrTLvDhC7jbVEc";
-const FUNIL_SHEET_NAME = "Sheet1"; // Tentando com o nome padrão primeiro
+const FUNIL_SHEET_NAME = "BASE"; // Tentando com o nome padrão primeiro
 
 // --- NOVO: CONFIGURAÇÕES DA PLANILHA DE ACESSO ---
 const ACCESS_CONTROL_SPREADSHEET_ID = "1QEsm1u0LDY_-8y_EWgifzUHJCHoz3_VOoUOSXuJZzSM";
