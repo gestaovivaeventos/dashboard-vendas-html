@@ -528,8 +528,8 @@ async function fetchFunilData() {
     const tituloIndex = 0; // Coluna A - Título
     const criadoEmIndex = 12; // Coluna M - Data criação
     const qualificacaoComissaoIndex = 57; // Coluna BF - Primeira vez que entrou na fase 1.2 Qualificação Comissão
-    const diagnosticoRealizadoIndex = 58; // Coluna BG - Primeira vez que entrou na fase 2.1 Diagnóstico Realizado
-    const propostaEnviadaIndex = 59; // Coluna BH - Primeira vez que entrou na fase 3.1 Proposta Enviada
+    const diagnosticoRealizadoIndex = 59; // Coluna BH - Primeira vez que entrou na fase 2.1 Diagnóstico Realizado
+    const propostaEnviadaIndex = 61; // Coluna BJ - Primeira vez que entrou na fase 3.1 Proposta Enviada
     
     // Vamos procurar a coluna nm_unidade dinamicamente no header
     let unidadeIndex = -1;
@@ -552,8 +552,8 @@ async function fetchFunilData() {
       console.log("Título (A):", rows[1][tituloIndex]);
       console.log("Criado em (M):", rows[1][criadoEmIndex]);
       console.log("Qualificação Comissão (BF):", rows[1][qualificacaoComissaoIndex]);
-      console.log("Diagnóstico Realizado (BG):", rows[1][diagnosticoRealizadoIndex]);
-      console.log("Proposta Enviada (BH):", rows[1][propostaEnviadaIndex]);
+      console.log("Diagnóstico Realizado (BH):", rows[1][diagnosticoRealizadoIndex]);
+      console.log("Proposta Enviada (BJ):", rows[1][propostaEnviadaIndex]);
       console.log("Unidade (BU):", rows[1][unidadeIndex]);
     }
     
@@ -2610,35 +2610,54 @@ function updateFunilIndicators(startDate, endDate, selectedUnidades) {
     
     // PASSO 6: Calcular e atualizar o card "Reunião Realizada"
     // Regra: Se "Diagnóstico Realizado" é NULL E "Proposta Enviada" é NULL = 0, senão = 1
+    // IMPORTANTE: Só contar quando a data de criação está no período (dadosFinaisFiltrados já tem isso)
     const leadsComReuniaoRealizada = dadosFinaisFiltrados.filter(item => {
         if (!item.titulo || item.titulo.trim() === '') return false; // tem título válido
         
         const diagnosticoVazio = !item.diagnostico_realizado || item.diagnostico_realizado.trim() === '';
         const propostaVazia = !item.proposta_enviada || item.proposta_enviada.trim() === '';
         
-        // Se AMBOS são vazios/NULL, retorna false (não conta)
-        // Se pelo menos UM tem valor, retorna true (conta)
+        // Se AMBOS são vazios/NULL, retorna false (não conta = 0)
+        // Se pelo menos UM tem valor, retorna true (conta = 1)
         const temReuniaoRealizada = !(diagnosticoVazio && propostaVazia);
         
-        if (temReuniaoRealizada) {
-            console.log("✅ Lead com reunião realizada:", {
-                titulo: item.titulo,
-                diagnostico: item.diagnostico_realizado || 'NULL',
-                proposta: item.proposta_enviada || 'NULL'
-            });
-        }
+        console.log("🔍 Análise de reunião realizada:", {
+            titulo: item.titulo,
+            diagnostico: item.diagnostico_realizado || 'NULL',
+            proposta: item.proposta_enviada || 'NULL',
+            diagnosticoVazio: diagnosticoVazio,
+            propostaVazia: propostaVazia,
+            temReuniaoRealizada: temReuniaoRealizada,
+            criado_em: item.criado_em
+        });
         
         return temReuniaoRealizada;
     });
     
     const totalReuniaoRealizada = leadsComReuniaoRealizada.length;
-    console.log("📊 Total de leads com Reunião Realizada:", totalReuniaoRealizada);
+    console.log("📊 Total de leads com Reunião Realizada (período filtrado):", totalReuniaoRealizada);
+    console.log("📊 Total de leads analisados (período filtrado):", dadosFinaisFiltrados.length);
+    
+    // Debug detalhado: mostrar estatísticas
+    const leadsComDiagnostico = dadosFinaisFiltrados.filter(item => 
+        item.titulo && item.titulo.trim() !== '' && 
+        item.diagnostico_realizado && item.diagnostico_realizado.trim() !== ''
+    );
+    const leadsComProposta = dadosFinaisFiltrados.filter(item => 
+        item.titulo && item.titulo.trim() !== '' && 
+        item.proposta_enviada && item.proposta_enviada.trim() !== ''
+    );
+    
+    console.log("📊 Estatísticas detalhadas:");
+    console.log("  - Leads com Diagnóstico preenchido:", leadsComDiagnostico.length);
+    console.log("  - Leads com Proposta preenchida:", leadsComProposta.length);
+    console.log("  - Leads com pelo menos um preenchido (Reunião Realizada):", totalReuniaoRealizada);
     
     // Mostrar amostra dos dados de reunião realizada
     if (leadsComReuniaoRealizada.length > 0) {
         console.log("🔍 Amostra dos leads com Reunião Realizada:");
         leadsComReuniaoRealizada.slice(0, 5).forEach((item, index) => {
-            console.log(`  ${index + 1}. Título: "${item.titulo}" | Diagnóstico: "${item.diagnostico_realizado || 'NULL'}" | Proposta: "${item.proposta_enviada || 'NULL'}"`);
+            console.log(`  ${index + 1}. Título: "${item.titulo}" | Diagnóstico: "${item.diagnostico_realizado || 'NULL'}" | Proposta: "${item.proposta_enviada || 'NULL'}" | Data: "${item.criado_em}"`);
         });
     }
     
