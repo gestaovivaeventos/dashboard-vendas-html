@@ -493,19 +493,21 @@ async function fetchFunilData() {
     const rows = data.values || [];
     if (rows.length === 0) return [];
     
-    const headers = rows[0].map((h) => h.trim().toLowerCase());
-    const tituloIndex = headers.findIndex(h => h.includes("título") || h.includes("titulo"));
-    const criadoEmIndex = headers.findIndex(h => h.includes("criado em") || h.includes("data"));
-    const statusIndex = headers.findIndex(h => h.includes("status") || h.includes("etapa"));
+    const headers = rows[0];
+    console.log("Headers da planilha do funil:", headers);
     
-    console.log("Headers encontrados:", headers);
-    console.log("Índices - Título:", tituloIndex, "Criado em:", criadoEmIndex, "Status:", statusIndex);
+    // Encontrar índices das colunas importantes
+    const tituloIndex = 0; // Coluna A
+    const criadoEmIndex = 12; // Coluna M (índice 12)
+    const unidadeIndex = 72; // Coluna BU (índice 72 - BU é a 73ª coluna)
+    
+    console.log("Índices - Título:", tituloIndex, "Criado em:", criadoEmIndex, "Unidade:", unidadeIndex);
     
     return rows.slice(1).map((row, index) => ({
       id: index + 1,
       titulo: row[tituloIndex] || '',
       criado_em: row[criadoEmIndex] || '',
-      status: row[statusIndex] || '',
+      nm_unidade: row[unidadeIndex] || '',
       row_data: row
     })).filter(item => item.titulo && item.titulo.trim() !== '');
   } catch (error) {
@@ -749,7 +751,7 @@ function updateDashboard() {
     updateConsultorTable(dataBrutaFiltrada);
     updateDetalhadaAdesoesTable(dataBrutaFiltrada);
     updateFundosDetalhadosTable(fundosDataFiltrado, selectedUnidades, startDate, endDate);
-    updateFunilIndicators(startDate, endDate);
+    updateFunilIndicators(startDate, endDate, selectedUnidades);
     updateMainKPIs(dataBrutaFiltrada, selectedUnidades, startDate, endDate);
     
     const dataAgregadaComVendas = processAndCrossReferenceData(dataBrutaFiltrada);
@@ -2242,19 +2244,40 @@ function updateFundosDetalhadosTable(fundosData, selectedUnidades, startDate, en
 }
 
 // --- FUNÇÃO PARA ATUALIZAR INDICADORES DO FUNIL ---
-function updateFunilIndicators(startDate, endDate) {
+function updateFunilIndicators(startDate, endDate, selectedUnidades) {
     if (!funilData || funilData.length === 0) {
         console.log("Dados do funil não disponíveis");
+        // Mostrar zeros quando não há dados
+        document.getElementById("funil-total-leads").textContent = "0";
+        document.getElementById("funil-qualificados").textContent = "0";
+        document.getElementById("funil-propostas").textContent = "0";
+        document.getElementById("funil-propostas-enviadas").textContent = "0";
+        document.getElementById("funil-contratos-fechados").textContent = "0";
+        document.getElementById("funil-leads-perdidos").textContent = "0";
+        document.getElementById("funil-leads-desqualificados").textContent = "0";
         return;
     }
     
-    // Filtrar dados do funil pelo período selecionado
+    console.log("Dados do funil carregados:", funilData.length, "registros");
+    console.log("Unidades selecionadas:", selectedUnidades);
+    
+    // Filtrar dados do funil pelo período selecionado e unidades
     const dadosFiltrados = funilData.filter(item => {
+        // Filtro por título válido
+        if (!item.titulo || item.titulo.trim() === '') return false;
+        
+        // Filtro por unidade (similar ao usado no resto do dashboard)
+        const unidadeMatch = selectedUnidades.length === 0 || selectedUnidades.includes(item.nm_unidade);
+        if (!unidadeMatch) return false;
+        
+        // Filtro por data
         if (!item.criado_em) return false;
         
         // Tentar diferentes formatos de data
         let dataItem = null;
-        const criadoEm = item.criado_em.toString();
+        const criadoEm = item.criado_em.toString().trim();
+        
+        if (!criadoEm) return false;
         
         // Formato DD/MM/YYYY
         if (criadoEm.includes('/')) {
@@ -2267,21 +2290,41 @@ function updateFunilIndicators(startDate, endDate) {
         else if (criadoEm.includes('-') && criadoEm.length >= 10) {
             dataItem = new Date(criadoEm);
         }
+        // Formato MM/DD/YYYY (formato americano)
+        else if (criadoEm.match(/^\d{1,2}\/\d{1,2}\/\d{4}$/)) {
+            const [mes, dia, ano] = criadoEm.split('/');
+            if (dia && mes && ano && ano.length === 4) {
+                dataItem = new Date(ano, mes - 1, dia);
+            }
+        }
         // Timestamp ou outros formatos
         else {
             dataItem = new Date(criadoEm);
         }
         
-        return dataItem && dataItem >= startDate && dataItem < endDate;
+        // Verificar se a data é válida e está no período
+        if (!dataItem || isNaN(dataItem.getTime())) return false;
+        
+        return dataItem >= startDate && dataItem < endDate;
     });
     
     console.log(`Dados do funil filtrados: ${dadosFiltrados.length} de ${funilData.length} registros`);
     
-    // Contar total de leads criados (todos os registros filtrados)
-    const totalLeads = dadosFiltrados.length;
+    // Contar títulos únicos (leads únicos) - isso é o que realmente importa
+    const titulosUnicos = new Set();
+    dadosFiltrados.forEach(item => {
+        if (item.titulo && item.titulo.trim() !== '') {
+            titulosUnicos.add(item.titulo.trim().toLowerCase());
+        }
+    });
+    
+    const totalLeads = titulosUnicos.size;
+    
+    console.log("Títulos únicos encontrados:", totalLeads);
+    console.log("Amostra dos títulos:", Array.from(titulosUnicos).slice(0, 5));
     
     // Para os outros indicadores, vamos usar valores padrão baseados na proporção típica do funil
-    // Estes valores serão atualizados quando tivermos acesso aos dados reais da planilha
+    // Estes valores serão atualizados quando tivermos acesso aos dados reais da planilha com status/etapas
     const qualificados = Math.floor(totalLeads * 0.42); // ~42% dos leads
     const propostas = Math.floor(totalLeads * 0.16); // ~16% dos leads
     const propostasEnviadas = Math.floor(totalLeads * 0.08); // ~8% dos leads
@@ -2305,6 +2348,10 @@ function updateFunilIndicators(startDate, endDate) {
         propostasEnviadas,
         contratosFechados,
         leadsPerdidos,
-        leadsDesqualificados
+        leadsDesqualificados,
+        filtrosAplicados: {
+            periodo: `${startDate.toLocaleDateString('pt-BR')} - ${endDate.toLocaleDateString('pt-BR')}`,
+            unidades: selectedUnidades.length > 0 ? selectedUnidades : 'Todas'
+        }
     });
 }
