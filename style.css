@@ -498,9 +498,9 @@ body {
         .captacoes-table-container, .captacoes-chart-container {
             background: linear-gradient(135deg, #343a40 0%, #495057 100%);
             border-radius: 8px;
-            padding: 20px;
+            padding: 15px; /* Reduzir padding para mais espaço */
             border: 1px solid #495057;
-            height: 600px; /* Altura aumentada para dar mais espaço ao gráfico */
+            height: 650px; /* Altura ainda maior */
             display: flex;
             flex-direction: column;
         }
@@ -610,15 +610,16 @@ body {
             align-items: center;
             height: 100%;
             width: 100%;
-            padding: 5px;
+            padding: 2px; /* Padding mínimo */
             flex: 1;
+            overflow: visible; /* Garantir que a legenda não seja cortada */
         }
 
         #captacoesChart {
             width: 100% !important;
             height: 100% !important;
-            max-width: 600px;
-            max-height: 450px;
+            max-width: 750px; /* Muito maior */
+            max-height: 550px; /* Muito maior */
         }
 
         /* Forçar cor branca na legenda do gráfico de captações */

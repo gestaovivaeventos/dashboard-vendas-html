@@ -3162,10 +3162,10 @@ function updateCaptacoesChart(dados) {
             aspectRatio: 1, // Gráfico quadrado
             layout: {
                 padding: {
-                    top: 5,
-                    bottom: 5,
-                    left: 5,
-                    right: 5
+                    top: 2,
+                    bottom: 2,
+                    left: 2,
+                    right: 120 /* Mais espaço à direita para a legenda */
                 }
             },
             plugins: {
@@ -3176,7 +3176,7 @@ function updateCaptacoesChart(dados) {
                         font: {
                             size: 16 // Fonte maior para legenda
                         },
-                        padding: 15,
+                        padding: 20, /* Mais espaçamento entre itens */
                         usePointStyle: true,
                         generateLabels: function(chart) {
                             const data = chart.data;
