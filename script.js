@@ -2366,15 +2366,52 @@ function updateFunilIndicators(startDate, endDate, selectedUnidades) {
     
     console.log("✅ Dados disponíveis:", funilData.length, "registros");
     
-    // LÓGICA SIMPLES: filtrar por unidade e contar linhas
-    let dadosParaContar = funilData;
+    // Função para converter data DD/MM/YYYY para objeto Date
+    const parseDate = (dateString) => {
+        if (!dateString || typeof dateString !== 'string') return null;
+        const parts = dateString.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+        if (parts) {
+            return new Date(parts[3], parts[2] - 1, parts[1]); // ano, mês-1, dia
+        }
+        return null;
+    };
     
-    // Se tem unidades selecionadas, filtrar por elas
+    // PASSO 1: FILTRAR POR PERÍODO DE DATA
+    let dadosFiltradosPorData = funilData.filter(item => {
+        if (!item.criado_em) {
+            return false; // Excluir itens sem data
+        }
+        
+        const dataItem = parseDate(item.criado_em);
+        if (!dataItem) {
+            console.log("⚠️ Data inválida:", item.criado_em);
+            return false;
+        }
+        
+        // Verificar se a data está dentro do período
+        const dentroIntervalo = dataItem >= startDate && dataItem < endDate;
+        
+        if (dentroIntervalo) {
+            console.log("✅ Data válida:", {
+                titulo: item.titulo,
+                data: item.criado_em,
+                dataParsed: dataItem,
+                unidade: item.nm_unidade
+            });
+        }
+        
+        return dentroIntervalo;
+    });
+    
+    console.log(`📅 Dados após filtro de data (${startDate.toLocaleDateString('pt-BR')} a ${endDate.toLocaleDateString('pt-BR')}):`, dadosFiltradosPorData.length, "registros");
+    
+    // PASSO 2: FILTRAR POR UNIDADE (se selecionadas)
+    let dadosFinaisFiltrados = dadosFiltradosPorData;
+    
     if (selectedUnidades && selectedUnidades.length > 0) {
         console.log("🔍 Filtrando por unidades:", selectedUnidades);
         
-        dadosParaContar = funilData.filter(item => {
-            // Verificar se tem nm_unidade e se está nas unidades selecionadas
+        dadosFinaisFiltrados = dadosFiltradosPorData.filter(item => {
             const unidadeItem = item.nm_unidade;
             if (!unidadeItem) {
                 console.log("⚠️ Item sem unidade:", item);
@@ -2382,28 +2419,21 @@ function updateFunilIndicators(startDate, endDate, selectedUnidades) {
             }
             
             const pertenceUnidade = selectedUnidades.includes(unidadeItem);
-            if (pertenceUnidade) {
-                console.log("✅ Item incluído:", {
-                    titulo: item.titulo,
-                    unidade: item.nm_unidade,
-                    criado_em: item.criado_em
-                });
-            }
             return pertenceUnidade;
         });
         
-        console.log("Dados após filtro de unidade:", dadosParaContar.length, "registros");
+        console.log("📊 Dados após filtro de unidade:", dadosFinaisFiltrados.length, "registros");
     } else {
-        console.log("📊 Contando todos os registros (sem filtro de unidade)");
+        console.log("📊 Mantendo todos os dados (sem filtro de unidade)");
     }
     
-    // CONTAR LINHAS com título válido (não vazio)
-    const leadsValidos = dadosParaContar.filter(item => {
+    // PASSO 3: CONTAR LINHAS com título válido (não vazio)
+    const leadsValidos = dadosFinaisFiltrados.filter(item => {
         return item.titulo && item.titulo.trim() !== '';
     });
     
     const totalLeads = leadsValidos.length;
-    console.log("📊 Total de leads (linhas) encontrados:", totalLeads);
+    console.log("📊 Total de leads no período filtrado:", totalLeads);
     
     // Mostrar amostra dos dados contados
     if (leadsValidos.length > 0) {
@@ -2413,7 +2443,7 @@ function updateFunilIndicators(startDate, endDate, selectedUnidades) {
         });
     }
     
-    // Atualizar o card principal
+    // PASSO 4: Atualizar o card principal
     const cardElement = document.getElementById("funil-total-leads");
     if (cardElement) {
         cardElement.textContent = totalLeads.toString();
