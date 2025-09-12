@@ -2670,9 +2670,48 @@ function updateFunilIndicators(startDate, endDate, selectedUnidades) {
         console.error("❌ Elemento 'funil-reuniao-realizada' não encontrado");
     }
     
+    // PASSO 7: Calcular e atualizar o card "Propostas Enviadas"
+    // Regra: count(Primeira vez que entrou na fase 3.1 Proposta Enviada)
+    // IMPORTANTE: Só contar quando a data de criação está no período (dadosFinaisFiltrados já tem isso)
+    const leadsComPropostaEnviada = dadosFinaisFiltrados.filter(item => {
+        if (!item.titulo || item.titulo.trim() === '') return false; // tem título válido
+        
+        const temPropostaEnviada = item.proposta_enviada && item.proposta_enviada.trim() !== '';
+        
+        if (temPropostaEnviada) {
+            console.log("✅ Lead com proposta enviada:", {
+                titulo: item.titulo,
+                proposta_enviada: item.proposta_enviada,
+                criado_em: item.criado_em,
+                unidade: item.nm_unidade
+            });
+        }
+        
+        return temPropostaEnviada;
+    });
+    
+    const totalPropostasEnviadas = leadsComPropostaEnviada.length;
+    console.log("📊 Total de leads com Propostas Enviadas (período filtrado):", totalPropostasEnviadas);
+    
+    // Mostrar amostra dos dados de propostas enviadas
+    if (leadsComPropostaEnviada.length > 0) {
+        console.log("🔍 Amostra dos leads com Propostas Enviadas:");
+        leadsComPropostaEnviada.slice(0, 5).forEach((item, index) => {
+            console.log(`  ${index + 1}. Título: "${item.titulo}" | Proposta: "${item.proposta_enviada}" | Data: "${item.criado_em}" | Unidade: "${item.nm_unidade}"`);
+        });
+    }
+    
+    // Atualizar o card de Propostas Enviadas
+    const propostasEnviadasCardElement = document.getElementById("funil-propostas-enviadas");
+    if (propostasEnviadasCardElement) {
+        propostasEnviadasCardElement.textContent = totalPropostasEnviadas.toString();
+        console.log("✅ Card 'Propostas Enviadas' atualizado com:", totalPropostasEnviadas);
+    } else {
+        console.error("❌ Elemento 'funil-propostas-enviadas' não encontrado");
+    }
+    
     // Por enquanto, outros cards ficam zerados
     const otherCards = [
-        "funil-propostas-enviadas",
         "funil-contratos-fechados", "funil-leads-perdidos", "funil-leads-desqualificados"
     ];
     
