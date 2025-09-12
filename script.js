@@ -3158,14 +3158,13 @@ function updateCaptacoesChart(dados) {
         },
         options: {
             responsive: true,
-            maintainAspectRatio: true,
-            aspectRatio: 1, // Gráfico quadrado
+            maintainAspectRatio: false, /* Permitir que ocupe todo espaço */
             layout: {
                 padding: {
-                    top: 2,
-                    bottom: 2,
-                    left: 2,
-                    right: 120 /* Mais espaço à direita para a legenda */
+                    top: 0,
+                    bottom: 0,
+                    left: 0,
+                    right: 180 /* Mais espaço à direita para legenda completa */
                 }
             },
             plugins: {
@@ -3174,9 +3173,9 @@ function updateCaptacoesChart(dados) {
                     labels: {
                         color: '#FFFFFF', // Legenda branca
                         font: {
-                            size: 16 // Fonte maior para legenda
+                            size: 18 // Fonte ainda maior para legenda
                         },
-                        padding: 20, /* Mais espaçamento entre itens */
+                        padding: 25, /* Ainda mais espaçamento */
                         usePointStyle: true,
                         generateLabels: function(chart) {
                             const data = chart.data;
@@ -3222,7 +3221,7 @@ function updateCaptacoesChart(dados) {
                     color: '#2c3e50',
                     font: {
                         weight: 'bold',
-                        size: 14
+                        size: 20 /* Fonte muito maior para os rótulos */
                     },
                     formatter: function(value, context) {
                         const percentual = dados[context.dataIndex].percentual;
