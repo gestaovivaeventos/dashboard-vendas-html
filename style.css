@@ -500,7 +500,7 @@ body {
             border-radius: 8px;
             padding: 20px;
             border: 1px solid #495057;
-            height: 500px; /* Altura fixa para ambos containers */
+            height: 600px; /* Altura aumentada para dar mais espaço ao gráfico */
             display: flex;
             flex-direction: column;
         }
@@ -610,15 +610,15 @@ body {
             align-items: center;
             height: 100%;
             width: 100%;
-            padding: 10px;
+            padding: 5px;
             flex: 1;
         }
 
         #captacoesChart {
             width: 100% !important;
             height: 100% !important;
-            max-width: 450px;
-            max-height: 400px;
+            max-width: 600px;
+            max-height: 450px;
         }
 
         /* Forçar cor branca na legenda do gráfico de captações */
