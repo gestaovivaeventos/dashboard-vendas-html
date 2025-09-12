@@ -34,7 +34,7 @@ const METAS_SHEET_NAME = "metas";
 
 // --- CONFIGURAÇÕES DA PLANILHA DO FUNIL ---
 const FUNIL_SPREADSHEET_ID = "1t67xdPLHB34pZw8WzBUphGRqFye0ZyrTLvDhC7jbVEc";
-const FUNIL_SHEET_NAME = "Página1";
+const FUNIL_SHEET_NAME = "Sheet1"; // Tentando com o nome padrão primeiro
 
 // --- NOVO: CONFIGURAÇÕES DA PLANILHA DE ACESSO ---
 const ACCESS_CONTROL_SPREADSHEET_ID = "1QEsm1u0LDY_-8y_EWgifzUHJCHoz3_VOoUOSXuJZzSM";
@@ -246,6 +246,13 @@ async function initializeDashboard() {
     metasData = sheetData;
     fundosData = novosFundosData;
     funilData = dadosFunil;
+    
+    console.log("=== DEBUG FUNIL ===");
+    console.log("Dados do funil carregados:", dadosFunil ? dadosFunil.length : 0);
+    if (dadosFunil && dadosFunil.length > 0) {
+      console.log("Primeira linha do funil:", dadosFunil[0]);
+      console.log("Amostra de 3 registros:", dadosFunil.slice(0, 3));
+    }
 
     if (allData && allData.length > 0) {
       loader.style.display = "none";
@@ -268,6 +275,19 @@ async function initializeDashboard() {
       populateFilters();
       addEventListeners();
       updateDashboard();
+      
+      // TESTE DIRETO DO FUNIL - FORÇAR ATUALIZAÇÃO
+      console.log("=== TESTE DIRETO DO FUNIL ===");
+      setTimeout(() => {
+        console.log("Testando atualização direta do card...");
+        const testElement = document.getElementById("funil-total-leads");
+        if (testElement) {
+          testElement.textContent = "999";
+          console.log("✅ Card atualizado com valor de teste");
+        } else {
+          console.error("❌ Elemento funil-total-leads não encontrado");
+        }
+      }, 2000);
     } else {
       loader.innerHTML = "Nenhum dado de vendas encontrado ou falha ao carregar.";
     }
@@ -478,23 +498,63 @@ async function fetchMetasData() {
 
 // --- NOVO: FUNÇÃO PARA CARREGAR DADOS DO FUNIL ---
 async function fetchFunilData() {
+  console.log("=== INÍCIO fetchFunilData ===");
+  
+  // DADOS DE TESTE TEMPORÁRIOS (enquanto a planilha não estiver pública)
+  console.log("⚠️ Usando dados de teste para desenvolvimento");
+  const dadosTeste = [
+    { id: 1, titulo: "Lead Casamento João Silva", criado_em: "15/08/2025", nm_unidade: "Belo Horizonte" },
+    { id: 2, titulo: "Lead Festa Maria Santos", criado_em: "20/08/2025", nm_unidade: "Belo Horizonte" },
+    { id: 3, titulo: "Lead Evento Pedro Costa", criado_em: "25/08/2025", nm_unidade: "São Paulo" },
+    { id: 4, titulo: "Lead Casamento Ana Lima", criado_em: "01/09/2025", nm_unidade: "Belo Horizonte" },
+    { id: 5, titulo: "Lead Festa Carlos Oliveira", criado_em: "05/09/2025", nm_unidade: "Rio de Janeiro" },
+    { id: 6, titulo: "Lead Evento Juliana Ferreira", criado_em: "10/09/2025", nm_unidade: "Belo Horizonte" },
+    { id: 7, titulo: "Lead Casamento Roberto Alves", criado_em: "12/09/2025", nm_unidade: "São Paulo" }
+  ];
+  
+  console.log("Dados de teste criados:", dadosTeste.length, "registros");
+  console.log("Amostra:", dadosTeste.slice(0, 3));
+  
+  return dadosTeste;
+  
+  /* CÓDIGO ORIGINAL COMENTADO TEMPORARIAMENTE
+  console.log("FUNIL_SPREADSHEET_ID:", FUNIL_SPREADSHEET_ID);
+  console.log("FUNIL_SHEET_NAME:", FUNIL_SHEET_NAME);
+  console.log("API_KEY existe:", !!API_KEY);
+  
   if (!FUNIL_SPREADSHEET_ID || !FUNIL_SHEET_NAME || !API_KEY) {
-    console.error("Configurações da planilha do funil incompletas.");
+    console.error("❌ Configurações da planilha do funil incompletas.");
     return [];
   }
+  
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${FUNIL_SPREADSHEET_ID}/values/${FUNIL_SHEET_NAME}?key=${API_KEY}`;
+  console.log("URL da API:", url);
+  
   try {
+    console.log("Fazendo requisição para a API...");
     const response = await fetch(url);
+    console.log("Status da resposta:", response.status);
+    
     if (!response.ok) {
-      console.error("Erro API Google Sheets para funil:", await response.json());
+      const errorData = await response.json();
+      console.error("❌ Erro API Google Sheets para funil:", errorData);
       return [];
     }
+    
     const data = await response.json();
+    console.log("Dados recebidos da API:", data);
+    
     const rows = data.values || [];
-    if (rows.length === 0) return [];
+    console.log("Número de linhas recebidas:", rows.length);
+    
+    if (rows.length === 0) {
+      console.log("❌ Nenhuma linha encontrada na planilha");
+      return [];
+    }
     
     const headers = rows[0];
-    console.log("Headers da planilha do funil:", headers);
+    console.log("Headers da planilha:", headers);
+    console.log("Primeira linha completa:", rows[0]);
     
     // Encontrar índices das colunas importantes
     const tituloIndex = 0; // Coluna A
@@ -503,17 +563,34 @@ async function fetchFunilData() {
     
     console.log("Índices - Título:", tituloIndex, "Criado em:", criadoEmIndex, "Unidade:", unidadeIndex);
     
-    return rows.slice(1).map((row, index) => ({
+    if (rows.length > 1) {
+      console.log("Segunda linha como exemplo:", rows[1]);
+      console.log("Título (A):", rows[1][tituloIndex]);
+      console.log("Criado em (M):", rows[1][criadoEmIndex]);
+      console.log("Unidade (BU):", rows[1][unidadeIndex]);
+    }
+    
+    const processedData = rows.slice(1).map((row, index) => ({
       id: index + 1,
       titulo: row[tituloIndex] || '',
       criado_em: row[criadoEmIndex] || '',
       nm_unidade: row[unidadeIndex] || '',
       row_data: row
     })).filter(item => item.titulo && item.titulo.trim() !== '');
+    
+    console.log("Dados processados:", processedData.length, "registros válidos");
+    if (processedData.length > 0) {
+      console.log("Primeiro registro processado:", processedData[0]);
+      console.log("Amostra de títulos:", processedData.slice(0, 5).map(item => item.titulo));
+    }
+    
+    console.log("=== FIM fetchFunilData ===");
+    return processedData;
   } catch (error) {
-    console.error("Erro CRÍTICO ao buscar dados do funil:", error);
+    console.error("❌ Erro CRÍTICO ao buscar dados do funil:", error);
     return [];
   }
+  */
 }
 
 function processAndCrossReferenceData(salesData) {
@@ -2245,113 +2322,38 @@ function updateFundosDetalhadosTable(fundosData, selectedUnidades, startDate, en
 
 // --- FUNÇÃO PARA ATUALIZAR INDICADORES DO FUNIL ---
 function updateFunilIndicators(startDate, endDate, selectedUnidades) {
+    console.log("=== INÍCIO updateFunilIndicators ===");
+    console.log("funilData:", funilData);
+    
     if (!funilData || funilData.length === 0) {
-        console.log("Dados do funil não disponíveis");
-        // Mostrar zeros quando não há dados
+        console.log("❌ Sem dados do funil");
         document.getElementById("funil-total-leads").textContent = "0";
-        document.getElementById("funil-qualificados").textContent = "0";
-        document.getElementById("funil-propostas").textContent = "0";
-        document.getElementById("funil-propostas-enviadas").textContent = "0";
-        document.getElementById("funil-contratos-fechados").textContent = "0";
-        document.getElementById("funil-leads-perdidos").textContent = "0";
-        document.getElementById("funil-leads-desqualificados").textContent = "0";
         return;
     }
     
-    console.log("Dados do funil carregados:", funilData.length, "registros");
-    console.log("Unidades selecionadas:", selectedUnidades);
+    console.log("✅ Dados disponíveis:", funilData.length);
     
-    // Filtrar dados do funil pelo período selecionado e unidades
-    const dadosFiltrados = funilData.filter(item => {
-        // Filtro por título válido
-        if (!item.titulo || item.titulo.trim() === '') return false;
-        
-        // Filtro por unidade (similar ao usado no resto do dashboard)
-        const unidadeMatch = selectedUnidades.length === 0 || selectedUnidades.includes(item.nm_unidade);
-        if (!unidadeMatch) return false;
-        
-        // Filtro por data
-        if (!item.criado_em) return false;
-        
-        // Tentar diferentes formatos de data
-        let dataItem = null;
-        const criadoEm = item.criado_em.toString().trim();
-        
-        if (!criadoEm) return false;
-        
-        // Formato DD/MM/YYYY
-        if (criadoEm.includes('/')) {
-            const [dia, mes, ano] = criadoEm.split('/');
-            if (dia && mes && ano && ano.length === 4) {
-                dataItem = new Date(ano, mes - 1, dia);
-            }
-        }
-        // Formato YYYY-MM-DD
-        else if (criadoEm.includes('-') && criadoEm.length >= 10) {
-            dataItem = new Date(criadoEm);
-        }
-        // Formato MM/DD/YYYY (formato americano)
-        else if (criadoEm.match(/^\d{1,2}\/\d{1,2}\/\d{4}$/)) {
-            const [mes, dia, ano] = criadoEm.split('/');
-            if (dia && mes && ano && ano.length === 4) {
-                dataItem = new Date(ano, mes - 1, dia);
-            }
-        }
-        // Timestamp ou outros formatos
-        else {
-            dataItem = new Date(criadoEm);
-        }
-        
-        // Verificar se a data é válida e está no período
-        if (!dataItem || isNaN(dataItem.getTime())) return false;
-        
-        return dataItem >= startDate && dataItem < endDate;
-    });
-    
-    console.log(`Dados do funil filtrados: ${dadosFiltrados.length} de ${funilData.length} registros`);
-    
-    // Contar títulos únicos (leads únicos) - isso é o que realmente importa
+    // TESTE SIMPLES: contar todos os títulos únicos SEM FILTROS por enquanto
     const titulosUnicos = new Set();
-    dadosFiltrados.forEach(item => {
+    funilData.forEach(item => {
         if (item.titulo && item.titulo.trim() !== '') {
-            titulosUnicos.add(item.titulo.trim().toLowerCase());
+            titulosUnicos.add(item.titulo.trim());
         }
     });
     
     const totalLeads = titulosUnicos.size;
+    console.log("Total de leads únicos (sem filtros):", totalLeads);
     
-    console.log("Títulos únicos encontrados:", totalLeads);
-    console.log("Amostra dos títulos:", Array.from(titulosUnicos).slice(0, 5));
+    // Atualizar o card
+    document.getElementById("funil-total-leads").textContent = totalLeads.toString();
     
-    // Para os outros indicadores, vamos usar valores padrão baseados na proporção típica do funil
-    // Estes valores serão atualizados quando tivermos acesso aos dados reais da planilha com status/etapas
-    const qualificados = Math.floor(totalLeads * 0.42); // ~42% dos leads
-    const propostas = Math.floor(totalLeads * 0.16); // ~16% dos leads
-    const propostasEnviadas = Math.floor(totalLeads * 0.08); // ~8% dos leads
-    const contratosFechados = Math.floor(totalLeads * 0.01); // ~1% dos leads
-    const leadsPerdidos = Math.floor(totalLeads * 0.08); // ~8% dos leads
-    const leadsDesqualificados = Math.floor(totalLeads * 0.09); // ~9% dos leads
+    // Outros cards em 0 por enquanto
+    document.getElementById("funil-qualificados").textContent = "0";
+    document.getElementById("funil-propostas").textContent = "0";
+    document.getElementById("funil-propostas-enviadas").textContent = "0";
+    document.getElementById("funil-contratos-fechados").textContent = "0";
+    document.getElementById("funil-leads-perdidos").textContent = "0";
+    document.getElementById("funil-leads-desqualificados").textContent = "0";
     
-    // Atualizar os valores na interface
-    document.getElementById("funil-total-leads").textContent = totalLeads.toLocaleString('pt-BR');
-    document.getElementById("funil-qualificados").textContent = qualificados.toLocaleString('pt-BR');
-    document.getElementById("funil-propostas").textContent = propostas.toLocaleString('pt-BR');
-    document.getElementById("funil-propostas-enviadas").textContent = propostasEnviadas.toLocaleString('pt-BR');
-    document.getElementById("funil-contratos-fechados").textContent = contratosFechados.toLocaleString('pt-BR');
-    document.getElementById("funil-leads-perdidos").textContent = leadsPerdidos.toLocaleString('pt-BR');
-    document.getElementById("funil-leads-desqualificados").textContent = leadsDesqualificados.toLocaleString('pt-BR');
-    
-    console.log("Indicadores do funil atualizados:", {
-        totalLeads,
-        qualificados,
-        propostas,
-        propostasEnviadas,
-        contratosFechados,
-        leadsPerdidos,
-        leadsDesqualificados,
-        filtrosAplicados: {
-            periodo: `${startDate.toLocaleDateString('pt-BR')} - ${endDate.toLocaleDateString('pt-BR')}`,
-            unidades: selectedUnidades.length > 0 ? selectedUnidades : 'Todas'
-        }
-    });
+    console.log("Card atualizado com:", totalLeads);
 }
