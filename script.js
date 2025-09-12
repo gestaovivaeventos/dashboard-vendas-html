@@ -275,19 +275,6 @@ async function initializeDashboard() {
       populateFilters();
       addEventListeners();
       updateDashboard();
-      
-      // TESTE DIRETO DO FUNIL - FORÇAR ATUALIZAÇÃO
-      console.log("=== TESTE DIRETO DO FUNIL ===");
-      setTimeout(() => {
-        console.log("Testando atualização direta do card...");
-        const testElement = document.getElementById("funil-total-leads");
-        if (testElement) {
-          testElement.textContent = "999";
-          console.log("✅ Card atualizado com valor de teste");
-        } else {
-          console.error("❌ Elemento funil-total-leads não encontrado");
-        }
-      }, 2000);
     } else {
       loader.innerHTML = "Nenhum dado de vendas encontrado ou falha ao carregar.";
     }
