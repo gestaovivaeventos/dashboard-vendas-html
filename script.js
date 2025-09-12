@@ -1731,15 +1731,6 @@ function populateFilters(selectedUnidades = []) {
     console.log('allData length:', allData.length);
     console.log('fundosData length:', fundosData.length);
     
-    // Destruir instâncias existentes do multiselect
-    try {
-        $("#unidade-filter").multiselect('destroy');
-        $("#curso-filter").multiselect('destroy');
-        $("#fundo-filter").multiselect('destroy');
-    } catch(e) {
-        console.log("Multiselect não existia ainda:", e);
-    }
-
     const unidadeFilter = $("#unidade-filter");
     const cursoFilter = $("#curso-filter");
     const fundoFilter = $("#fundo-filter");
@@ -1765,77 +1756,44 @@ function populateFilters(selectedUnidades = []) {
         // Salva as seleções atuais antes de qualquer modificação
         const currentSelectedValues = unidadeFilter.val() || [];
         
+        // Sempre destroi e reconstrói para evitar problemas
+        try {
+            if (unidadeFilter.data('multiselect')) {
+                unidadeFilter.multiselect('destroy');
+            }
+        } catch (e) {
+            console.log('Erro ao destruir multiselect:', e);
+        }
+        
+        // Limpa e reconstrói as opções
+        unidadeFilter.empty();
+        
         // Verifica se estamos na página do funil para incluir "Sem unidade"
         const isFunilPage = document.getElementById('btn-page3')?.classList.contains('active') || 
                            document.getElementById('page3')?.classList.contains('active');
         
-        // Verifica o estado atual do filtro
-        const currentOptions = unidadeFilter.find('option').map(function() { return this.value; }).get();
-        const shouldIncludeSemuUnidade = isFunilPage && funilData && funilData.length > 0 && 
-                                        funilData.some(item => item.nm_unidade === 'Sem unidade');
-        const hasSemuUnidade = currentOptions.includes('Sem unidade');
+        const unidadesVendas = allData.map((d) => d.nm_unidade);
+        const unidadesFundos = fundosData.map((d) => d.nm_unidade);
+        const unidadesFunil = funilData ? funilData.map((d) => d.nm_unidade).filter(Boolean) : [];
         
-        console.log('populateFilters debug:', {
-            isFunilPage,
-            shouldIncludeSemuUnidade,
-            hasSemuUnidade,
-            currentOptionsLength: currentOptions.length,
-            needsRecreate: (shouldIncludeSemuUnidade && !hasSemuUnidade) || (!shouldIncludeSemuUnidade && hasSemuUnidade) || currentOptions.length === 0
-        });
+        // Combina todas as unidades: vendas, fundos E funil
+        const unidades = [...new Set([...unidadesVendas, ...unidadesFundos, ...unidadesFunil])].sort();
         
-        // Só recria o filtro se realmente necessário
-        const needsRecreate = (shouldIncludeSemuUnidade && !hasSemuUnidade) || 
-                             (!shouldIncludeSemuUnidade && hasSemuUnidade) || 
-                             currentOptions.length === 0;
-        
-        if (needsRecreate) {
-            console.log('Recriando filtro de unidades...');
-            
-            // Destroi cuidadosamente o multiselect atual
-            if (unidadeFilter.data('multiselect')) {
-                try {
-                    unidadeFilter.multiselect('destroy');
-                } catch (e) {
-                    console.warn('Erro ao destruir multiselect:', e);
-                }
-            }
-            
-            // Limpa e reconstrói as opções
-            unidadeFilter.empty();
-            
-            const unidadesVendas = allData.map((d) => d.nm_unidade);
-            const unidadesFundos = fundosData.map((d) => d.nm_unidade);
-            const unidadesFunil = funilData ? funilData.map((d) => d.nm_unidade).filter(Boolean) : [];
-            
-            // Combina todas as unidades: vendas, fundos E funil
-            const unidades = [...new Set([...unidadesVendas, ...unidadesFundos, ...unidadesFunil])].sort();
-            
-            console.log('🏢 Unidades encontradas:', {
-                vendas: [...new Set(unidadesVendas)].length,
-                fundos: [...new Set(unidadesFundos)].length,
-                funil: [...new Set(unidadesFunil)].length,
-                total: unidades.length,
-                lista: unidades
-            });
-            
-            if (shouldIncludeSemuUnidade && !unidades.includes('Sem unidade')) {
-                unidades.push('Sem unidade');
-                unidades.sort();
-            }
-            
-            unidades.forEach((u) => {
-                const isSelected = currentSelectedValues.includes(u);
-                unidadeFilter.append($("<option>", { 
-                    value: u, 
-                    text: u,
-                    selected: isSelected 
-                }));
-            });
-            
-            console.log('Filtro recriado com', unidades.length, 'opções');
-        } else {
-            console.log('Filtro não precisa ser recriado');
+        if (isFunilPage && funilData && funilData.some(item => item.nm_unidade === 'Sem unidade') && !unidades.includes('Sem unidade')) {
+            unidades.push('Sem unidade');
+            unidades.sort();
         }
+        
+        console.log('🏢 Criando filtro com unidades:', unidades.length);
+        
+        unidades.forEach((u) => {
+            const isSelected = currentSelectedValues.includes(u);
+            unidadeFilter.append($("<option>", { 
+                value: u, 
+                text: u,
+                selected: isSelected 
+            }));
+        });
 
         // Filtra os dados com base nas unidades selecionadas
         const unidadesFiltradas = selectedUnidades.length > 0 ? selectedUnidades : [
@@ -1867,122 +1825,125 @@ function populateFilters(selectedUnidades = []) {
             fundoFilter.append($("<option>", { value: f, text: f }));
         });
 
-        // Recria os multiselects apenas quando necessário
+        // Sempre inicializa os multiselects
         setTimeout(() => {
-            // Só recria o multiselect de unidades se foi realmente recriado
-            if (needsRecreate) {
-                console.log('Inicializando multiselect...');
-                
-                try {
-                    unidadeFilter.multiselect({
-                        enableFiltering: true,
-                        includeSelectAllOption: true,
-                        selectAllText: "Marcar todos",
-                        filterPlaceholder: "Pesquisar...",
-                        nonSelectedText: "Todas as unidades",
-                        nSelectedText: "unidades",
-                        allSelectedText: "Todas selecionadas",
-                        buttonWidth: "100%",
-                        maxHeight: 300,
-                        onChange: function(option, checked) {
-                            console.log('Unidade onChange triggered:', option.val(), checked);
-                            const selectedOptions = $('#unidade-filter').val() || [];
-                            console.log('Selected unidades:', selectedOptions);
-                            updateDependentFilters(selectedOptions);
-                            updateDashboard();
-                        },
-                        onSelectAll: function() {
-                            console.log('Unidade onSelectAll triggered');
-                            const selectedOptions = $('#unidade-filter').val() || [];
-                            console.log('All selected unidades:', selectedOptions);
-                            updateDependentFilters(selectedOptions);
-                            updateDashboard();
-                        },
-                        onDeselectAll: function() {
-                            console.log('Unidade onDeselectAll triggered');
-                            updateDependentFilters([]);
-                            updateDashboard();
-                        },
-                        enableCaseInsensitiveFiltering: true,
-                        filterBehavior: 'text',
-                        dropUp: false,
-                        dropRight: false,
-                        widthSynchronizationMode: 'ifPopupIsSmaller',
-                        closeOnSelect: false,
-                        templates: {
-                            ul: '<ul class="multiselect-container dropdown-menu" style="width: auto; min-width: 100%;"></ul>'
-                        }
-                    });
-                    
-                    // Restaura as seleções após inicializar o multiselect
-                    if (currentSelectedValues.length > 0) {
-                        console.log('Restaurando seleções:', currentSelectedValues);
-                        unidadeFilter.multiselect('select', currentSelectedValues);
+            console.log('Inicializando todos os multiselects...');
+            
+            // UNIDADES
+            try {
+                unidadeFilter.multiselect({
+                    enableFiltering: true,
+                    includeSelectAllOption: true,
+                    selectAllText: "Marcar todos",
+                    filterPlaceholder: "Pesquisar...",
+                    nonSelectedText: "Todas as unidades",
+                    nSelectedText: "unidades",
+                    allSelectedText: "Todas selecionadas",
+                    buttonWidth: "100%",
+                    maxHeight: 300,
+                    onChange: function(option, checked) {
+                        console.log('Unidade onChange triggered:', option.val(), checked);
+                        const selectedOptions = $('#unidade-filter').val() || [];
+                        console.log('Selected unidades:', selectedOptions);
+                        updateDependentFilters(selectedOptions);
+                        updateDashboard();
+                    },
+                    onSelectAll: function() {
+                        console.log('Unidade onSelectAll triggered');
+                        const selectedOptions = $('#unidade-filter').val() || [];
+                        updateDependentFilters(selectedOptions);
+                        updateDashboard();
+                    },
+                    onDeselectAll: function() {
+                        console.log('Unidade onDeselectAll triggered');
+                        updateDependentFilters([]);
+                        updateDashboard();
+                    },
+                    enableCaseInsensitiveFiltering: true,
+                    filterBehavior: 'text',
+                    dropUp: false,
+                    dropRight: false,
+                    widthSynchronizationMode: 'ifPopupIsSmaller',
+                    closeOnSelect: false,
+                    templates: {
+                        ul: '<ul class="multiselect-container dropdown-menu" style="width: auto; min-width: 100%;"></ul>'
                     }
-                    
-                    console.log('Multiselect inicializado com sucesso');
-                    
-                } catch (error) {
-                    console.error('Erro ao inicializar multiselect:', error);
+                });
+                
+                if (currentSelectedValues.length > 0) {
+                    unidadeFilter.multiselect('select', currentSelectedValues);
                 }
-            } else {
-                console.log('Multiselect não precisou ser recriado');
+                
+                console.log('Multiselect de unidades inicializado com sucesso');
+            } catch (error) {
+                console.error('Erro ao inicializar multiselect de unidades:', error);
+            }
+
+            // CURSOS
+            try {
+                cursoFilter.multiselect({
+                    enableFiltering: true,
+                    includeSelectAllOption: true,
+                    selectAllText: "Marcar todos",
+                    filterPlaceholder: "Pesquisar...",
+                    nonSelectedText: "Todos os cursos",
+                    nSelectedText: "cursos",
+                    allSelectedText: "Todos selecionados",
+                    buttonWidth: "100%",
+                    maxHeight: 300,
+                    onChange: updateDashboard,
+                    onSelectAll: updateDashboard,
+                    onDeselectAll: updateDashboard,
+                    enableCaseInsensitiveFiltering: true,
+                    filterBehavior: 'text',
+                    dropUp: false,
+                    dropRight: false,
+                    widthSynchronizationMode: 'ifPopupIsSmaller',
+                    templates: {
+                        button: '<button type="button" class="multiselect dropdown-toggle" data-toggle="dropdown"><span class="multiselect-selected-text"></span></button>',
+                        ul: '<ul class="multiselect-container dropdown-menu" style="width: auto; min-width: 100%;"></ul>'
+                    }
+                });
+                
+                console.log('Multiselect de cursos inicializado com sucesso');
+            } catch (error) {
+                console.error('Erro ao inicializar multiselect de cursos:', error);
+            }
+
+            // FUNDOS
+            try {
+                fundoFilter.multiselect({
+                    enableFiltering: true,
+                    includeSelectAllOption: true,
+                    selectAllText: "Marcar todos",
+                    filterPlaceholder: "Pesquisar...",
+                    nonSelectedText: "Todos os fundos",
+                    nSelectedText: "fundos",
+                    allSelectedText: "Todos selecionados",
+                    buttonWidth: "100%",
+                    maxHeight: 300,
+                    onChange: updateDashboard,
+                    onSelectAll: updateDashboard,
+                    onDeselectAll: updateDashboard,
+                    enableCaseInsensitiveFiltering: true,
+                    filterBehavior: 'text',
+                    dropUp: false,
+                    dropRight: false,
+                    widthSynchronizationMode: 'ifPopupIsSmaller',
+                    closeOnSelect: false,
+                    templates: {
+                        button: '<button type="button" class="multiselect dropdown-toggle" data-toggle="dropdown"><span class="multiselect-selected-text"></span></button>',
+                        ul: '<ul class="multiselect-container dropdown-menu" style="width: auto; min-width: 100%;"></ul>',
+                        filter: '<li class="multiselect-item filter"><div class="input-group"><input class="form-control multiselect-search" type="text"></div></li>',
+                        filterClearBtn: '<span class="input-group-btn"><button class="btn btn-default multiselect-clear-filter" type="button"><i class="fas fa-times"></i></button></span>'
+                    }
+                });
+                
+                console.log('Multiselect de fundos inicializado com sucesso');
+            } catch (error) {
+                console.error('Erro ao inicializar multiselect de fundos:', error);
             }
         }, 50);
-
-        cursoFilter.multiselect({
-            enableFiltering: true,
-            includeSelectAllOption: true,
-            selectAllText: "Marcar todos",
-            filterPlaceholder: "Pesquisar...",
-            nonSelectedText: "Todos os cursos",
-            nSelectedText: "cursos",
-            allSelectedText: "Todos selecionados",
-            buttonWidth: "100%",
-            maxHeight: 300,
-            onChange: updateDashboard,
-            onSelectAll: updateDashboard,
-            onDeselectAll: updateDashboard,
-            enableCaseInsensitiveFiltering: true,
-            filterBehavior: 'text',
-            dropUp: false,
-            dropRight: false,
-            widthSynchronizationMode: 'ifPopupIsSmaller',
-            templates: {
-                button: '<button type="button" class="multiselect dropdown-toggle" data-toggle="dropdown"><span class="multiselect-selected-text"></span></button>',
-                ul: '<ul class="multiselect-container dropdown-menu" style="width: auto; min-width: 100%;"></ul>'
-            }
-        });
-
-
-
-        // Inicialização do multiselect para fundos
-        fundoFilter.multiselect({
-            enableFiltering: true,
-            includeSelectAllOption: true,
-            selectAllText: "Marcar todos",
-            filterPlaceholder: "Pesquisar...",
-            nonSelectedText: "Todos os fundos",
-            nSelectedText: "fundos",
-            allSelectedText: "Todos selecionados",
-            buttonWidth: "100%",
-            maxHeight: 300,
-            onChange: updateDashboard,
-            onSelectAll: updateDashboard,
-            onDeselectAll: updateDashboard,
-            enableCaseInsensitiveFiltering: true,
-            filterBehavior: 'text',
-            dropUp: false,
-            dropRight: false,
-            widthSynchronizationMode: 'ifPopupIsSmaller',
-            closeOnSelect: false,
-            templates: {
-                button: '<button type="button" class="multiselect dropdown-toggle" data-toggle="dropdown"><span class="multiselect-selected-text"></span></button>',
-                ul: '<ul class="multiselect-container dropdown-menu" style="width: auto; min-width: 100%;"></ul>',
-                filter: '<li class="multiselect-item filter"><div class="input-group"><input class="form-control multiselect-search" type="text"></div></li>',
-                filterClearBtn: '<span class="input-group-btn"><button class="btn btn-default multiselect-clear-filter" type="button"><i class="fas fa-times"></i></button></span>'
-            }
-        });
 
     } else if (Array.isArray(userAccessLevel)) {
         // CENÁRIO 2: MULTI-FRANQUEADO (vê apenas as suas unidades, mas pode selecionar)
