@@ -1568,6 +1568,11 @@ function addEventListeners() {
             this.classList.add("active");
             document.querySelectorAll(".page-content").forEach((page) => page.classList.remove("active"));
             document.getElementById(this.dataset.page).classList.add("active");
+            
+            // Recarrega os filtros quando muda de página para ajustar "Sem unidade"
+            if (userAccessLevel === "ALL_UNITS") {
+                populateFilters();
+            }
         });
     });
 
@@ -1742,11 +1747,33 @@ function populateFilters(selectedUnidades = []) {
     fundoFilter.empty();
 
     if (userAccessLevel === "ALL_UNITS") {
-        // Popula o filtro de unidades apenas uma vez
-        if (unidadeFilter.find('option').length === 0) {
+        // Verifica se estamos na página do funil para incluir "Sem unidade"
+        const isFunilPage = document.getElementById('btn-page3')?.classList.contains('active') || 
+                           document.getElementById('page3')?.classList.contains('active');
+        
+        // Popula o filtro de unidades (recria se necessário para incluir/excluir "Sem unidade")
+        const currentOptions = unidadeFilter.find('option').map(function() { return this.value; }).get();
+        const shouldIncludeSemuUnidade = isFunilPage && funilData && funilData.length > 0 && 
+                                        funilData.some(item => item.nm_unidade === 'Sem unidade');
+        const hasSemuUnidade = currentOptions.includes('Sem unidade');
+        
+        // Recria o filtro se precisar adicionar ou remover "Sem unidade"
+        if ((shouldIncludeSemuUnidade && !hasSemuUnidade) || (!shouldIncludeSemuUnidade && hasSemuUnidade) || currentOptions.length === 0) {
+            // Destroi o multiselect atual se existir
+            if (unidadeFilter.data('multiselect')) {
+                unidadeFilter.multiselect('destroy');
+            }
+            unidadeFilter.empty();
+            
             const unidadesVendas = allData.map((d) => d.nm_unidade);
             const unidadesFundos = fundosData.map((d) => d.nm_unidade);
             const unidades = [...new Set([...unidadesVendas, ...unidadesFundos])].sort();
+            
+            if (shouldIncludeSemuUnidade && !unidades.includes('Sem unidade')) {
+                unidades.push('Sem unidade');
+                unidades.sort();
+            }
+            
             unidades.forEach((u) => {
                 unidadeFilter.append($("<option>", { value: u, text: u }));
             });
