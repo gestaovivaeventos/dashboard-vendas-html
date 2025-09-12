@@ -2762,6 +2762,14 @@ function updateFunilIndicators(startDate, endDate, selectedUnidades) {
     // PASSO 9: Calcular e atualizar o card "Leads Perdidos"
     // Regra complexa: Leads na fase 7.2 Perdido, mas com várias condições de descarte
     
+    // Primeiro, vamos ver o que temos na coluna fase_perdido
+    console.log("🔍 Analisando coluna fase_perdido nos primeiros 10 registros:");
+    dadosFinaisFiltrados.slice(0, 10).forEach((item, index) => {
+        if (item.fase_perdido && item.fase_perdido.trim() !== '') {
+            console.log(`  ${index + 1}. Título: "${item.titulo}" | Fase Perdido: "${item.fase_perdido}" | Motivo: "${item.concat_motivo_perda}"`);
+        }
+    });
+    
     // Função auxiliar para aplicar as regras do campo auxiliar
     const getCampoAuxiliar = (concatMotivoPerda) => {
         if (!concatMotivoPerda || concatMotivoPerda.trim() === '') return '';
@@ -2803,13 +2811,18 @@ function updateFunilIndicators(startDate, endDate, selectedUnidades) {
     const leadsComFasePerdido = dadosFinaisFiltrados.filter(item => {
         if (!item.titulo || item.titulo.trim() === '') return false; // tem título válido
         
-        // 1. Verificar se está na fase 7.2 Perdido
-        const estaNaFasePerdido = item.fase_perdido && item.fase_perdido.trim() !== '';
+        // 1. Verificar se está realmente na fase 7.2 Perdido
+        // A fase perdido deve conter explicitamente "7.2" ou "Perdido"
+        const estaNaFasePerdido = item.fase_perdido && 
+                                 item.fase_perdido.trim() !== '' && 
+                                 (item.fase_perdido.includes("7.2") || 
+                                  item.fase_perdido.toLowerCase().includes("perdido"));
+        
         if (!estaNaFasePerdido) {
             return false;
         }
         
-        // 2. Descartar se CONCAT MOTIVO PERDA estiver vazio
+        // 2. Deve ter motivo da perda preenchido
         if (!item.concat_motivo_perda || item.concat_motivo_perda.trim() === '') {
             console.log("❌ Lead perdido descartado (motivo vazio):", {
                 titulo: item.titulo,
