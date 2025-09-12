@@ -407,7 +407,7 @@ body {
         /* Estilos para os indicadores do funil */
         .funil-indicators-grid {
             display: grid;
-            grid-template-columns: repeat(5, 1fr);
+            grid-template-columns: repeat(6, 1fr);
             grid-template-rows: auto auto;
             gap: 20px;
             grid-column: span 12;
@@ -432,18 +432,20 @@ body {
             border-color: #6c757d;
         }
 
-        .funil-card-wide {
-            grid-column: span 2;
-            /* Centralizando os cards da linha inferior */
-        }
+        /* Cards da linha superior - cada um ocupa 1 coluna do grid de 6 */
+        .funil-indicator-card:nth-of-type(1) { grid-column: 1; }
+        .funil-indicator-card:nth-of-type(2) { grid-column: 2; }
+        .funil-indicator-card:nth-of-type(3) { grid-column: 3; }
+        .funil-indicator-card:nth-of-type(4) { grid-column: 4; }
+        .funil-indicator-card:nth-of-type(5) { grid-column: 5; }
 
-        /* Cards da linha inferior centralizados */
+        /* Cards da linha inferior centralizados na área destacada */
         .funil-card-wide:nth-of-type(6) {
-            grid-column: 2 / span 2; /* Starts at column 2, spans 2 columns */
+            grid-column: 2 / span 2; /* Centralizado à esquerda */
         }
 
         .funil-card-wide:nth-of-type(7) {
-            grid-column: 4 / span 2; /* Starts at column 4, spans 2 columns */
+            grid-column: 4 / span 2; /* Centralizado à direita */
         }
 
         .funil-card-highlight {
