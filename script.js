@@ -34,7 +34,7 @@ const METAS_SHEET_NAME = "metas";
 
 // --- CONFIGURAÇÕES DA PLANILHA DO FUNIL ---
 const FUNIL_SPREADSHEET_ID = "1t67xdPLHB34pZw8WzBUphGRqFye0ZyrTLvDhC7jbVEc";
-const FUNIL_SHEET_NAME = "BASE"; // Tentando com o nome padrão primeiro
+const FUNIL_SHEET_NAME = "base"; // Nome correto da aba (minúscula)
 
 // --- NOVO: CONFIGURAÇÕES DA PLANILHA DE ACESSO ---
 const ACCESS_CONTROL_SPREADSHEET_ID = "1QEsm1u0LDY_-8y_EWgifzUHJCHoz3_VOoUOSXuJZzSM";
@@ -538,9 +538,22 @@ async function fetchFunilData() {
     console.log("Primeira linha completa:", rows[0]);
     
     // Encontrar índices das colunas importantes
-    const tituloIndex = 0; // Coluna A
-    const criadoEmIndex = 12; // Coluna M (índice 12)
-    const unidadeIndex = 72; // Coluna BU (índice 72 - BU é a 73ª coluna)
+    const tituloIndex = 0; // Coluna A - Título
+    const criadoEmIndex = 12; // Coluna M - Data criação
+    
+    // Vamos procurar a coluna nm_unidade dinamicamente no header
+    let unidadeIndex = -1;
+    headers.forEach((header, index) => {
+      if (header && (header.toLowerCase().includes('nm_unidade') || header.toLowerCase().includes('unidade'))) {
+        unidadeIndex = index;
+        console.log(`✅ Coluna unidade encontrada: "${header}" no índice ${index}`);
+      }
+    });
+    
+    if (unidadeIndex === -1) {
+      console.warn("⚠️ Coluna nm_unidade não encontrada, tentando índice 72 como fallback");
+      unidadeIndex = 72;
+    }
     
     console.log("Índices - Título:", tituloIndex, "Criado em:", criadoEmIndex, "Unidade:", unidadeIndex);
     
@@ -562,7 +575,24 @@ async function fetchFunilData() {
     console.log("Dados processados:", processedData.length, "registros válidos");
     if (processedData.length > 0) {
       console.log("Primeiro registro processado:", processedData[0]);
-      console.log("Amostra de títulos:", processedData.slice(0, 5).map(item => item.titulo));
+      
+      // Debug: mostrar todas as unidades encontradas
+      const unidadesEncontradas = [...new Set(processedData.map(item => item.nm_unidade).filter(Boolean))];
+      console.log("🏢 Unidades encontradas na planilha:", unidadesEncontradas);
+      
+      // Debug: contar por unidade
+      const contadorPorUnidade = {};
+      processedData.forEach(item => {
+        const unidade = item.nm_unidade || 'SEM_UNIDADE';
+        contadorPorUnidade[unidade] = (contadorPorUnidade[unidade] || 0) + 1;
+      });
+      console.log("📊 Contagem por unidade:", contadorPorUnidade);
+      
+      console.log("Amostra de títulos:", processedData.slice(0, 3).map(item => ({
+        titulo: item.titulo,
+        unidade: item.nm_unidade,
+        criado_em: item.criado_em
+      })));
     }
     
     console.log("=== FIM fetchFunilData ===");
@@ -2319,7 +2349,7 @@ function updateFunilIndicators(startDate, endDate, selectedUnidades) {
     console.log("- startDate:", startDate);
     console.log("- endDate:", endDate);
     console.log("- selectedUnidades:", selectedUnidades);
-    console.log("- funilData:", funilData ? funilData.length : 0, "registros");
+    console.log("- funilData total:", funilData ? funilData.length : 0, "registros");
     
     if (!funilData || funilData.length === 0) {
         console.log("❌ Sem dados do funil para processar");
@@ -2335,51 +2365,53 @@ function updateFunilIndicators(startDate, endDate, selectedUnidades) {
     }
     
     console.log("✅ Dados disponíveis:", funilData.length, "registros");
-    console.log("Amostra dos dados:", funilData.slice(0, 3));
     
-    // Função para converter data DD/MM/YYYY para objeto Date
-    const parseDate = (dateString) => {
-        if (!dateString || typeof dateString !== 'string') return null;
-        const parts = dateString.match(/(\d{2})\/(\d{2})\/(\d{4})/);
-        if (parts) {
-            return new Date(parts[3], parts[2] - 1, parts[1]); // ano, mês-1, dia
-        }
-        return null;
-    };
+    // LÓGICA SIMPLES: filtrar por unidade e contar linhas
+    let dadosParaContar = funilData;
     
-    // Filtrar dados por período e unidade
-    const dadosFiltrados = funilData.filter(item => {
-        // Filtro por data
-        if (item.criado_em) {
-            const dataItem = parseDate(item.criado_em);
-            if (dataItem && (dataItem < startDate || dataItem >= endDate)) {
+    // Se tem unidades selecionadas, filtrar por elas
+    if (selectedUnidades && selectedUnidades.length > 0) {
+        console.log("🔍 Filtrando por unidades:", selectedUnidades);
+        
+        dadosParaContar = funilData.filter(item => {
+            // Verificar se tem nm_unidade e se está nas unidades selecionadas
+            const unidadeItem = item.nm_unidade;
+            if (!unidadeItem) {
+                console.log("⚠️ Item sem unidade:", item);
                 return false;
             }
-        }
-        
-        // Filtro por unidade (se selecionadas)
-        if (selectedUnidades.length > 0 && item.nm_unidade) {
-            if (!selectedUnidades.includes(item.nm_unidade)) {
-                return false;
+            
+            const pertenceUnidade = selectedUnidades.includes(unidadeItem);
+            if (pertenceUnidade) {
+                console.log("✅ Item incluído:", {
+                    titulo: item.titulo,
+                    unidade: item.nm_unidade,
+                    criado_em: item.criado_em
+                });
             }
-        }
+            return pertenceUnidade;
+        });
         
-        // Filtro básico: deve ter título
+        console.log("Dados após filtro de unidade:", dadosParaContar.length, "registros");
+    } else {
+        console.log("📊 Contando todos os registros (sem filtro de unidade)");
+    }
+    
+    // CONTAR LINHAS com título válido (não vazio)
+    const leadsValidos = dadosParaContar.filter(item => {
         return item.titulo && item.titulo.trim() !== '';
     });
     
-    console.log("Dados após filtros:", dadosFiltrados.length, "registros");
+    const totalLeads = leadsValidos.length;
+    console.log("📊 Total de leads (linhas) encontrados:", totalLeads);
     
-    // Contar títulos únicos nos dados filtrados
-    const titulosUnicos = new Set();
-    dadosFiltrados.forEach(item => {
-        if (item.titulo && item.titulo.trim() !== '') {
-            titulosUnicos.add(item.titulo.trim());
-        }
-    });
-    
-    const totalLeads = titulosUnicos.size;
-    console.log("Total de leads únicos (com filtros):", totalLeads);
+    // Mostrar amostra dos dados contados
+    if (leadsValidos.length > 0) {
+        console.log("🔍 Amostra dos leads contados:");
+        leadsValidos.slice(0, 5).forEach((item, index) => {
+            console.log(`  ${index + 1}. Título: "${item.titulo}" | Unidade: "${item.nm_unidade}" | Criado: "${item.criado_em}"`);
+        });
+    }
     
     // Atualizar o card principal
     const cardElement = document.getElementById("funil-total-leads");
@@ -2390,7 +2422,7 @@ function updateFunilIndicators(startDate, endDate, selectedUnidades) {
         console.error("❌ Elemento 'funil-total-leads' não encontrado");
     }
     
-    // Por enquanto, outros cards ficam zerados (aguardando implementação específica)
+    // Por enquanto, outros cards ficam zerados
     const otherCards = [
         "funil-qualificados", "funil-propostas", "funil-propostas-enviadas",
         "funil-contratos-fechados", "funil-leads-perdidos", "funil-leads-desqualificados"
