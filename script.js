@@ -1805,7 +1805,18 @@ function populateFilters(selectedUnidades = []) {
             
             const unidadesVendas = allData.map((d) => d.nm_unidade);
             const unidadesFundos = fundosData.map((d) => d.nm_unidade);
-            const unidades = [...new Set([...unidadesVendas, ...unidadesFundos])].sort();
+            const unidadesFunil = funilData ? funilData.map((d) => d.nm_unidade).filter(Boolean) : [];
+            
+            // Combina todas as unidades: vendas, fundos E funil
+            const unidades = [...new Set([...unidadesVendas, ...unidadesFundos, ...unidadesFunil])].sort();
+            
+            console.log('🏢 Unidades encontradas:', {
+                vendas: [...new Set(unidadesVendas)].length,
+                fundos: [...new Set(unidadesFundos)].length,
+                funil: [...new Set(unidadesFunil)].length,
+                total: unidades.length,
+                lista: unidades
+            });
             
             if (shouldIncludeSemuUnidade && !unidades.includes('Sem unidade')) {
                 unidades.push('Sem unidade');
@@ -1827,7 +1838,13 @@ function populateFilters(selectedUnidades = []) {
         }
 
         // Filtra os dados com base nas unidades selecionadas
-        const unidadesFiltradas = selectedUnidades.length > 0 ? selectedUnidades : [...new Set(allData.map(d => d.nm_unidade), ...fundosData.map(d => d.nm_unidade))];
+        const unidadesFiltradas = selectedUnidades.length > 0 ? selectedUnidades : [
+            ...new Set([
+                ...allData.map(d => d.nm_unidade),
+                ...fundosData.map(d => d.nm_unidade),
+                ...(funilData ? funilData.map(d => d.nm_unidade).filter(Boolean) : [])
+            ])
+        ];
         
         const dadosFiltrados = allData.filter(d => unidadesFiltradas.includes(d.nm_unidade));
         const fundosFiltrados = fundosData.filter(d => unidadesFiltradas.includes(d.nm_unidade));
@@ -2525,6 +2542,25 @@ function updateFunilIndicators(startDate, endDate, selectedUnidades) {
     if (selectedUnidades && selectedUnidades.length > 0) {
         console.log("🔍 Filtrando por unidades:", selectedUnidades);
         
+        // Verifica se estamos na página do funil para incluir todas as unidades do funil
+        const isFunilPage = document.getElementById('btn-page3')?.classList.contains('active') || 
+                           document.getElementById('page3')?.classList.contains('active');
+        
+        let unidadesParaFiltro = [...selectedUnidades];
+        
+        if (isFunilPage && funilData) {
+            // Na página do funil, adiciona todas as unidades do funil às unidades permitidas
+            const unidadesFunil = [...new Set(funilData.map(d => d.nm_unidade).filter(Boolean))];
+            unidadesParaFiltro = [...new Set([...selectedUnidades, ...unidadesFunil])];
+            
+            console.log("🏢 Página do funil: incluindo unidades do funil:", {
+                selecionadas: selectedUnidades.length,
+                doFunil: unidadesFunil.length,
+                total: unidadesParaFiltro.length,
+                unidadesFunil: unidadesFunil
+            });
+        }
+        
         dadosFinaisFiltrados = dadosFiltradosPorData.filter(item => {
             const unidadeItem = item.nm_unidade;
             if (!unidadeItem) {
@@ -2532,7 +2568,16 @@ function updateFunilIndicators(startDate, endDate, selectedUnidades) {
                 return false;
             }
             
-            const pertenceUnidade = selectedUnidades.includes(unidadeItem);
+            const pertenceUnidade = unidadesParaFiltro.includes(unidadeItem);
+            
+            if (!pertenceUnidade) {
+                console.log("❌ Unidade não está no filtro:", {
+                    titulo: item.titulo,
+                    unidade: unidadeItem,
+                    unidadesPermitidas: unidadesParaFiltro
+                });
+            }
+            
             return pertenceUnidade;
         });
         
