@@ -3064,7 +3064,11 @@ function updateCaptacoesTable(dados) {
     // Limpar tabela
     tbody.innerHTML = '';
     
-    // Encontrar valores min e max para o mapa de calor
+    // Calcular totais para a linha de resumo
+    const totalAbsoluto = dados.reduce((sum, item) => sum + item.total, 0);
+    const totalPercentual = dados.reduce((sum, item) => sum + item.percentual, 0);
+    
+    // Encontrar valores min e max para o mapa de calor (excluindo o total)
     const percentuais = dados.map(item => item.percentual);
     const maxPercent = Math.max(...percentuais);
     const minPercent = Math.min(...percentuais);
@@ -3079,7 +3083,7 @@ function updateCaptacoesTable(dados) {
         return 'heat-high';
     }
     
-    // Preencher tabela
+    // Preencher tabela com dados
     dados.forEach(item => {
         const tr = document.createElement('tr');
         
@@ -3093,7 +3097,22 @@ function updateCaptacoesTable(dados) {
         tbody.appendChild(tr);
     });
     
-    console.log("✅ Tabela de captações atualizada com", dados.length, "itens");
+    // Adicionar linha de resumo/total
+    const trTotal = document.createElement('tr');
+    trTotal.style.borderTop = '2px solid #ffc107';
+    trTotal.style.fontWeight = 'bold';
+    trTotal.style.backgroundColor = 'rgba(255, 193, 7, 0.1)';
+    
+    trTotal.innerHTML = `
+        <td style="text-align: center; color: #ffc107;">TOTAL GERAL</td>
+        <td style="text-align: center; color: #ffc107;">-</td>
+        <td style="text-align: center; color: #ffc107; background-color: rgba(255, 193, 7, 0.2);">${totalPercentual.toFixed(1)}%</td>
+        <td style="text-align: center; color: #ffc107; background-color: rgba(255, 193, 7, 0.2);">${totalAbsoluto}</td>
+    `;
+    
+    tbody.appendChild(trTotal);
+    
+    console.log("✅ Tabela de captações atualizada com", dados.length, "itens + linha de resumo");
 }
 
 // Variável global para armazenar a instância do gráfico
@@ -3131,7 +3150,7 @@ function updateCaptacoesChart(dados) {
     captacoesChartInstance = new Chart(ctx, {
         type: 'pie',
         data: {
-            labels: labels.map((label, index) => `${label} (${dados[index].percentual}%)`),
+            labels: labels, // Sem percentuais na legenda
             datasets: [{
                 data: valores,
                 backgroundColor: backgroundColor,
@@ -3158,7 +3177,7 @@ function updateCaptacoesChart(dados) {
                                 return data.labels.map((label, index) => {
                                     const dataset = data.datasets[0];
                                     return {
-                                        text: label,
+                                        text: label, // Apenas o nome do tipo
                                         fillStyle: dataset.backgroundColor[index],
                                         strokeStyle: dataset.borderColor,
                                         lineWidth: dataset.borderWidth,
@@ -3184,9 +3203,21 @@ function updateCaptacoesChart(dados) {
                             return `${item.tipo}: ${item.total} leads (${item.percentual}%)`;
                         }
                     }
+                },
+                datalabels: {
+                    color: '#2c3e50',
+                    font: {
+                        weight: 'bold',
+                        size: 14
+                    },
+                    formatter: function(value, context) {
+                        const percentual = dados[context.dataIndex].percentual;
+                        return `${percentual}%`;
+                    }
                 }
             }
-        }
+        },
+        plugins: [ChartDataLabels] // Plugin para exibir percentuais nas fatias
     });
     
     console.log("✅ Gráfico de captações atualizado com", dados.length, "categorias");
