@@ -568,6 +568,7 @@ async function fetchFunilData() {
     console.log("=== FIM fetchFunilData ===");
     return processedData;
   
+  /* CÓDIGO ORIGINAL COMENTADO TEMPORARIAMENTE
   console.log("FUNIL_SPREADSHEET_ID:", FUNIL_SPREADSHEET_ID);
   console.log("FUNIL_SHEET_NAME:", FUNIL_SHEET_NAME);
   console.log("API_KEY existe:", !!API_KEY);
@@ -576,6 +577,63 @@ async function fetchFunilData() {
     console.error("❌ Configurações da planilha do funil incompletas.");
     return [];
   }
+  
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${FUNIL_SPREADSHEET_ID}/values/${FUNIL_SHEET_NAME}?key=${API_KEY}`;
+  console.log("URL da API:", url);
+  
+  try {
+    console.log("Fazendo requisição para a API...");
+    const response = await fetch(url);
+    console.log("Status da resposta:", response.status);
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("❌ Erro API Google Sheets para funil:", errorData);
+      return [];
+    }
+    
+    const data = await response.json();
+    console.log("Dados recebidos da API:", data);
+    
+    const rows = data.values || [];
+    console.log("Número de linhas recebidas:", rows.length);
+    
+    if (rows.length === 0) {
+      console.log("❌ Nenhuma linha encontrada na planilha");
+      return [];
+    }
+    
+    const headers = rows[0];
+    console.log("Headers da planilha:", headers);
+    console.log("Primeira linha completa:", rows[0]);
+    
+    // Encontrar índices das colunas importantes
+    const tituloIndex = 0; // Coluna A
+    const criadoEmIndex = 12; // Coluna M (índice 12)
+    const unidadeIndex = 72; // Coluna BU (índice 72 - BU é a 73ª coluna)
+    
+    console.log("Índices - Título:", tituloIndex, "Criado em:", criadoEmIndex, "Unidade:", unidadeIndex);
+    
+    if (rows.length > 1) {
+      console.log("Segunda linha como exemplo:", rows[1]);
+      console.log("Título (A):", rows[1][tituloIndex]);
+      console.log("Criado em (M):", rows[1][criadoEmIndex]);
+      console.log("Unidade (BU):", rows[1][unidadeIndex]);
+    }
+    
+    const processedData = rows.slice(1).map((row, index) => ({
+      id: index + 1,
+      titulo: row[tituloIndex] || '',
+      criado_em: row[criadoEmIndex] || '',
+      nm_unidade: row[unidadeIndex] || '',
+      row_data: row
+    })).filter(item => item.titulo && item.titulo.trim() !== '');
+    
+    console.log("Dados processados:", processedData.length, "registros válidos");
+    if (processedData.length > 0) {
+      console.log("Primeiro registro processado:", processedData[0]);
+      console.log("Amostra de títulos:", processedData.slice(0, 5).map(item => item.titulo));
+    }
     
     console.log("=== FIM fetchFunilData ===");
     return processedData;
