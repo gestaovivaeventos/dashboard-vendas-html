@@ -407,7 +407,7 @@ body {
         /* Estilos para os indicadores do funil */
         .funil-indicators-grid {
             display: grid;
-            grid-template-columns: repeat(6, 1fr);
+            grid-template-columns: repeat(10, 1fr); /* Grid de 10 colunas para melhor controle */
             grid-template-rows: auto auto;
             gap: 20px;
             grid-column: span 12;
@@ -432,20 +432,20 @@ body {
             border-color: #6c757d;
         }
 
-        /* Cards da linha superior - cada um ocupa 1 coluna do grid de 6 */
-        .funil-indicator-card:nth-of-type(1) { grid-column: 1; }
-        .funil-indicator-card:nth-of-type(2) { grid-column: 2; }
-        .funil-indicator-card:nth-of-type(3) { grid-column: 3; }
-        .funil-indicator-card:nth-of-type(4) { grid-column: 4; }
-        .funil-indicator-card:nth-of-type(5) { grid-column: 5; }
+        /* Cards da linha superior - cada um ocupa 2 colunas do grid de 10 */
+        .funil-indicator-card:nth-of-type(1) { grid-column: 1 / span 2; }
+        .funil-indicator-card:nth-of-type(2) { grid-column: 3 / span 2; }
+        .funil-indicator-card:nth-of-type(3) { grid-column: 5 / span 2; }
+        .funil-indicator-card:nth-of-type(4) { grid-column: 7 / span 2; }
+        .funil-indicator-card:nth-of-type(5) { grid-column: 9 / span 2; }
 
-        /* Cards da linha inferior centralizados na área destacada */
+        /* Cards da linha inferior centralizados */
         .funil-card-wide:nth-of-type(6) {
-            grid-column: 2 / span 2; /* Centralizado à esquerda */
+            grid-column: 2 / span 3; /* 3 colunas, posicionado no centro-esquerda */
         }
 
         .funil-card-wide:nth-of-type(7) {
-            grid-column: 4 / span 2; /* Centralizado à direita */
+            grid-column: 6 / span 3; /* 3 colunas, posicionado no centro-direita */
         }
 
         .funil-card-highlight {
