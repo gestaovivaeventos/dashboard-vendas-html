@@ -526,11 +526,13 @@ async function fetchFunilData() {
     
     // Encontrar índices das colunas importantes
     const tituloIndex = 0; // Coluna A - Título
+    const fasePerdidoIndex = 1; // Coluna B - Fase 7.2 Perdido
     const criadoEmIndex = 12; // Coluna M - Data criação
     const qualificacaoComissaoIndex = 57; // Coluna BF - Primeira vez que entrou na fase 1.2 Qualificação Comissão
     const diagnosticoRealizadoIndex = 59; // Coluna BH - Primeira vez que entrou na fase 2.1 Diagnóstico Realizado
     const propostaEnviadaIndex = 61; // Coluna BJ - Primeira vez que entrou na fase 3.1 Proposta Enviada
     const fechamentoComissaoIndex = 64; // Coluna BM - Primeira vez que entrou na fase 4.1 Fechamento Comissão
+    const concatMotivoPerdaIndex = 70; // Coluna BS - CONCAT MOTIVO PERDA
     
     // Vamos procurar a coluna nm_unidade dinamicamente no header
     let unidadeIndex = -1;
@@ -546,16 +548,18 @@ async function fetchFunilData() {
       unidadeIndex = 72;
     }
     
-    console.log("Índices - Título:", tituloIndex, "Criado em:", criadoEmIndex, "Qualificação Comissão:", qualificacaoComissaoIndex, "Diagnóstico Realizado:", diagnosticoRealizadoIndex, "Proposta Enviada:", propostaEnviadaIndex, "Fechamento Comissão:", fechamentoComissaoIndex, "Unidade:", unidadeIndex);
+    console.log("Índices - Título:", tituloIndex, "Fase Perdido:", fasePerdidoIndex, "Criado em:", criadoEmIndex, "Qualificação Comissão:", qualificacaoComissaoIndex, "Diagnóstico Realizado:", diagnosticoRealizadoIndex, "Proposta Enviada:", propostaEnviadaIndex, "Fechamento Comissão:", fechamentoComissaoIndex, "CONCAT Motivo Perda:", concatMotivoPerdaIndex, "Unidade:", unidadeIndex);
     
     if (rows.length > 1) {
       console.log("Segunda linha como exemplo:", rows[1]);
       console.log("Título (A):", rows[1][tituloIndex]);
+      console.log("Fase Perdido (B):", rows[1][fasePerdidoIndex]);
       console.log("Criado em (M):", rows[1][criadoEmIndex]);
       console.log("Qualificação Comissão (BF):", rows[1][qualificacaoComissaoIndex]);
       console.log("Diagnóstico Realizado (BH):", rows[1][diagnosticoRealizadoIndex]);
       console.log("Proposta Enviada (BJ):", rows[1][propostaEnviadaIndex]);
       console.log("Fechamento Comissão (BM):", rows[1][fechamentoComissaoIndex]);
+      console.log("CONCAT Motivo Perda (BS):", rows[1][concatMotivoPerdaIndex]);
       console.log("Unidade (BU):", rows[1][unidadeIndex]);
     }
     
@@ -563,11 +567,13 @@ async function fetchFunilData() {
     const allProcessedData = rows.slice(1).map((row, index) => ({
       id: index + 1,
       titulo: row[tituloIndex] || '',
+      fase_perdido: row[fasePerdidoIndex] || '',
       criado_em: row[criadoEmIndex] || '',
       qualificacao_comissao: row[qualificacaoComissaoIndex] || '',
       diagnostico_realizado: row[diagnosticoRealizadoIndex] || '',
       proposta_enviada: row[propostaEnviadaIndex] || '',
       fechamento_comissao: row[fechamentoComissaoIndex] || '',
+      concat_motivo_perda: row[concatMotivoPerdaIndex] || '',
       nm_unidade: row[unidadeIndex] || '',
       row_data: row
     }));
@@ -2753,9 +2759,115 @@ function updateFunilIndicators(startDate, endDate, selectedUnidades) {
         console.error("❌ Elemento 'funil-contratos-fechados' não encontrado");
     }
     
+    // PASSO 9: Calcular e atualizar o card "Leads Perdidos"
+    // Regra complexa: Leads na fase 7.2 Perdido, mas com várias condições de descarte
+    
+    // Função auxiliar para aplicar as regras do campo auxiliar
+    const getCampoAuxiliar = (concatMotivoPerda) => {
+        if (!concatMotivoPerda || concatMotivoPerda.trim() === '') return '';
+        
+        const motivo = concatMotivoPerda.trim();
+        
+        switch (motivo) {
+            case "Outro Motivo (especifique no campo de texto)":
+                return "Outro Motivo (especifique no campo de texto)";
+            case "Fechou com o Concorrente":
+                return "Fechou com o Concorrente";
+            case "Desistiu de Fazer o Fundo de Formatura":
+                return "Desistiu de Fazer o Fundo de Formatura";
+            case "Lead Duplicado (já existe outra pessoa da turma negociando - especifique o nome)":
+                return "Descarte - Lead Duplicado (já existe outra pessoa da turma negociando - especifique o nome)";
+            case "Falta de Contato no Grupo (durante negociação)":
+                return "Falta de Contato no Grupo (durante negociação)";
+            case "Falta de Contato Inicial (não responde)":
+                return "Falta de Contato Inicial (não responde)";
+            case "Território Inviável (não atendido por franquia VIVA)":
+                return "Descarte - Território Inviável (não atendido por franquia VIVA)";
+            case "Falta de Contato Inicial (telefone errado)":
+                return "Descarte - Falta de Contato Inicial (telefone errado)";
+            case "Pediu para retomar contato no próximo semestre":
+                return "Descarte - Pediu para retomar contato no próximo semestre";
+            case "Tipo de Ensino/Curso não atendido":
+                return "Descarte - Tipo de Ensino/Curso não atendido";
+            case "Adesão individual":
+                return "Descarte - Adesão Individual";
+            case "Adesão individual:":
+                return "Descarte - Adesão Individual";
+            case "Tipo de Ensino/Curso não atendido:":
+                return "Descarte - Tipo de Ensino/Curso não atendido";
+            default:
+                return motivo;
+        }
+    };
+    
+    const leadsComFasePerdido = dadosFinaisFiltrados.filter(item => {
+        if (!item.titulo || item.titulo.trim() === '') return false; // tem título válido
+        
+        // 1. Verificar se está na fase 7.2 Perdido
+        const estaNaFasePerdido = item.fase_perdido && item.fase_perdido.trim() !== '';
+        if (!estaNaFasePerdido) {
+            return false;
+        }
+        
+        // 2. Descartar se CONCAT MOTIVO PERDA estiver vazio
+        if (!item.concat_motivo_perda || item.concat_motivo_perda.trim() === '') {
+            console.log("❌ Lead perdido descartado (motivo vazio):", {
+                titulo: item.titulo,
+                fase_perdido: item.fase_perdido,
+                concat_motivo_perda: 'VAZIO'
+            });
+            return false;
+        }
+        
+        // 3. Aplicar a regra do campo auxiliar e verificar se começa com "Descarte"
+        const campoAuxiliar = getCampoAuxiliar(item.concat_motivo_perda);
+        const comecaComDescarte = campoAuxiliar.startsWith("Descarte");
+        
+        if (comecaComDescarte) {
+            console.log("❌ Lead perdido descartado (inicia com 'Descarte'):", {
+                titulo: item.titulo,
+                concat_motivo_perda: item.concat_motivo_perda,
+                campo_auxiliar: campoAuxiliar
+            });
+            return false;
+        }
+        
+        // 4. Se passou por todas as verificações, contar como lead perdido válido
+        console.log("✅ Lead perdido válido:", {
+            titulo: item.titulo,
+            fase_perdido: item.fase_perdido,
+            concat_motivo_perda: item.concat_motivo_perda,
+            campo_auxiliar: campoAuxiliar,
+            criado_em: item.criado_em,
+            unidade: item.nm_unidade
+        });
+        
+        return true;
+    });
+    
+    const totalLeadsPerdidos = leadsComFasePerdido.length;
+    console.log("📊 Total de Leads Perdidos válidos (período filtrado):", totalLeadsPerdidos);
+    
+    // Mostrar amostra dos dados de leads perdidos
+    if (leadsComFasePerdido.length > 0) {
+        console.log("🔍 Amostra dos Leads Perdidos válidos:");
+        leadsComFasePerdido.slice(0, 5).forEach((item, index) => {
+            console.log(`  ${index + 1}. Título: "${item.titulo}" | Motivo: "${item.concat_motivo_perda}" | Data: "${item.criado_em}"`);
+        });
+    }
+    
+    // Atualizar o card de Leads Perdidos
+    const leadsPerdidosCardElement = document.getElementById("funil-leads-perdidos");
+    if (leadsPerdidosCardElement) {
+        leadsPerdidosCardElement.textContent = totalLeadsPerdidos.toString();
+        console.log("✅ Card 'Leads Perdidos' atualizado com:", totalLeadsPerdidos);
+    } else {
+        console.error("❌ Elemento 'funil-leads-perdidos' não encontrado");
+    }
+    
     // Por enquanto, outros cards ficam zerados
     const otherCards = [
-        "funil-leads-perdidos", "funil-leads-desqualificados"
+        "funil-leads-desqualificados"
     ];
     
     otherCards.forEach(cardId => {
