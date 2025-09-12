@@ -527,6 +527,7 @@ async function fetchFunilData() {
     // Encontrar índices das colunas importantes
     const tituloIndex = 0; // Coluna A - Título
     const fasePerdidoIndex = 1; // Coluna B - Fase 7.2 Perdido
+    const origemLeadIndex = 6; // Coluna G - Origem do Lead
     const criadoEmIndex = 12; // Coluna M - Data criação
     const qualificacaoComissaoIndex = 57; // Coluna BF - Primeira vez que entrou na fase 1.2 Qualificação Comissão
     const diagnosticoRealizadoIndex = 59; // Coluna BH - Primeira vez que entrou na fase 2.1 Diagnóstico Realizado
@@ -548,12 +549,13 @@ async function fetchFunilData() {
       unidadeIndex = 72;
     }
     
-    console.log("Índices - Título:", tituloIndex, "Fase Perdido:", fasePerdidoIndex, "Criado em:", criadoEmIndex, "Qualificação Comissão:", qualificacaoComissaoIndex, "Diagnóstico Realizado:", diagnosticoRealizadoIndex, "Proposta Enviada:", propostaEnviadaIndex, "Fechamento Comissão:", fechamentoComissaoIndex, "CONCAT Motivo Perda:", concatMotivoPerdaIndex, "Unidade:", unidadeIndex);
+    console.log("Índices - Título:", tituloIndex, "Fase Perdido:", fasePerdidoIndex, "Origem Lead:", origemLeadIndex, "Criado em:", criadoEmIndex, "Qualificação Comissão:", qualificacaoComissaoIndex, "Diagnóstico Realizado:", diagnosticoRealizadoIndex, "Proposta Enviada:", propostaEnviadaIndex, "Fechamento Comissão:", fechamentoComissaoIndex, "CONCAT Motivo Perda:", concatMotivoPerdaIndex, "Unidade:", unidadeIndex);
     
     if (rows.length > 1) {
       console.log("Segunda linha como exemplo:", rows[1]);
       console.log("Título (A):", rows[1][tituloIndex]);
       console.log("Fase Perdido (B):", rows[1][fasePerdidoIndex]);
+      console.log("Origem Lead (G):", rows[1][origemLeadIndex]);
       console.log("Criado em (M):", rows[1][criadoEmIndex]);
       console.log("Qualificação Comissão (BF):", rows[1][qualificacaoComissaoIndex]);
       console.log("Diagnóstico Realizado (BH):", rows[1][diagnosticoRealizadoIndex]);
@@ -568,6 +570,7 @@ async function fetchFunilData() {
       id: index + 1,
       titulo: row[tituloIndex] || '',
       fase_perdido: row[fasePerdidoIndex] || '',
+      origem_lead: row[origemLeadIndex] || '',
       criado_em: row[criadoEmIndex] || '',
       qualificacao_comissao: row[qualificacaoComissaoIndex] || '',
       diagnostico_realizado: row[diagnosticoRealizadoIndex] || '',
@@ -2937,5 +2940,236 @@ function updateFunilIndicators(startDate, endDate, selectedUnidades) {
         console.error("❌ Elemento 'funil-leads-desqualificados' não encontrado");
     }
     
+    // PASSO 11: Atualizar a seção de captações
+    updateCaptacoes(dadosFinaisFiltrados);
+    
     console.log("=== FIM updateFunilIndicators ===");
+}
+
+// Função para classificar o tipo de captação baseado na origem do lead
+function getTipoCaptacao(origemLead) {
+    if (!origemLead || origemLead.trim() === '') return 'Captação Ativa';
+    
+    const origem = origemLead.trim();
+    
+    switch (origem) {
+        case "Presencial - Ligação/WPP Telefone Consultor (a)":
+            return "Captação Passiva";
+        case "Digital - Redes Sociais - VIVA Brasil":
+            return "Captação Passiva - Exclusiva Viva BR";
+        case "Digital - Redes Sociais - Instagram Local":
+            return "Captação Passiva";
+        case "Digital - Site VIVA Brasil":
+            return "Captação Passiva - Exclusiva Viva BR";
+        case "Digital - Card Google":
+            return "Captação Passiva - Exclusiva Viva BR";
+        case "Indicação - Via Atlética/DA/CA":
+            return "Captação Passiva";
+        case "Indicação - Via outra Franquia/Consultor VIVA":
+            return "Captação Passiva";
+        case "Digital - Redes Sociais - Instagram Consultor (a)":
+            return "Captação Passiva";
+        case "Presencial - Ligação Telefone Franquia":
+            return "Captação Passiva";
+        case "Indicação - Via Integrante de Turma":
+            return "Captação Passiva";
+        case "Presencial - Visita Sede Franquia":
+            return "Captação Passiva";
+        case "Digital - Campanha paga - Instagram Local":
+            return "Captação Passiva";
+        default:
+            return "Captação Ativa";
+    }
+}
+
+// Função para atualizar a seção de captações
+function updateCaptacoes(dadosFiltrados) {
+    console.log("=== INÍCIO updateCaptacoes ===");
+    
+    // Filtrar apenas leads com título válido
+    const leadsValidos = dadosFiltrados.filter(item => 
+        item.titulo && item.titulo.trim() !== ''
+    );
+    
+    console.log("📊 Total de leads válidos para captações:", leadsValidos.length);
+    
+    // Agrupar por origem do lead
+    const origemContador = {};
+    const tipoContador = {};
+    
+    leadsValidos.forEach(item => {
+        const origem = item.origem_lead || 'Não informado';
+        const tipo = getTipoCaptacao(origem);
+        
+        // Contar por origem
+        if (!origemContador[origem]) {
+            origemContador[origem] = 0;
+        }
+        origemContador[origem]++;
+        
+        // Contar por tipo
+        if (!tipoContador[tipo]) {
+            tipoContador[tipo] = 0;
+        }
+        tipoContador[tipo]++;
+    });
+    
+    console.log("📊 Contadores por origem:", origemContador);
+    console.log("📊 Contadores por tipo:", tipoContador);
+    
+    // Criar dados para a tabela
+    const dadosTabela = [];
+    const totalLeads = leadsValidos.length;
+    
+    Object.keys(origemContador).forEach(origem => {
+        const total = origemContador[origem];
+        const percentual = ((total / totalLeads) * 100).toFixed(1);
+        const tipo = getTipoCaptacao(origem);
+        
+        dadosTabela.push({
+            origem,
+            tipo,
+            percentual: parseFloat(percentual),
+            total
+        });
+    });
+    
+    // Ordenar por total (descendente)
+    dadosTabela.sort((a, b) => b.total - a.total);
+    
+    // Atualizar tabela
+    updateCaptacoesTable(dadosTabela);
+    
+    // Criar dados para o gráfico de pizza (agrupado por tipo)
+    const dadosGrafico = Object.keys(tipoContador).map(tipo => ({
+        tipo,
+        total: tipoContador[tipo],
+        percentual: ((tipoContador[tipo] / totalLeads) * 100).toFixed(1)
+    }));
+    
+    // Atualizar gráfico
+    updateCaptacoesChart(dadosGrafico);
+    
+    console.log("=== FIM updateCaptacoes ===");
+}
+
+// Função para atualizar a tabela de captações
+function updateCaptacoesTable(dados) {
+    const tbody = document.getElementById('captacoes-table-body');
+    if (!tbody) {
+        console.error("❌ Elemento 'captacoes-table-body' não encontrado");
+        return;
+    }
+    
+    // Limpar tabela
+    tbody.innerHTML = '';
+    
+    // Encontrar valores min e max para o mapa de calor
+    const percentuais = dados.map(item => item.percentual);
+    const maxPercent = Math.max(...percentuais);
+    const minPercent = Math.min(...percentuais);
+    
+    // Função para determinar a classe do mapa de calor
+    function getHeatClass(percentual) {
+        const threshold1 = minPercent + (maxPercent - minPercent) * 0.33;
+        const threshold2 = minPercent + (maxPercent - minPercent) * 0.66;
+        
+        if (percentual <= threshold1) return 'heat-low';
+        if (percentual <= threshold2) return 'heat-medium';
+        return 'heat-high';
+    }
+    
+    // Preencher tabela
+    dados.forEach(item => {
+        const tr = document.createElement('tr');
+        
+        tr.innerHTML = `
+            <td>${item.origem}</td>
+            <td>${item.tipo}</td>
+            <td class="${getHeatClass(item.percentual)}">${item.percentual}%</td>
+            <td class="${getHeatClass(item.percentual)}">${item.total}</td>
+        `;
+        
+        tbody.appendChild(tr);
+    });
+    
+    console.log("✅ Tabela de captações atualizada com", dados.length, "itens");
+}
+
+// Variável global para armazenar a instância do gráfico
+let captacoesChartInstance = null;
+
+// Função para atualizar o gráfico de captações
+function updateCaptacoesChart(dados) {
+    const ctx = document.getElementById('captacoesChart');
+    if (!ctx) {
+        console.error("❌ Elemento 'captacoesChart' não encontrado");
+        return;
+    }
+    
+    // Destruir gráfico anterior se existir
+    if (captacoesChartInstance) {
+        captacoesChartInstance.destroy();
+    }
+    
+    // Cores para o gráfico
+    const cores = [
+        '#FFC107', // Amarelo principal
+        '#FF8F00', // Laranja
+        '#FF5722', // Vermelho
+        '#9C27B0', // Roxo
+        '#3F51B5', // Azul
+        '#009688', // Verde água
+        '#4CAF50', // Verde
+        '#FF9800'  // Laranja claro
+    ];
+    
+    const labels = dados.map(item => item.tipo);
+    const valores = dados.map(item => item.total);
+    const backgroundColor = dados.map((_, index) => cores[index % cores.length]);
+    
+    captacoesChartInstance = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: valores,
+                backgroundColor: backgroundColor,
+                borderColor: '#495057',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        color: '#F8F9FA',
+                        font: {
+                            size: 12
+                        },
+                        padding: 15,
+                        usePointStyle: true
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(33, 37, 41, 0.9)',
+                    titleColor: '#FFC107',
+                    bodyColor: '#F8F9FA',
+                    borderColor: '#495057',
+                    borderWidth: 1,
+                    callbacks: {
+                        label: function(context) {
+                            const item = dados[context.dataIndex];
+                            return `${context.label}: ${item.total} (${item.percentual}%)`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+    
+    console.log("✅ Gráfico de captações atualizado com", dados.length, "categorias");
 }

@@ -424,11 +424,39 @@
                         </div>
                     </section>
 
-                    <!-- Seção de Captações (placeholder para futuro) -->
+                    <!-- Seção de Captações -->
                     <section class="kpi-container" id="funil-captacoes-section" style="display: block;">
                         <h2 style="grid-column: span 12; font-size: 1.4em; color: #ffc107; margin-bottom: 20px;">CAPTAÇÕES</h2>
-                        <div class="funil-captacoes-placeholder">
-                            <p>Seção em desenvolvimento - Indicadores de captações serão adicionados em breve</p>
+                        
+                        <!-- Container para tabela e gráfico -->
+                        <div class="captacoes-content">
+                            <!-- Tabela com mapa de calor -->
+                            <div class="captacoes-table-container">
+                                <h3 class="captacoes-subtitle">TIPOS DE CAPTAÇÃO TOTAL</h3>
+                                <div class="captacoes-table-wrapper">
+                                    <table class="captacoes-table" id="captacoes-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Origem do Lead</th>
+                                                <th>Tipo de captação</th>
+                                                <th>%</th>
+                                                <th>TOTAL</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="captacoes-table-body">
+                                            <!-- Dados serão inseridos via JavaScript -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            
+                            <!-- Gráfico de pizza -->
+                            <div class="captacoes-chart-container">
+                                <h3 class="captacoes-subtitle">TIPOS DE CAPTAÇÃO TOTAL</h3>
+                                <div class="chart-wrapper">
+                                    <canvas id="captacoesChart"></canvas>
+                                </div>
+                            </div>
                         </div>
                     </section>
                 </div>

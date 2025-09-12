@@ -486,6 +486,104 @@ body {
             font-style: italic;
         }
 
+        /* Estilos para a seção de captações */
+        .captacoes-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            grid-column: span 12;
+            margin-top: 20px;
+        }
+
+        .captacoes-table-container, .captacoes-chart-container {
+            background: linear-gradient(135deg, #343a40 0%, #495057 100%);
+            border-radius: 8px;
+            padding: 20px;
+            border: 1px solid #495057;
+        }
+
+        .captacoes-subtitle {
+            color: #ffc107;
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .captacoes-table-wrapper {
+            overflow-x: auto;
+        }
+
+        .captacoes-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        .captacoes-table th {
+            background: linear-gradient(135deg, #495057 0%, #6c757d 100%);
+            color: #ffc107;
+            padding: 12px 8px;
+            text-align: center;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+            border: 1px solid #6c757d;
+        }
+
+        .captacoes-table td {
+            padding: 10px 8px;
+            text-align: center;
+            border: 1px solid #495057;
+            color: #f8f9fa;
+            font-weight: 500;
+        }
+
+        .captacoes-table td:first-child {
+            text-align: left;
+            font-size: 0.8rem;
+            max-width: 200px;
+            word-wrap: break-word;
+        }
+
+        .captacoes-table td:nth-child(2) {
+            text-align: left;
+            font-size: 0.8rem;
+        }
+
+        /* Mapa de calor - cores baseadas na porcentagem */
+        .captacoes-table .heat-low {
+            background-color: rgba(255, 193, 7, 0.2) !important;
+        }
+
+        .captacoes-table .heat-medium {
+            background-color: rgba(255, 193, 7, 0.5) !important;
+        }
+
+        .captacoes-table .heat-high {
+            background-color: rgba(255, 193, 7, 0.8) !important;
+            color: #212529 !important;
+        }
+
+        .captacoes-table tbody tr:hover {
+            background-color: rgba(255, 193, 7, 0.1);
+        }
+
+        .chart-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 300px;
+        }
+
+        #captacoesChart {
+            max-width: 100%;
+            max-height: 100%;
+        }
+
         /* Responsividade para telas menores */
         @media (max-width: 1400px) {
             .funil-indicators-grid {
