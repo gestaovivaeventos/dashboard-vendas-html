@@ -539,6 +539,8 @@ async function fetchFunilData() {
     const concatMotivoPerdaIndex = 70; // Coluna BS - CONCAT MOTIVO PERDA
     const concatConcorrenteIndex = 71; // Coluna BT - CONCAT CONCORRENTE
     const consultorIndex = 53; // Coluna BB - Selecione o Consultor responsável por este Card
+    const etiquetasIndex = 54; // Coluna BC - Etiquetas
+    const segmentacaoLeadIndex = 69; // Coluna BR - Indique qual a segmentação desse potencial cliente
     
     // Índices das colunas de perdas por fase
     const perda11Index = 13; // Coluna N - (1.1) Venda Perdida?
@@ -612,7 +614,9 @@ async function fetchFunilData() {
       fase_perdido: row[fasePerdidoIndex] || '',
       curso: row[cursoIndex] || '', // Coluna D - Qual é o seu curso?
       consultor: row[consultorIndex] || '', // Coluna BB - Selecione o Consultor responsável por este Card
+      etiquetas: row[etiquetasIndex] || '', // Coluna BC - Etiquetas
       origem_lead: row[origemLeadIndex] || '',
+      segmentacao_lead: row[segmentacaoLeadIndex] || '', // Coluna BR - Indique qual a segmentação desse potencial cliente
       criado_em: row[criadoEmIndex] || '',
       qualificacao_comissao: row[qualificacaoComissaoIndex] || '',
       diagnostico_realizado: row[diagnosticoRealizadoIndex] || '',
@@ -1707,6 +1711,8 @@ function updateDependentFilters(selectedUnidades = []) {
     const cursoFilter = $("#curso-filter");
     const consultorFilter = $("#consultor-filter");
     const origemLeadFilter = $("#origem-lead-filter");
+    const segmentacaoLeadFilter = $("#segmentacao-lead-filter");
+    const etiquetasFilter = $("#etiquetas-filter");
     const fundoFilter = $("#fundo-filter");
     
     // Verificar se estamos na página do funil
@@ -1719,6 +1725,8 @@ function updateDependentFilters(selectedUnidades = []) {
     const fundoFilterContainer = document.getElementById('fundo-filter-container');
     const consultorFilterContainer = document.getElementById('consultor-filter-container');
     const origemLeadFilterContainer = document.getElementById('origem-lead-filter-container');
+    const segmentacaoLeadFilterContainer = document.getElementById('segmentacao-lead-filter-container');
+    const etiquetasFilterContainer = document.getElementById('etiquetas-filter-container');
     
     if (fundoFilterContainer) {
         if (isFunilPage) {
@@ -1743,6 +1751,22 @@ function updateDependentFilters(selectedUnidades = []) {
             origemLeadFilterContainer.style.display = 'none';
         }
     }
+
+    if (segmentacaoLeadFilterContainer) {
+        if (isFunilPage) {
+            segmentacaoLeadFilterContainer.style.display = 'block';
+        } else {
+            segmentacaoLeadFilterContainer.style.display = 'none';
+        }
+    }
+
+    if (etiquetasFilterContainer) {
+        if (isFunilPage) {
+            etiquetasFilterContainer.style.display = 'block';
+        } else {
+            etiquetasFilterContainer.style.display = 'none';
+        }
+    }
     
     // Destruir instâncias existentes
     try {
@@ -1750,6 +1774,8 @@ function updateDependentFilters(selectedUnidades = []) {
         if (isFunilPage) {
             consultorFilter.multiselect('destroy');
             origemLeadFilter.multiselect('destroy');
+            segmentacaoLeadFilter.multiselect('destroy');
+            etiquetasFilter.multiselect('destroy');
         } else {
             fundoFilter.multiselect('destroy');
         }
@@ -1762,6 +1788,8 @@ function updateDependentFilters(selectedUnidades = []) {
     if (isFunilPage) {
         consultorFilter.empty();
         origemLeadFilter.empty();
+        segmentacaoLeadFilter.empty();
+        etiquetasFilter.empty();
     } else {
         fundoFilter.empty();
     }
@@ -1816,6 +1844,24 @@ function updateDependentFilters(selectedUnidades = []) {
         
         origensLead.forEach((o) => {
             origemLeadFilter.append($("<option>", { value: o, text: o }));
+        });
+
+        // Popular filtro de segmentação lead (apenas se for página do funil)
+        const segmentacaoLeadFunil = funilFiltrado.map((d) => d.segmentacao_lead || '').filter(s => s && s.trim() !== '' && s !== 'N/A');
+        const segmentacoesLead = [...new Set(segmentacaoLeadFunil)].sort();
+        console.log('Segmentações do lead do funil:', segmentacoesLead);
+        
+        segmentacoesLead.forEach((s) => {
+            segmentacaoLeadFilter.append($("<option>", { value: s, text: s }));
+        });
+
+        // Popular filtro de etiquetas (apenas se for página do funil)
+        const etiquetasFunil = funilFiltrado.map((d) => d.etiquetas || '').filter(e => e && e.trim() !== '' && e !== 'N/A');
+        const etiquetas = [...new Set(etiquetasFunil)].sort();
+        console.log('Etiquetas do funil:', etiquetas);
+        
+        etiquetas.forEach((e) => {
+            etiquetasFilter.append($("<option>", { value: e, text: e }));
         });
     }
     
@@ -1905,6 +1951,56 @@ function updateDependentFilters(selectedUnidades = []) {
                 ul: '<ul class="multiselect-container dropdown-menu" style="width: auto; min-width: 100%;"></ul>'
             }
         });
+
+        // Recriar multiselects para segmentação lead (apenas se for página do funil)
+        segmentacaoLeadFilter.multiselect({
+            enableFiltering: true,
+            includeSelectAllOption: true,
+            selectAllText: "Marcar todos",
+            filterPlaceholder: "Pesquisar...",
+            nonSelectedText: "Todas as segmentações",
+            nSelectedText: "segmentações",
+            allSelectedText: "Todas selecionadas",
+            buttonWidth: "100%",
+            maxHeight: 300,
+            onChange: updateDashboard,
+            onSelectAll: updateDashboard,
+            onDeselectAll: updateDashboard,
+            enableCaseInsensitiveFiltering: true,
+            filterBehavior: 'text',
+            dropUp: false,
+            dropRight: false,
+            widthSynchronizationMode: 'ifPopupIsSmaller',
+            templates: {
+                button: '<button type="button" class="multiselect dropdown-toggle" data-toggle="dropdown"><span class="multiselect-selected-text"></span></button>',
+                ul: '<ul class="multiselect-container dropdown-menu" style="width: auto; min-width: 100%;"></ul>'
+            }
+        });
+
+        // Recriar multiselects para etiquetas (apenas se for página do funil)
+        etiquetasFilter.multiselect({
+            enableFiltering: true,
+            includeSelectAllOption: true,
+            selectAllText: "Marcar todos",
+            filterPlaceholder: "Pesquisar...",
+            nonSelectedText: "Todas as etiquetas",
+            nSelectedText: "etiquetas",
+            allSelectedText: "Todas selecionadas",
+            buttonWidth: "100%",
+            maxHeight: 300,
+            onChange: updateDashboard,
+            onSelectAll: updateDashboard,
+            onDeselectAll: updateDashboard,
+            enableCaseInsensitiveFiltering: true,
+            filterBehavior: 'text',
+            dropUp: false,
+            dropRight: false,
+            widthSynchronizationMode: 'ifPopupIsSmaller',
+            templates: {
+                button: '<button type="button" class="multiselect dropdown-toggle" data-toggle="dropdown"><span class="multiselect-selected-text"></span></button>',
+                ul: '<ul class="multiselect-container dropdown-menu" style="width: auto; min-width: 100%;"></ul>'
+            }
+        });
     }
     
     // Recriar multiselects para fundos (apenas se não for página do funil)
@@ -1952,6 +2048,8 @@ function populateFilters(selectedUnidades = []) {
     const cursoFilter = $("#curso-filter");
     const consultorFilter = $("#consultor-filter");
     const origemLeadFilter = $("#origem-lead-filter");
+    const segmentacaoLeadFilter = $("#segmentacao-lead-filter");
+    const etiquetasFilter = $("#etiquetas-filter");
     const fundoFilter = $("#fundo-filter");
     
     // Verificar se estamos na página do funil
@@ -1996,6 +2094,24 @@ function populateFilters(selectedUnidades = []) {
             origemLeadFilterContainer.style.display = 'block';
         } else {
             origemLeadFilterContainer.style.display = 'none';
+        }
+    }
+
+    const segmentacaoLeadFilterContainer = document.getElementById('segmentacao-lead-filter-container');
+    if (segmentacaoLeadFilterContainer) {
+        if (isFunilPage) {
+            segmentacaoLeadFilterContainer.style.display = 'block';
+        } else {
+            segmentacaoLeadFilterContainer.style.display = 'none';
+        }
+    }
+
+    const etiquetasFilterContainer = document.getElementById('etiquetas-filter-container');
+    if (etiquetasFilterContainer) {
+        if (isFunilPage) {
+            etiquetasFilterContainer.style.display = 'block';
+        } else {
+            etiquetasFilterContainer.style.display = 'none';
         }
     }
     
@@ -2170,6 +2286,30 @@ function populateFilters(selectedUnidades = []) {
             });
             
             console.log('📝 Opções adicionadas ao filtro de origem do lead:', origensLead.length);
+
+            // Populate segmentacao lead filter (apenas se for página do funil)
+            console.log('🎯 POPULANDO SEGMENTAÇÃO LEAD DO FUNIL');
+            const segmentacaoLeadFunil = funilFiltrado.map((d) => d.segmentacao_lead || '').filter(s => s && s.trim() !== '' && s !== 'N/A');
+            const segmentacoesLead = [...new Set(segmentacaoLeadFunil)].sort();
+            console.log('Segmentações do lead do funil (populateFilters):', segmentacoesLead);
+            
+            segmentacoesLead.forEach((s) => {
+                segmentacaoLeadFilter.append($("<option>", { value: s, text: s }));
+            });
+            
+            console.log('📝 Opções adicionadas ao filtro de segmentação lead:', segmentacoesLead.length);
+
+            // Populate etiquetas filter (apenas se for página do funil)
+            console.log('🎯 POPULANDO ETIQUETAS DO FUNIL');
+            const etiquetasFunil = funilFiltrado.map((d) => d.etiquetas || '').filter(e => e && e.trim() !== '' && e !== 'N/A');
+            const etiquetas = [...new Set(etiquetasFunil)].sort();
+            console.log('Etiquetas do funil (populateFilters):', etiquetas);
+            
+            etiquetas.forEach((e) => {
+                etiquetasFilter.append($("<option>", { value: e, text: e }));
+            });
+            
+            console.log('📝 Opções adicionadas ao filtro de etiquetas:', etiquetas.length);
         }
 
         // Populate fundos filter (apenas se não for página do funil)
@@ -2359,6 +2499,88 @@ function populateFilters(selectedUnidades = []) {
                     console.log('Multiselect de origem do lead inicializado com sucesso');
                 } catch (error) {
                     console.error('Erro ao inicializar multiselect de origem do lead:', error);
+                }
+
+                // SEGMENTAÇÃO LEAD (apenas se for página do funil)
+                try {
+                    // Destruir multiselect existente de segmentação lead
+                    try {
+                        if (segmentacaoLeadFilter.data('multiselect')) {
+                            segmentacaoLeadFilter.multiselect('destroy');
+                            console.log('🔄 Multiselect de segmentação lead destruído');
+                        }
+                    } catch (e) {
+                        console.log('🔄 Nenhum multiselect de segmentação lead para destruir');
+                    }
+                    
+                    segmentacaoLeadFilter.multiselect({
+                        enableFiltering: true,
+                        includeSelectAllOption: true,
+                        selectAllText: "Marcar todos",
+                        filterPlaceholder: "Pesquisar...",
+                        nonSelectedText: "Todas as segmentações",
+                        nSelectedText: "segmentações",
+                        allSelectedText: "Todas selecionadas",
+                        buttonWidth: "100%",
+                        maxHeight: 300,
+                        onChange: updateDashboard,
+                        onSelectAll: updateDashboard,
+                        onDeselectAll: updateDashboard,
+                        enableCaseInsensitiveFiltering: true,
+                        filterBehavior: 'text',
+                        dropUp: false,
+                        dropRight: false,
+                        widthSynchronizationMode: 'ifPopupIsSmaller',
+                        templates: {
+                            button: '<button type="button" class="multiselect dropdown-toggle" data-toggle="dropdown"><span class="multiselect-selected-text"></span></button>',
+                            ul: '<ul class="multiselect-container dropdown-menu" style="width: auto; min-width: 100%;"></ul>'
+                        }
+                    });
+                    
+                    console.log('Multiselect de segmentação lead inicializado com sucesso');
+                } catch (error) {
+                    console.error('Erro ao inicializar multiselect de segmentação lead:', error);
+                }
+
+                // ETIQUETAS (apenas se for página do funil)
+                try {
+                    // Destruir multiselect existente de etiquetas
+                    try {
+                        if (etiquetasFilter.data('multiselect')) {
+                            etiquetasFilter.multiselect('destroy');
+                            console.log('🔄 Multiselect de etiquetas destruído');
+                        }
+                    } catch (e) {
+                        console.log('🔄 Nenhum multiselect de etiquetas para destruir');
+                    }
+                    
+                    etiquetasFilter.multiselect({
+                        enableFiltering: true,
+                        includeSelectAllOption: true,
+                        selectAllText: "Marcar todos",
+                        filterPlaceholder: "Pesquisar...",
+                        nonSelectedText: "Todas as etiquetas",
+                        nSelectedText: "etiquetas",
+                        allSelectedText: "Todas selecionadas",
+                        buttonWidth: "100%",
+                        maxHeight: 300,
+                        onChange: updateDashboard,
+                        onSelectAll: updateDashboard,
+                        onDeselectAll: updateDashboard,
+                        enableCaseInsensitiveFiltering: true,
+                        filterBehavior: 'text',
+                        dropUp: false,
+                        dropRight: false,
+                        widthSynchronizationMode: 'ifPopupIsSmaller',
+                        templates: {
+                            button: '<button type="button" class="multiselect dropdown-toggle" data-toggle="dropdown"><span class="multiselect-selected-text"></span></button>',
+                            ul: '<ul class="multiselect-container dropdown-menu" style="width: auto; min-width: 100%;"></ul>'
+                        }
+                    });
+                    
+                    console.log('Multiselect de etiquetas inicializado com sucesso');
+                } catch (error) {
+                    console.error('Erro ao inicializar multiselect de etiquetas:', error);
                 }
             }
 
@@ -3174,6 +3396,82 @@ function updateFunilIndicators(startDate, endDate, selectedUnidades) {
         console.log("📊 Dados após filtro de origem do lead:", dadosFinaisFiltrados.length, "registros");
     } else {
         console.log("📊 Mantendo todos os dados (sem filtro de origem do lead)");
+    }
+
+    // PASSO 2.8: FILTRAR POR SEGMENTAÇÃO LEAD (se estiver na página do funil e segmentação selecionada)
+    const selectedSegmentacoesLead = $("#segmentacao-lead-filter").val() || [];
+    if (selectedSegmentacoesLead && selectedSegmentacoesLead.length > 0) {
+        console.log("🔍 Filtrando por segmentações do lead:", selectedSegmentacoesLead);
+        
+        dadosFinaisFiltrados = dadosFinaisFiltrados.filter(item => {
+            const segmentacaoLeadItem = item.segmentacao_lead;
+            if (!segmentacaoLeadItem || segmentacaoLeadItem.trim() === '') {
+                console.log("⚠️ Item sem segmentação do lead:", {
+                    titulo: item.titulo,
+                    segmentacao_lead: segmentacaoLeadItem
+                });
+                return false;
+            }
+            
+            const segmentacaoPertence = selectedSegmentacoesLead.includes(segmentacaoLeadItem.trim());
+            
+            if (!segmentacaoPertence) {
+                console.log("❌ Segmentação do lead não está no filtro:", {
+                    titulo: item.titulo,
+                    segmentacao_lead: segmentacaoLeadItem,
+                    segmentacoesPermitidas: selectedSegmentacoesLead
+                });
+            } else {
+                console.log("✅ Segmentação do lead aceita:", {
+                    titulo: item.titulo,
+                    segmentacao_lead: segmentacaoLeadItem
+                });
+            }
+            
+            return segmentacaoPertence;
+        });
+        
+        console.log("📊 Dados após filtro de segmentação do lead:", dadosFinaisFiltrados.length, "registros");
+    } else {
+        console.log("📊 Mantendo todos os dados (sem filtro de segmentação do lead)");
+    }
+
+    // PASSO 2.9: FILTRAR POR ETIQUETAS (se estiver na página do funil e etiquetas selecionadas)
+    const selectedEtiquetas = $("#etiquetas-filter").val() || [];
+    if (selectedEtiquetas && selectedEtiquetas.length > 0) {
+        console.log("🔍 Filtrando por etiquetas:", selectedEtiquetas);
+        
+        dadosFinaisFiltrados = dadosFinaisFiltrados.filter(item => {
+            const etiquetasItem = item.etiquetas;
+            if (!etiquetasItem || etiquetasItem.trim() === '') {
+                console.log("⚠️ Item sem etiquetas:", {
+                    titulo: item.titulo,
+                    etiquetas: etiquetasItem
+                });
+                return false;
+            }
+            
+            const etiquetasPertence = selectedEtiquetas.includes(etiquetasItem.trim());
+            
+            if (!etiquetasPertence) {
+                console.log("❌ Etiquetas não estão no filtro:", {
+                    titulo: item.titulo,
+                    etiquetas: etiquetasItem,
+                    etiquetasPermitidas: selectedEtiquetas
+                });
+            } else {
+                console.log("✅ Etiquetas aceitas:", {
+                    titulo: item.titulo,
+                    etiquetas: etiquetasItem
+                });
+            }
+            
+            return etiquetasPertence;
+        });
+        
+        console.log("📊 Dados após filtro de etiquetas:", dadosFinaisFiltrados.length, "registros");
+    } else {
+        console.log("📊 Mantendo todos os dados (sem filtro de etiquetas)");
     }
     
     // PASSO 3: CONTAR LINHAS com título válido (não vazio)
