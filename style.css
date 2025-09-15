@@ -421,17 +421,17 @@ body {
             align-items: center;
             justify-content: flex-start;
             position: relative;
-            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
-            border-radius: 12px;
-            padding: 30px 10px;
-            border: 2px solid #495057;
-            min-height: 180px;
-            overflow: hidden;
+            background: transparent; /* Remove o fundo azul */
+            border-radius: 0; /* Remove bordas arredondadas */
+            padding: 20px 0; /* Reduz padding vertical, remove horizontal */
+            border: none; /* Remove a borda */
+            min-height: 140px; /* Reduz altura mínima */
+            overflow: visible; /* Permite que elementos sejam visíveis */
         }
 
-        /* Quando o sidebar está recolhido, o funil se expande ligeiramente */
+        /* Quando o sidebar está recolhido, o funil se expande para ocupar mais espaço */
         #main-content.full-width .funil-horizontal-container {
-            grid-column: 1 / span 9; /* Mantém 9 colunas para não quebrar o layout */
+            grid-column: 1 / span 10; /* Expande para 10 colunas quando sidebar recolhido */
         }
 
         /* Cards do funil em formato de seta */
@@ -511,7 +511,7 @@ body {
 
         /* Quando o sidebar está recolhido, ajusta a proporção corretamente */
         #main-content.full-width .funil-side-cards {
-            grid-column: 10 / span 3; /* Mantém os cards laterais visíveis */
+            grid-column: 11 / span 2; /* Ajusta para as últimas 2 colunas quando sidebar recolhido */
         }
 
         .funil-indicator-card {
