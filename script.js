@@ -536,6 +536,7 @@ async function fetchFunilData() {
     const propostaEnviadaIndex = 61; // Coluna BJ - Primeira vez que entrou na fase 3.1 Proposta Enviada
     const fechamentoComissaoIndex = 64; // Coluna BM - Primeira vez que entrou na fase 4.1 Fechamento Comissão
     const concatMotivoPerdaIndex = 70; // Coluna BS - CONCAT MOTIVO PERDA
+    const concatConcorrenteIndex = 71; // Coluna BT - CONCAT CONCORRENTE
     
     // Índices das colunas de perdas por fase
     const perda11Index = 13; // Coluna N - (1.1) Venda Perdida?
@@ -563,7 +564,7 @@ async function fetchFunilData() {
       unidadeIndex = 72;
     }
     
-    console.log("Índices - Título:", tituloIndex, "Fase Perdido:", fasePerdidoIndex, "Origem Lead:", origemLeadIndex, "Criado em:", criadoEmIndex, "Qualificação Comissão:", qualificacaoComissaoIndex, "Diagnóstico Realizado:", diagnosticoRealizadoIndex, "Proposta Enviada:", propostaEnviadaIndex, "Fechamento Comissão:", fechamentoComissaoIndex, "CONCAT Motivo Perda:", concatMotivoPerdaIndex, "Unidade:", unidadeIndex);
+    console.log("Índices - Título:", tituloIndex, "Fase Perdido:", fasePerdidoIndex, "Origem Lead:", origemLeadIndex, "Criado em:", criadoEmIndex, "Qualificação Comissão:", qualificacaoComissaoIndex, "Diagnóstico Realizado:", diagnosticoRealizadoIndex, "Proposta Enviada:", propostaEnviadaIndex, "Fechamento Comissão:", fechamentoComissaoIndex, "CONCAT Motivo Perda:", concatMotivoPerdaIndex, "CONCAT Concorrente:", concatConcorrenteIndex, "Unidade:", unidadeIndex);
     
     if (rows.length > 1) {
       console.log("Segunda linha como exemplo:", rows[1]);
@@ -591,6 +592,7 @@ async function fetchFunilData() {
       proposta_enviada: row[propostaEnviadaIndex] || '',
       fechamento_comissao: row[fechamentoComissaoIndex] || '',
       concat_motivo_perda: row[concatMotivoPerdaIndex] || '',
+      concat_concorrente: row[concatConcorrenteIndex] || '',
       nm_unidade: row[unidadeIndex] || '',
       // Colunas de perdas por fase
       perda_11: row[perda11Index] || '',
@@ -2972,6 +2974,12 @@ function updateFunilIndicators(startDate, endDate, selectedUnidades) {
     console.log("🔍 Chamando updateMotivosPerdaTable com", dadosFinaisFiltrados.length, "registros");
     updateMotivosPerdaTable(dadosFinaisFiltrados);
     
+    console.log("🔍 Chamando updateDescartesTable com", dadosFinaisFiltrados.length, "registros");
+    updateDescartesTable(dadosFinaisFiltrados);
+    
+    console.log("🔍 Chamando updateConcorrentesTable com", dadosFinaisFiltrados.length, "registros");
+    updateConcorrentesTable(dadosFinaisFiltrados);
+    
     // PASSO 12: Atualizar o gráfico de negociações por fase
     createNegociacoesPorFaseChart(dadosFinaisFiltrados);
     
@@ -3402,19 +3410,19 @@ function updateMotivosPerdaTable(dadosFiltrados) {
             try {
                 const tr = document.createElement('tr');
                 
-                // Determinar classe CSS baseada no motivo
-                let classeMotivo = 'motivo-outros';
-                const motivoLower = item.motivo.toLowerCase();
-                if (motivoLower.includes('concorr') || motivoLower.includes('competidor')) {
-                    classeMotivo = 'motivo-concorrente';
+                // Determinar classe do mapa de calor baseada na porcentagem
+                let heatClass = 'heat-low';
+                const percentualNumerico = parseFloat(item.percentual);
+                if (percentualNumerico >= 30) {
+                    heatClass = 'heat-high';
+                } else if (percentualNumerico >= 15) {
+                    heatClass = 'heat-medium';
                 }
-                
-                tr.className = classeMotivo;
                 
                 tr.innerHTML = `
                     <td>${item.motivo}</td>
-                    <td>${item.percentual}%</td>
-                    <td>${item.total}</td>
+                    <td class="${heatClass}">${item.percentual}%</td>
+                    <td class="${heatClass}">${item.total}</td>
                 `;
                 
                 tbody.appendChild(tr);
@@ -3445,6 +3453,298 @@ function updateMotivosPerdaTable(dadosFiltrados) {
     }
     
     console.log("=== FIM updateMotivosPerdaTable ===");
+}
+
+// Função para atualizar a tabela de descartes (motivos que começam com "Descarte")
+function updateDescartesTable(dadosFiltrados) {
+    console.log("=== INÍCIO updateDescartesTable ===");
+    
+    try {
+        const tbody = document.getElementById('descartes-table-body');
+        if (!tbody) {
+            console.error("❌ Elemento descartes-table-body não encontrado");
+            return;
+        }
+
+        console.log("📊 Processando", dadosFiltrados.length, "registros para tabela de descartes");
+
+        // Filtrar apenas leads que têm motivos de descarte
+        const leadsComDescarte = dadosFiltrados.filter(item => {
+            try {
+                if (!item.titulo || item.titulo.trim() === '') return false;
+                
+                // 1. Verificar se está realmente na fase 7.2 Perdido
+                const estaNaFasePerdido = item.fase_perdido && 
+                                         item.fase_perdido.trim() !== '' && 
+                                         (item.fase_perdido.includes("7.2") || 
+                                          item.fase_perdido.toLowerCase().includes("perdido"));
+                
+                if (!estaNaFasePerdido) return false;
+                
+                // 2. Deve ter motivo da perda preenchido
+                if (!item.concat_motivo_perda || item.concat_motivo_perda.trim() === '') return false;
+                
+                // 3. Aplicar a regra do campo auxiliar e verificar se começa com "Descarte"
+                const campoAuxiliar = getCampoAuxiliar(item.concat_motivo_perda);
+                const comecaComDescarte = campoAuxiliar.startsWith("Descarte");
+                
+                console.log("🔍 Processando lead para descarte:", {
+                    titulo: item.titulo,
+                    motivo_original: item.concat_motivo_perda,
+                    campo_auxiliar: campoAuxiliar,
+                    comeca_com_descarte: comecaComDescarte
+                });
+                
+                if (comecaComDescarte) {
+                    console.log("✅ Lead válido para tabela de descartes");
+                    return true; // INCLUIR apenas os que começam com "Descarte"
+                }
+                
+                console.log("❌ Lead descartado (não é descarte)");
+                return false;
+            } catch (error) {
+                console.error("Erro ao processar item:", item, error);
+                return false;
+            }
+        });
+
+        // Se não há leads válidos, mostrar mensagem
+        if (leadsComDescarte.length === 0) {
+            console.log("⚠️ Nenhum lead com descarte encontrado");
+            tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: #adb5bd; padding: 20px;">Nenhum descarte encontrado no período selecionado</td></tr>';
+            console.log("=== FIM updateDescartesTable ===");
+            return;
+        }
+
+        // Contar motivos de descarte usando o campo auxiliar processado
+        const motivoContador = {};
+        let totalLeadsDescartados = 0;
+
+        leadsComDescarte.forEach(item => {
+            try {
+                const campoAuxiliar = getCampoAuxiliar(item.concat_motivo_perda);
+                const motivoFinal = campoAuxiliar || item.concat_motivo_perda.trim();
+                
+                if (motivoFinal) {
+                    if (!motivoContador[motivoFinal]) {
+                        motivoContador[motivoFinal] = 0;
+                    }
+                    motivoContador[motivoFinal]++;
+                    totalLeadsDescartados++;
+                }
+            } catch (error) {
+                console.error("Erro ao contar motivo de descarte:", item, error);
+            }
+        });
+
+        console.log("📈 Contagem de descartes:", motivoContador);
+        console.log("📊 Total de leads descartados contabilizados:", totalLeadsDescartados);
+
+        // Converter para array e ordenar por quantidade (descendente)
+        const dadosTabela = Object.keys(motivoContador).map(motivo => ({
+            motivo,
+            total: motivoContador[motivo],
+            percentual: totalLeadsDescartados > 0 ? ((motivoContador[motivo] / totalLeadsDescartados) * 100).toFixed(1) : 0
+        })).sort((a, b) => b.total - a.total);
+
+        // Limpar tabela
+        tbody.innerHTML = '';
+
+        // Adicionar linhas de dados
+        dadosTabela.forEach(item => {
+            try {
+                const tr = document.createElement('tr');
+                
+                // Determinar classe do mapa de calor baseada na porcentagem
+                let heatClass = 'heat-low';
+                const percentualNumerico = parseFloat(item.percentual);
+                if (percentualNumerico >= 30) {
+                    heatClass = 'heat-high';
+                } else if (percentualNumerico >= 15) {
+                    heatClass = 'heat-medium';
+                }
+                
+                tr.innerHTML = `
+                    <td>${item.motivo}</td>
+                    <td class="${heatClass}">${item.percentual}%</td>
+                    <td class="${heatClass}">${item.total}</td>
+                `;
+                
+                tbody.appendChild(tr);
+            } catch (error) {
+                console.error("Erro ao criar linha da tabela de descartes:", item, error);
+            }
+        });
+
+        // Adicionar linha de resumo/total
+        const totalPercentual = dadosTabela.reduce((sum, item) => sum + parseFloat(item.percentual), 0);
+        const totalAbsoluto = dadosTabela.reduce((sum, item) => sum + item.total, 0);
+        
+        const trTotal = document.createElement('tr');
+        trTotal.className = 'leads-perdidos-table-footer';
+        
+        trTotal.innerHTML = `
+            <td><strong>TOTAL GERAL</strong></td>
+            <td><strong>${totalPercentual.toFixed(1)}%</strong></td>
+            <td><strong>${totalAbsoluto}</strong></td>
+        `;
+        
+        tbody.appendChild(trTotal);
+
+        console.log("✅ Tabela de descartes atualizada com", dadosTabela.length, "motivos + linha de resumo");
+        
+    } catch (error) {
+        console.error("❌ Erro geral na função updateDescartesTable:", error);
+    }
+    
+    console.log("=== FIM updateDescartesTable ===");
+}
+
+// Função para atualizar a tabela de concorrentes (motivo "Fechou com o Concorrente")
+function updateConcorrentesTable(dadosFiltrados) {
+    console.log("=== INÍCIO updateConcorrentesTable ===");
+    
+    try {
+        const tbody = document.getElementById('concorrentes-table-body');
+        if (!tbody) {
+            console.error("❌ Elemento concorrentes-table-body não encontrado");
+            return;
+        }
+
+        console.log("📊 Processando", dadosFiltrados.length, "registros para tabela de concorrentes");
+
+        // Filtrar apenas leads que fecharam com concorrente
+        const leadsComConcorrente = dadosFiltrados.filter(item => {
+            try {
+                if (!item.titulo || item.titulo.trim() === '') return false;
+                
+                // 1. Verificar se está realmente na fase 7.2 Perdido
+                const estaNaFasePerdido = item.fase_perdido && 
+                                         item.fase_perdido.trim() !== '' && 
+                                         (item.fase_perdido.includes("7.2") || 
+                                          item.fase_perdido.toLowerCase().includes("perdido"));
+                
+                if (!estaNaFasePerdido) return false;
+                
+                // 2. Deve ter motivo da perda igual a "Fechou com o Concorrente"
+                if (!item.concat_motivo_perda || item.concat_motivo_perda.trim() === '') return false;
+                
+                const motivo = item.concat_motivo_perda.trim();
+                const fechouComConcorrente = motivo === "Fechou com o Concorrente";
+                
+                console.log("🔍 Processando lead para concorrente:", {
+                    titulo: item.titulo,
+                    motivo: item.concat_motivo_perda,
+                    concorrente: item.concat_concorrente,
+                    fechou_com_concorrente: fechouComConcorrente
+                });
+                
+                if (fechouComConcorrente) {
+                    console.log("✅ Lead válido para tabela de concorrentes");
+                    return true;
+                }
+                
+                console.log("❌ Lead descartado (não fechou com concorrente)");
+                return false;
+            } catch (error) {
+                console.error("Erro ao processar item:", item, error);
+                return false;
+            }
+        });
+
+        // Se não há leads válidos, mostrar mensagem
+        if (leadsComConcorrente.length === 0) {
+            console.log("⚠️ Nenhum lead que fechou com concorrente encontrado");
+            tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: #adb5bd; padding: 20px;">Nenhum concorrente encontrado no período selecionado</td></tr>';
+            console.log("=== FIM updateConcorrentesTable ===");
+            return;
+        }
+
+        // Contar concorrentes
+        const concorrenteContador = {};
+        let totalLeadsConcorrente = 0;
+
+        leadsComConcorrente.forEach(item => {
+            try {
+                // Usar o campo concat_concorrente
+                let concorrente = item.concat_concorrente || 'Concorrente não informado (Turma ativa por não informar)';
+                concorrente = concorrente.trim();
+                
+                if (concorrente === '') {
+                    concorrente = 'Concorrente não informado (Turma ativa por não informar)';
+                }
+                
+                if (!concorrenteContador[concorrente]) {
+                    concorrenteContador[concorrente] = 0;
+                }
+                concorrenteContador[concorrente]++;
+                totalLeadsConcorrente++;
+            } catch (error) {
+                console.error("Erro ao contar concorrente:", item, error);
+            }
+        });
+
+        console.log("📈 Contagem de concorrentes:", concorrenteContador);
+        console.log("📊 Total de leads com concorrente contabilizados:", totalLeadsConcorrente);
+
+        // Converter para array e ordenar por quantidade (descendente)
+        const dadosTabela = Object.keys(concorrenteContador).map(concorrente => ({
+            concorrente,
+            total: concorrenteContador[concorrente],
+            percentual: totalLeadsConcorrente > 0 ? ((concorrenteContador[concorrente] / totalLeadsConcorrente) * 100).toFixed(1) : 0
+        })).sort((a, b) => b.total - a.total);
+
+        // Limpar tabela
+        tbody.innerHTML = '';
+
+        // Adicionar linhas de dados
+        dadosTabela.forEach(item => {
+            try {
+                const tr = document.createElement('tr');
+                
+                // Determinar classe do mapa de calor baseada na porcentagem
+                let heatClass = 'heat-low';
+                const percentualNumerico = parseFloat(item.percentual);
+                if (percentualNumerico >= 30) {
+                    heatClass = 'heat-high';
+                } else if (percentualNumerico >= 15) {
+                    heatClass = 'heat-medium';
+                }
+                
+                tr.innerHTML = `
+                    <td>${item.concorrente}</td>
+                    <td class="${heatClass}">${item.percentual}%</td>
+                    <td class="${heatClass}">${item.total}</td>
+                `;
+                
+                tbody.appendChild(tr);
+            } catch (error) {
+                console.error("Erro ao criar linha da tabela de concorrentes:", item, error);
+            }
+        });
+
+        // Adicionar linha de resumo/total
+        const totalPercentual = dadosTabela.reduce((sum, item) => sum + parseFloat(item.percentual), 0);
+        const totalAbsoluto = dadosTabela.reduce((sum, item) => sum + item.total, 0);
+        
+        const trTotal = document.createElement('tr');
+        trTotal.className = 'leads-perdidos-table-footer';
+        
+        trTotal.innerHTML = `
+            <td><strong>TOTAL GERAL</strong></td>
+            <td><strong>${totalPercentual.toFixed(1)}%</strong></td>
+            <td><strong>${totalAbsoluto}</strong></td>
+        `;
+        
+        tbody.appendChild(trTotal);
+
+        console.log("✅ Tabela de concorrentes atualizada com", dadosTabela.length, "concorrentes + linha de resumo");
+        
+    } catch (error) {
+        console.error("❌ Erro geral na função updateConcorrentesTable:", error);
+    }
+    
+    console.log("=== FIM updateConcorrentesTable ===");
 }
 
 // === NOVA SEÇÃO: NEGOCIAÇÕES E PERDAS POR FASE ===

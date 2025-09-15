@@ -490,23 +490,66 @@
                     <section class="kpi-container" id="leads-perdidos-detalhados-section" style="display: block;">
                         <h2 style="grid-column: span 12; font-size: 1.4em; color: #ffc107; margin-bottom: 20px; text-align: left;">LEADS PERDIDOS, DESCARTES E CONCORRENTES</h2>
                         
-                        <!-- Container para a tabela de motivos de perda -->
+                        <!-- Container com duas colunas para as tabelas -->
                         <div class="leads-perdidos-content">
-                            <div class="leads-perdidos-table-container">
-                                <div class="leads-perdidos-table-wrapper">
-                                    <h3 class="leads-perdidos-subtitle">MOTIVOS DE PERDA</h3>
-                                    <table class="leads-perdidos-table" id="motivos-perda-table">
-                                        <thead>
-                                            <tr>
-                                                <th>Motivo da Perda</th>
-                                                <th>%</th>
-                                                <th>Total</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="motivos-perda-table-body">
-                                            <!-- Dados serão inseridos via JavaScript -->
-                                        </tbody>
-                                    </table>
+                            <div class="tabelas-lado-a-lado">
+                                <!-- Tabela de Motivos de Perda (esquerda) -->
+                                <div class="leads-perdidos-table-container">
+                                    <div class="leads-perdidos-table-wrapper">
+                                        <h3 class="leads-perdidos-subtitle">MOTIVOS DE PERDA</h3>
+                                        <table class="leads-perdidos-table" id="motivos-perda-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Motivo da Perda</th>
+                                                    <th>%</th>
+                                                    <th>Total</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="motivos-perda-table-body">
+                                                <!-- Dados serão inseridos via JavaScript -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                
+                                <!-- Tabela de Descartes (direita) -->
+                                <div class="leads-perdidos-table-container">
+                                    <div class="leads-perdidos-table-wrapper">
+                                        <h3 class="leads-perdidos-subtitle">DESCARTES</h3>
+                                        <table class="leads-perdidos-table" id="descartes-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Motivo do Descarte</th>
+                                                    <th>%</th>
+                                                    <th>Total</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="descartes-table-body">
+                                                <!-- Dados serão inseridos via JavaScript -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Tabela de Concorrentes (abaixo das duas anteriores) -->
+                            <div class="concorrentes-section">
+                                <div class="leads-perdidos-table-container concorrentes-container">
+                                    <div class="leads-perdidos-table-wrapper">
+                                        <h3 class="leads-perdidos-subtitle">CONCORRENTES</h3>
+                                        <table class="leads-perdidos-table" id="concorrentes-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Concorrente</th>
+                                                    <th>%</th>
+                                                    <th>Total</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="concorrentes-table-body">
+                                                <!-- Dados serão inseridos via JavaScript -->
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
                         </div>
