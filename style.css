@@ -425,7 +425,7 @@ body {
             border-radius: 0; /* Remove bordas arredondadas */
             padding: 20px 0; /* Reduz padding vertical, remove horizontal */
             border: none; /* Remove a borda */
-            min-height: 140px; /* Reduz altura mínima */
+            min-height: 215px; /* Aumenta para acomodar os cards maiores (175px + padding) */
             overflow: visible; /* Permite que elementos sejam visíveis */
         }
 
@@ -448,7 +448,7 @@ body {
             flex-direction: column;
             gap: 8px;
             min-width: 110px;
-            height: 120px;
+            height: 175px; /* Aumentada de 120px para 175px para ficar na altura dos 2 cards laterais */
             justify-content: center;
             box-shadow: 0 4px 8px rgba(0,0,0,0.3);
             font-weight: bold;
