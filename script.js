@@ -2447,6 +2447,44 @@ function updateFundosDetalhadosTable(fundosData, selectedUnidades, startDate, en
     }
 }
 
+// --- FUNÇÃO AUXILIAR GLOBAL PARA CAMPO AUXILIAR ---
+function getCampoAuxiliar(concatMotivoPerda) {
+    if (!concatMotivoPerda || concatMotivoPerda.trim() === '') return '';
+    
+    const motivo = concatMotivoPerda.trim();
+    
+    switch (motivo) {
+        case "Outro Motivo (especifique no campo de texto)":
+            return "Outro Motivo (especifique no campo de texto)";
+        case "Fechou com o Concorrente":
+            return "Fechou com o Concorrente";
+        case "Desistiu de Fazer o Fundo de Formatura":
+            return "Desistiu de Fazer o Fundo de Formatura";
+        case "Lead Duplicado (já existe outra pessoa da turma negociando - especifique o nome)":
+            return "Descarte - Lead Duplicado (já existe outra pessoa da turma negociando - especifique o nome)";
+        case "Falta de Contato no Grupo (durante negociação)":
+            return "Falta de Contato no Grupo (durante negociação)";
+        case "Falta de Contato Inicial (não responde)":
+            return "Falta de Contato Inicial (não responde)";
+        case "Território Inviável (não atendido por franquia VIVA)":
+            return "Descarte - Território Inviável (não atendido por franquia VIVA)";
+        case "Falta de Contato Inicial (telefone errado)":
+            return "Descarte - Falta de Contato Inicial (telefone errado)";
+        case "Pediu para retomar contato no próximo semestre":
+            return "Descarte - Pediu para retomar contato no próximo semestre";
+        case "Tipo de Ensino/Curso não atendido":
+            return "Descarte - Tipo de Ensino/Curso não atendido";
+        case "Adesão individual":
+            return "Descarte - Adesão Individual";
+        case "Adesão individual:":
+            return "Descarte - Adesão Individual";
+        case "Tipo de Ensino/Curso não atendido:":
+            return "Descarte - Tipo de Ensino/Curso não atendido";
+        default:
+            return motivo;
+    }
+}
+
 // --- FUNÇÃO PARA ATUALIZAR INDICADORES DO FUNIL ---
 function updateFunilIndicators(startDate, endDate, selectedUnidades) {
     console.log("=== INÍCIO updateFunilIndicators ===");
@@ -2798,44 +2836,6 @@ function updateFunilIndicators(startDate, endDate, selectedUnidades) {
         }
     });
     
-    // Função auxiliar para aplicar as regras do campo auxiliar
-    const getCampoAuxiliar = (concatMotivoPerda) => {
-        if (!concatMotivoPerda || concatMotivoPerda.trim() === '') return '';
-        
-        const motivo = concatMotivoPerda.trim();
-        
-        switch (motivo) {
-            case "Outro Motivo (especifique no campo de texto)":
-                return "Outro Motivo (especifique no campo de texto)";
-            case "Fechou com o Concorrente":
-                return "Fechou com o Concorrente";
-            case "Desistiu de Fazer o Fundo de Formatura":
-                return "Desistiu de Fazer o Fundo de Formatura";
-            case "Lead Duplicado (já existe outra pessoa da turma negociando - especifique o nome)":
-                return "Descarte - Lead Duplicado (já existe outra pessoa da turma negociando - especifique o nome)";
-            case "Falta de Contato no Grupo (durante negociação)":
-                return "Falta de Contato no Grupo (durante negociação)";
-            case "Falta de Contato Inicial (não responde)":
-                return "Falta de Contato Inicial (não responde)";
-            case "Território Inviável (não atendido por franquia VIVA)":
-                return "Descarte - Território Inviável (não atendido por franquia VIVA)";
-            case "Falta de Contato Inicial (telefone errado)":
-                return "Descarte - Falta de Contato Inicial (telefone errado)";
-            case "Pediu para retomar contato no próximo semestre":
-                return "Descarte - Pediu para retomar contato no próximo semestre";
-            case "Tipo de Ensino/Curso não atendido":
-                return "Descarte - Tipo de Ensino/Curso não atendido";
-            case "Adesão individual":
-                return "Descarte - Adesão Individual";
-            case "Adesão individual:":
-                return "Descarte - Adesão Individual";
-            case "Tipo de Ensino/Curso não atendido:":
-                return "Descarte - Tipo de Ensino/Curso não atendido";
-            default:
-                return motivo;
-        }
-    };
-    
     const leadsComFasePerdido = dadosFinaisFiltrados.filter(item => {
         if (!item.titulo || item.titulo.trim() === '') return false; // tem título válido
         
@@ -2969,6 +2969,7 @@ function updateFunilIndicators(startDate, endDate, selectedUnidades) {
     updateCaptacoes(dadosFinaisFiltrados);
     
     // PASSO 11.5: Atualizar a tabela de motivos de perda detalhados
+    console.log("🔍 Chamando updateMotivosPerdaTable com", dadosFinaisFiltrados.length, "registros");
     updateMotivosPerdaTable(dadosFinaisFiltrados);
     
     // PASSO 12: Atualizar o gráfico de negociações por fase
@@ -3275,6 +3276,7 @@ function updateCaptacoesChart(dados) {
 // Função para atualizar a tabela de motivos de perda
 function updateMotivosPerdaTable(dadosFiltrados) {
     console.log("=== INÍCIO updateMotivosPerdaTable ===");
+    console.log("📊 Dados filtrados recebidos:", dadosFiltrados ? dadosFiltrados.length : 0);
     
     const tbody = document.getElementById('motivos-perda-table-body');
     if (!tbody) {
@@ -3282,7 +3284,36 @@ function updateMotivosPerdaTable(dadosFiltrados) {
         return;
     }
 
+    // Verificar se há dados do funil disponíveis
+    if (!dadosFiltrados || dadosFiltrados.length === 0) {
+        console.log("⚠️ Não há dados filtrados para processar motivos de perda");
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: #adb5bd;">Nenhum dado disponível</td></tr>';
+        return;
+    }
+
     try {
+        // Debug: Verificar estrutura dos dados
+        console.log("🔍 Amostra dos primeiros 3 registros:", dadosFiltrados.slice(0, 3));
+        
+        // Debug: Verificar quantos leads têm fase_perdido preenchida
+        const leadsComFasePerdidoPreenchida = dadosFiltrados.filter(item => 
+            item && item.fase_perdido && item.fase_perdido.trim() !== ''
+        );
+        console.log("📊 Leads com fase_perdido preenchida:", leadsComFasePerdidoPreenchida.length);
+        
+        // Debug: Verificar quantos são da fase 7.2
+        const leadsNaFase72 = dadosFiltrados.filter(item => 
+            item && item.fase_perdido && 
+            (item.fase_perdido.includes("7.2") || item.fase_perdido.toLowerCase().includes("perdido"))
+        );
+        console.log("📊 Leads na fase 7.2 Perdido:", leadsNaFase72.length);
+        
+        // Debug: Verificar quantos têm motivo preenchido
+        const leadsComMotivo = dadosFiltrados.filter(item => 
+            item && item.concat_motivo_perda && item.concat_motivo_perda.trim() !== ''
+        );
+        console.log("📊 Leads com motivo de perda preenchido:", leadsComMotivo.length);
+
         // Filtrar apenas leads perdidos VÁLIDOS (MESMA LÓGICA DO CARD - exclui os que começam com "Descarte")
         const leadsComFasePerdido = dadosFiltrados.filter(item => {
             try {
@@ -3303,10 +3334,19 @@ function updateMotivosPerdaTable(dadosFiltrados) {
                 const campoAuxiliar = getCampoAuxiliar(item.concat_motivo_perda);
                 const comecaComDescarte = campoAuxiliar.startsWith("Descarte");
                 
+                console.log("🔍 Processando lead:", {
+                    titulo: item.titulo,
+                    motivo_original: item.concat_motivo_perda,
+                    campo_auxiliar: campoAuxiliar,
+                    comeca_com_descarte: comecaComDescarte
+                });
+                
                 if (comecaComDescarte) {
+                    console.log("❌ Lead descartado (motivo de descarte)");
                     return false; // EXCLUIR os que começam com "Descarte"
                 }
                 
+                console.log("✅ Lead válido para tabela");
                 return true;
             } catch (error) {
                 console.error("Erro ao processar item:", item, error);
@@ -3314,7 +3354,13 @@ function updateMotivosPerdaTable(dadosFiltrados) {
             }
         });
 
-        console.log("📊 Total de leads perdidos VÁLIDOS com motivo (excluindo descartes):", leadsComFasePerdido.length);
+        // Se não há leads válidos, mostrar mensagem
+        if (leadsComFasePerdido.length === 0) {
+            console.log("⚠️ Nenhum lead perdido válido encontrado");
+            tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: #adb5bd; padding: 20px;">Nenhum motivo de perda encontrado no período selecionado</td></tr>';
+            console.log("=== FIM updateMotivosPerdaTable ===");
+            return;
+        }
 
         // Contar motivos de perda usando o campo auxiliar processado
         const motivoContador = {};
