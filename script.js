@@ -529,6 +529,7 @@ async function fetchFunilData() {
     // Encontrar índices das colunas importantes
     const tituloIndex = 0; // Coluna A - Título
     const fasePerdidoIndex = 1; // Coluna B - Fase 7.2 Perdido
+    const cursoIndex = 3; // Coluna D - Qual é o seu curso?
     const origemLeadIndex = 6; // Coluna G - Origem do Lead
     const criadoEmIndex = 12; // Coluna M - Data criação
     const qualificacaoComissaoIndex = 57; // Coluna BF - Primeira vez que entrou na fase 1.2 Qualificação Comissão
@@ -564,12 +565,13 @@ async function fetchFunilData() {
       unidadeIndex = 72;
     }
     
-    console.log("Índices - Título:", tituloIndex, "Fase Perdido:", fasePerdidoIndex, "Origem Lead:", origemLeadIndex, "Criado em:", criadoEmIndex, "Qualificação Comissão:", qualificacaoComissaoIndex, "Diagnóstico Realizado:", diagnosticoRealizadoIndex, "Proposta Enviada:", propostaEnviadaIndex, "Fechamento Comissão:", fechamentoComissaoIndex, "CONCAT Motivo Perda:", concatMotivoPerdaIndex, "CONCAT Concorrente:", concatConcorrenteIndex, "Unidade:", unidadeIndex);
+    console.log("Índices - Título:", tituloIndex, "Fase Perdido:", fasePerdidoIndex, "Curso:", cursoIndex, "Origem Lead:", origemLeadIndex, "Criado em:", criadoEmIndex, "Qualificação Comissão:", qualificacaoComissaoIndex, "Diagnóstico Realizado:", diagnosticoRealizadoIndex, "Proposta Enviada:", propostaEnviadaIndex, "Fechamento Comissão:", fechamentoComissaoIndex, "CONCAT Motivo Perda:", concatMotivoPerdaIndex, "CONCAT Concorrente:", concatConcorrenteIndex, "Unidade:", unidadeIndex);
     
     if (rows.length > 1) {
       console.log("Segunda linha como exemplo:", rows[1]);
       console.log("Título (A):", rows[1][tituloIndex]);
       console.log("Fase Perdido (B):", rows[1][fasePerdidoIndex]);
+      console.log("Curso (D):", rows[1][cursoIndex]);
       console.log("Origem Lead (G):", rows[1][origemLeadIndex]);
       console.log("Criado em (M):", rows[1][criadoEmIndex]);
       console.log("Qualificação Comissão (BF):", rows[1][qualificacaoComissaoIndex]);
@@ -585,6 +587,7 @@ async function fetchFunilData() {
       id: index + 1,
       titulo: row[tituloIndex] || '',
       fase_perdido: row[fasePerdidoIndex] || '',
+      curso: row[cursoIndex] || '', // Coluna D - Qual é o seu curso?
       origem_lead: row[origemLeadIndex] || '',
       criado_em: row[criadoEmIndex] || '',
       qualificacao_comissao: row[qualificacaoComissaoIndex] || '',
@@ -1671,17 +1674,37 @@ function updateDependentFilters(selectedUnidades = []) {
     const cursoFilter = $("#curso-filter");
     const fundoFilter = $("#fundo-filter");
     
+    // Verificar se estamos na página do funil
+    const isFunilPage = document.getElementById('btn-page3')?.classList.contains('active') || 
+                       document.getElementById('page3')?.classList.contains('active');
+    
+    console.log('É página do funil?', isFunilPage);
+    
+    // Ocultar/mostrar filtro de fundos baseado na página
+    const fundoFilterContainer = document.getElementById('fundo-filter-container');
+    if (fundoFilterContainer) {
+        if (isFunilPage) {
+            fundoFilterContainer.style.display = 'none';
+        } else {
+            fundoFilterContainer.style.display = 'block';
+        }
+    }
+    
     // Destruir instâncias existentes
     try {
         cursoFilter.multiselect('destroy');
-        fundoFilter.multiselect('destroy');
+        if (!isFunilPage) { // Só destruir fundo filter se não for página do funil
+            fundoFilter.multiselect('destroy');
+        }
     } catch(e) {
         console.log("Multiselect de filtros dependentes não existia ainda");
     }
     
     // Limpar opções
     cursoFilter.empty();
-    fundoFilter.empty();
+    if (!isFunilPage) {
+        fundoFilter.empty();
+    }
     
     // Determinar quais unidades usar para filtrar
     let unidadesFiltradas = [];
@@ -1696,24 +1719,36 @@ function updateDependentFilters(selectedUnidades = []) {
     // Filtrar dados com base nas unidades
     const dadosFiltrados = allData.filter(d => unidadesFiltradas.includes(d.nm_unidade));
     const fundosFiltrados = fundosData.filter(d => unidadesFiltradas.includes(d.nm_unidade));
+    const funilFiltrado = funilData.filter(d => unidadesFiltradas.includes(d.nm_unidade));
     
     // Popular filtro de cursos
-    const cursosVendas = dadosFiltrados.map((d) => d.curso_fundo || '').filter(c => c && c !== 'N/A');
-    const cursosFundos = fundosFiltrados.map((d) => d.curso_fundo || '').filter(c => c && c !== 'N/A');
-    const cursos = [...new Set([...cursosVendas, ...cursosFundos])].sort();
+    let cursos = [];
+    if (isFunilPage) {
+        // Para página do funil, usar coluna D do funil (Qual é o seu curso?)
+        const cursosFunil = funilFiltrado.map((d) => d.curso || '').filter(c => c && c.trim() !== '' && c !== 'N/A');
+        cursos = [...new Set(cursosFunil)].sort();
+        console.log('Cursos do funil:', cursos);
+    } else {
+        // Para outras páginas, usar dados de vendas e fundos
+        const cursosVendas = dadosFiltrados.map((d) => d.curso_fundo || '').filter(c => c && c !== 'N/A');
+        const cursosFundos = fundosFiltrados.map((d) => d.curso_fundo || '').filter(c => c && c !== 'N/A');
+        cursos = [...new Set([...cursosVendas, ...cursosFundos])].sort();
+    }
     
     cursos.forEach((c) => {
         cursoFilter.append($("<option>", { value: c, text: c }));
     });
     
-    // Popular filtro de fundos
-    const fundosFromVendas = dadosFiltrados.map((d) => d.nm_fundo || '').filter(f => f && f !== 'N/A');
-    const fundosFromFundos = fundosFiltrados.map((d) => d.nm_fundo || '').filter(f => f && f !== 'N/A');
-    const fundosUnicos = [...new Set([...fundosFromVendas, ...fundosFromFundos])].sort();
-    
-    fundosUnicos.forEach((f) => {
-        fundoFilter.append($("<option>", { value: f, text: f }));
-    });
+    // Popular filtro de fundos (apenas se não for página do funil)
+    if (!isFunilPage) {
+        const fundosFromVendas = dadosFiltrados.map((d) => d.nm_fundo || '').filter(f => f && f !== 'N/A');
+        const fundosFromFundos = fundosFiltrados.map((d) => d.nm_fundo || '').filter(f => f && f !== 'N/A');
+        const fundosUnicos = [...new Set([...fundosFromVendas, ...fundosFromFundos])].sort();
+        
+        fundosUnicos.forEach((f) => {
+            fundoFilter.append($("<option>", { value: f, text: f }));
+        });
+    }
     
     // Recriar multiselects para cursos
     cursoFilter.multiselect({
@@ -1740,33 +1775,35 @@ function updateDependentFilters(selectedUnidades = []) {
         }
     });
     
-    // Recriar multiselects para fundos
-    fundoFilter.multiselect({
-        enableFiltering: true,
-        includeSelectAllOption: true,
-        selectAllText: "Marcar todos",
-        filterPlaceholder: "Pesquisar...",
-        nonSelectedText: "Todos os fundos",
-        nSelectedText: "fundos",
-        allSelectedText: "Todos selecionados",
-        buttonWidth: "100%",
-        maxHeight: 300,
-        onChange: updateDashboard,
-        onSelectAll: updateDashboard,
-        onDeselectAll: updateDashboard,
-        enableCaseInsensitiveFiltering: true,
-        filterBehavior: 'text',
-        dropUp: false,
-        dropRight: false,
-        widthSynchronizationMode: 'ifPopupIsSmaller',
-        closeOnSelect: false,
-        templates: {
-            button: '<button type="button" class="multiselect dropdown-toggle" data-toggle="dropdown"><span class="multiselect-selected-text"></span></button>',
-            ul: '<ul class="multiselect-container dropdown-menu" style="width: auto; min-width: 100%;"></ul>',
-            filter: '<li class="multiselect-item filter"><div class="input-group"><input class="form-control multiselect-search" type="text"></div></li>',
-            filterClearBtn: '<span class="input-group-btn"><button class="btn btn-default multiselect-clear-filter" type="button"><i class="fas fa-times"></i></button></span>'
-        }
-    });
+    // Recriar multiselects para fundos (apenas se não for página do funil)
+    if (!isFunilPage) {
+        fundoFilter.multiselect({
+            enableFiltering: true,
+            includeSelectAllOption: true,
+            selectAllText: "Marcar todos",
+            filterPlaceholder: "Pesquisar...",
+            nonSelectedText: "Todos os fundos",
+            nSelectedText: "fundos",
+            allSelectedText: "Todos selecionados",
+            buttonWidth: "100%",
+            maxHeight: 300,
+            onChange: updateDashboard,
+            onSelectAll: updateDashboard,
+            onDeselectAll: updateDashboard,
+            enableCaseInsensitiveFiltering: true,
+            filterBehavior: 'text',
+            dropUp: false,
+            dropRight: false,
+            widthSynchronizationMode: 'ifPopupIsSmaller',
+            closeOnSelect: false,
+            templates: {
+                button: '<button type="button" class="multiselect dropdown-toggle" data-toggle="dropdown"><span class="multiselect-selected-text"></span></button>',
+                ul: '<ul class="multiselect-container dropdown-menu" style="width: auto; min-width: 100%;"></ul>',
+                filter: '<li class="multiselect-item filter"><div class="input-group"><input class="form-control multiselect-search" type="text"></div></li>',
+                filterClearBtn: '<span class="input-group-btn"><button class="btn btn-default multiselect-clear-filter" type="button"><i class="fas fa-times"></i></button></span>'
+            }
+        });
+    }
 }
 
 // Arquivo: script.js (do Dashboard de Vendas)
@@ -1782,6 +1819,22 @@ function populateFilters(selectedUnidades = []) {
     const unidadeFilter = $("#unidade-filter");
     const cursoFilter = $("#curso-filter");
     const fundoFilter = $("#fundo-filter");
+    
+    // Verificar se estamos na página do funil
+    const isFunilPage = document.getElementById('btn-page3')?.classList.contains('active') || 
+                       document.getElementById('page3')?.classList.contains('active');
+    
+    console.log('É página do funil (populateFilters)?', isFunilPage);
+    
+    // Ocultar/mostrar filtro de fundos baseado na página
+    const fundoFilterContainer = document.getElementById('fundo-filter-container');
+    if (fundoFilterContainer) {
+        if (isFunilPage) {
+            fundoFilterContainer.style.display = 'none';
+        } else {
+            fundoFilterContainer.style.display = 'block';
+        }
+    }
     
     console.log('jQuery found unidade filter?', unidadeFilter.length > 0);
     console.log('Multiselect plugin available?', typeof unidadeFilter.multiselect === 'function');
@@ -2631,6 +2684,44 @@ function updateFunilIndicators(startDate, endDate, selectedUnidades) {
         console.log("📊 Dados após filtro de unidade:", dadosFinaisFiltrados.length, "registros");
     } else {
         console.log("📊 Mantendo todos os dados (sem filtro de unidade)");
+    }
+    
+    // PASSO 2.5: FILTRAR POR CURSO (se estiver na página do funil e curso selecionado)
+    const selectedCursos = $("#curso-filter").val() || [];
+    if (selectedCursos && selectedCursos.length > 0) {
+        console.log("🔍 Filtrando por cursos:", selectedCursos);
+        
+        dadosFinaisFiltrados = dadosFinaisFiltrados.filter(item => {
+            const cursoItem = item.curso;
+            if (!cursoItem || cursoItem.trim() === '') {
+                console.log("⚠️ Item sem curso:", {
+                    titulo: item.titulo,
+                    curso: cursoItem
+                });
+                return false;
+            }
+            
+            const cursoPertence = selectedCursos.includes(cursoItem.trim());
+            
+            if (!cursoPertence) {
+                console.log("❌ Curso não está no filtro:", {
+                    titulo: item.titulo,
+                    curso: cursoItem,
+                    cursosPermitidos: selectedCursos
+                });
+            } else {
+                console.log("✅ Curso aceito:", {
+                    titulo: item.titulo,
+                    curso: cursoItem
+                });
+            }
+            
+            return cursoPertence;
+        });
+        
+        console.log("📊 Dados após filtro de curso:", dadosFinaisFiltrados.length, "registros");
+    } else {
+        console.log("📊 Mantendo todos os dados (sem filtro de curso)");
     }
     
     // PASSO 3: CONTAR LINHAS com título válido (não vazio)
