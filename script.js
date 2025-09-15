@@ -1706,6 +1706,7 @@ function updateDependentFilters(selectedUnidades = []) {
     console.log('updateDependentFilters called with:', selectedUnidades);
     const cursoFilter = $("#curso-filter");
     const consultorFilter = $("#consultor-filter");
+    const origemLeadFilter = $("#origem-lead-filter");
     const fundoFilter = $("#fundo-filter");
     
     // Verificar se estamos na página do funil
@@ -1717,6 +1718,7 @@ function updateDependentFilters(selectedUnidades = []) {
     // Ocultar/mostrar filtros baseado na página
     const fundoFilterContainer = document.getElementById('fundo-filter-container');
     const consultorFilterContainer = document.getElementById('consultor-filter-container');
+    const origemLeadFilterContainer = document.getElementById('origem-lead-filter-container');
     
     if (fundoFilterContainer) {
         if (isFunilPage) {
@@ -1733,12 +1735,21 @@ function updateDependentFilters(selectedUnidades = []) {
             consultorFilterContainer.style.display = 'none';
         }
     }
+
+    if (origemLeadFilterContainer) {
+        if (isFunilPage) {
+            origemLeadFilterContainer.style.display = 'block';
+        } else {
+            origemLeadFilterContainer.style.display = 'none';
+        }
+    }
     
     // Destruir instâncias existentes
     try {
         cursoFilter.multiselect('destroy');
         if (isFunilPage) {
             consultorFilter.multiselect('destroy');
+            origemLeadFilter.multiselect('destroy');
         } else {
             fundoFilter.multiselect('destroy');
         }
@@ -1750,6 +1761,7 @@ function updateDependentFilters(selectedUnidades = []) {
     cursoFilter.empty();
     if (isFunilPage) {
         consultorFilter.empty();
+        origemLeadFilter.empty();
     } else {
         fundoFilter.empty();
     }
@@ -1795,6 +1807,15 @@ function updateDependentFilters(selectedUnidades = []) {
         
         consultores.forEach((c) => {
             consultorFilter.append($("<option>", { value: c, text: c }));
+        });
+
+        // Popular filtro de origem do lead (apenas se for página do funil)
+        const origemLeadFunil = funilFiltrado.map((d) => d.origem_lead || '').filter(o => o && o.trim() !== '' && o !== 'N/A');
+        const origensLead = [...new Set(origemLeadFunil)].sort();
+        console.log('Origens do lead do funil:', origensLead);
+        
+        origensLead.forEach((o) => {
+            origemLeadFilter.append($("<option>", { value: o, text: o }));
         });
     }
     
@@ -1859,6 +1880,31 @@ function updateDependentFilters(selectedUnidades = []) {
                 ul: '<ul class="multiselect-container dropdown-menu" style="width: auto; min-width: 100%;"></ul>'
             }
         });
+
+        // Recriar multiselects para origem do lead (apenas se for página do funil)
+        origemLeadFilter.multiselect({
+            enableFiltering: true,
+            includeSelectAllOption: true,
+            selectAllText: "Marcar todos",
+            filterPlaceholder: "Pesquisar...",
+            nonSelectedText: "Todas as origens",
+            nSelectedText: "origens",
+            allSelectedText: "Todas selecionadas",
+            buttonWidth: "100%",
+            maxHeight: 300,
+            onChange: updateDashboard,
+            onSelectAll: updateDashboard,
+            onDeselectAll: updateDashboard,
+            enableCaseInsensitiveFiltering: true,
+            filterBehavior: 'text',
+            dropUp: false,
+            dropRight: false,
+            widthSynchronizationMode: 'ifPopupIsSmaller',
+            templates: {
+                button: '<button type="button" class="multiselect dropdown-toggle" data-toggle="dropdown"><span class="multiselect-selected-text"></span></button>',
+                ul: '<ul class="multiselect-container dropdown-menu" style="width: auto; min-width: 100%;"></ul>'
+            }
+        });
     }
     
     // Recriar multiselects para fundos (apenas se não for página do funil)
@@ -1905,6 +1951,7 @@ function populateFilters(selectedUnidades = []) {
     const unidadeFilter = $("#unidade-filter");
     const cursoFilter = $("#curso-filter");
     const consultorFilter = $("#consultor-filter");
+    const origemLeadFilter = $("#origem-lead-filter");
     const fundoFilter = $("#fundo-filter");
     
     // Verificar se estamos na página do funil
@@ -1926,6 +1973,7 @@ function populateFilters(selectedUnidades = []) {
     // Ocultar/mostrar filtros baseado na página
     const fundoFilterContainer = document.getElementById('fundo-filter-container');
     const consultorFilterContainer = document.getElementById('consultor-filter-container');
+    const origemLeadFilterContainer = document.getElementById('origem-lead-filter-container');
     
     if (fundoFilterContainer) {
         if (isFunilPage) {
@@ -1940,6 +1988,14 @@ function populateFilters(selectedUnidades = []) {
             consultorFilterContainer.style.display = 'block';
         } else {
             consultorFilterContainer.style.display = 'none';
+        }
+    }
+
+    if (origemLeadFilterContainer) {
+        if (isFunilPage) {
+            origemLeadFilterContainer.style.display = 'block';
+        } else {
+            origemLeadFilterContainer.style.display = 'none';
         }
     }
     
@@ -2102,6 +2158,20 @@ function populateFilters(selectedUnidades = []) {
             console.log('📝 Opções adicionadas ao filtro de consultor:', consultores.length);
         }
 
+        // Populate origem do lead filter (apenas se for página do funil)
+        if (isFunilPage && funilFiltrado.length > 0) {
+            console.log('🎯 POPULANDO ORIGEM DO LEAD DO FUNIL');
+            const origemLeadFunil = funilFiltrado.map((d) => d.origem_lead || '').filter(o => o && o.trim() !== '' && o !== 'N/A');
+            const origensLead = [...new Set(origemLeadFunil)].sort();
+            console.log('Origens do lead do funil (populateFilters):', origensLead);
+            
+            origensLead.forEach((o) => {
+                origemLeadFilter.append($("<option>", { value: o, text: o }));
+            });
+            
+            console.log('📝 Opções adicionadas ao filtro de origem do lead:', origensLead.length);
+        }
+
         // Populate fundos filter (apenas se não for página do funil)
         if (!isFunilPage) {
             const fundosFromVendas = dadosFiltrados.map((d) => d.nm_fundo || '').filter(f => f && f !== 'N/A');
@@ -2248,6 +2318,47 @@ function populateFilters(selectedUnidades = []) {
                     console.log('Multiselect de consultores inicializado com sucesso');
                 } catch (error) {
                     console.error('Erro ao inicializar multiselect de consultores:', error);
+                }
+
+                // ORIGEM DO LEAD (apenas se for página do funil)
+                try {
+                    // Destruir multiselect existente de origem do lead
+                    try {
+                        if (origemLeadFilter.data('multiselect')) {
+                            origemLeadFilter.multiselect('destroy');
+                            console.log('🔄 Multiselect de origem do lead destruído');
+                        }
+                    } catch (e) {
+                        console.log('🔄 Nenhum multiselect de origem do lead para destruir');
+                    }
+                    
+                    origemLeadFilter.multiselect({
+                        enableFiltering: true,
+                        includeSelectAllOption: true,
+                        selectAllText: "Marcar todos",
+                        filterPlaceholder: "Pesquisar...",
+                        nonSelectedText: "Todas as origens",
+                        nSelectedText: "origens",
+                        allSelectedText: "Todas selecionadas",
+                        buttonWidth: "100%",
+                        maxHeight: 300,
+                        onChange: updateDashboard,
+                        onSelectAll: updateDashboard,
+                        onDeselectAll: updateDashboard,
+                        enableCaseInsensitiveFiltering: true,
+                        filterBehavior: 'text',
+                        dropUp: false,
+                        dropRight: false,
+                        widthSynchronizationMode: 'ifPopupIsSmaller',
+                        templates: {
+                            button: '<button type="button" class="multiselect dropdown-toggle" data-toggle="dropdown"><span class="multiselect-selected-text"></span></button>',
+                            ul: '<ul class="multiselect-container dropdown-menu" style="width: auto; min-width: 100%;"></ul>'
+                        }
+                    });
+                    
+                    console.log('Multiselect de origem do lead inicializado com sucesso');
+                } catch (error) {
+                    console.error('Erro ao inicializar multiselect de origem do lead:', error);
                 }
             }
 
@@ -3025,6 +3136,44 @@ function updateFunilIndicators(startDate, endDate, selectedUnidades) {
         console.log("📊 Dados após filtro de consultor:", dadosFinaisFiltrados.length, "registros");
     } else {
         console.log("📊 Mantendo todos os dados (sem filtro de consultor)");
+    }
+
+    // PASSO 2.7: FILTRAR POR ORIGEM DO LEAD (se estiver na página do funil e origem selecionada)
+    const selectedOrigensLead = $("#origem-lead-filter").val() || [];
+    if (selectedOrigensLead && selectedOrigensLead.length > 0) {
+        console.log("🔍 Filtrando por origens do lead:", selectedOrigensLead);
+        
+        dadosFinaisFiltrados = dadosFinaisFiltrados.filter(item => {
+            const origemLeadItem = item.origem_lead;
+            if (!origemLeadItem || origemLeadItem.trim() === '') {
+                console.log("⚠️ Item sem origem do lead:", {
+                    titulo: item.titulo,
+                    origem_lead: origemLeadItem
+                });
+                return false;
+            }
+            
+            const origemPertence = selectedOrigensLead.includes(origemLeadItem.trim());
+            
+            if (!origemPertence) {
+                console.log("❌ Origem do lead não está no filtro:", {
+                    titulo: item.titulo,
+                    origem_lead: origemLeadItem,
+                    origensPermitidas: selectedOrigensLead
+                });
+            } else {
+                console.log("✅ Origem do lead aceita:", {
+                    titulo: item.titulo,
+                    origem_lead: origemLeadItem
+                });
+            }
+            
+            return origemPertence;
+        });
+        
+        console.log("📊 Dados após filtro de origem do lead:", dadosFinaisFiltrados.length, "registros");
+    } else {
+        console.log("📊 Mantendo todos os dados (sem filtro de origem do lead)");
     }
     
     // PASSO 3: CONTAR LINHAS com título válido (não vazio)
