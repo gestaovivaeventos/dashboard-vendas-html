@@ -1364,6 +1364,13 @@ input[type=number] {
             overflow: hidden;
         }
 
+        /* Container principal das tabelas */
+        .leads-perdidos-content {
+            display: flex;
+            flex-direction: column; /* Empilha elementos verticalmente */
+            width: 100%;
+        }
+
         /* Layout de duas colunas para as tabelas */
         .tabelas-lado-a-lado {
             display: flex;
@@ -1386,20 +1393,6 @@ input[type=number] {
             min-width: 0;
             max-width: 100%;
             overflow: hidden;
-        }
-
-        .leads-perdidos-subtitle {
-            color: #ffc107;
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin-bottom: 20px;
-            text-align: center;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            height: 30px; /* Altura fixa para alinhar os títulos */
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
 
         .leads-perdidos-table-wrapper {
@@ -1503,12 +1496,17 @@ input[type=number] {
         .concorrentes-section {
             width: 100%;
             display: block; /* Força ficar em uma nova linha */
+            clear: both; /* Limpa qualquer float */
+            margin-top: 30px; /* Espaço acima */
         }
 
         .concorrentes-container {
-            max-width: 600px; /* Largura menor para a tabela de concorrentes */
-            margin: 0 auto; /* Centralizar na página */
+            width: 100%; /* Ocupar toda a largura disponível */
+            max-width: none; /* Remover limitação de largura */
+            margin: 0; /* Remover centralização */
             min-height: 400px; /* Altura menor que as tabelas de cima */
+            display: flex;
+            flex-direction: column;
         }
 
         /* Responsividade para telas menores - empilhar tabelas */
