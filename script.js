@@ -1679,6 +1679,12 @@ function addEventListeners() {
                     }
                 }, 100);
             }
+            
+            // 🆕 FORÇAR APLICAÇÃO DA VISIBILIDADE DO FILTRO FUNDOS APÓS QUALQUER MUDANÇA DE PÁGINA
+            setTimeout(() => {
+                console.log('🔧 Aplicando visibilidade do filtro FUNDOS após navegação...');
+                applyFundosFilterVisibility();
+            }, 200);
         });
     });
 
@@ -1706,6 +1712,76 @@ function addEventListeners() {
             window.scrollTo(0, scrollPosition);
         });
     });
+}
+
+// 🆕 Função para aplicar visibilidade do filtro FUNDOS baseado na página ativa
+function applyFundosFilterVisibility() {
+    console.log('🔧 Aplicando visibilidade do filtro FUNDOS...');
+    
+    // Detectar página ativa
+    let currentActivePage = null;
+    if (document.getElementById('btn-page1')?.classList.contains('active')) {
+        currentActivePage = 'page1';
+    } else if (document.getElementById('btn-page2')?.classList.contains('active')) {
+        currentActivePage = 'page2';
+    } else if (document.getElementById('btn-page3')?.classList.contains('active')) {
+        currentActivePage = 'page3';
+    }
+    
+    const shouldShowFundos = (currentActivePage === 'page2');
+    const fundoFilterContainer = document.getElementById('fundo-filter-container');
+    const fundoFilter = $("#fundo-filter");
+    
+    console.log('🔧 applyFundosFilterVisibility - currentActivePage:', currentActivePage);
+    console.log('🔧 applyFundosFilterVisibility - shouldShowFundos:', shouldShowFundos);
+    
+    if (fundoFilterContainer) {
+        if (shouldShowFundos) {
+            fundoFilterContainer.style.display = 'block';
+            fundoFilterContainer.style.visibility = 'visible';
+            console.log('🔧 ✅ FUNDOS FORÇADO PARA VISÍVEL');
+            
+            // 🆕 REINICIALIZAR MULTISELECT DO FUNDOS QUANDO FICAR VISÍVEL
+            setTimeout(() => {
+                console.log('🔧 Reinicializando multiselect do FUNDOS...');
+                try {
+                    // Destruir multiselect existente se houver
+                    if (fundoFilter.data('multiselect')) {
+                        fundoFilter.multiselect('destroy');
+                        console.log('🔧 Multiselect FUNDOS destruído');
+                    }
+                    
+                    // Recriar multiselect
+                    fundoFilter.multiselect({
+                        enableFiltering: true,
+                        includeSelectAllOption: true,
+                        selectAllText: "Marcar todos",
+                        filterPlaceholder: "Pesquisar...",
+                        nonSelectedText: "Todos os fundos",
+                        nSelectedText: "fundos",
+                        allSelectedText: "Todos selecionados",
+                        buttonWidth: "100%",
+                        maxHeight: 300,
+                        onChange: updateDashboard,
+                        onSelectAll: updateDashboard,
+                        onDeselectAll: updateDashboard,
+                        enableCaseInsensitiveFiltering: true,
+                        filterBehavior: 'text'
+                    });
+                    console.log('🔧 ✅ Multiselect FUNDOS reinicializado com sucesso');
+                } catch (error) {
+                    console.error('🔧 ❌ Erro ao reinicializar multiselect FUNDOS:', error);
+                }
+            }, 100);
+            
+        } else {
+            fundoFilterContainer.style.display = 'none';
+            fundoFilterContainer.style.visibility = 'hidden';
+            console.log('🔧 ✅ FUNDOS FORÇADO PARA OCULTO');
+        }
+    } else {
+        console.log('🔧 ❌ fundoFilterContainer não encontrado');
+    }
 }
 
 // Função para atualizar filtros dependentes quando as unidades mudam
@@ -1736,7 +1812,41 @@ function updateDependentFilters(selectedUnidades = []) {
     const isFunilPage = document.getElementById('btn-page3')?.classList.contains('active') || 
                        document.getElementById('page3')?.classList.contains('active');
     
-    console.log('É página do funil?', isFunilPage);
+    // Verificar se estamos na página "Metas e Resultados" 
+    const isMetasPage = document.getElementById('btn-page1')?.classList.contains('active') || 
+                       document.getElementById('page1')?.classList.contains('active');
+    
+    // CORREÇÃO DEFINITIVA: Detecção mais robusta de página ativa
+    let currentActivePage = null;
+    
+    // Verificar qual botão de navegação está ativo
+    if (document.getElementById('btn-page1')?.classList.contains('active')) {
+        currentActivePage = 'page1';
+    } else if (document.getElementById('btn-page2')?.classList.contains('active')) {
+        currentActivePage = 'page2';
+    } else if (document.getElementById('btn-page3')?.classList.contains('active')) {
+        currentActivePage = 'page3';
+    }
+    
+    // Se nenhum botão estiver ativo, verificar pelo elemento da página
+    if (!currentActivePage) {
+        if (document.getElementById('page1')?.classList.contains('active')) {
+            currentActivePage = 'page1';
+        } else if (document.getElementById('page2')?.classList.contains('active')) {
+            currentActivePage = 'page2';
+        } else if (document.getElementById('page3')?.classList.contains('active')) {
+            currentActivePage = 'page3';
+        }
+    }
+    
+    // Lógica simples: MOSTRAR FUNDOS apenas na página 2
+    const shouldShowFundos = (currentActivePage === 'page2');
+    const shouldHideFundos = !shouldShowFundos;
+    
+    console.log('🔍 Detecção de página (updateDependentFilters):');
+    console.log('  - currentActivePage:', currentActivePage);
+    console.log('  - shouldShowFundos:', shouldShowFundos);
+    console.log('  - shouldHideFundos:', shouldHideFundos);
     
     // Ocultar/mostrar filtros baseado na página
     const fundoFilterContainer = document.getElementById('fundo-filter-container');
@@ -1746,11 +1856,52 @@ function updateDependentFilters(selectedUnidades = []) {
     const etiquetasFilterContainer = document.getElementById('etiquetas-filter-container');
     
     if (fundoFilterContainer) {
-        if (isFunilPage) {
+        console.log('🎯 CONTROLE FILTRO FUNDOS:');
+        console.log('  - fundoFilterContainer encontrado:', !!fundoFilterContainer);
+        console.log('  - currentActivePage:', currentActivePage);
+        console.log('  - shouldShowFundos:', shouldShowFundos);
+        console.log('  - shouldHideFundos:', shouldHideFundos);
+        
+        if (shouldHideFundos) {
             fundoFilterContainer.style.display = 'none';
+            fundoFilterContainer.style.visibility = 'hidden';
+            console.log('  - ✅ FUNDOS OCULTADO FORÇADAMENTE');
         } else {
             fundoFilterContainer.style.display = 'block';
+            fundoFilterContainer.style.visibility = 'visible';
+            console.log('  - ✅ FUNDOS EXIBIDO FORÇADAMENTE');
+            
+            // 🆕 REINICIALIZAR MULTISELECT DO FUNDOS quando ficar visível
+            setTimeout(() => {
+                console.log('  - 🔧 Reinicializando multiselect FUNDOS (updateDependentFilters)...');
+                try {
+                    if (fundoFilter.data('multiselect')) {
+                        fundoFilter.multiselect('destroy');
+                    }
+                    fundoFilter.multiselect({
+                        enableFiltering: true,
+                        includeSelectAllOption: true,
+                        selectAllText: "Marcar todos",
+                        filterPlaceholder: "Pesquisar...",
+                        nonSelectedText: "Todos os fundos",
+                        nSelectedText: "fundos",
+                        allSelectedText: "Todos selecionados",
+                        buttonWidth: "100%",
+                        maxHeight: 300,
+                        onChange: updateDashboard,
+                        onSelectAll: updateDashboard,
+                        onDeselectAll: updateDashboard,
+                        enableCaseInsensitiveFiltering: true,
+                        filterBehavior: 'text'
+                    });
+                    console.log('  - ✅ Multiselect FUNDOS reinicializado (updateDependentFilters)');
+                } catch (error) {
+                    console.error('  - ❌ Erro ao reinicializar multiselect FUNDOS:', error);
+                }
+            }, 50);
         }
+    } else {
+        console.log('❌ fundoFilterContainer NÃO ENCONTRADO!');
     }
     
     if (consultorFilterContainer) {
@@ -1882,8 +2033,8 @@ function updateDependentFilters(selectedUnidades = []) {
         });
     }
     
-    // Popular filtro de fundos (apenas se não for página do funil)
-    if (!isFunilPage) {
+    // Popular filtro de fundos (apenas se não deve ocultar FUNDOS)
+    if (!shouldHideFundos) {
         const fundosFromVendas = dadosFiltrados.map((d) => d.nm_fundo || '').filter(f => f && f !== 'N/A');
         const fundosFromFundos = fundosFiltrados.map((d) => d.nm_fundo || '').filter(f => f && f !== 'N/A');
         const fundosUnicos = [...new Set([...fundosFromVendas, ...fundosFromFundos])].sort();
@@ -2020,8 +2171,8 @@ function updateDependentFilters(selectedUnidades = []) {
         });
     }
     
-    // Recriar multiselects para fundos (apenas se não for página do funil)
-    if (!isFunilPage) {
+    // Recriar multiselects para fundos (apenas se não deve ocultar FUNDOS)
+    if (!shouldHideFundos) {
         fundoFilter.multiselect({
             enableFiltering: true,
             includeSelectAllOption: true,
@@ -2133,17 +2284,41 @@ function populateFilters(selectedUnidades = []) {
     const isFunilPage = document.getElementById('btn-page3')?.classList.contains('active') || 
                        document.getElementById('page3')?.classList.contains('active');
     
-    console.log('===== DETECÇÃO DA PÁGINA DO FUNIL (populateFilters) =====');
-    console.log('btn-page3 existe?', !!document.getElementById('btn-page3'));
-    console.log('btn-page3 classes:', document.getElementById('btn-page3')?.classList.toString());
-    console.log('btn-page3 ativo?', document.getElementById('btn-page3')?.classList.contains('active'));
-    console.log('page3 existe?', !!document.getElementById('page3'));
-    console.log('page3 classes:', document.getElementById('page3')?.classList.toString());
-    console.log('page3 ativo?', document.getElementById('page3')?.classList.contains('active'));
-    console.log('É página do funil (populateFilters)?', isFunilPage);
-    console.log('funilData disponível?', !!funilData);
-    console.log('funilData length:', funilData ? funilData.length : 0);
-    console.log('=========================================================');
+    // Verificar se estamos na página "Metas e Resultados" 
+    const isMetasPage = document.getElementById('btn-page1')?.classList.contains('active') || 
+                       document.getElementById('page1')?.classList.contains('active');
+    
+    // CORREÇÃO DEFINITIVA: Detecção mais robusta de página ativa
+    let currentActivePage = null;
+    
+    // Verificar qual botão de navegação está ativo
+    if (document.getElementById('btn-page1')?.classList.contains('active')) {
+        currentActivePage = 'page1';
+    } else if (document.getElementById('btn-page2')?.classList.contains('active')) {
+        currentActivePage = 'page2';
+    } else if (document.getElementById('btn-page3')?.classList.contains('active')) {
+        currentActivePage = 'page3';
+    }
+    
+    // Se nenhum botão estiver ativo, verificar pelo elemento da página
+    if (!currentActivePage) {
+        if (document.getElementById('page1')?.classList.contains('active')) {
+            currentActivePage = 'page1';
+        } else if (document.getElementById('page2')?.classList.contains('active')) {
+            currentActivePage = 'page2';
+        } else if (document.getElementById('page3')?.classList.contains('active')) {
+            currentActivePage = 'page3';
+        }
+    }
+    
+    // Lógica simples: MOSTRAR FUNDOS apenas na página 2
+    const shouldShowFundos = (currentActivePage === 'page2');
+    const shouldHideFundos = !shouldShowFundos;
+    
+    console.log('🔍 Detecção de página (populateFilters):');
+    console.log('  - currentActivePage:', currentActivePage);
+    console.log('  - shouldShowFundos:', shouldShowFundos);
+    console.log('  - shouldHideFundos:', shouldHideFundos);
     
     // Ocultar/mostrar filtros baseado na página
     const fundoFilterContainer = document.getElementById('fundo-filter-container');
@@ -2151,11 +2326,52 @@ function populateFilters(selectedUnidades = []) {
     const origemLeadFilterContainer = document.getElementById('origem-lead-filter-container');
     
     if (fundoFilterContainer) {
-        if (isFunilPage) {
+        console.log('🎯 CONTROLE FILTRO FUNDOS (populateFilters):');
+        console.log('  - fundoFilterContainer encontrado:', !!fundoFilterContainer);
+        console.log('  - currentActivePage:', currentActivePage);
+        console.log('  - shouldShowFundos:', shouldShowFundos);
+        console.log('  - shouldHideFundos:', shouldHideFundos);
+        
+        if (shouldHideFundos) {
             fundoFilterContainer.style.display = 'none';
+            fundoFilterContainer.style.visibility = 'hidden';
+            console.log('  - ✅ FUNDOS OCULTADO FORÇADAMENTE (populateFilters)');
         } else {
             fundoFilterContainer.style.display = 'block';
+            fundoFilterContainer.style.visibility = 'visible';
+            console.log('  - ✅ FUNDOS EXIBIDO FORÇADAMENTE (populateFilters)');
+            
+            // 🆕 REINICIALIZAR MULTISELECT DO FUNDOS quando ficar visível
+            setTimeout(() => {
+                console.log('  - 🔧 Reinicializando multiselect FUNDOS (populateFilters)...');
+                try {
+                    if (fundoFilter.data('multiselect')) {
+                        fundoFilter.multiselect('destroy');
+                    }
+                    fundoFilter.multiselect({
+                        enableFiltering: true,
+                        includeSelectAllOption: true,
+                        selectAllText: "Marcar todos",
+                        filterPlaceholder: "Pesquisar...",
+                        nonSelectedText: "Todos os fundos",
+                        nSelectedText: "fundos",
+                        allSelectedText: "Todos selecionados",
+                        buttonWidth: "100%",
+                        maxHeight: 300,
+                        onChange: updateDashboard,
+                        onSelectAll: updateDashboard,
+                        onDeselectAll: updateDashboard,
+                        enableCaseInsensitiveFiltering: true,
+                        filterBehavior: 'text'
+                    });
+                    console.log('  - ✅ Multiselect FUNDOS reinicializado (populateFilters)');
+                } catch (error) {
+                    console.error('  - ❌ Erro ao reinicializar multiselect FUNDOS:', error);
+                }
+            }, 50);
         }
+    } else {
+        console.log('❌ fundoFilterContainer NÃO ENCONTRADO! (populateFilters)');
     }
     
     if (consultorFilterContainer) {
@@ -2207,7 +2423,7 @@ function populateFilters(selectedUnidades = []) {
     
     // Limpa apenas os filtros dependentes
     cursoFilter.empty();
-    if (!isFunilPage) {
+    if (!shouldHideFundos) {
         fundoFilter.empty();
     }
     
@@ -2389,8 +2605,8 @@ function populateFilters(selectedUnidades = []) {
             console.log('📝 Opções adicionadas ao filtro de etiquetas:', etiquetas.length);
         }
 
-        // Populate fundos filter (apenas se não for página do funil)
-        if (!isFunilPage) {
+        // Populate fundos filter (apenas se não deve ocultar FUNDOS)
+        if (!shouldHideFundos) {
             const fundosFromVendas = dadosFiltrados.map((d) => d.nm_fundo || '').filter(f => f && f !== 'N/A');
             const fundosFromFundos = fundosFiltrados.map((d) => d.nm_fundo || '').filter(f => f && f !== 'N/A');
             const fundosUnicos = [...new Set([...fundosFromVendas, ...fundosFromFundos])].sort();
@@ -2661,8 +2877,8 @@ function populateFilters(selectedUnidades = []) {
                 }
             }
 
-            // FUNDOS (apenas se não for página do funil)
-            if (!isFunilPage) {
+            // FUNDOS (apenas se não deve ocultar FUNDOS)
+            if (!shouldHideFundos) {
                 try {
                     // Destruir multiselect existente de fundos
                     try {
@@ -2783,8 +2999,8 @@ function populateFilters(selectedUnidades = []) {
             cursoFilter.append($("<option>", { value: c, text: c }));
         });
 
-        // Popular filtro de fundos (apenas se não for página do funil)
-        if (!isFunilPage) {
+        // Popular filtro de fundos (apenas se não deve ocultar FUNDOS)
+        if (!shouldHideFundos) {
             const fundosDisponiveis = [...new Set([
                 ...dadosUnidade.map(d => d.nm_fundo || ''),
                 ...fundosUnidade.map(d => d.nm_fundo || '')
@@ -2820,8 +3036,8 @@ function populateFilters(selectedUnidades = []) {
             }
         });
 
-        // Configurar multiselect para fundos (apenas se não for página do funil)
-        if (!isFunilPage) {
+        // Configurar multiselect para fundos (apenas se não deve ocultar FUNDOS)
+        if (!shouldHideFundos) {
             fundoFilter.multiselect({
                 enableFiltering: true,
                 includeSelectAllOption: true,
