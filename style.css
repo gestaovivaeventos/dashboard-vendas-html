@@ -429,9 +429,9 @@ body {
             overflow: hidden;
         }
 
-        /* Quando o sidebar está recolhido, mantém a mesma proporção 75/25 */
+        /* Quando o sidebar está recolhido, o funil se expande para eliminar o espaço vazio */
         #main-content.full-width .funil-horizontal-container {
-            grid-column: 1 / span 9; /* Mantém 9 colunas (75%) */
+            grid-column: 1 / span 12; /* Ocupa todas as 12 colunas disponíveis */
         }
 
         /* Cards do funil em formato de seta */
@@ -509,9 +509,13 @@ body {
             gap: 15px; /* Reduzido de 20px para 15px */
         }
 
-        /* Quando o sidebar está recolhido, mantém a mesma proporção 75/25 */
+        /* Quando o sidebar está recolhido, os cards laterais se movem para sobrepor o funil */
         #main-content.full-width .funil-side-cards {
-            grid-column: 10 / span 3; /* Mantém 3 colunas (25%) */
+            position: absolute; /* Posicionamento absoluto para sobrepor */
+            right: 20px; /* Distância da borda direita */
+            top: 20px; /* Distância do topo */
+            width: 200px; /* Largura fixa para os cards */
+            z-index: 20; /* Ficam acima do funil */
         }
 
         .funil-indicator-card {
