@@ -560,7 +560,7 @@ body {
         }
 
         .funil-card-title {
-            font-size: 0.75rem;
+            font-size: 0.9rem; /* Aumentado de 0.75rem para 0.9rem */
             color: #212529;
             font-weight: 700;
             text-transform: uppercase;
@@ -579,7 +579,7 @@ body {
         /* Estilos específicos para cards laterais */
         .funil-side-card .funil-card-title {
             color: #ffffff;
-            font-size: 0.7rem; /* Reduzido de 0.85rem para 0.7rem */
+            font-size: 0.85rem; /* Aumentado de 0.7rem para 0.85rem */
         }
 
         .funil-side-card .funil-card-value {
