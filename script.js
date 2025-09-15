@@ -2968,6 +2968,9 @@ function updateFunilIndicators(startDate, endDate, selectedUnidades) {
     // PASSO 11: Atualizar a seção de captações
     updateCaptacoes(dadosFinaisFiltrados);
     
+    // PASSO 11.5: Atualizar a tabela de motivos de perda detalhados
+    updateMotivosPerdaTable(dadosFinaisFiltrados);
+    
     // PASSO 12: Atualizar o gráfico de negociações por fase
     createNegociacoesPorFaseChart(dadosFinaisFiltrados);
     
@@ -3265,6 +3268,122 @@ function updateCaptacoesChart(dados) {
     });
     
     console.log("✅ Gráfico de captações atualizado com", dados.length, "categorias");
+}
+
+// === NOVA SEÇÃO: LEADS PERDIDOS DETALHADOS ===
+
+// Função para atualizar a tabela de motivos de perda
+function updateMotivosPerdaTable(dadosFiltrados) {
+    console.log("=== INÍCIO updateMotivosPerdaTable ===");
+    
+    const tbody = document.getElementById('motivos-perda-table-body');
+    if (!tbody) {
+        console.error("❌ Elemento 'motivos-perda-table-body' não encontrado");
+        return;
+    }
+
+    try {
+        // Filtrar apenas leads perdidos VÁLIDOS (MESMA LÓGICA DO CARD - exclui os que começam com "Descarte")
+        const leadsComFasePerdido = dadosFiltrados.filter(item => {
+            try {
+                if (!item.titulo || item.titulo.trim() === '') return false; // tem título válido
+                
+                // 1. Verificar se está realmente na fase 7.2 Perdido
+                const estaNaFasePerdido = item.fase_perdido && 
+                                         item.fase_perdido.trim() !== '' && 
+                                         (item.fase_perdido.includes("7.2") || 
+                                          item.fase_perdido.toLowerCase().includes("perdido"));
+                
+                if (!estaNaFasePerdido) return false;
+                
+                // 2. Deve ter motivo da perda preenchido
+                if (!item.concat_motivo_perda || item.concat_motivo_perda.trim() === '') return false;
+                
+                // 3. Aplicar a regra do campo auxiliar e verificar se começa com "Descarte"
+                const campoAuxiliar = getCampoAuxiliar(item.concat_motivo_perda);
+                const comecaComDescarte = campoAuxiliar.startsWith("Descarte");
+                
+                if (comecaComDescarte) {
+                    return false; // EXCLUIR os que começam com "Descarte"
+                }
+                
+                return true;
+            } catch (error) {
+                console.error("Erro ao processar item:", item, error);
+                return false;
+            }
+        });
+
+        console.log("📊 Total de leads perdidos VÁLIDOS com motivo (excluindo descartes):", leadsComFasePerdido.length);
+
+        // Contar motivos de perda usando o campo auxiliar processado
+        const motivoContador = {};
+        let totalLeadsPerdidos = 0;
+
+        leadsComFasePerdido.forEach(item => {
+            try {
+                // Usar o campo auxiliar processado ao invés do motivo original
+                const campoAuxiliar = getCampoAuxiliar(item.concat_motivo_perda);
+                const motivoFinal = campoAuxiliar || item.concat_motivo_perda.trim();
+                
+                if (motivoFinal) {
+                    if (!motivoContador[motivoFinal]) {
+                        motivoContador[motivoFinal] = 0;
+                    }
+                    motivoContador[motivoFinal]++;
+                    totalLeadsPerdidos++;
+                }
+            } catch (error) {
+                console.error("Erro ao contar motivo:", item, error);
+            }
+        });
+
+        console.log("📈 Contagem de motivos:", motivoContador);
+        console.log("📊 Total de leads perdidos contabilizados:", totalLeadsPerdidos);
+
+        // Converter para array e ordenar por quantidade (descendente)
+        const dadosTabela = Object.keys(motivoContador).map(motivo => ({
+            motivo,
+            total: motivoContador[motivo],
+            percentual: totalLeadsPerdidos > 0 ? ((motivoContador[motivo] / totalLeadsPerdidos) * 100).toFixed(1) : 0
+        })).sort((a, b) => b.total - a.total);
+
+        // Limpar tabela
+        tbody.innerHTML = '';
+
+        // Adicionar linhas de dados
+        dadosTabela.forEach(item => {
+            try {
+                const tr = document.createElement('tr');
+                
+                // Determinar classe CSS baseada no motivo
+                let classeMotivo = 'motivo-outros';
+                const motivoLower = item.motivo.toLowerCase();
+                if (motivoLower.includes('concorr') || motivoLower.includes('competidor')) {
+                    classeMotivo = 'motivo-concorrente';
+                }
+                
+                tr.className = classeMotivo;
+                
+                tr.innerHTML = `
+                    <td>${item.motivo}</td>
+                    <td>${item.percentual}%</td>
+                    <td>${item.total}</td>
+                `;
+                
+                tbody.appendChild(tr);
+            } catch (error) {
+                console.error("Erro ao criar linha da tabela:", item, error);
+            }
+        });
+
+        console.log("✅ Tabela de motivos de perda atualizada com", dadosTabela.length, "motivos");
+        
+    } catch (error) {
+        console.error("❌ Erro geral na função updateMotivosPerdaTable:", error);
+    }
+    
+    console.log("=== FIM updateMotivosPerdaTable ===");
 }
 
 // === NOVA SEÇÃO: NEGOCIAÇÕES E PERDAS POR FASE ===

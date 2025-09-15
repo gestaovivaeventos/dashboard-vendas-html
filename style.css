@@ -1349,3 +1349,127 @@ input[type=number] {
             max-width: 100%;
             max-height: 100%;
         }
+
+        /* Estilos para a seção de Leads Perdidos Detalhados */
+        .leads-perdidos-content {
+            display: flex;
+            justify-content: center;
+            grid-column: span 12;
+            margin-top: 20px;
+        }
+
+        /* Quando o sidebar está recolhido, ajusta o layout dos leads perdidos */
+        #main-content.full-width .leads-perdidos-content {
+            max-width: 100%;
+            overflow: hidden;
+        }
+
+        .leads-perdidos-table-container {
+            background: linear-gradient(135deg, #343a40 0%, #495057 100%);
+            border-radius: 8px;
+            padding: 20px;
+            border: 1px solid #495057;
+            min-height: 500px;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            max-width: 800px; /* Limitar largura máxima */
+        }
+
+        /* Quando o sidebar está recolhido, ajusta o container dos leads perdidos */
+        #main-content.full-width .leads-perdidos-table-container {
+            min-width: 0;
+            max-width: 100%;
+            overflow: hidden;
+        }
+
+        .leads-perdidos-subtitle {
+            color: #ffc107;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .leads-perdidos-table-wrapper {
+            overflow-x: auto;
+            overflow-y: auto;
+            border: 1px solid #495057;
+            border-radius: 8px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .leads-perdidos-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .leads-perdidos-table th {
+            background: linear-gradient(135deg, #495057 0%, #6c757d 100%);
+            color: #ffc107;
+            padding: 12px 15px;
+            text-align: center;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+            border: 1px solid #6c757d;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .leads-perdidos-table th:first-child {
+            text-align: left;
+            width: 60%;
+        }
+
+        .leads-perdidos-table th:nth-child(2) {
+            width: 20%;
+        }
+
+        .leads-perdidos-table th:nth-child(3) {
+            width: 20%;
+        }
+
+        .leads-perdidos-table td {
+            padding: 12px 15px;
+            border: 1px solid #495057;
+            color: #f8f9fa;
+            font-weight: 500;
+        }
+
+        .leads-perdidos-table td:first-child {
+            text-align: left;
+            font-size: 0.85rem;
+            word-wrap: break-word;
+        }
+
+        .leads-perdidos-table td:nth-child(2),
+        .leads-perdidos-table td:nth-child(3) {
+            text-align: center;
+            font-weight: 600;
+        }
+
+        /* Efeito hover nas linhas */
+        .leads-perdidos-table tbody tr:hover {
+            background-color: rgba(255, 193, 7, 0.1);
+        }
+
+        /* Cores diferenciadas para destacar motivos importantes */
+        .leads-perdidos-table .motivo-concorrente {
+            background-color: rgba(220, 53, 69, 0.2) !important;
+        }
+
+        .leads-perdidos-table .motivo-descarte {
+            background-color: rgba(108, 117, 125, 0.2) !important;
+        }
+
+        .leads-perdidos-table .motivo-outros {
+            background-color: rgba(255, 193, 7, 0.1) !important;
+        }
