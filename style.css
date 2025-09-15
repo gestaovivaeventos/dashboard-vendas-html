@@ -429,9 +429,9 @@ body {
             overflow: hidden;
         }
 
-        /* Quando o sidebar está recolhido, o funil se expande para eliminar o espaço vazio */
+        /* Quando o sidebar está recolhido, o funil se expande ligeiramente */
         #main-content.full-width .funil-horizontal-container {
-            grid-column: 1 / span 12; /* Ocupa todas as 12 colunas disponíveis */
+            grid-column: 1 / span 9; /* Mantém 9 colunas para não quebrar o layout */
         }
 
         /* Cards do funil em formato de seta */
@@ -509,13 +509,9 @@ body {
             gap: 15px; /* Reduzido de 20px para 15px */
         }
 
-        /* Quando o sidebar está recolhido, os cards laterais se movem para sobrepor o funil */
+        /* Quando o sidebar está recolhido, ajusta a proporção corretamente */
         #main-content.full-width .funil-side-cards {
-            position: absolute; /* Posicionamento absoluto para sobrepor */
-            right: 20px; /* Distância da borda direita */
-            top: 20px; /* Distância do topo */
-            width: 200px; /* Largura fixa para os cards */
-            z-index: 20; /* Ficam acima do funil */
+            grid-column: 10 / span 3; /* Mantém os cards laterais visíveis */
         }
 
         .funil-indicator-card {
@@ -608,6 +604,14 @@ body {
             margin-top: 20px;
         }
 
+        /* Quando o sidebar está recolhido, ajusta o layout das captações */
+        #main-content.full-width .captacoes-content {
+            grid-template-columns: 1fr 1fr; /* Mantém duas colunas mas com melhor espaçamento */
+            gap: 20px; /* Reduz o gap para evitar overflow */
+            max-width: 100%; /* Garante que não saia da tela */
+            overflow: hidden; /* Previne vazamento horizontal */
+        }
+
         .captacoes-table-container, .captacoes-chart-container {
             background: linear-gradient(135deg, #343a40 0%, #495057 100%);
             border-radius: 8px;
@@ -616,6 +620,14 @@ body {
             height: 700px; /* Altura muito maior */
             display: flex;
             flex-direction: column;
+        }
+
+        /* Quando o sidebar está recolhido, ajusta os containers das captações */
+        #main-content.full-width .captacoes-table-container,
+        #main-content.full-width .captacoes-chart-container {
+            min-width: 0; /* Permite que o container encolha se necessário */
+            max-width: 100%; /* Não permite que saia da tela */
+            overflow: hidden; /* Previne vazamento */
         }
 
         .captacoes-subtitle {
