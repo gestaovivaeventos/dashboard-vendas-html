@@ -274,7 +274,10 @@ async function initializeDashboard() {
       });
       document.getElementById("filters-section").style.display = "flex";
 
-      populateFilters();
+      // ✅ GARANTIR POPULAÇÃO DOS FILTROS: Usar retry para garantir que dados estão prontos
+      console.log('🔄 Iniciando população dos filtros após carregamento dos dados...');
+      retryPopulateFilters();
+      
       addEventListeners();
       updateDashboard();
     } else {
@@ -1667,12 +1670,12 @@ function addEventListeners() {
                 setTimeout(() => {
                     console.log('🔄 Recarregando filtros após mudança de página...');
                     if (userAccessLevel === "ALL_UNITS") {
-                        populateFilters();
+                        retryPopulateFilters();
                     } else if (Array.isArray(userAccessLevel)) {
-                        updateDependentFilters(userAccessLevel);
+                        retryUpdateDependentFilters(userAccessLevel);
                     } else {
                         // Para usuário único, recriar a lógica dos filtros
-                        populateFilters();
+                        retryPopulateFilters();
                     }
                 }, 100);
             }
@@ -1708,6 +1711,20 @@ function addEventListeners() {
 // Função para atualizar filtros dependentes quando as unidades mudam
 function updateDependentFilters(selectedUnidades = []) {
     console.log('updateDependentFilters called with:', selectedUnidades);
+    
+    // ⚠️ VALIDAÇÃO CRÍTICA: Verificar se os dados estão carregados
+    if (!allData || allData.length === 0) {
+        console.warn('⚠️ allData ainda não carregado em updateDependentFilters - aguardando...');
+        return;
+    }
+    
+    if (!fundosData || fundosData.length === 0) {
+        console.warn('⚠️ fundosData ainda não carregado em updateDependentFilters - aguardando...');
+        return;
+    }
+    
+    console.log('✅ Dados validados em updateDependentFilters - prosseguindo');
+    
     const cursoFilter = $("#curso-filter");
     const consultorFilter = $("#consultor-filter");
     const origemLeadFilter = $("#origem-lead-filter");
@@ -2038,11 +2055,71 @@ function updateDependentFilters(selectedUnidades = []) {
 
 // ...
 
+// Função auxiliar para retentar população de filtros
+function retryPopulateFilters(selectedUnidades = [], maxRetries = 5, currentRetry = 0) {
+    console.log(`🔄 Tentativa ${currentRetry + 1} de ${maxRetries} para popular filtros`);
+    
+    // Verificar se os dados estão carregados
+    const dataReady = allData && allData.length > 0 && fundosData && fundosData.length > 0;
+    
+    if (dataReady) {
+        console.log('✅ Dados prontos - populando filtros...');
+        populateFilters(selectedUnidades);
+        return;
+    }
+    
+    if (currentRetry < maxRetries - 1) {
+        console.log(`⏳ Dados ainda não prontos - tentando novamente em 500ms...`);
+        setTimeout(() => {
+            retryPopulateFilters(selectedUnidades, maxRetries, currentRetry + 1);
+        }, 500);
+    } else {
+        console.error('❌ Falha ao carregar dados após', maxRetries, 'tentativas');
+    }
+}
+
+// Função auxiliar para retentar updateDependentFilters
+function retryUpdateDependentFilters(selectedUnidades = [], maxRetries = 5, currentRetry = 0) {
+    console.log(`🔄 Tentativa ${currentRetry + 1} de ${maxRetries} para updateDependentFilters`);
+    
+    // Verificar se os dados estão carregados
+    const dataReady = allData && allData.length > 0 && fundosData && fundosData.length > 0;
+    
+    if (dataReady) {
+        console.log('✅ Dados prontos - atualizando filtros dependentes...');
+        updateDependentFilters(selectedUnidades);
+        return;
+    }
+    
+    if (currentRetry < maxRetries - 1) {
+        console.log(`⏳ Dados ainda não prontos - tentando novamente em 500ms...`);
+        setTimeout(() => {
+            retryUpdateDependentFilters(selectedUnidades, maxRetries, currentRetry + 1);
+        }, 500);
+    } else {
+        console.error('❌ Falha ao carregar dados para updateDependentFilters após', maxRetries, 'tentativas');
+    }
+}
+
 function populateFilters(selectedUnidades = []) {
     console.log('populateFilters called with:', selectedUnidades);
     console.log('userAccessLevel:', userAccessLevel);
-    console.log('allData length:', allData.length);
-    console.log('fundosData length:', fundosData.length);
+    console.log('allData length:', allData ? allData.length : 0);
+    console.log('fundosData length:', fundosData ? fundosData.length : 0);
+    console.log('funilData length:', funilData ? funilData.length : 0);
+    
+    // ⚠️ VALIDAÇÃO CRÍTICA: Verificar se os dados estão carregados
+    if (!allData || allData.length === 0) {
+        console.warn('⚠️ allData ainda não carregado - aguardando...');
+        return;
+    }
+    
+    if (!fundosData || fundosData.length === 0) {
+        console.warn('⚠️ fundosData ainda não carregado - aguardando...');
+        return;
+    }
+    
+    console.log('✅ Dados validados - prosseguindo com populateFilters');
     
     const unidadeFilter = $("#unidade-filter");
     const cursoFilter = $("#curso-filter");
@@ -2666,6 +2743,12 @@ function populateFilters(selectedUnidades = []) {
             });
         }, 50);
 
+        // 🆕 CHAMAR updateDependentFilters para usuários multi-franqueado após o setup inicial
+        setTimeout(() => {
+            console.log('🔄 Chamando updateDependentFilters para usuário multi-franqueado...');
+            retryUpdateDependentFilters(userAccessLevel);
+        }, 150);
+
     } else {
         // CENÁRIO 3: FRANQUEADO DE UNIDADE ÚNICA (filtro travado)
         console.log('Setting up single-franchise filter for:', userAccessLevel);
@@ -2762,6 +2845,73 @@ function populateFilters(selectedUnidades = []) {
                     ul: '<ul class="multiselect-container dropdown-menu" style="width: auto; min-width: 100%;"></ul>'
                 }
             });
+        }
+
+        // 🆕 ADICIONAR FILTROS ESPECÍFICOS DO FUNIL para usuário único
+        if (isFunilPage && funilUnidade && funilUnidade.length > 0) {
+            console.log('🎯 POPULANDO FILTROS DO FUNIL para usuário único');
+            
+            // Popular filtro de consultores
+            const consultoresUnidade = [...new Set(funilUnidade.map(d => d.consultor || ''))].filter(c => c && c.trim() !== '' && c !== 'N/A').sort();
+            console.log('Consultores da unidade (usuário único):', consultoresUnidade);
+            consultoresUnidade.forEach(c => {
+                consultorFilter.append($("<option>", { value: c, text: c }));
+            });
+
+            // Popular filtro de origem do lead
+            const origensLeadUnidade = [...new Set(funilUnidade.map(d => d.origem_lead || ''))].filter(o => o && o.trim() !== '' && o !== 'N/A').sort();
+            console.log('Origens do lead da unidade (usuário único):', origensLeadUnidade);
+            origensLeadUnidade.forEach(o => {
+                origemLeadFilter.append($("<option>", { value: o, text: o }));
+            });
+
+            // Popular filtro de segmentação lead
+            const segmentacoesUnidade = [...new Set(funilUnidade.map(d => d.segmentacao_lead || ''))].filter(s => s && s.trim() !== '' && s !== 'N/A').sort();
+            console.log('Segmentações da unidade (usuário único):', segmentacoesUnidade);
+            segmentacoesUnidade.forEach(s => {
+                segmentacaoLeadFilter.append($("<option>", { value: s, text: s }));
+            });
+
+            // Popular filtro de etiquetas
+            const etiquetasUnidade = [...new Set(funilUnidade.map(d => d.etiquetas || ''))].filter(e => e && e.trim() !== '' && e !== 'N/A').sort();
+            console.log('Etiquetas da unidade (usuário único):', etiquetasUnidade);
+            etiquetasUnidade.forEach(e => {
+                etiquetasFilter.append($("<option>", { value: e, text: e }));
+            });
+
+            // Configurar multiselects para os filtros do funil
+            [
+                { filter: consultorFilter, name: 'consultores', text: 'Todos os consultores' },
+                { filter: origemLeadFilter, name: 'origens', text: 'Todas as origens' },
+                { filter: segmentacaoLeadFilter, name: 'segmentações', text: 'Todas as segmentações' },
+                { filter: etiquetasFilter, name: 'etiquetas', text: 'Todas as etiquetas' }
+            ].forEach(({ filter, name, text }) => {
+                filter.multiselect({
+                    enableFiltering: true,
+                    includeSelectAllOption: true,
+                    selectAllText: "Marcar todos",
+                    filterPlaceholder: "Pesquisar...",
+                    nonSelectedText: text,
+                    nSelectedText: name,
+                    allSelectedText: "Todos selecionados",
+                    buttonWidth: "100%",
+                    maxHeight: 300,
+                    onChange: updateDashboard,
+                    onSelectAll: updateDashboard,
+                    onDeselectAll: updateDashboard,
+                    enableCaseInsensitiveFiltering: true,
+                    filterBehavior: 'text',
+                    dropUp: false,
+                    dropRight: false,
+                    widthSynchronizationMode: 'ifPopupIsSmaller',
+                    templates: {
+                        button: '<button type="button" class="multiselect dropdown-toggle" data-toggle="dropdown"><span class="multiselect-selected-text"></span></button>',
+                        ul: '<ul class="multiselect-container dropdown-menu" style="width: auto; min-width: 100%;"></ul>'
+                    }
+                });
+            });
+
+            console.log('✅ Filtros do funil configurados para usuário único');
         }
     }
 
