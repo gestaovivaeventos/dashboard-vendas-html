@@ -538,6 +538,7 @@ async function fetchFunilData() {
     const fechamentoComissaoIndex = 64; // Coluna BM - Primeira vez que entrou na fase 4.1 Fechamento Comissão
     const concatMotivoPerdaIndex = 70; // Coluna BS - CONCAT MOTIVO PERDA
     const concatConcorrenteIndex = 71; // Coluna BT - CONCAT CONCORRENTE
+    const consultorIndex = 53; // Coluna BB - Selecione o Consultor responsável por este Card
     
     // Índices das colunas de perdas por fase
     const perda11Index = 13; // Coluna N - (1.1) Venda Perdida?
@@ -574,6 +575,7 @@ async function fetchFunilData() {
       console.log("Curso (D):", rows[1][cursoIndex]);
       console.log("Origem Lead (G):", rows[1][origemLeadIndex]);
       console.log("Criado em (M):", rows[1][criadoEmIndex]);
+      console.log("Consultor (BB):", rows[1][consultorIndex]);
       
       // Debug específico da coluna D (curso)
       console.log("🔍 DEBUG COLUNA D (CURSO):");
@@ -583,6 +585,16 @@ async function fetchFunilData() {
       console.log("Primeiras 5 linhas da coluna D:");
       for (let i = 1; i <= Math.min(5, rows.length - 1); i++) {
         console.log(`  Linha ${i + 1}: "${rows[i][cursoIndex]}"`);
+      }
+      
+      // Debug específico da coluna BB (consultor)
+      console.log("🔍 DEBUG COLUNA BB (CONSULTOR):");
+      console.log("Header da coluna BB:", headers[consultorIndex]);
+      console.log("Índice da coluna consultor:", consultorIndex);
+      console.log("Valor na linha 2, coluna BB:", rows[1][consultorIndex]);
+      console.log("Primeiras 5 linhas da coluna BB:");
+      for (let i = 1; i <= Math.min(5, rows.length - 1); i++) {
+        console.log(`  Linha ${i + 1}: "${rows[i][consultorIndex]}"`);
       }
       
       console.log("Qualificação Comissão (BF):", rows[1][qualificacaoComissaoIndex]);
@@ -599,6 +611,7 @@ async function fetchFunilData() {
       titulo: row[tituloIndex] || '',
       fase_perdido: row[fasePerdidoIndex] || '',
       curso: row[cursoIndex] || '', // Coluna D - Qual é o seu curso?
+      consultor: row[consultorIndex] || '', // Coluna BB - Selecione o Consultor responsável por este Card
       origem_lead: row[origemLeadIndex] || '',
       criado_em: row[criadoEmIndex] || '',
       qualificacao_comissao: row[qualificacaoComissaoIndex] || '',
@@ -1692,6 +1705,7 @@ function addEventListeners() {
 function updateDependentFilters(selectedUnidades = []) {
     console.log('updateDependentFilters called with:', selectedUnidades);
     const cursoFilter = $("#curso-filter");
+    const consultorFilter = $("#consultor-filter");
     const fundoFilter = $("#fundo-filter");
     
     // Verificar se estamos na página do funil
@@ -1700,8 +1714,10 @@ function updateDependentFilters(selectedUnidades = []) {
     
     console.log('É página do funil?', isFunilPage);
     
-    // Ocultar/mostrar filtro de fundos baseado na página
+    // Ocultar/mostrar filtros baseado na página
     const fundoFilterContainer = document.getElementById('fundo-filter-container');
+    const consultorFilterContainer = document.getElementById('consultor-filter-container');
+    
     if (fundoFilterContainer) {
         if (isFunilPage) {
             fundoFilterContainer.style.display = 'none';
@@ -1710,10 +1726,20 @@ function updateDependentFilters(selectedUnidades = []) {
         }
     }
     
+    if (consultorFilterContainer) {
+        if (isFunilPage) {
+            consultorFilterContainer.style.display = 'block';
+        } else {
+            consultorFilterContainer.style.display = 'none';
+        }
+    }
+    
     // Destruir instâncias existentes
     try {
         cursoFilter.multiselect('destroy');
-        if (!isFunilPage) { // Só destruir fundo filter se não for página do funil
+        if (isFunilPage) {
+            consultorFilter.multiselect('destroy');
+        } else {
             fundoFilter.multiselect('destroy');
         }
     } catch(e) {
@@ -1722,7 +1748,9 @@ function updateDependentFilters(selectedUnidades = []) {
     
     // Limpar opções
     cursoFilter.empty();
-    if (!isFunilPage) {
+    if (isFunilPage) {
+        consultorFilter.empty();
+    } else {
         fundoFilter.empty();
     }
     
@@ -1759,6 +1787,17 @@ function updateDependentFilters(selectedUnidades = []) {
         cursoFilter.append($("<option>", { value: c, text: c }));
     });
     
+    // Popular filtro de consultores (apenas se for página do funil)
+    if (isFunilPage) {
+        const consultoresFunil = funilFiltrado.map((d) => d.consultor || '').filter(c => c && c.trim() !== '' && c !== 'N/A');
+        const consultores = [...new Set(consultoresFunil)].sort();
+        console.log('Consultores do funil:', consultores);
+        
+        consultores.forEach((c) => {
+            consultorFilter.append($("<option>", { value: c, text: c }));
+        });
+    }
+    
     // Popular filtro de fundos (apenas se não for página do funil)
     if (!isFunilPage) {
         const fundosFromVendas = dadosFiltrados.map((d) => d.nm_fundo || '').filter(f => f && f !== 'N/A');
@@ -1794,6 +1833,33 @@ function updateDependentFilters(selectedUnidades = []) {
             ul: '<ul class="multiselect-container dropdown-menu" style="width: auto; min-width: 100%;"></ul>'
         }
     });
+    
+    // Recriar multiselects para consultores (apenas se for página do funil)
+    if (isFunilPage) {
+        consultorFilter.multiselect({
+            enableFiltering: true,
+            includeSelectAllOption: true,
+            selectAllText: "Marcar todos",
+            filterPlaceholder: "Pesquisar...",
+            nonSelectedText: "Todos os consultores",
+            nSelectedText: "consultores",
+            allSelectedText: "Todos selecionados",
+            buttonWidth: "100%",
+            maxHeight: 300,
+            onChange: updateDashboard,
+            onSelectAll: updateDashboard,
+            onDeselectAll: updateDashboard,
+            enableCaseInsensitiveFiltering: true,
+            filterBehavior: 'text',
+            dropUp: false,
+            dropRight: false,
+            widthSynchronizationMode: 'ifPopupIsSmaller',
+            templates: {
+                button: '<button type="button" class="multiselect dropdown-toggle" data-toggle="dropdown"><span class="multiselect-selected-text"></span></button>',
+                ul: '<ul class="multiselect-container dropdown-menu" style="width: auto; min-width: 100%;"></ul>'
+            }
+        });
+    }
     
     // Recriar multiselects para fundos (apenas se não for página do funil)
     if (!isFunilPage) {
@@ -1838,6 +1904,7 @@ function populateFilters(selectedUnidades = []) {
     
     const unidadeFilter = $("#unidade-filter");
     const cursoFilter = $("#curso-filter");
+    const consultorFilter = $("#consultor-filter");
     const fundoFilter = $("#fundo-filter");
     
     // Verificar se estamos na página do funil
@@ -1856,13 +1923,23 @@ function populateFilters(selectedUnidades = []) {
     console.log('funilData length:', funilData ? funilData.length : 0);
     console.log('=========================================================');
     
-    // Ocultar/mostrar filtro de fundos baseado na página
+    // Ocultar/mostrar filtros baseado na página
     const fundoFilterContainer = document.getElementById('fundo-filter-container');
+    const consultorFilterContainer = document.getElementById('consultor-filter-container');
+    
     if (fundoFilterContainer) {
         if (isFunilPage) {
             fundoFilterContainer.style.display = 'none';
         } else {
             fundoFilterContainer.style.display = 'block';
+        }
+    }
+    
+    if (consultorFilterContainer) {
+        if (isFunilPage) {
+            consultorFilterContainer.style.display = 'block';
+        } else {
+            consultorFilterContainer.style.display = 'none';
         }
     }
     
@@ -2011,6 +2088,20 @@ function populateFilters(selectedUnidades = []) {
         console.log('📝 Curso filter agora tem:', cursoFilter.children().length, 'opções');
         console.log('📝 Primeiras 5 opções:', cursos.slice(0, 5));
 
+        // Populate consultores filter (apenas se for página do funil)
+        if (isFunilPage && funilFiltrado.length > 0) {
+            console.log('🎯 POPULANDO CONSULTORES DO FUNIL');
+            const consultoresFunil = funilFiltrado.map((d) => d.consultor || '').filter(c => c && c.trim() !== '' && c !== 'N/A');
+            const consultores = [...new Set(consultoresFunil)].sort();
+            console.log('Consultores do funil (populateFilters):', consultores);
+            
+            consultores.forEach((c) => {
+                consultorFilter.append($("<option>", { value: c, text: c }));
+            });
+            
+            console.log('📝 Opções adicionadas ao filtro de consultor:', consultores.length);
+        }
+
         // Populate fundos filter (apenas se não for página do funil)
         if (!isFunilPage) {
             const fundosFromVendas = dadosFiltrados.map((d) => d.nm_fundo || '').filter(f => f && f !== 'N/A');
@@ -2115,6 +2206,49 @@ function populateFilters(selectedUnidades = []) {
                 console.log('Multiselect de cursos inicializado com sucesso');
             } catch (error) {
                 console.error('Erro ao inicializar multiselect de cursos:', error);
+            }
+
+            // CONSULTORES (apenas se for página do funil)
+            if (isFunilPage) {
+                try {
+                    // Destruir multiselect existente de consultor
+                    try {
+                        if (consultorFilter.data('multiselect')) {
+                            consultorFilter.multiselect('destroy');
+                            console.log('🔄 Multiselect de consultor destruído');
+                        }
+                    } catch (e) {
+                        console.log('🔄 Nenhum multiselect de consultor para destruir');
+                    }
+                    
+                    consultorFilter.multiselect({
+                        enableFiltering: true,
+                        includeSelectAllOption: true,
+                        selectAllText: "Marcar todos",
+                        filterPlaceholder: "Pesquisar...",
+                        nonSelectedText: "Todos os consultores",
+                        nSelectedText: "consultores",
+                        allSelectedText: "Todos selecionados",
+                        buttonWidth: "100%",
+                        maxHeight: 300,
+                        onChange: updateDashboard,
+                        onSelectAll: updateDashboard,
+                        onDeselectAll: updateDashboard,
+                        enableCaseInsensitiveFiltering: true,
+                        filterBehavior: 'text',
+                        dropUp: false,
+                        dropRight: false,
+                        widthSynchronizationMode: 'ifPopupIsSmaller',
+                        templates: {
+                            button: '<button type="button" class="multiselect dropdown-toggle" data-toggle="dropdown"><span class="multiselect-selected-text"></span></button>',
+                            ul: '<ul class="multiselect-container dropdown-menu" style="width: auto; min-width: 100%;"></ul>'
+                        }
+                    });
+                    
+                    console.log('Multiselect de consultores inicializado com sucesso');
+                } catch (error) {
+                    console.error('Erro ao inicializar multiselect de consultores:', error);
+                }
             }
 
             // FUNDOS (apenas se não for página do funil)
@@ -2853,6 +2987,44 @@ function updateFunilIndicators(startDate, endDate, selectedUnidades) {
         console.log("📊 Dados após filtro de curso:", dadosFinaisFiltrados.length, "registros");
     } else {
         console.log("📊 Mantendo todos os dados (sem filtro de curso)");
+    }
+    
+    // PASSO 2.6: FILTRAR POR CONSULTOR (se estiver na página do funil e consultor selecionado)
+    const selectedConsultores = $("#consultor-filter").val() || [];
+    if (selectedConsultores && selectedConsultores.length > 0) {
+        console.log("🔍 Filtrando por consultores:", selectedConsultores);
+        
+        dadosFinaisFiltrados = dadosFinaisFiltrados.filter(item => {
+            const consultorItem = item.consultor;
+            if (!consultorItem || consultorItem.trim() === '') {
+                console.log("⚠️ Item sem consultor:", {
+                    titulo: item.titulo,
+                    consultor: consultorItem
+                });
+                return false;
+            }
+            
+            const consultorPertence = selectedConsultores.includes(consultorItem.trim());
+            
+            if (!consultorPertence) {
+                console.log("❌ Consultor não está no filtro:", {
+                    titulo: item.titulo,
+                    consultor: consultorItem,
+                    consultoresPermitidos: selectedConsultores
+                });
+            } else {
+                console.log("✅ Consultor aceito:", {
+                    titulo: item.titulo,
+                    consultor: consultorItem
+                });
+            }
+            
+            return consultorPertence;
+        });
+        
+        console.log("📊 Dados após filtro de consultor:", dadosFinaisFiltrados.length, "registros");
+    } else {
+        console.log("📊 Mantendo todos os dados (sem filtro de consultor)");
     }
     
     // PASSO 3: CONTAR LINHAS com título válido (não vazio)
