@@ -3865,6 +3865,17 @@ function updateNegociacoesPorFaseChart(dados) {
                 legend: {
                     display: false // Não mostrar legenda
                 },
+                tooltip: {
+                    titleFont: {
+                        size: 16 // Aumentar fonte do título do tooltip
+                    },
+                    bodyFont: {
+                        size: 14 // Aumentar fonte do corpo do tooltip
+                    },
+                    footerFont: {
+                        size: 12 // Fonte do rodapé do tooltip
+                    }
+                },
                 datalabels: {
                     anchor: 'end',
                     align: 'right',
@@ -3882,7 +3893,7 @@ function updateNegociacoesPorFaseChart(dados) {
                     ticks: {
                         color: '#FFFFFF',
                         font: {
-                            size: 12
+                            size: 16 // Aumentado de 12 para 16
                         },
                         stepSize: 1
                     },
@@ -3894,7 +3905,7 @@ function updateNegociacoesPorFaseChart(dados) {
                     ticks: {
                         color: '#FFFFFF',
                         font: {
-                            size: 11
+                            size: 14 // Aumentado de 11 para 14
                         }
                     },
                     grid: {
@@ -4035,6 +4046,17 @@ function updatePerdasPorFaseChart(dados) {
                 legend: {
                     display: false
                 },
+                tooltip: {
+                    titleFont: {
+                        size: 16 // Aumentar fonte do título do tooltip
+                    },
+                    bodyFont: {
+                        size: 14 // Aumentar fonte do corpo do tooltip
+                    },
+                    footerFont: {
+                        size: 12 // Fonte do rodapé do tooltip
+                    }
+                },
                 datalabels: {
                     anchor: 'end',
                     align: 'right',
@@ -4052,7 +4074,7 @@ function updatePerdasPorFaseChart(dados) {
                     ticks: {
                         color: '#FFFFFF',
                         font: {
-                            size: 12
+                            size: 16 // Aumentado de 12 para 16
                         },
                         stepSize: 1
                     },
@@ -4064,7 +4086,7 @@ function updatePerdasPorFaseChart(dados) {
                     ticks: {
                         color: '#FFFFFF',
                         font: {
-                            size: 11
+                            size: 14 // Aumentado de 11 para 14
                         }
                     },
                     grid: {

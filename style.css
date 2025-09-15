@@ -664,17 +664,17 @@ body {
         .captacoes-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 0.85rem;
+            font-size: 1rem; /* Aumentado de 0.85rem para 1rem */
         }
 
         .captacoes-table th {
             background: linear-gradient(135deg, #495057 0%, #6c757d 100%);
             color: #ffc107;
-            padding: 12px 8px;
+            padding: 15px 10px; /* Aumentado padding de 12px 8px para 15px 10px */
             text-align: center;
             font-weight: 600;
             text-transform: uppercase;
-            font-size: 0.75rem;
+            font-size: 0.9rem; /* Aumentado de 0.75rem para 0.9rem */
             letter-spacing: 0.5px;
             border: 1px solid #6c757d;
             position: sticky;
@@ -683,23 +683,24 @@ body {
         }
 
         .captacoes-table td {
-            padding: 10px 8px;
+            padding: 12px 10px; /* Aumentado padding de 10px 8px para 12px 10px */
             text-align: center;
             border: 1px solid #495057;
             color: #f8f9fa;
             font-weight: 500;
+            font-size: 0.95rem; /* Adicionado tamanho específico de fonte */
         }
 
         .captacoes-table td:first-child {
             text-align: left;
-            font-size: 0.8rem;
+            font-size: 0.9rem; /* Aumentado de 0.8rem para 0.9rem */
             max-width: 200px;
             word-wrap: break-word;
         }
 
         .captacoes-table td:nth-child(2) {
             text-align: left;
-            font-size: 0.8rem;
+            font-size: 0.9rem; /* Aumentado de 0.8rem para 0.9rem */
         }
 
         /* Mapa de calor - cores baseadas na porcentagem */
@@ -730,12 +731,13 @@ body {
         }
 
         .captacoes-table-footer td {
-            padding: 12px 8px !important;
+            padding: 15px 10px !important; /* Aumentado padding de 12px 8px para 15px 10px */
             font-weight: bold !important;
             color: #ffc107 !important;
             background-color: rgba(255, 193, 7, 0.2) !important;
             text-align: center !important;
             border-bottom: none !important;
+            font-size: 1rem !important; /* Adicionado tamanho específico de fonte */
         }
 
         .chart-wrapper {
@@ -1407,18 +1409,18 @@ input[type=number] {
         .leads-perdidos-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 0.85rem;
+            font-size: 1rem; /* Aumentado de 0.85rem para 1rem */
             flex: 1; /* Expande para ocupar todo o espaço disponível */
         }
 
         .leads-perdidos-table th {
             background: linear-gradient(135deg, #495057 0%, #6c757d 100%);
             color: #ffc107;
-            padding: 12px 8px;
+            padding: 15px 10px; /* Aumentado padding de 12px 8px para 15px 10px */
             text-align: center;
             font-weight: 600;
             text-transform: uppercase;
-            font-size: 0.75rem;
+            font-size: 0.9rem; /* Aumentado de 0.75rem para 0.9rem */
             letter-spacing: 0.5px;
             border: 1px solid #6c757d;
             position: sticky;
@@ -1437,16 +1439,17 @@ input[type=number] {
         }
 
         .leads-perdidos-table td {
-            padding: 10px 8px;
+            padding: 12px 10px; /* Aumentado padding de 10px 8px para 12px 10px */
             text-align: center;
             border: 1px solid #495057;
             color: #f8f9fa;
             font-weight: 500;
+            font-size: 0.95rem; /* Adicionado tamanho específico de fonte */
         }
 
         .leads-perdidos-table td:first-child {
             text-align: left;
-            font-size: 0.8rem;
+            font-size: 0.9rem; /* Aumentado de 0.8rem para 0.9rem */
             max-width: 200px;
             word-wrap: break-word;
         }
@@ -1480,12 +1483,13 @@ input[type=number] {
         }
 
         .leads-perdidos-table-footer td {
-            padding: 12px 8px !important;
+            padding: 15px 10px !important; /* Aumentado padding de 12px 8px para 15px 10px */
             font-weight: bold !important;
             color: #ffc107 !important;
             background-color: rgba(255, 193, 7, 0.2) !important;
             text-align: center !important;
             border-bottom: none !important;
+            font-size: 1rem !important; /* Adicionado tamanho específico de fonte */
         }
 
         .leads-perdidos-table-footer td:first-child {
@@ -1515,4 +1519,56 @@ input[type=number] {
                 flex-direction: column;
                 gap: 30px;
             }
+        }
+
+        /* Aumentar fonte quando sidebar está recolhido */
+        #main-content.full-width .leads-perdidos-table {
+            font-size: 1.1rem; /* Aumenta ainda mais quando sidebar recolhido */
+        }
+
+        #main-content.full-width .leads-perdidos-table th {
+            font-size: 1rem; /* Aumenta cabeçalhos quando sidebar recolhido */
+            padding: 16px 12px; /* Mais padding quando há mais espaço */
+        }
+
+        #main-content.full-width .leads-perdidos-table td {
+            font-size: 1.05rem; /* Aumenta células quando sidebar recolhido */
+            padding: 14px 12px; /* Mais padding quando há mais espaço */
+        }
+
+        #main-content.full-width .leads-perdidos-table td:first-child {
+            font-size: 1rem; /* Aumenta primeira coluna quando sidebar recolhido */
+        }
+
+        #main-content.full-width .leads-perdidos-table-footer td {
+            font-size: 1.1rem !important; /* Aumenta footer quando sidebar recolhido */
+            padding: 16px 12px !important;
+        }
+
+        /* Aumentar fonte da tabela de captações quando sidebar está recolhido */
+        #main-content.full-width .captacoes-table {
+            font-size: 1.1rem; /* Aumenta ainda mais quando sidebar recolhido */
+        }
+
+        #main-content.full-width .captacoes-table th {
+            font-size: 1rem; /* Aumenta cabeçalhos quando sidebar recolhido */
+            padding: 16px 12px; /* Mais padding quando há mais espaço */
+        }
+
+        #main-content.full-width .captacoes-table td {
+            font-size: 1.05rem; /* Aumenta células quando sidebar recolhido */
+            padding: 14px 12px; /* Mais padding quando há mais espaço */
+        }
+
+        #main-content.full-width .captacoes-table td:first-child {
+            font-size: 1rem; /* Aumenta primeira coluna quando sidebar recolhido */
+        }
+
+        #main-content.full-width .captacoes-table td:nth-child(2) {
+            font-size: 1rem; /* Aumenta segunda coluna quando sidebar recolhido */
+        }
+
+        #main-content.full-width .captacoes-table-footer td {
+            font-size: 1.1rem !important; /* Aumenta footer quando sidebar recolhido */
+            padding: 16px 12px !important;
         }
