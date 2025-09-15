@@ -429,9 +429,10 @@ body {
             overflow: visible; /* Permite que elementos sejam visíveis */
         }
 
-        /* Quando o sidebar está recolhido, o funil se expande para ocupar mais espaço */
+        /* Quando o sidebar está recolhido, o funil se expande para ocupar quase todo o espaço */
         #main-content.full-width .funil-horizontal-container {
-            grid-column: 1 / span 10; /* Expande para 10 colunas quando sidebar recolhido */
+            grid-column: 1 / span 11; /* Expande para 11 colunas quando sidebar recolhido */
+            justify-content: space-between; /* Distribui os cards por todo o espaço */
         }
 
         /* Cards do funil em formato de seta */
@@ -451,9 +452,17 @@ body {
             justify-content: center;
             box-shadow: 0 4px 8px rgba(0,0,0,0.3);
             font-weight: bold;
+            flex: 1; /* Permite que os cards se expandam igualmente */
             
             /* Criar formato de seta usando clip-path */
             clip-path: polygon(0% 0%, calc(100% - 20px) 0%, 100% 50%, calc(100% - 20px) 100%, 0% 100%, 20px 50%);
+        }
+
+        /* Quando o sidebar está recolhido, os cards se expandem mais */
+        #main-content.full-width .funil-horizontal-card {
+            flex: 1; /* Cada card ocupa espaço igual disponível */
+            min-width: 150px; /* Largura mínima maior quando expandido */
+            margin-right: -8px; /* Overlap um pouco maior para manter conexão visual */
         }
 
         /* Primeiro card não tem seta à esquerda */
@@ -511,7 +520,7 @@ body {
 
         /* Quando o sidebar está recolhido, ajusta a proporção corretamente */
         #main-content.full-width .funil-side-cards {
-            grid-column: 11 / span 2; /* Ajusta para as últimas 2 colunas quando sidebar recolhido */
+            grid-column: 12 / span 1; /* Ocupa apenas a última coluna quando sidebar recolhido */
         }
 
         .funil-indicator-card {
