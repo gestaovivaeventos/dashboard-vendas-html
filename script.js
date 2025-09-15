@@ -249,13 +249,6 @@ async function initializeDashboard() {
     fundosData = novosFundosData;
     funilData = dadosFunil;
     
-    console.log("🎯 DEBUG DADOS CARREGADOS:");
-    console.log("🎯 - allData:", allData?.length || 0, "registros");
-    console.log("🎯 - metasData:", metasData?.length || 0, "registros");
-    console.log("🎯 - fundosData:", fundosData?.length || 0, "registros");
-    console.log("🎯 - funilData:", funilData?.length || 0, "registros");
-    console.log("🎯 - dadosFunil recebido:", dadosFunil?.length || 0, "registros");
-    
     console.log("=== DEBUG FUNIL ===");
     console.log("Dados do funil carregados:", dadosFunil ? dadosFunil.length : 0);
     if (dadosFunil && dadosFunil.length > 0) {
