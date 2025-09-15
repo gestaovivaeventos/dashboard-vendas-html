@@ -235,17 +235,26 @@ async function initializeDashboard() {
   displayLastUpdateMessage();
   const loader = document.getElementById("loader");
   try {
+    console.log("🎯 Iniciando Promise.all para carregar dados...");
     const [salesData, sheetData, novosFundosData, dadosFunil] = await Promise.all([
       fetchAllSalesDataFromSheet(),
       fetchMetasData(),
       fetchFundosData(),
       fetchFunilData(),
     ]);
+    console.log("🎯 Promise.all concluído com sucesso!");
 
     allData = salesData;
     metasData = sheetData;
     fundosData = novosFundosData;
     funilData = dadosFunil;
+    
+    console.log("🎯 DEBUG DADOS CARREGADOS:");
+    console.log("🎯 - allData:", allData?.length || 0, "registros");
+    console.log("🎯 - metasData:", metasData?.length || 0, "registros");
+    console.log("🎯 - fundosData:", fundosData?.length || 0, "registros");
+    console.log("🎯 - funilData:", funilData?.length || 0, "registros");
+    console.log("🎯 - dadosFunil recebido:", dadosFunil?.length || 0, "registros");
     
     console.log("=== DEBUG FUNIL ===");
     console.log("Dados do funil carregados:", dadosFunil ? dadosFunil.length : 0);
@@ -526,7 +535,7 @@ async function fetchFunilData() {
     
     // Encontrar índices das colunas importantes
     const tituloIndex = 0; // Coluna A - Título
-    const fasePerdidoIndex = 1; // Coluna B - Fase 7.2 Perdido
+    const faseAtualIndex = 1; // Coluna B - Fase atual
     const origemLeadIndex = 6; // Coluna G - Origem do Lead
     const criadoEmIndex = 12; // Coluna M - Data criação
     const qualificacaoComissaoIndex = 57; // Coluna BF - Primeira vez que entrou na fase 1.2 Qualificação Comissão
@@ -569,7 +578,7 @@ async function fetchFunilData() {
     const allProcessedData = rows.slice(1).map((row, index) => ({
       id: index + 1,
       titulo: row[tituloIndex] || '',
-      fase_perdido: row[fasePerdidoIndex] || '',
+      faseAtual: row[faseAtualIndex] || '',
       origem_lead: row[origemLeadIndex] || '',
       criado_em: row[criadoEmIndex] || '',
       qualificacao_comissao: row[qualificacaoComissaoIndex] || '',
@@ -580,6 +589,12 @@ async function fetchFunilData() {
       nm_unidade: row[unidadeIndex] || '',
       row_data: row
     }));
+    
+    // Debug para verificar as fases atuais
+    console.log("🔍 Debug faseAtual - Primeiras 5 linhas:");
+    allProcessedData.slice(0, 5).forEach((item, index) => {
+        console.log(`  ${index + 1}. Título: "${item.titulo}" | Fase: "${item.faseAtual}" | Criado: "${item.criado_em}"`);
+    });
     
     console.log("📊 Total de linhas processadas (sem filtro):", allProcessedData.length);
     
@@ -861,10 +876,15 @@ function updateDashboard() {
     updateContractsCharts(fundosDataFiltrado);
     updateAdesoesDrillDownCharts(allDataForOtherCharts);
     
+    console.log("🎯 Antes de updateConsultorTable...");
     updateConsultorTable(dataBrutaFiltrada);
+    console.log("🎯 Antes de updateDetalhadaAdesoesTable...");
     updateDetalhadaAdesoesTable(dataBrutaFiltrada);
+    console.log("🎯 Antes de updateFundosDetalhadosTable...");
     updateFundosDetalhadosTable(fundosDataFiltrado, selectedUnidades, startDate, endDate);
+    console.log("🎯 Prestes a chamar updateFunilIndicators...");
     updateFunilIndicators(startDate, endDate, selectedUnidades);
+    console.log("🎯 Depois de updateFunilIndicators...");
     updateMainKPIs(dataBrutaFiltrada, selectedUnidades, startDate, endDate);
     
     const dataAgregadaComVendas = processAndCrossReferenceData(dataBrutaFiltrada);
@@ -873,6 +893,8 @@ function updateDashboard() {
     
     document.getElementById("kpi-section-py").style.display = "block";
     updatePreviousYearKPIs(dataBrutaFiltradaPY, selectedUnidades, startDate, endDate);
+    
+    console.log("🎯 === FIM updateDashboard ===");
 }
 
 // ...
@@ -2424,12 +2446,12 @@ function updateFundosDetalhadosTable(fundosData, selectedUnidades, startDate, en
 
 // --- FUNÇÃO PARA ATUALIZAR INDICADORES DO FUNIL ---
 function updateFunilIndicators(startDate, endDate, selectedUnidades) {
-    console.log("=== INÍCIO updateFunilIndicators ===");
-    console.log("Parâmetros recebidos:");
-    console.log("- startDate:", startDate);
-    console.log("- endDate:", endDate);
-    console.log("- selectedUnidades:", selectedUnidades);
-    console.log("- funilData total:", funilData ? funilData.length : 0, "registros");
+    console.log("🎯 === INÍCIO updateFunilIndicators ===");
+    console.log("🎯 Parâmetros recebidos:");
+    console.log("🎯 - startDate:", startDate);
+    console.log("🎯 - endDate:", endDate);
+    console.log("🎯 - selectedUnidades:", selectedUnidades);
+    console.log("🎯 - funilData total:", funilData ? funilData.length : 0, "registros");
     
     if (!funilData || funilData.length === 0) {
         console.log("❌ Sem dados do funil para processar");
@@ -2943,6 +2965,9 @@ function updateFunilIndicators(startDate, endDate, selectedUnidades) {
     // PASSO 11: Atualizar a seção de captações
     updateCaptacoes(dadosFinaisFiltrados);
     
+    // PASSO 12: Atualizar a seção de negociações e perdas por fase
+    updateNegociacoesPerdas(dadosFinaisFiltrados);
+    
     console.log("=== FIM updateFunilIndicators ===");
 }
 
@@ -3234,4 +3259,156 @@ function updateCaptacoesChart(dados) {
     });
     
     console.log("✅ Gráfico de captações atualizado com", dados.length, "categorias");
+}
+
+// Variável global para armazenar a instância do gráfico de turmas negociadas
+let turmasNegociadasChartInstance = null;
+
+// Função para atualizar a seção de negociações e perdas por fase
+function updateNegociacoesPerdas(dadosFiltrados) {
+    console.log("=== INÍCIO updateNegociacoesPerdas ===");
+    console.log("📊 Dados recebidos:", dadosFiltrados.length);
+    
+    // Filtrar apenas leads com fase atual válida
+    const leadsValidos = dadosFiltrados.filter(item => 
+        item.faseAtual && item.faseAtual.trim() !== ''
+    );
+    
+    console.log("📊 Total de leads válidos para negociações:", leadsValidos.length);
+    
+    if (leadsValidos.length === 0) {
+        console.warn("⚠️ Nenhum lead com fase atual válida encontrado");
+        console.log("📊 Amostra dos dados recebidos:", dadosFiltrados.slice(0, 3));
+        return;
+    }
+    
+    // Debug: mostrar algumas fases encontradas
+    console.log("📊 Primeiras 5 fases encontradas:", leadsValidos.slice(0, 5).map(item => item.faseAtual));
+    
+    // Contar por fase atual
+    const faseContador = {};
+    leadsValidos.forEach(item => {
+        const fase = item.faseAtual.trim();
+        faseContador[fase] = (faseContador[fase] || 0) + 1;
+    });
+    
+    console.log("📊 Contador de fases:", faseContador);
+    
+    // Converter para array e ordenar por quantidade (maior para menor)
+    const dadosGrafico = Object.keys(faseContador)
+        .map(fase => ({
+            fase: fase,
+            quantidade: faseContador[fase]
+        }))
+        .sort((a, b) => b.quantidade - a.quantidade);
+    
+    console.log("📊 Dados para o gráfico:", dadosGrafico);
+    
+    // Atualizar o primeiro gráfico (Turmas Negociadas por Fase)
+    updateTurmasNegociadasChart(dadosGrafico);
+    
+    console.log("=== FIM updateNegociacoesPerdas ===");
+}
+
+// Função para atualizar o gráfico de turmas negociadas por fase
+function updateTurmasNegociadasChart(dados) {
+    console.log("📊 updateTurmasNegociadasChart chamada!");
+    console.log("📊 Dados recebidos:", dados?.length || 0, "itens");
+    console.log("📊 Estrutura dos dados:", dados);
+    
+    const ctx = document.getElementById('turmasNegociadasChart');
+    if (!ctx) {
+        console.error("❌ Elemento 'turmasNegociadasChart' não encontrado");
+        return;
+    }
+    
+    // Destruir gráfico anterior se existir
+    if (turmasNegociadasChartInstance) {
+        turmasNegociadasChartInstance.destroy();
+    }
+    
+    // Cores para as barras (gradiente de laranja/amarelo)
+    const cores = [
+        '#FFC107', '#FF8F00', '#FF6F00', '#E65100', '#FF5722',
+        '#FF9800', '#F57C00', '#EF6C00', '#D84315', '#BF360C'
+    ];
+    
+    const labels = dados.map(item => item.fase);
+    const valores = dados.map(item => item.quantidade);
+    const backgroundColor = dados.map((_, index) => cores[index % cores.length]);
+    
+    console.log("📊 Labels:", labels);
+    console.log("📊 Valores:", valores);
+    
+    turmasNegociadasChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Quantidade',
+                data: valores,
+                backgroundColor: backgroundColor,
+                borderColor: '#495057',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            indexAxis: 'y', // Barras horizontais
+            responsive: true,
+            maintainAspectRatio: false,
+            layout: {
+                padding: {
+                    top: 10,
+                    bottom: 10,
+                    left: 10,
+                    right: 20
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false // Ocultar legenda
+                },
+                datalabels: {
+                    anchor: 'end',
+                    align: 'right',
+                    color: '#2c3e50',
+                    font: {
+                        weight: 'bold',
+                        size: 14
+                    },
+                    formatter: function(value) {
+                        return value;
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    ticks: {
+                        color: '#FFFFFF',
+                        font: {
+                            size: 12
+                        }
+                    },
+                    grid: {
+                        color: '#495057'
+                    }
+                },
+                y: {
+                    ticks: {
+                        color: '#FFFFFF',
+                        font: {
+                            size: 12
+                        }
+                    },
+                    grid: {
+                        color: '#495057'
+                    }
+                }
+            }
+        },
+        plugins: [ChartDataLabels] // Plugin para exibir valores nas barras
+    });
+    
+    console.log("✅ Gráfico de turmas negociadas atualizado com", dados.length, "fases");
 }
