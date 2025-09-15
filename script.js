@@ -3423,7 +3423,22 @@ function updateMotivosPerdaTable(dadosFiltrados) {
             }
         });
 
-        console.log("✅ Tabela de motivos de perda atualizada com", dadosTabela.length, "motivos");
+        // Adicionar linha de resumo/total
+        const totalPercentual = dadosTabela.reduce((sum, item) => sum + parseFloat(item.percentual), 0);
+        const totalAbsoluto = dadosTabela.reduce((sum, item) => sum + item.total, 0);
+        
+        const trTotal = document.createElement('tr');
+        trTotal.className = 'leads-perdidos-table-footer';
+        
+        trTotal.innerHTML = `
+            <td><strong>TOTAL GERAL</strong></td>
+            <td><strong>${totalPercentual.toFixed(1)}%</strong></td>
+            <td><strong>${totalAbsoluto}</strong></td>
+        `;
+        
+        tbody.appendChild(trTotal);
+
+        console.log("✅ Tabela de motivos de perda atualizada com", dadosTabela.length, "motivos + linha de resumo");
         
     } catch (error) {
         console.error("❌ Erro geral na função updateMotivosPerdaTable:", error);

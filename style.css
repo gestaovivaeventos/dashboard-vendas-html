@@ -1473,3 +1473,26 @@ input[type=number] {
         .leads-perdidos-table .motivo-outros {
             background-color: rgba(255, 193, 7, 0.1) !important;
         }
+
+        /* Linha de resumo da tabela de motivos de perda */
+        .leads-perdidos-table-footer {
+            position: sticky;
+            bottom: 0;
+            background: rgba(44, 62, 80, 0.95) !important;
+            border-top: 2px solid #ffc107 !important;
+            z-index: 10;
+        }
+
+        .leads-perdidos-table-footer td {
+            padding: 12px 15px !important;
+            font-weight: bold !important;
+            color: #ffc107 !important;
+            background-color: rgba(255, 193, 7, 0.2) !important;
+            text-align: center !important;
+            border-bottom: none !important;
+            border: 1px solid #ffc107 !important;
+        }
+
+        .leads-perdidos-table-footer td:first-child {
+            text-align: left !important;
+        }
