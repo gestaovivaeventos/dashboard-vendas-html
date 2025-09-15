@@ -3815,17 +3815,16 @@ function updateNegociacoesPorFaseChart(dados) {
         dadosMap.set(item.fase, item.quantidade);
     });
     
-    // Organizar dados na ordem correta das fases
+    // Organizar dados na ordem correta das fases - INCLUINDO ZEROS
     const labels = [];
     const valores = [];
     const backgroundColor = [];
     
     ordemFases.forEach(fase => {
-        if (dadosMap.has(fase.nome)) {
-            labels.push(fase.nome);
-            valores.push(dadosMap.get(fase.nome));
-            backgroundColor.push(fase.cor);
-        }
+        labels.push(fase.nome);
+        // Se a fase tem dados, usar o valor; senão, usar 0
+        valores.push(dadosMap.has(fase.nome) ? dadosMap.get(fase.nome) : 0);
+        backgroundColor.push(fase.cor);
     });
     
     // Adicionar fases que não estão na lista padrão (se houver)
@@ -4005,17 +4004,16 @@ function updatePerdasPorFaseChart(dados) {
         dadosMap.set(item.fase, item.quantidade);
     });
     
-    // Organizar dados na ordem correta das fases
+    // Organizar dados na ordem correta das fases - INCLUINDO ZEROS
     const labels = [];
     const valores = [];
     const backgroundColor = [];
     
     ordemFasesPerdas.forEach(fase => {
-        if (dadosMap.has(fase.nome)) {
-            labels.push(fase.nome);
-            valores.push(dadosMap.get(fase.nome));
-            backgroundColor.push(fase.cor);
-        }
+        labels.push(fase.nome);
+        // Se a fase tem dados, usar o valor; senão, usar 0
+        valores.push(dadosMap.has(fase.nome) ? dadosMap.get(fase.nome) : 0);
+        backgroundColor.push(fase.cor);
     });
     
     perdasPorFaseChartInstance = new Chart(ctx, {
