@@ -235,14 +235,12 @@ async function initializeDashboard() {
   displayLastUpdateMessage();
   const loader = document.getElementById("loader");
   try {
-    console.log("🎯 Iniciando Promise.all para carregar dados...");
     const [salesData, sheetData, novosFundosData, dadosFunil] = await Promise.all([
       fetchAllSalesDataFromSheet(),
       fetchMetasData(),
       fetchFundosData(),
       fetchFunilData(),
     ]);
-    console.log("🎯 Promise.all concluído com sucesso!");
 
     allData = salesData;
     metasData = sheetData;
@@ -869,15 +867,10 @@ function updateDashboard() {
     updateContractsCharts(fundosDataFiltrado);
     updateAdesoesDrillDownCharts(allDataForOtherCharts);
     
-    console.log("🎯 Antes de updateConsultorTable...");
     updateConsultorTable(dataBrutaFiltrada);
-    console.log("🎯 Antes de updateDetalhadaAdesoesTable...");
     updateDetalhadaAdesoesTable(dataBrutaFiltrada);
-    console.log("🎯 Antes de updateFundosDetalhadosTable...");
     updateFundosDetalhadosTable(fundosDataFiltrado, selectedUnidades, startDate, endDate);
-    console.log("🎯 Prestes a chamar updateFunilIndicators...");
     updateFunilIndicators(startDate, endDate, selectedUnidades);
-    console.log("🎯 Depois de updateFunilIndicators...");
     updateMainKPIs(dataBrutaFiltrada, selectedUnidades, startDate, endDate);
     
     const dataAgregadaComVendas = processAndCrossReferenceData(dataBrutaFiltrada);
@@ -886,8 +879,6 @@ function updateDashboard() {
     
     document.getElementById("kpi-section-py").style.display = "block";
     updatePreviousYearKPIs(dataBrutaFiltradaPY, selectedUnidades, startDate, endDate);
-    
-    console.log("🎯 === FIM updateDashboard ===");
 }
 
 // ...
@@ -2439,12 +2430,12 @@ function updateFundosDetalhadosTable(fundosData, selectedUnidades, startDate, en
 
 // --- FUNÇÃO PARA ATUALIZAR INDICADORES DO FUNIL ---
 function updateFunilIndicators(startDate, endDate, selectedUnidades) {
-    console.log("🎯 === INÍCIO updateFunilIndicators ===");
-    console.log("🎯 Parâmetros recebidos:");
-    console.log("🎯 - startDate:", startDate);
-    console.log("🎯 - endDate:", endDate);
-    console.log("🎯 - selectedUnidades:", selectedUnidades);
-    console.log("🎯 - funilData total:", funilData ? funilData.length : 0, "registros");
+    console.log("=== INÍCIO updateFunilIndicators ===");
+    console.log("Parâmetros recebidos:");
+    console.log("- startDate:", startDate);
+    console.log("- endDate:", endDate);
+    console.log("- selectedUnidades:", selectedUnidades);
+    console.log("- funilData total:", funilData ? funilData.length : 0, "registros");
     
     if (!funilData || funilData.length === 0) {
         console.log("❌ Sem dados do funil para processar");
@@ -2959,7 +2950,20 @@ function updateFunilIndicators(startDate, endDate, selectedUnidades) {
     updateCaptacoes(dadosFinaisFiltrados);
     
     // PASSO 12: Atualizar a seção de negociações e perdas por fase
-    updateNegociacoesPerdas(dadosFinaisFiltrados);
+    // TESTE: Criar dados simulados se não houver dados do funil
+    if (!funilData || funilData.length === 0) {
+        console.log("⚠️ Dados do funil não disponíveis. Criando dados simulados para teste...");
+        const dadosSimulados = [
+            { faseAtual: "7.2 Perdido", titulo: "Lead Teste 1", criado_em: "01/09/2025" },
+            { faseAtual: "6.2 Novo Cliente Concluído", titulo: "Lead Teste 2", criado_em: "02/09/2025" },
+            { faseAtual: "2.1 Diagnóstico Realizado", titulo: "Lead Teste 3", criado_em: "03/09/2025" },
+            { faseAtual: "7.2 Perdido", titulo: "Lead Teste 4", criado_em: "04/09/2025" },
+            { faseAtual: "5.1 Proposta Enviada", titulo: "Lead Teste 5", criado_em: "05/09/2025" }
+        ];
+        updateNegociacoesPerdas(dadosSimulados);
+    } else {
+        updateNegociacoesPerdas(dadosFinaisFiltrados);
+    }
     
     console.log("=== FIM updateFunilIndicators ===");
 }
