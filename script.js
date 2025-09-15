@@ -72,7 +72,8 @@ let allData = [],
   consultorDataTable,
   detalhadaAdesoesDataTable,
   fundosDetalhadosDataTable,
-  negociacoesPorFaseChart; // NOVO: Chart de negociações por fase
+  negociacoesPorFaseChart, // NOVO: Chart de negociações por fase
+  perdasPorFaseChart; // NOVO: Chart de perdas por fase
 let currentVvrChartType = "total";
 let currentTableDataType = "total";
 let currentFilteredDataForTable = [];
@@ -536,6 +537,18 @@ async function fetchFunilData() {
     const fechamentoComissaoIndex = 64; // Coluna BM - Primeira vez que entrou na fase 4.1 Fechamento Comissão
     const concatMotivoPerdaIndex = 70; // Coluna BS - CONCAT MOTIVO PERDA
     
+    // Índices das colunas de perdas por fase
+    const perda11Index = 13; // Coluna N - (1.1) Venda Perdida?
+    const perda12Index = 17; // Coluna R - (1.2) Venda Perdida?
+    const perda13Index = 21; // Coluna V - (1.4) Venda Perdida? (1.3 Reunião Agendada)
+    const perda21Index = 25; // Coluna Z - (2.1) Venda Perdida?
+    const perda22Index = 29; // Coluna AD - (2.2) Venda Perdida?
+    const perda31Index = 33; // Coluna AH - (3.1) Venda Perdida?
+    const perda32Index = 37; // Coluna AL - (3.2) Venda Perdida?
+    const perda33Index = 41; // Coluna AP - (3.3) Venda Perdida?
+    const perda41Index = 45; // Coluna AT - (4.1) Venda Perdida?
+    const perda51Index = 49; // Coluna AX - (5.1) Venda Perdida?
+    
     // Vamos procurar a coluna nm_unidade dinamicamente no header
     let unidadeIndex = -1;
     headers.forEach((header, index) => {
@@ -579,6 +592,17 @@ async function fetchFunilData() {
       fechamento_comissao: row[fechamentoComissaoIndex] || '',
       concat_motivo_perda: row[concatMotivoPerdaIndex] || '',
       nm_unidade: row[unidadeIndex] || '',
+      // Colunas de perdas por fase
+      perda_11: row[perda11Index] || '',
+      perda_12: row[perda12Index] || '',
+      perda_13: row[perda13Index] || '',
+      perda_21: row[perda21Index] || '',
+      perda_22: row[perda22Index] || '',
+      perda_31: row[perda31Index] || '',
+      perda_32: row[perda32Index] || '',
+      perda_33: row[perda33Index] || '',
+      perda_41: row[perda41Index] || '',
+      perda_51: row[perda51Index] || '',
       row_data: row
     }));
     
@@ -2947,6 +2971,9 @@ function updateFunilIndicators(startDate, endDate, selectedUnidades) {
     // PASSO 12: Atualizar o gráfico de negociações por fase
     createNegociacoesPorFaseChart(dadosFinaisFiltrados);
     
+    // PASSO 13: Atualizar o gráfico de perdas por fase
+    createPerdasPorFaseChart(dadosFinaisFiltrados);
+    
     console.log("=== FIM updateFunilIndicators ===");
 }
 
@@ -3400,4 +3427,174 @@ function updateNegociacoesPorFaseChart(dados) {
     });
     
     console.log("✅ Gráfico de negociações por fase atualizado com", dados.length, "fases");
+}
+
+// === GRÁFICO DE PERDAS POR FASE ===
+
+let perdasPorFaseChartInstance = null;
+
+// Função para criar o gráfico de perdas por fase
+function createPerdasPorFaseChart(dadosFiltrados) {
+    console.log("=== INÍCIO createPerdasPorFaseChart ===");
+    
+    // Contar perdas por fase baseado nas colunas específicas
+    const perdasContador = {
+        '1.1 Qualificação do Lead': 0,
+        '1.2 Qualificação Comissão': 0,
+        '1.3 Reunião Agendada': 0,
+        '2.1 Diagnóstico Realizado': 0,
+        '2.2 Apresentação Proposta': 0,
+        '3.1 Proposta Enviada': 0,
+        '3.2 Apresentação Turma': 0,
+        '3.3 Gerar Contrato': 0,
+        '4.1 Fechamento Comissão': 0,
+        '5.1 Captação de Adesões': 0
+    };
+    
+    dadosFiltrados.forEach(item => {
+        if (item.titulo && item.titulo.trim() !== '') { // Apenas cards com título válido
+            // Contar "sim" em cada coluna de perda
+            if (item.perda_11 && item.perda_11.toLowerCase() === 'sim') perdasContador['1.1 Qualificação do Lead']++;
+            if (item.perda_12 && item.perda_12.toLowerCase() === 'sim') perdasContador['1.2 Qualificação Comissão']++;
+            if (item.perda_13 && item.perda_13.toLowerCase() === 'sim') perdasContador['1.3 Reunião Agendada']++;
+            if (item.perda_21 && item.perda_21.toLowerCase() === 'sim') perdasContador['2.1 Diagnóstico Realizado']++;
+            if (item.perda_22 && item.perda_22.toLowerCase() === 'sim') perdasContador['2.2 Apresentação Proposta']++;
+            if (item.perda_31 && item.perda_31.toLowerCase() === 'sim') perdasContador['3.1 Proposta Enviada']++;
+            if (item.perda_32 && item.perda_32.toLowerCase() === 'sim') perdasContador['3.2 Apresentação Turma']++;
+            if (item.perda_33 && item.perda_33.toLowerCase() === 'sim') perdasContador['3.3 Gerar Contrato']++;
+            if (item.perda_41 && item.perda_41.toLowerCase() === 'sim') perdasContador['4.1 Fechamento Comissão']++;
+            if (item.perda_51 && item.perda_51.toLowerCase() === 'sim') perdasContador['5.1 Captação de Adesões']++;
+        }
+    });
+    
+    console.log("📊 Contador de perdas por fase:", perdasContador);
+    
+    // Preparar dados para o gráfico (SEMPRE exibir todas as fases, mesmo com zero)
+    const dadosGrafico = Object.keys(perdasContador).map(fase => ({
+        fase: fase,
+        quantidade: perdasContador[fase]
+    }));
+    
+    // Atualizar gráfico
+    updatePerdasPorFaseChart(dadosGrafico);
+    
+    console.log("=== FIM createPerdasPorFaseChart ===");
+}
+
+// Função para atualizar o gráfico de perdas por fase
+function updatePerdasPorFaseChart(dados) {
+    const ctx = document.getElementById('perdasPorFaseChart');
+    if (!ctx) {
+        console.error("❌ Elemento 'perdasPorFaseChart' não encontrado");
+        return;
+    }
+    
+    // Destruir gráfico anterior se existir
+    if (perdasPorFaseChartInstance) {
+        perdasPorFaseChartInstance.destroy();
+    }
+    
+    // Definir cores em tons de vermelho para perdas
+    const ordemFasesPerdas = [
+        { nome: '1.1 Qualificação do Lead', cor: '#FFCDD2' },        // Vermelho muito claro
+        { nome: '1.2 Qualificação Comissão', cor: '#EF9A9A' },      // Vermelho claro
+        { nome: '1.3 Reunião Agendada', cor: '#E57373' },           // Vermelho médio-claro
+        { nome: '2.1 Diagnóstico Realizado', cor: '#EF5350' },      // Vermelho médio
+        { nome: '2.2 Apresentação Proposta', cor: '#F44336' },      // Vermelho médio-escuro
+        { nome: '3.1 Proposta Enviada', cor: '#E53935' },           // Vermelho escuro
+        { nome: '3.2 Apresentação Turma', cor: '#D32F2F' },         // Vermelho muito escuro
+        { nome: '3.3 Gerar Contrato', cor: '#C62828' },             // Vermelho quase marrom
+        { nome: '4.1 Fechamento Comissão', cor: '#B71C1C' },        // Vermelho bem escuro
+        { nome: '5.1 Captação de Adesões', cor: '#8D1F1F' }         // Vermelho escuríssimo
+    ];
+    
+    // Criar um mapa dos dados recebidos
+    const dadosMap = new Map();
+    dados.forEach(item => {
+        dadosMap.set(item.fase, item.quantidade);
+    });
+    
+    // Organizar dados na ordem correta das fases
+    const labels = [];
+    const valores = [];
+    const backgroundColor = [];
+    
+    ordemFasesPerdas.forEach(fase => {
+        if (dadosMap.has(fase.nome)) {
+            labels.push(fase.nome);
+            valores.push(dadosMap.get(fase.nome));
+            backgroundColor.push(fase.cor);
+        }
+    });
+    
+    perdasPorFaseChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Perdas',
+                data: valores,
+                backgroundColor: backgroundColor,
+                borderColor: backgroundColor,
+                borderWidth: 1
+            }]
+        },
+        options: {
+            indexAxis: 'y', // Gráfico horizontal
+            responsive: true,
+            maintainAspectRatio: false,
+            layout: {
+                padding: {
+                    top: 20,
+                    bottom: 20,
+                    left: 20,
+                    right: 80
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                },
+                datalabels: {
+                    anchor: 'end',
+                    align: 'right',
+                    color: '#FFFFFF',
+                    font: {
+                        size: 14,
+                        weight: 'bold'
+                    },
+                    formatter: (value) => value.toString()
+                }
+            },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    ticks: {
+                        color: '#FFFFFF',
+                        font: {
+                            size: 12
+                        },
+                        stepSize: 1
+                    },
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    }
+                },
+                y: {
+                    ticks: {
+                        color: '#FFFFFF',
+                        font: {
+                            size: 11
+                        }
+                    },
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    }
+                }
+            }
+        },
+        plugins: [ChartDataLabels]
+    });
+    
+    console.log("✅ Gráfico de perdas por fase atualizado com", dados.length, "fases");
 }

@@ -1293,14 +1293,17 @@ input[type=number] {
 /* === ESTILOS PARA NEGOCIAÇÕES E PERDAS POR FASE === */
 
         .negociacoes-content {
-            display: flex;
-            justify-content: center;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
             grid-column: span 12;
             margin-top: 20px;
         }
 
         /* Quando o sidebar está recolhido, ajusta o layout das negociações */
         #main-content.full-width .negociacoes-content {
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
             max-width: 100%;
             overflow: hidden;
         }
@@ -1314,7 +1317,6 @@ input[type=number] {
             display: flex;
             flex-direction: column;
             width: 100%;
-            max-width: 1200px;
         }
 
         /* Quando o sidebar está recolhido, ajusta o container das negociações */
