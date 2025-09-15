@@ -71,7 +71,8 @@ let allData = [],
   monthlyAdesoesStackedChart,
   consultorDataTable,
   detalhadaAdesoesDataTable,
-  fundosDetalhadosDataTable;
+  fundosDetalhadosDataTable,
+  negociacoesPorFaseChart; // NOVO: Chart de negociações por fase
 let currentVvrChartType = "total";
 let currentTableDataType = "total";
 let currentFilteredDataForTable = [];
@@ -2943,6 +2944,9 @@ function updateFunilIndicators(startDate, endDate, selectedUnidades) {
     // PASSO 11: Atualizar a seção de captações
     updateCaptacoes(dadosFinaisFiltrados);
     
+    // PASSO 12: Atualizar o gráfico de negociações por fase
+    createNegociacoesPorFaseChart(dadosFinaisFiltrados);
+    
     console.log("=== FIM updateFunilIndicators ===");
 }
 
@@ -3234,4 +3238,166 @@ function updateCaptacoesChart(dados) {
     });
     
     console.log("✅ Gráfico de captações atualizado com", dados.length, "categorias");
+}
+
+// === NOVA SEÇÃO: NEGOCIAÇÕES E PERDAS POR FASE ===
+
+let negociacoesPorFaseChartInstance = null;
+
+// Função para criar o gráfico de negociações por fase
+function createNegociacoesPorFaseChart(dadosFiltrados) {
+    console.log("=== INÍCIO createNegociacoesPorFaseChart ===");
+    
+    // Contar quantidade de cards por fase atual
+    const faseContador = {};
+    
+    dadosFiltrados.forEach(item => {
+        if (item.titulo && item.titulo.trim() !== '') { // Apenas cards com título válido
+            const fase = item.fase_perdido || 'Não informado';
+            faseContador[fase] = (faseContador[fase] || 0) + 1;
+        }
+    });
+    
+    console.log("📊 Contador por fase:", faseContador);
+    
+    // Preparar dados para o gráfico (sem ordenação - a ordenação será feita na função do gráfico)
+    const dadosGrafico = Object.keys(faseContador).map(fase => ({
+        fase: fase,
+        quantidade: faseContador[fase]
+    }));
+    
+    // Atualizar gráfico
+    updateNegociacoesPorFaseChart(dadosGrafico);
+    
+    console.log("=== FIM createNegociacoesPorFaseChart ===");
+}
+
+// Função para atualizar o gráfico de negociações por fase
+function updateNegociacoesPorFaseChart(dados) {
+    const ctx = document.getElementById('negociacoesPorFaseChart');
+    if (!ctx) {
+        console.error("❌ Elemento 'negociacoesPorFaseChart' não encontrado");
+        return;
+    }
+    
+    // Destruir gráfico anterior se existir
+    if (negociacoesPorFaseChartInstance) {
+        negociacoesPorFaseChartInstance.destroy();
+    }
+    
+    // Definir a ordem correta das fases e suas cores conforme gradiente laranja da empresa
+    const ordemFases = [
+        { nome: '1.1 Qualificação do Lead', cor: '#FFE082' },        // Laranja muito claro
+        { nome: '1.2 Qualificação Comissão', cor: '#FFCC02' },      // Laranja claro
+        { nome: '1.3 Reunião Agendada', cor: '#FFC107' },           // Laranja médio-claro
+        { nome: '2.1 Diagnóstico Realizado', cor: '#FF9800' },      // Laranja médio
+        { nome: '2.2 Apresentação Proposta', cor: '#F57C00' },      // Laranja médio-escuro
+        { nome: '3.1 Proposta Enviada', cor: '#EF6C00' },           // Laranja escuro
+        { nome: '3.2 Apresentação Turma', cor: '#E65100' },         // Laranja muito escuro
+        { nome: '3.3 Gerar Contrato', cor: '#D84315' },             // Laranja quase vermelho
+        { nome: '4.1 Fechamento Comissão', cor: '#BF360C' },        // Laranja bem escuro
+        { nome: '4.1.1 Indicação', cor: '#A6300C' },                // Laranja escuríssimo
+        { nome: '5.1 Captação de Adesões', cor: '#942A09' },        // Laranja quase marrom
+        { nome: '6.2 Novo Cliente Concluído', cor: '#8A2A0B' },     // Laranja final
+        { nome: '7.2 Perdido', cor: '#D32F2F' }                     // Vermelho para perdidos
+    ];
+    
+    // Criar um mapa dos dados recebidos
+    const dadosMap = new Map();
+    dados.forEach(item => {
+        dadosMap.set(item.fase, item.quantidade);
+    });
+    
+    // Organizar dados na ordem correta das fases
+    const labels = [];
+    const valores = [];
+    const backgroundColor = [];
+    
+    ordemFases.forEach(fase => {
+        if (dadosMap.has(fase.nome)) {
+            labels.push(fase.nome);
+            valores.push(dadosMap.get(fase.nome));
+            backgroundColor.push(fase.cor);
+        }
+    });
+    
+    // Adicionar fases que não estão na lista padrão (se houver)
+    dados.forEach(item => {
+        if (!ordemFases.some(fase => fase.nome === item.fase)) {
+            labels.push(item.fase);
+            valores.push(item.quantidade);
+            backgroundColor.push('#FF8F00'); // Cor laranja padrão para fases não mapeadas
+        }
+    });
+    
+    negociacoesPorFaseChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Quantidade',
+                data: valores,
+                backgroundColor: backgroundColor,
+                borderColor: backgroundColor,
+                borderWidth: 1
+            }]
+        },
+        options: {
+            indexAxis: 'y', // Isso torna o gráfico horizontal
+            responsive: true,
+            maintainAspectRatio: false,
+            layout: {
+                padding: {
+                    top: 20,
+                    bottom: 20,
+                    left: 20,
+                    right: 80 // Mais espaço à direita para os valores
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false // Não mostrar legenda
+                },
+                datalabels: {
+                    anchor: 'end',
+                    align: 'right',
+                    color: '#FFFFFF',
+                    font: {
+                        size: 14,
+                        weight: 'bold'
+                    },
+                    formatter: (value) => value.toString()
+                }
+            },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    ticks: {
+                        color: '#FFFFFF',
+                        font: {
+                            size: 12
+                        },
+                        stepSize: 1
+                    },
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    }
+                },
+                y: {
+                    ticks: {
+                        color: '#FFFFFF',
+                        font: {
+                            size: 11
+                        }
+                    },
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    }
+                }
+            }
+        },
+        plugins: [ChartDataLabels]
+    });
+    
+    console.log("✅ Gráfico de negociações por fase atualizado com", dados.length, "fases");
 }
