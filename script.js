@@ -2161,61 +2161,82 @@ function addEventListeners() {
             
             console.log('🔄 Navegação de página:', previousPage, '→', newPage);
             
-            // 🚨 LIMPAR FILTROS ESPECÍFICOS DA PÁGINA 2 **ANTES** DA MUDANÇA VISUAL
+            // 🚨 TRANSIÇÃO SUAVE: Ocultar filtros ANTES da limpeza
             if (previousPage === "page2" && newPage !== "page2") {
-                console.log('🧹 Saindo da página 2 - limpando filtros específicos ANTES da mudança visual...');
+                console.log('🧹 Saindo da página 2 - iniciando transição suave...');
                 
-                // 🆕 LIMPAR FILTRO DE FUNDOS FISICAMENTE
-                console.log('🧹 🎯 LIMPANDO FILTRO DE FUNDOS...');
-                $("#fundo-filter").val([]);
-                try {
-                    if ($("#fundo-filter").data('multiselect')) {
-                        $("#fundo-filter").multiselect('refresh');
-                        console.log('🧹 ✅ Filtro de FUNDOS limpo e atualizado');
-                    }
-                } catch (error) {
-                    console.log('🧹 ❌ Erro ao limpar filtro de fundos:', error);
-                }
+                // ✅ FASE 1: Ocultar filtros com transição suave
+                const filtersToHide = [
+                    '#tipo-adesao-filter-container',
+                    '#tipo-servico-filter-container', 
+                    '#tipo-cliente-filter-container',
+                    '#consultor-comercial-filter-container',
+                    '#indicacao-adesao-filter-container',
+                    '#instituicao-filter-container'
+                ];
                 
-                // Limpar seleções dos filtros específicos da página 2 SILENCIOSAMENTE
-                $("#tipo-adesao-filter").val([]);
-                $("#tipo-servico-filter").val([]);
-                $("#tipo-cliente-filter").val([]);
-                $("#consultor-comercial-filter").val([]);
-                $("#indicacao-adesao-filter").val([]);
-                $("#instituicao-filter").val([]);
+                filtersToHide.forEach(selector => {
+                    const element = document.querySelector(selector);
+                    if (element && element.style.visibility !== 'hidden') {
+                        element.classList.remove('smooth-showing');
+                        element.classList.add('smooth-hiding');
+                    }
+                });
                 
-                // Atualizar o multiselect SILENCIOSAMENTE (sem triggers)
-                try {
-                    if ($("#tipo-adesao-filter").data('multiselect')) {
-                        $("#tipo-adesao-filter").multiselect('refresh');
+                // ✅ FASE 2: Aguardar transição e então limpar (timing reduzido)
+                setTimeout(() => {
+                    // 🆕 LIMPAR FILTRO DE FUNDOS FISICAMENTE
+                    console.log('🧹 🎯 LIMPANDO FILTRO DE FUNDOS...');
+                    $("#fundo-filter").val([]);
+                    try {
+                        if ($("#fundo-filter").data('multiselect')) {
+                            $("#fundo-filter").multiselect('refresh');
+                            console.log('🧹 ✅ Filtro de FUNDOS limpo e atualizado');
+                        }
+                    } catch (error) {
+                        console.log('🧹 ❌ Erro ao limpar filtro de fundos:', error);
                     }
-                    if ($("#tipo-servico-filter").data('multiselect')) {
-                        $("#tipo-servico-filter").multiselect('refresh');
+                    
+                    // Limpar seleções dos filtros específicos da página 2 SILENCIOSAMENTE
+                    $("#tipo-adesao-filter").val([]);
+                    $("#tipo-servico-filter").val([]);
+                    $("#tipo-cliente-filter").val([]);
+                    $("#consultor-comercial-filter").val([]);
+                    $("#indicacao-adesao-filter").val([]);
+                    $("#instituicao-filter").val([]);
+                    
+                    // Atualizar o multiselect SILENCIOSAMENTE (sem triggers)
+                    try {
+                        if ($("#tipo-adesao-filter").data('multiselect')) {
+                            $("#tipo-adesao-filter").multiselect('refresh');
+                        }
+                        if ($("#tipo-servico-filter").data('multiselect')) {
+                            $("#tipo-servico-filter").multiselect('refresh');
+                        }
+                        if ($("#tipo-cliente-filter").data('multiselect')) {
+                            $("#tipo-cliente-filter").multiselect('refresh');
+                        }
+                        if ($("#consultor-comercial-filter").data('multiselect')) {
+                            $("#consultor-comercial-filter").multiselect('refresh');
+                        }
+                        if ($("#indicacao-adesao-filter").data('multiselect')) {
+                            $("#indicacao-adesao-filter").multiselect('refresh');
+                        }
+                        if ($("#instituicao-filter").data('multiselect')) {
+                            $("#instituicao-filter").multiselect('refresh');
+                        }
+                        console.log('🧹 ✅ Filtros específicos limpos SILENCIOSAMENTE');
+                    } catch (error) {
+                        console.log('🧹 Erro ao atualizar multiselects:', error);
                     }
-                    if ($("#tipo-cliente-filter").data('multiselect')) {
-                        $("#tipo-cliente-filter").multiselect('refresh');
-                    }
-                    if ($("#consultor-comercial-filter").data('multiselect')) {
-                        $("#consultor-comercial-filter").multiselect('refresh');
-                    }
-                    if ($("#indicacao-adesao-filter").data('multiselect')) {
-                        $("#indicacao-adesao-filter").multiselect('refresh');
-                    }
-                    if ($("#instituicao-filter").data('multiselect')) {
-                        $("#instituicao-filter").multiselect('refresh');
-                    }
-                    console.log('🧹 ✅ Filtros específicos limpos SILENCIOSAMENTE');
-                } catch (error) {
-                    console.log('🧹 Erro ao atualizar multiselects:', error);
-                }
-                
-                // 🔄 ATUALIZAR DASHBOARD **ANTES** DA MUDANÇA VISUAL - SEM DELAY
-                console.log('🔄 Atualizando dashboard ANTES da mudança visual...');
-                updateDashboard();
+                    
+                    // 🔄 ATUALIZAR DASHBOARD **ANTES** DA MUDANÇA VISUAL
+                    console.log('🔄 Atualizando dashboard ANTES da mudança visual...');
+                    updateDashboard();
+                }, 200); // Timing reduzido para fluidez
             }
             
-            // SÓ DEPOIS fazer a mudança visual das páginas
+            // ✅ MUDANÇA VISUAL DA PÁGINA - Sempre executar
             document.querySelectorAll(".page-navigation button").forEach((btn) => btn.classList.remove("active"));
             this.classList.add("active");
             document.querySelectorAll(".page-content").forEach((page) => page.classList.remove("active"));
@@ -2244,6 +2265,28 @@ function addEventListeners() {
             // 🆕 FORÇAR APLICAÇÃO DA VISIBILIDADE DOS FILTROS APÓS QUALQUER MUDANÇA DE PÁGINA
             setTimeout(() => {
                 console.log('🔧 Aplicando visibilidade dos filtros após navegação...');
+                
+                // ✅ TRANSIÇÃO SUAVE: Mostrar filtros da nova página
+                if (newPage === "page2") {
+                    // Remover classe hiding se existir
+                    const filtersToShow = [
+                        '#tipo-adesao-filter-container',
+                        '#tipo-servico-filter-container', 
+                        '#tipo-cliente-filter-container',
+                        '#consultor-comercial-filter-container',
+                        '#indicacao-adesao-filter-container',
+                        '#instituicao-filter-container'
+                    ];
+                    
+                    filtersToShow.forEach(selector => {
+                        const element = document.querySelector(selector);
+                        if (element) {
+                            element.classList.remove('smooth-hiding');
+                            element.classList.add('smooth-showing');
+                        }
+                    });
+                }
+                
                 applyFundosFilterVisibility();
                 applyTipoAdesaoFilterVisibility();
                 applyTipoServicoFilterVisibility();
@@ -2322,8 +2365,16 @@ function applyFundosFilterVisibility() {
     
     if (fundoFilterContainer) {
         if (shouldShowFundos) {
+            // Mostrar sem transição na inicialização, com transição na navegação
             fundoFilterContainer.style.display = 'block';
             fundoFilterContainer.style.visibility = 'visible';
+            
+            // Aplicar transição suave apenas se estivermos navegando
+            if (fundoFilterContainer.classList.contains('smooth-hiding')) {
+                fundoFilterContainer.classList.remove('smooth-hiding');
+                fundoFilterContainer.classList.add('smooth-showing');
+            }
+            
             console.log('🔧 ✅ FUNDOS FORÇADO PARA VISÍVEL');
             
             // 🆕 REINICIALIZAR MULTISELECT DO FUNDOS QUANDO FICAR VISÍVEL
@@ -2360,8 +2411,19 @@ function applyFundosFilterVisibility() {
             }, 100);
             
         } else {
-            fundoFilterContainer.style.display = 'none';
-            fundoFilterContainer.style.visibility = 'hidden';
+            // Aplicar transição suave apenas se já estiver visível
+            if (fundoFilterContainer.style.visibility !== 'hidden') {
+                fundoFilterContainer.classList.remove('smooth-showing');
+                fundoFilterContainer.classList.add('smooth-hiding');
+                setTimeout(() => {
+                    fundoFilterContainer.style.display = 'none';
+                    fundoFilterContainer.style.visibility = 'hidden';
+                }, 300);
+            } else {
+                // Ocultar imediatamente se já estiver oculto
+                fundoFilterContainer.style.display = 'none';
+                fundoFilterContainer.style.visibility = 'hidden';
+            }
             console.log('🔧 ✅ FUNDOS FORÇADO PARA OCULTO');
         }
     } else {
@@ -2392,8 +2454,16 @@ function applyTipoAdesaoFilterVisibility() {
     
     if (tipoAdesaoFilterContainer) {
         if (shouldShowTipoAdesao) {
+            // Mostrar sem transição na inicialização, com transição na navegação
             tipoAdesaoFilterContainer.style.display = 'block';
             tipoAdesaoFilterContainer.style.visibility = 'visible';
+            
+            // Aplicar transição suave apenas se estivermos navegando
+            if (tipoAdesaoFilterContainer.classList.contains('smooth-hiding')) {
+                tipoAdesaoFilterContainer.classList.remove('smooth-hiding');
+                tipoAdesaoFilterContainer.classList.add('smooth-showing');
+            }
+            
             console.log('🔧 ✅ TIPO ADESÃO FORÇADO PARA VISÍVEL');
             
             // 🆕 POPULAR FILTRO DE TIPO DE ADESÃO IMEDIATAMENTE
@@ -2493,8 +2563,19 @@ function applyTipoAdesaoFilterVisibility() {
             }, 100);
             
         } else {
-            tipoAdesaoFilterContainer.style.display = 'none';
-            tipoAdesaoFilterContainer.style.visibility = 'hidden';
+            // Aplicar transição suave apenas se já estiver visível
+            if (tipoAdesaoFilterContainer.style.visibility !== 'hidden') {
+                tipoAdesaoFilterContainer.classList.remove('smooth-showing');
+                tipoAdesaoFilterContainer.classList.add('smooth-hiding');
+                setTimeout(() => {
+                    tipoAdesaoFilterContainer.style.display = 'none';
+                    tipoAdesaoFilterContainer.style.visibility = 'hidden';
+                }, 300);
+            } else {
+                // Ocultar imediatamente se já estiver oculto
+                tipoAdesaoFilterContainer.style.display = 'none';
+                tipoAdesaoFilterContainer.style.visibility = 'hidden';
+            }
             console.log('🔧 ✅ TIPO ADESÃO FORÇADO PARA OCULTO');
         }
     } else {
@@ -2525,8 +2606,16 @@ function applyTipoServicoFilterVisibility() {
     
     if (tipoServicoFilterContainer) {
         if (shouldShowTipoServico) {
+            // Mostrar sem transição na inicialização, com transição na navegação
             tipoServicoFilterContainer.style.display = 'block';
             tipoServicoFilterContainer.style.visibility = 'visible';
+            
+            // Aplicar transição suave apenas se estivermos navegando
+            if (tipoServicoFilterContainer.classList.contains('smooth-hiding')) {
+                tipoServicoFilterContainer.classList.remove('smooth-hiding');
+                tipoServicoFilterContainer.classList.add('smooth-showing');
+            }
+            
             console.log('🔧 ✅ TIPO SERVIÇO FORÇADO PARA VISÍVEL');
             
             // 🆕 POPULAR FILTRO DE TIPO DE SERVIÇO IMEDIATAMENTE
@@ -2629,8 +2718,19 @@ function applyTipoServicoFilterVisibility() {
             }, 100);
             
         } else {
-            tipoServicoFilterContainer.style.display = 'none';
-            tipoServicoFilterContainer.style.visibility = 'hidden';
+            // Aplicar transição suave apenas se já estiver visível
+            if (tipoServicoFilterContainer.style.visibility !== 'hidden') {
+                tipoServicoFilterContainer.classList.remove('smooth-showing');
+                tipoServicoFilterContainer.classList.add('smooth-hiding');
+                setTimeout(() => {
+                    tipoServicoFilterContainer.style.display = 'none';
+                    tipoServicoFilterContainer.style.visibility = 'hidden';
+                }, 300);
+            } else {
+                // Ocultar imediatamente se já estiver oculto
+                tipoServicoFilterContainer.style.display = 'none';
+                tipoServicoFilterContainer.style.visibility = 'hidden';
+            }
             console.log('🔧 ✅ TIPO SERVIÇO FORÇADO PARA OCULTO');
         }
     } else {
@@ -2646,8 +2746,16 @@ function applyTipoClienteFilterVisibility() {
         const currentActivePage = document.getElementById('btn-page2')?.classList.contains('active') ? 'page2' : 'other';
         
         if (currentActivePage === 'page2') {
+            // Mostrar sem transição na inicialização, com transição na navegação
             tipoClienteFilterContainer.style.display = 'block';
             tipoClienteFilterContainer.style.visibility = 'visible';
+            
+            // Aplicar transição suave apenas se estivermos navegando
+            if (tipoClienteFilterContainer.classList.contains('smooth-hiding')) {
+                tipoClienteFilterContainer.classList.remove('smooth-hiding');
+                tipoClienteFilterContainer.classList.add('smooth-showing');
+            }
+            
             console.log('👥 ✅ TIPO CLIENTE mostrado para página 2');
             
             const tipoClienteFilter = $('#tipo-cliente-filter');
@@ -2747,8 +2855,19 @@ function applyTipoClienteFilterVisibility() {
             }, 100);
             
         } else {
-            tipoClienteFilterContainer.style.display = 'none';
-            tipoClienteFilterContainer.style.visibility = 'hidden';
+            // Aplicar transição suave apenas se já estiver visível
+            if (tipoClienteFilterContainer.style.visibility !== 'hidden') {
+                tipoClienteFilterContainer.classList.remove('smooth-showing');
+                tipoClienteFilterContainer.classList.add('smooth-hiding');
+                setTimeout(() => {
+                    tipoClienteFilterContainer.style.display = 'none';
+                    tipoClienteFilterContainer.style.visibility = 'hidden';
+                }, 300);
+            } else {
+                // Ocultar imediatamente se já estiver oculto
+                tipoClienteFilterContainer.style.display = 'none';
+                tipoClienteFilterContainer.style.visibility = 'hidden';
+            }
             console.log('👥 ✅ TIPO CLIENTE FORÇADO PARA OCULTO');
         }
     } else {
@@ -2764,8 +2883,16 @@ function applyConsultorComercialFilterVisibility() {
         const currentActivePage = document.getElementById('btn-page2')?.classList.contains('active') ? 'page2' : 'other';
         
         if (currentActivePage === 'page2') {
+            // Mostrar sem transição na inicialização, com transição na navegação
             consultorComercialFilterContainer.style.display = 'block';
             consultorComercialFilterContainer.style.visibility = 'visible';
+            
+            // Aplicar transição suave apenas se estivermos navegando
+            if (consultorComercialFilterContainer.classList.contains('smooth-hiding')) {
+                consultorComercialFilterContainer.classList.remove('smooth-hiding');
+                consultorComercialFilterContainer.classList.add('smooth-showing');
+            }
+            
             console.log('👨‍💼 ✅ CONSULTOR COMERCIAL mostrado para página 2');
             
             const consultorComercialFilter = $('#consultor-comercial-filter');
@@ -2859,8 +2986,19 @@ function applyConsultorComercialFilterVisibility() {
             }, 100);
             
         } else {
-            consultorComercialFilterContainer.style.display = 'none';
-            consultorComercialFilterContainer.style.visibility = 'hidden';
+            // Aplicar transição suave apenas se já estiver visível
+            if (consultorComercialFilterContainer.style.visibility !== 'hidden') {
+                consultorComercialFilterContainer.classList.remove('smooth-showing');
+                consultorComercialFilterContainer.classList.add('smooth-hiding');
+                setTimeout(() => {
+                    consultorComercialFilterContainer.style.display = 'none';
+                    consultorComercialFilterContainer.style.visibility = 'hidden';
+                }, 300);
+            } else {
+                // Ocultar imediatamente se já estiver oculto
+                consultorComercialFilterContainer.style.display = 'none';
+                consultorComercialFilterContainer.style.visibility = 'hidden';
+            }
             console.log('👨‍💼 ✅ CONSULTOR COMERCIAL FORÇADO PARA OCULTO');
         }
     } else {
@@ -2876,8 +3014,16 @@ function applyIndicacaoAdesaoFilterVisibility() {
         const currentActivePage = document.getElementById('btn-page2')?.classList.contains('active') ? 'page2' : 'other';
         
         if (currentActivePage === 'page2') {
+            // Mostrar sem transição na inicialização, com transição na navegação
             indicacaoAdesaoFilterContainer.style.display = 'block';
             indicacaoAdesaoFilterContainer.style.visibility = 'visible';
+            
+            // Aplicar transição suave apenas se estivermos navegando
+            if (indicacaoAdesaoFilterContainer.classList.contains('smooth-hiding')) {
+                indicacaoAdesaoFilterContainer.classList.remove('smooth-hiding');
+                indicacaoAdesaoFilterContainer.classList.add('smooth-showing');
+            }
+            
             console.log('📌 ✅ INDICAÇÃO ADESÃO mostrado para página 2');
             
             const indicacaoAdesaoFilter = $('#indicacao-adesao-filter');
@@ -2959,8 +3105,19 @@ function applyIndicacaoAdesaoFilterVisibility() {
             }, 100);
             
         } else {
-            indicacaoAdesaoFilterContainer.style.display = 'none';
-            indicacaoAdesaoFilterContainer.style.visibility = 'hidden';
+            // Aplicar transição suave apenas se já estiver visível
+            if (indicacaoAdesaoFilterContainer.style.visibility !== 'hidden') {
+                indicacaoAdesaoFilterContainer.classList.remove('smooth-showing');
+                indicacaoAdesaoFilterContainer.classList.add('smooth-hiding');
+                setTimeout(() => {
+                    indicacaoAdesaoFilterContainer.style.display = 'none';
+                    indicacaoAdesaoFilterContainer.style.visibility = 'hidden';
+                }, 300);
+            } else {
+                // Ocultar imediatamente se já estiver oculto
+                indicacaoAdesaoFilterContainer.style.display = 'none';
+                indicacaoAdesaoFilterContainer.style.visibility = 'hidden';
+            }
             console.log('📌 ✅ INDICAÇÃO ADESÃO FORÇADO PARA OCULTO');
         }
     } else {

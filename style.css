@@ -846,6 +846,25 @@ body {
             display: flex;
             flex-direction: column;
             gap: 8px;
+            /* ✅ TRANSIÇÕES SUAVES para navegação fluida */
+            transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s ease;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* ✅ Estados para transição suave - apenas quando navegando */
+        .filter-item.smooth-hiding {
+            opacity: 0;
+            transform: translateY(-10px);
+            pointer-events: none;
+            transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s ease;
+        }
+
+        .filter-item.smooth-showing {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+            transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s ease;
         }
 
         /* Labels dos filtros */
