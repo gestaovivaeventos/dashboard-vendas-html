@@ -514,6 +514,11 @@ async function fetchMetasData() {
     if (metaContratosIndex === -1) metaContratosIndex = headers.indexOf("meta contratos");
     if (metaContratosIndex === -1) metaContratosIndex = 10; // fallback para coluna K (índice 10)
     console.log('🔍 Índice meta_contratos detectado em:', metaContratosIndex);
+    // Detectar coluna meta_reunioes (coluna J conforme informado)
+    let metaReunioesIndex = headers.indexOf("meta_reunioes");
+    if (metaReunioesIndex === -1) metaReunioesIndex = headers.indexOf("meta reunioes");
+    if (metaReunioesIndex === -1) metaReunioesIndex = 9; // fallback para coluna J (índice 9)
+    console.log('🔍 Índice meta_reunioes detectado em:', metaReunioesIndex);
 
     console.log('🔍 Índices das colunas:');
     console.log(`  - nm_unidade: ${unidadeIndex}`);
@@ -581,20 +586,22 @@ async function fetchMetasData() {
         console.log(`  - row:`, row);
       }
       
-                if (deveProcessar) {
-                    const chave = `${unidade}-${ano}-${mes}`;
-                    const metaLeads = parseInt(row[metaLeadsIndex]) || 0;
-                    const metaContratos = parseInt(row[metaContratosIndex]) || 0;
-                    metasMap.set(chave, {
-                        meta_vvr_vendas: metaVendas,
-                        meta_vvr_posvendas: metaPosvendas,
-                        meta_vvr_total: metaVendas + metaPosvendas,
-                        meta_adesoes: metaAdesoes,
-                        meta_leads: metaLeads,
-                        meta_contratos: metaContratos,
-                    });
-                    linhasProcessadas++;
-                }
+                    if (deveProcessar) {
+                        const chave = `${unidade}-${ano}-${mes}`;
+                        const metaLeads = parseInt(row[metaLeadsIndex]) || 0;
+                        const metaContratos = parseInt(row[metaContratosIndex]) || 0;
+                        const metaReunioes = parseInt(row[metaReunioesIndex]) || 0;
+                        metasMap.set(chave, {
+                            meta_vvr_vendas: metaVendas,
+                            meta_vvr_posvendas: metaPosvendas,
+                            meta_vvr_total: metaVendas + metaPosvendas,
+                            meta_adesoes: metaAdesoes,
+                            meta_leads: metaLeads,
+                            meta_contratos: metaContratos,
+                            meta_reunioes: metaReunioes,
+                        });
+                        linhasProcessadas++;
+                    }
     });
     
     console.log(`🔍 Linhas processadas: ${linhasProcessadas}`);
@@ -1526,6 +1533,70 @@ function updateDashboard() {
         if (contratosProgressEl) contratosProgressEl.style.width = `${Math.min(100, percentCt * 100)}%`;
     } catch (err) {
         console.error('Erro ao calcular indicador de contratos:', err);
+    }
+    // --- Indicadores Operacionais: REUNIÕES ---
+    try {
+        // Regra especial: usar BH (diagnostico_realizado) se presente, senão BJ (proposta_enviada)
+        const reunioesCount = (funilData || []).reduce((acc, item) => {
+            const unidadeMatch = finalSelectedUnidades.length === 0 || finalSelectedUnidades.includes(item.nm_unidade);
+            if (!unidadeMatch) return acc;
+
+            let dateStr = item.diagnostico_realizado && item.diagnostico_realizado.toString().trim() !== '' ? item.diagnostico_realizado :
+                (item.proposta_enviada && item.proposta_enviada.toString().trim() !== '' ? item.proposta_enviada : null);
+            if (!dateStr) return acc;
+
+            // Tentar parsear formatos comuns (DD/MM/YYYY) e fallback para Date constructor
+            let parsedDate = null;
+            if (typeof dateStr === 'string') {
+                const parts = dateStr.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+                if (parts) parsedDate = new Date(Number(parts[3]), Number(parts[2]) - 1, Number(parts[1]));
+                else {
+                    const dt = new Date(dateStr);
+                    if (!isNaN(dt)) parsedDate = dt;
+                }
+            } else if (dateStr instanceof Date) {
+                parsedDate = dateStr;
+            }
+
+            if (!parsedDate || isNaN(parsedDate.getTime())) return acc;
+            // normaliza horário: considerar inclusivo no início e exclusivo no fim (como outros indicadores)
+            if (parsedDate >= startDate && parsedDate < endDate) return acc + 1;
+            return acc;
+        }, 0);
+
+        // Somar metas de reunioes (meta_reunioes) a partir de metasData para o período/unidades
+        let totalMetaReunioes = 0;
+        if (metasData && metasData.size > 0) {
+            const unidadesSelecionadasNorm = finalSelectedUnidades.map(u => u ? u.toString().toLowerCase().trim() : '');
+            metasData.forEach((metaInfo, chave) => {
+                const [unidadeMetaRaw, anoMeta, mesMeta] = chave.split("-");
+                const unidadeMeta = unidadeMetaRaw ? unidadeMetaRaw.toString().toLowerCase().trim() : '';
+                if (!unidadeMeta) return;
+                if (unidadesSelecionadasNorm.length > 0 && !unidadesSelecionadasNorm.includes(unidadeMeta)) return;
+                if (anoMeta && mesMeta) {
+                    const metaDate = new Date(Number(anoMeta), Number(mesMeta) - 1, 1);
+                    const metaRangeStart = new Date(metaDate.getFullYear(), metaDate.getMonth(), 1);
+                    const metaRangeEnd = new Date(metaDate.getFullYear(), metaDate.getMonth() + 1, 1);
+                    if (metaRangeStart < endDate && metaRangeEnd > startDate) {
+                        totalMetaReunioes += (metaInfo.meta_reunioes || 0);
+                    }
+                }
+            });
+        }
+
+        // Atualizar DOM
+        const reunioesEl = document.getElementById('ind-reunioes');
+        const reunioesMetaEl = document.getElementById('ind-reunioes-meta');
+        const reunioesPercentEl = document.getElementById('ind-reunioes-percent');
+        const reunioesProgressEl = document.getElementById('ind-reunioes-progress');
+
+        if (reunioesEl) reunioesEl.textContent = reunioesCount.toLocaleString('pt-BR');
+        if (reunioesMetaEl) reunioesMetaEl.textContent = totalMetaReunioes.toLocaleString('pt-BR');
+        const percentRe = totalMetaReunioes > 0 ? (reunioesCount / totalMetaReunioes) : 0;
+        if (reunioesPercentEl) reunioesPercentEl.textContent = `${(percentRe * 100).toFixed(1)}%`;
+        if (reunioesProgressEl) reunioesProgressEl.style.width = `${Math.min(100, percentRe * 100)}%`;
+    } catch (err) {
+        console.error('Erro ao calcular indicador de reunioes:', err);
     }
     updateFunilIndicators(startDate, endDate, finalSelectedUnidades);
     updateMainKPIs(dataBrutaFiltrada, finalSelectedUnidades, startDate, endDate);
