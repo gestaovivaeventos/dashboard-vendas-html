@@ -1190,42 +1190,33 @@ function updateDashboard() {
     }
     
     console.log('🔍 Página ativa detectada:', currentActivePage);
+    console.log('🔍 Valor BRUTO do filtro de fundos:', selectedFundos);
     
-    // 🚨 FILTROS ESPECÍFICOS POR PÁGINA - aplicar apenas na página correspondente
-    let selectedTipoAdesao, selectedTipoServico, selectedInstituicao, selectedFundosForFiltering, selectedCursosForFiltering;
+    // 🚨 FILTRO DE FUNDOS - aplicar APENAS na página 2
+    let selectedTipoAdesao, selectedTipoServico, selectedInstituicao, selectedFundosForFiltering;
     
-    if (currentActivePage === 'page1') {
-        // PÁGINA 1: Apenas filtros de Unidades (filtro mãe) e Cursos
+    // 🔒 VERIFICAÇÃO ROBUSTA: SE NÃO ESTIVERMOS NA PÁGINA 2, FORÇAR FUNDOS VAZIO
+    if (currentActivePage !== 'page2') {
+        // 🛑 FORÇAR filtro de fundos como vazio nas páginas 1 e 3
+        selectedFundosForFiltering = [];
         selectedTipoAdesao = [];
         selectedTipoServico = [];
         selectedInstituicao = [];
-        selectedFundosForFiltering = [];
-        selectedCursosForFiltering = selectedCursos; // Usar filtro de cursos na página 1
-        console.log('🔍 PÁGINA 1 ATIVA - aplicando apenas filtros de unidades e cursos');
-    } else if (currentActivePage === 'page2') {
-        // PÁGINA 2: Filtros de Unidades (filtro mãe) + Fundos + Tipo Adesão + Tipo Serviço + Instituição
+        console.log('🔍 🛑 PÁGINAS 1/3 - FORÇANDO filtro de fundos VAZIO (ignorando valor:', selectedFundos, ')');
+    } else {
+        // ✅ PÁGINA 2: Aplicar filtro de fundos + filtros específicos
         selectedTipoAdesao = $("#tipo-adesao-filter").val() || [];
         selectedTipoServico = $("#tipo-servico-filter").val() || [];
         selectedInstituicao = $("#instituicao-filter").val() || [];
-        selectedFundosForFiltering = selectedFundos;
-        selectedCursosForFiltering = []; // Não usar filtro de cursos na página 2
-        console.log('🔍 PÁGINA 2 ATIVA - aplicando filtros específicos da página 2');
-    } else {
-        // PÁGINA 3: Apenas filtros de Unidades (filtro mãe)
-        selectedTipoAdesao = [];
-        selectedTipoServico = [];
-        selectedInstituicao = [];
-        selectedFundosForFiltering = [];
-        selectedCursosForFiltering = []; // Não usar filtro de cursos na página 3
-        console.log('🔍 PÁGINA 3 ATIVA - aplicando apenas filtro de unidades');
+        selectedFundosForFiltering = selectedFundos; // APLICAR filtro de fundos na página 2
+        console.log('🔍 ✅ PÁGINA 2 - aplicando filtro de fundos:', selectedFundos);
     }
     
-    console.log('🔍 Filtros por página:');
-    console.log('  - Unidades (filtro mãe):', finalSelectedUnidades.length);
-    console.log('  - Cursos (página específica):', selectedCursosForFiltering.length);
-    console.log('  - Fundos (página específica):', selectedFundosForFiltering.length);
-    console.log('  - TipoAdesao:', selectedTipoAdesao.length, 'TipoServico:', selectedTipoServico.length, 'Instituicao:', selectedInstituicao.length);
-    console.log('🔍 Valores aplicados - Cursos:', selectedCursosForFiltering, 'Fundos:', selectedFundosForFiltering, 'TipoAdesao:', selectedTipoAdesao);
+    console.log('🔍 Filtros aplicados:');
+    console.log('  - Unidades (sempre):', finalSelectedUnidades.length, finalSelectedUnidades);
+    console.log('  - Cursos (sempre):', selectedCursos.length, selectedCursos);
+    console.log('  - 🎯 FUNDOS (APENAS página 2):', selectedFundosForFiltering.length, selectedFundosForFiltering);
+    console.log('  - Página 2 específicos - TipoAdesao:', selectedTipoAdesao.length, 'TipoServico:', selectedTipoServico.length, 'Instituicao:', selectedInstituicao.length);
     
     const startDateString = document.getElementById("start-date").value;
     const [startYear, startMonth, startDay] = startDateString.split('-').map(Number);
@@ -1244,7 +1235,7 @@ function updateDashboard() {
     if (hasPermissionToViewData) {
         const filterLogic = d => {
             const unidadeMatch = finalSelectedUnidades.length === 0 || finalSelectedUnidades.includes(d.nm_unidade);
-            const cursoMatch = selectedCursosForFiltering.length === 0 || (d.curso_fundo && selectedCursosForFiltering.includes(d.curso_fundo));
+            const cursoMatch = selectedCursos.length === 0 || (d.curso_fundo && selectedCursos.includes(d.curso_fundo));
             const fundoMatch = selectedFundosForFiltering.length === 0 || (d.nm_fundo && selectedFundosForFiltering.includes(d.nm_fundo));
             
             // 🆕 Filtros específicos da página 2 - arrays já estão vazios se não estivermos na página 2
@@ -1268,7 +1259,7 @@ function updateDashboard() {
         // Filtrar dados de fundos usando dt_contrato
         fundosDataFiltrado = fundosData.filter(d => {
             const unidadeMatch = finalSelectedUnidades.length === 0 || finalSelectedUnidades.includes(d.nm_unidade);
-            const cursoMatch = selectedCursosForFiltering.length === 0 || (d.curso_fundo && selectedCursosForFiltering.includes(d.curso_fundo));
+            const cursoMatch = selectedCursos.length === 0 || (d.curso_fundo && selectedCursos.includes(d.curso_fundo));
             const fundoMatch = selectedFundosForFiltering.length === 0 || (d.nm_fundo && selectedFundosForFiltering.includes(d.nm_fundo));
             
             // 🆕 Filtros específicos da página 2 - arrays já estão vazios se não estivermos na página 2
@@ -1869,37 +1860,28 @@ function updateContractsCharts() {
     console.log('📊 updateContractsCharts - filtros base:');
     console.log('  - Unidades:', selectedUnidades);
     console.log('  - Cursos:', selectedCursos);
-    console.log('  - Fundos:', selectedFundos);
+    console.log('  - Fundos BRUTO:', selectedFundos);
     
-    // 🚨 FILTROS ESPECÍFICOS POR PÁGINA - aplicar apenas na página correspondente
-    let selectedTipoServico, selectedInstituicao, selectedFundosForCharts, selectedCursosForCharts;
+    // 🚨 FILTRO DE FUNDOS - aplicar APENAS na página 2
+    let selectedTipoServico, selectedInstituicao, selectedFundosForCharts;
     
-    const currentActivePage = document.getElementById('btn-page2')?.classList.contains('active') ? 'page2' : 
-                             (document.getElementById('btn-page1')?.classList.contains('active') ? 'page1' : 'page3');
+    const currentActivePage = document.getElementById('btn-page2')?.classList.contains('active') ? 'page2' : 'other';
     
-    if (currentActivePage === 'page1') {
-        // PÁGINA 1: Apenas filtros de Unidades e Cursos
+    // 🔒 VERIFICAÇÃO ROBUSTA: SE NÃO ESTIVERMOS NA PÁGINA 2, FORÇAR FUNDOS VAZIO
+    if (currentActivePage !== 'page2') {
+        // 🛑 FORÇAR filtro de fundos como vazio nas páginas 1 e 3
         selectedTipoServico = [];
         selectedInstituicao = [];
         selectedFundosForCharts = [];
-        selectedCursosForCharts = selectedCursos;
-        console.log('📊 updateContractsCharts - página 1 ativa, aplicando apenas filtros de unidades e cursos');
-    } else if (currentActivePage === 'page2') {
-        // PÁGINA 2: Filtros específicos da página 2
+        console.log('📊 🛑 updateContractsCharts - PÁGINAS 1/3 - FORÇANDO fundos VAZIO (ignorando:', selectedFundos, ')');
+    } else {
+        // ✅ PÁGINA 2: Aplicar filtro de fundos + filtros específicos
         selectedTipoServico = $("#tipo-servico-filter").val() || [];
         selectedInstituicao = $("#instituicao-filter").val() || [];
         selectedFundosForCharts = selectedFundos;
-        selectedCursosForCharts = [];
-        console.log('📊 updateContractsCharts - página 2 ativa, aplicando filtros específicos da página 2');
+        console.log('📊 ✅ updateContractsCharts - PÁGINA 2 - aplicando filtro de fundos:', selectedFundos);
         console.log('  - Tipo Serviço:', selectedTipoServico);
         console.log('  - Instituição:', selectedInstituicao);
-    } else {
-        // PÁGINA 3: Apenas filtros de Unidades
-        selectedTipoServico = [];
-        selectedInstituicao = [];
-        selectedFundosForCharts = [];
-        selectedCursosForCharts = [];
-        console.log('📊 updateContractsCharts - página 3 ativa, aplicando apenas filtro de unidades');
     }
     
     // Aplicar filtros SEM restrição de período
@@ -1907,7 +1889,7 @@ function updateContractsCharts() {
     
     const fundosParaGraficos = fundosData.filter(d => {
         const unidadeMatch = selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade);
-        const cursoMatch = selectedCursosForCharts.length === 0 || (d.curso_fundo && selectedCursosForCharts.includes(d.curso_fundo));
+        const cursoMatch = selectedCursos.length === 0 || (d.curso_fundo && selectedCursos.includes(d.curso_fundo));
         const fundoMatch = selectedFundosForCharts.length === 0 || (d.nm_fundo && selectedFundosForCharts.includes(d.nm_fundo));
         
         const tipoServicoMatch = selectedTipoServico.length === 0 || 
@@ -1920,7 +1902,7 @@ function updateContractsCharts() {
     });
     
     console.log('📊 updateContractsCharts - dados filtrados:', fundosParaGraficos.length, 'contratos');
-    console.log('📊 Filtros aplicados - Unidades:', selectedUnidades.length, 'Cursos:', selectedCursosForCharts.length, 'Fundos:', selectedFundosForCharts.length, 'TipoServ:', selectedTipoServico.length, 'Inst:', selectedInstituicao.length);
+    console.log('📊 Filtros aplicados - Unidades:', selectedUnidades.length, 'Cursos:', selectedCursos.length, 'Fundos:', selectedFundosForCharts.length, 'TipoServ:', selectedTipoServico.length, 'Inst:', selectedInstituicao.length);
     
     fundosParaGraficos.forEach((d) => {
         if (d.dt_contrato) {
@@ -2095,6 +2077,18 @@ function addEventListeners() {
             if (previousPage === "page2" && newPage !== "page2") {
                 console.log('🧹 Saindo da página 2 - limpando filtros específicos ANTES da mudança visual...');
                 
+                // 🆕 LIMPAR FILTRO DE FUNDOS FISICAMENTE
+                console.log('🧹 🎯 LIMPANDO FILTRO DE FUNDOS...');
+                $("#fundo-filter").val([]);
+                try {
+                    if ($("#fundo-filter").data('multiselect')) {
+                        $("#fundo-filter").multiselect('refresh');
+                        console.log('🧹 ✅ Filtro de FUNDOS limpo e atualizado');
+                    }
+                } catch (error) {
+                    console.log('🧹 ❌ Erro ao limpar filtro de fundos:', error);
+                }
+                
                 // Limpar seleções dos filtros específicos da página 2 SILENCIOSAMENTE
                 $("#tipo-adesao-filter").val([]);
                 $("#tipo-servico-filter").val([]);
@@ -2154,6 +2148,24 @@ function addEventListeners() {
                 applyTipoAdesaoFilterVisibility();
                 applyTipoServicoFilterVisibility();
                 applyInstituicaoFilterVisibility();
+                
+                // 🆕 🎯 LIMPEZA ADICIONAL: Se entramos numa página que NÃO é a 2, garantir que fundos está vazio
+                if (newPage !== "page2") {
+                    console.log('🧹 🎯 LIMPEZA ADICIONAL: Entrando na página', newPage, '- garantindo que filtro de fundos está vazio...');
+                    $("#fundo-filter").val([]);
+                    try {
+                        if ($("#fundo-filter").data('multiselect')) {
+                            $("#fundo-filter").multiselect('refresh');
+                            console.log('🧹 ✅ Filtro de fundos limpo após entrar na página', newPage);
+                        }
+                    } catch (error) {
+                        console.log('🧹 ❌ Erro ao limpar filtro de fundos após mudança:', error);
+                    }
+                    
+                    // Forçar atualização do dashboard após a limpeza
+                    console.log('🔄 Forçando atualização do dashboard após limpeza...');
+                    updateDashboard();
+                }
             }, 200);
         });
     });
