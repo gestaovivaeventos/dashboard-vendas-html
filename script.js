@@ -279,6 +279,14 @@ async function initializeDashboard() {
       console.log('🔄 Iniciando população dos filtros após carregamento dos dados...');
       retryPopulateFilters();
       
+      // 🆕 Aplicar visibilidade dos filtros específicos por página
+      setTimeout(() => {
+        applyFundosFilterVisibility();
+        applyTipoAdesaoFilterVisibility();
+        applyTipoServicoFilterVisibility();
+        applyInstituicaoFilterVisibility();
+      }, 500);
+      
       addEventListeners();
       updateDashboard();
     } else {
@@ -355,6 +363,8 @@ async function fetchAllSalesDataFromSheet() {
         const nomeIntegranteIndex = headers.indexOf("nm_integrante");
         const idFundoIndex = headers.indexOf("id_fundo");
         const cursoFundoIndex = headers.indexOf("curso_fundo");
+        const tipoServicoIndex = headers.indexOf("tp_servico");
+        const instituicaoIndex = headers.indexOf("nm_instituicao");
 
         return rows.slice(1).map((row) => {
             const dateValue = parseDate(row[dataIndex]);
@@ -369,6 +379,8 @@ async function fetchAllSalesDataFromSheet() {
                 nm_integrante: nomeIntegranteIndex !== -1 ? row[nomeIntegranteIndex] || "N/A" : "N/A",
                 id_fundo: idFundoIndex !== -1 ? row[idFundoIndex] || "N/A" : "N/A",
                 curso_fundo: cursoFundoIndex !== -1 ? row[cursoFundoIndex] || "" : "",
+                tp_servico: tipoServicoIndex !== -1 ? row[tipoServicoIndex] || "N/A" : "N/A",
+                nm_instituicao: instituicaoIndex !== -1 ? row[instituicaoIndex] || "N/A" : "N/A",
             };
         }).filter(Boolean);
     } catch (error) {
@@ -860,29 +872,30 @@ function updateMainKPIs(dataBruta, selectedUnidades, startDate, endDate, retryCo
     
     // 🆕 VALIDAÇÃO CRÍTICA: Não calcular se dados não estão prontos
     if (!metasData || metasData.size === 0) {
-        if (retryCount < 20) { // Máximo 20 tentativas (2 segundos)
+        if (retryCount < 10) { // Máximo 10 tentativas (1 segundo)
             console.log('⚠️ METAS NÃO CARREGADAS (vazia) - adiando cálculo...');
             setTimeout(() => {
                 updateMainKPIs(dataBruta, selectedUnidades, startDate, endDate, retryCount + 1);
             }, 100);
+            return;
         } else {
-            console.error('❌ TIMEOUT: Metas não carregaram após 20 tentativas');
+            console.warn('⚠️ TIMEOUT: Metas não carregaram após 10 tentativas - prosseguindo sem metas');
+            // Prosseguir mesmo sem metas para não bloquear o dashboard
         }
-        return;
     }
     
-    // 🆕 VALIDAÇÃO ADICIONAL: Verificar se todas as metas foram carregadas
-    if (metasData.size < 40) { // Esperamos pelo menos 40 metas
-        if (retryCount < 20) {
-            console.log(`⚠️ METAS INCOMPLETAS (${metasData.size} < 40) - adiando cálculo...`);
+    // 🆕 VALIDAÇÃO ADICIONAL: Verificar se metas básicas foram carregadas
+    if (metasData.size < 5) { // Esperamos pelo menos 5 metas (mais flexível)
+        if (retryCount < 10) { // Reduzir tentativas para 10 (1 segundo)
+            console.log(`⚠️ METAS INCOMPLETAS (${metasData.size} < 5) - adiando cálculo...`);
             setTimeout(() => {
                 updateMainKPIs(dataBruta, selectedUnidades, startDate, endDate, retryCount + 1);
             }, 100);
+            return;
         } else {
-            console.error(`❌ TIMEOUT: Só carregaram ${metasData.size} metas após 20 tentativas`);
-            // Prosseguir mesmo assim
+            console.warn(`⚠️ TIMEOUT: Só carregaram ${metasData.size} metas após 10 tentativas - prosseguindo mesmo assim`);
+            // Prosseguir mesmo assim para não bloquear o dashboard
         }
-        return;
     }
     
     console.log('✅ Dados validados - prosseguindo com cálculo de KPIs');
@@ -1166,6 +1179,37 @@ function updateDashboard() {
     const selectedCursos = $("#curso-filter").val() || [];
     const selectedFundos = $("#fundo-filter").val() || [];
     
+    // 🆕 Detectar página ativa para aplicar filtros específicos
+    let currentActivePage = 'page1';
+    if (document.getElementById('btn-page1')?.classList.contains('active')) {
+        currentActivePage = 'page1';
+    } else if (document.getElementById('btn-page2')?.classList.contains('active')) {
+        currentActivePage = 'page2';
+    } else if (document.getElementById('btn-page3')?.classList.contains('active')) {
+        currentActivePage = 'page3';
+    }
+    
+    console.log('🔍 Página ativa detectada:', currentActivePage);
+    
+    // 🚨 FILTROS ESPECÍFICOS DA PÁGINA 2 - só carregar valores se estivermos na página 2
+    let selectedTipoAdesao, selectedTipoServico, selectedInstituicao;
+    
+    if (currentActivePage === 'page2') {
+        selectedTipoAdesao = $("#tipo-adesao-filter").val() || [];
+        selectedTipoServico = $("#tipo-servico-filter").val() || [];
+        selectedInstituicao = $("#instituicao-filter").val() || [];
+        console.log('🔍 PÁGINA 2 ATIVA - carregando filtros específicos');
+    } else {
+        // 🔒 FORÇAR arrays vazios quando não estamos na página 2
+        selectedTipoAdesao = [];
+        selectedTipoServico = [];
+        selectedInstituicao = [];
+        console.log('🔍 PÁGINA 1/3 ATIVA - forçando filtros específicos como vazios');
+    }
+    
+    console.log('🔍 Filtros página 2 - TipoAdesao:', selectedTipoAdesao.length, 'TipoServico:', selectedTipoServico.length, 'Instituicao:', selectedInstituicao.length);
+    console.log('🔍 Valores reais - TipoAdesao:', selectedTipoAdesao, 'TipoServico:', selectedTipoServico, 'Instituicao:', selectedInstituicao);
+    
     const startDateString = document.getElementById("start-date").value;
     const [startYear, startMonth, startDay] = startDateString.split('-').map(Number);
     const startDate = new Date(startYear, startMonth - 1, startDay);
@@ -1185,7 +1229,18 @@ function updateDashboard() {
             const unidadeMatch = finalSelectedUnidades.length === 0 || finalSelectedUnidades.includes(d.nm_unidade);
             const cursoMatch = selectedCursos.length === 0 || (d.curso_fundo && selectedCursos.includes(d.curso_fundo));
             const fundoMatch = selectedFundos.length === 0 || (d.nm_fundo && selectedFundos.includes(d.nm_fundo));
-            return unidadeMatch && cursoMatch && fundoMatch;
+            
+            // 🆕 Filtros específicos da página 2 - arrays já estão vazios se não estivermos na página 2
+            const tipoAdesaoMatch = selectedTipoAdesao.length === 0 || 
+                (d.venda_posvenda && selectedTipoAdesao.includes(d.venda_posvenda.trim().toUpperCase()));
+            
+            const tipoServicoMatch = selectedTipoServico.length === 0 || 
+                (d.tp_servico && selectedTipoServico.includes(d.tp_servico.trim().toUpperCase()));
+            
+            const instituicaoMatch = selectedInstituicao.length === 0 || 
+                (d.nm_instituicao && selectedInstituicao.includes(d.nm_instituicao.trim().toUpperCase()));
+            
+            return unidadeMatch && cursoMatch && fundoMatch && tipoAdesaoMatch && tipoServicoMatch && instituicaoMatch;
         };
         
         // Filtrar dados de adesões
@@ -1198,8 +1253,16 @@ function updateDashboard() {
             const unidadeMatch = finalSelectedUnidades.length === 0 || finalSelectedUnidades.includes(d.nm_unidade);
             const cursoMatch = selectedCursos.length === 0 || (d.curso_fundo && selectedCursos.includes(d.curso_fundo));
             const fundoMatch = selectedFundos.length === 0 || (d.nm_fundo && selectedFundos.includes(d.nm_fundo));
+            
+            // 🆕 Filtros específicos da página 2 - arrays já estão vazios se não estivermos na página 2
+            const tipoServicoMatch = selectedTipoServico.length === 0 || 
+                (d.tipo_servico && selectedTipoServico.includes(d.tipo_servico.trim().toUpperCase()));
+            
+            const instituicaoMatch = selectedInstituicao.length === 0 || 
+                (d.instituicao && selectedInstituicao.includes(d.instituicao.trim().toUpperCase()));
+            
             const dateMatch = d.dt_contrato && d.dt_contrato >= startDate && d.dt_contrato < endDate;
-            return unidadeMatch && cursoMatch && fundoMatch && dateMatch;
+            return unidadeMatch && cursoMatch && fundoMatch && tipoServicoMatch && instituicaoMatch && dateMatch;
         });
 
         const sDPY = new Date(startDate); sDPY.setFullYear(sDPY.getFullYear() - 1);
@@ -1218,7 +1281,7 @@ function updateDashboard() {
     // Todas as chamadas abaixo estão corrigidas e seguras
     updateDrillDownCharts(allDataForOtherCharts);
     updateTicketCharts(allDataForOtherCharts);
-    updateContractsCharts(fundosDataFiltrado);
+    updateContractsCharts(); // 🆕 Sem parâmetro - faz própria filtragem sem período
     updateAdesoesDrillDownCharts(allDataForOtherCharts);
     
     updateConsultorTable(dataBrutaFiltrada);
@@ -1778,24 +1841,68 @@ function drawMonthlyTicketChart(data, year) {
     });
 }
 
-function updateContractsCharts(filteredData) {
+function updateContractsCharts() {
     const contractsByYear = {};
-    // Aplicar apenas os filtros de unidade e curso, ignorando o filtro de data
+    
+    // 🆕 FILTRAR DADOS DE FUNDOS PARA GRÁFICOS (sem filtro de período)
     const selectedUnidades = $("#unidade-filter").val() || [];
     const selectedCursos = $("#curso-filter").val() || [];
+    const selectedFundos = $("#fundo-filter").val() || [];
     
-    fundosData.filter(d => {
+    console.log('📊 updateContractsCharts - filtros base:');
+    console.log('  - Unidades:', selectedUnidades);
+    console.log('  - Cursos:', selectedCursos);
+    console.log('  - Fundos:', selectedFundos);
+    
+    // 🚨 FILTROS ESPECÍFICOS DA PÁGINA 2 - só aplicar se estivermos na página 2
+    let selectedTipoServico, selectedInstituicao;
+    
+    const currentActivePage = document.getElementById('btn-page2')?.classList.contains('active') ? 'page2' : 'other';
+    
+    if (currentActivePage === 'page2') {
+        selectedTipoServico = $("#tipo-servico-filter").val() || [];
+        selectedInstituicao = $("#instituicao-filter").val() || [];
+        console.log('📊 updateContractsCharts - página 2 ativa, aplicando filtros específicos');
+        console.log('  - Tipo Serviço:', selectedTipoServico);
+        console.log('  - Instituição:', selectedInstituicao);
+    } else {
+        selectedTipoServico = [];
+        selectedInstituicao = [];
+        console.log('📊 updateContractsCharts - página 1/3 ativa, ignorando filtros específicos');
+    }
+    
+    // Aplicar filtros SEM restrição de período
+    console.log('📊 Total de dados de fundos antes do filtro:', fundosData.length);
+    
+    const fundosParaGraficos = fundosData.filter(d => {
         const unidadeMatch = selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade);
         const cursoMatch = selectedCursos.length === 0 || (d.curso_fundo && selectedCursos.includes(d.curso_fundo));
-        return unidadeMatch && cursoMatch;
-    }).forEach((d) => {
-        const year = d.dt_contrato.getFullYear();
-        if (!contractsByYear[year]) { contractsByYear[year] = 0; }
-        contractsByYear[year]++;
+        const fundoMatch = selectedFundos.length === 0 || (d.nm_fundo && selectedFundos.includes(d.nm_fundo));
+        
+        const tipoServicoMatch = selectedTipoServico.length === 0 || 
+            (d.tipo_servico && selectedTipoServico.includes(d.tipo_servico.trim().toUpperCase()));
+        
+        const instituicaoMatch = selectedInstituicao.length === 0 || 
+            (d.instituicao && selectedInstituicao.includes(d.instituicao.trim().toUpperCase()));
+        
+        return unidadeMatch && cursoMatch && fundoMatch && tipoServicoMatch && instituicaoMatch;
+    });
+    
+    console.log('📊 updateContractsCharts - dados filtrados:', fundosParaGraficos.length, 'contratos');
+    console.log('📊 Filtros aplicados - Unidades:', selectedUnidades.length, 'Cursos:', selectedCursos.length, 'Fundos:', selectedFundos.length, 'TipoServ:', selectedTipoServico.length, 'Inst:', selectedInstituicao.length);
+    
+    fundosParaGraficos.forEach((d) => {
+        if (d.dt_contrato) {
+            const year = d.dt_contrato.getFullYear();
+            if (!contractsByYear[year]) { contractsByYear[year] = 0; }
+            contractsByYear[year]++;
+        }
     });
 
     const years = Object.keys(contractsByYear).sort().filter((year) => parseInt(year) >= 2019);
-    const annualContractsData = years.map((year) => contractsByYear[year]);
+    const annualContractsData = years.map((year) => contractsByYear[year] || 0);
+
+    console.log('📊 Dados anuais dos contratos:', contractsByYear);
 
     if (yearlyContractsChart) yearlyContractsChart.destroy();
     yearlyContractsChart = new Chart(document.getElementById("yearlyContractsChart"), {
@@ -1817,7 +1924,7 @@ function updateContractsCharts(filteredData) {
             onClick: (event, elements) => {
                 if (elements.length > 0) {
                     const clickedYear = years[elements[0].index];
-                    drawMonthlyContractsChart(filteredData, clickedYear);
+                    drawMonthlyContractsChart(fundosParaGraficos, clickedYear);
                 }
             },
         },
@@ -1825,7 +1932,7 @@ function updateContractsCharts(filteredData) {
 
     // Lógica para limpar ou desenhar o gráfico mensal
     if (years.length > 0) {
-        drawMonthlyContractsChart(filteredData, years[years.length - 1]);
+        drawMonthlyContractsChart(fundosParaGraficos, years[years.length - 1]);
     } else {
         // Se não há dados, chama a função com um array vazio para limpar o gráfico mensal
         drawMonthlyContractsChart([], new Date().getFullYear());
@@ -1836,18 +1943,15 @@ function drawMonthlyContractsChart(data, year) {
     document.getElementById("monthly-contracts-title").textContent = `Contratos Realizados Total Mensal (${year})`;
     const contractsByMonth = Array(12).fill(0);
 
-    // Aplicar apenas os filtros de unidade e curso, ignorando o filtro de data
-    const selectedUnidades = $("#unidade-filter").val() || [];
-    const selectedCursos = $("#curso-filter").val() || [];
+    // 🆕 USAR OS DADOS JÁ FILTRADOS (incluindo tipo serviço e instituição)
+    console.log('📊 drawMonthlyContractsChart - usando dados filtrados para ano', year, ':', data.length, 'contratos');
     
-    fundosData.filter(d => {
-        const unidadeMatch = selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade);
-        const cursoMatch = selectedCursos.length === 0 || (d.curso_fundo && selectedCursos.includes(d.curso_fundo));
-        return unidadeMatch && cursoMatch && d.dt_contrato.getFullYear() === parseInt(year);
-    }).forEach((d) => {
+    data.filter(d => d.dt_contrato && d.dt_contrato.getFullYear() === parseInt(year)).forEach((d) => {
         const month = d.dt_contrato.getMonth();
         contractsByMonth[month]++;
     });
+
+    console.log('📊 Contratos por mês para', year, ':', contractsByMonth);
 
     const monthLabels = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
     if (monthlyContractsChart) monthlyContractsChart.destroy();
@@ -1954,6 +2058,39 @@ function addEventListeners() {
             const previousPage = document.querySelector(".page-navigation button.active")?.dataset.page;
             const newPage = this.dataset.page;
             
+            console.log('🔄 Navegação de página:', previousPage, '→', newPage);
+            
+            // 🚨 LIMPAR FILTROS ESPECÍFICOS DA PÁGINA 2 **ANTES** DA MUDANÇA VISUAL
+            if (previousPage === "page2" && newPage !== "page2") {
+                console.log('🧹 Saindo da página 2 - limpando filtros específicos ANTES da mudança visual...');
+                
+                // Limpar seleções dos filtros específicos da página 2 SILENCIOSAMENTE
+                $("#tipo-adesao-filter").val([]);
+                $("#tipo-servico-filter").val([]);
+                $("#instituicao-filter").val([]);
+                
+                // Atualizar o multiselect SILENCIOSAMENTE (sem triggers)
+                try {
+                    if ($("#tipo-adesao-filter").data('multiselect')) {
+                        $("#tipo-adesao-filter").multiselect('refresh');
+                    }
+                    if ($("#tipo-servico-filter").data('multiselect')) {
+                        $("#tipo-servico-filter").multiselect('refresh');
+                    }
+                    if ($("#instituicao-filter").data('multiselect')) {
+                        $("#instituicao-filter").multiselect('refresh');
+                    }
+                    console.log('🧹 ✅ Filtros específicos limpos SILENCIOSAMENTE');
+                } catch (error) {
+                    console.log('🧹 Erro ao atualizar multiselects:', error);
+                }
+                
+                // 🔄 ATUALIZAR DASHBOARD **ANTES** DA MUDANÇA VISUAL - SEM DELAY
+                console.log('🔄 Atualizando dashboard ANTES da mudança visual...');
+                updateDashboard();
+            }
+            
+            // SÓ DEPOIS fazer a mudança visual das páginas
             document.querySelectorAll(".page-navigation button").forEach((btn) => btn.classList.remove("active"));
             this.classList.add("active");
             document.querySelectorAll(".page-content").forEach((page) => page.classList.remove("active"));
@@ -1979,10 +2116,13 @@ function addEventListeners() {
                 }, 100);
             }
             
-            // 🆕 FORÇAR APLICAÇÃO DA VISIBILIDADE DO FILTRO FUNDOS APÓS QUALQUER MUDANÇA DE PÁGINA
+            // 🆕 FORÇAR APLICAÇÃO DA VISIBILIDADE DOS FILTROS APÓS QUALQUER MUDANÇA DE PÁGINA
             setTimeout(() => {
-                console.log('🔧 Aplicando visibilidade do filtro FUNDOS após navegação...');
+                console.log('🔧 Aplicando visibilidade dos filtros após navegação...');
                 applyFundosFilterVisibility();
+                applyTipoAdesaoFilterVisibility();
+                applyTipoServicoFilterVisibility();
+                applyInstituicaoFilterVisibility();
             }, 200);
         });
     });
@@ -2080,6 +2220,391 @@ function applyFundosFilterVisibility() {
         }
     } else {
         console.log('🔧 ❌ fundoFilterContainer não encontrado');
+    }
+}
+
+// 🆕 Função para controlar visibilidade do filtro Tipo de Adesão (só página 2)
+function applyTipoAdesaoFilterVisibility() {
+    // Determinar página ativa
+    let currentActivePage = 'page1';
+    if (document.getElementById('btn-page1')?.classList.contains('active')) {
+        currentActivePage = 'page1';
+    } else if (document.getElementById('btn-page2')?.classList.contains('active')) {
+        currentActivePage = 'page2';
+    } else if (document.getElementById('btn-page3')?.classList.contains('active')) {
+        currentActivePage = 'page3';
+    }
+    
+    const shouldShowTipoAdesao = (currentActivePage === 'page2');
+    const tipoAdesaoFilterContainer = document.getElementById('tipo-adesao-filter-container');
+    const tipoAdesaoFilter = $("#tipo-adesao-filter");
+    
+    console.log('🔧 applyTipoAdesaoFilterVisibility - currentActivePage:', currentActivePage);
+    console.log('🔧 applyTipoAdesaoFilterVisibility - shouldShowTipoAdesao:', shouldShowTipoAdesao);
+    console.log('🔧 applyTipoAdesaoFilterVisibility - allData disponível:', !!(allData && allData.length > 0));
+    console.log('🔧 applyTipoAdesaoFilterVisibility - allData length:', allData ? allData.length : 'undefined');
+    
+    if (tipoAdesaoFilterContainer) {
+        if (shouldShowTipoAdesao) {
+            tipoAdesaoFilterContainer.style.display = 'block';
+            tipoAdesaoFilterContainer.style.visibility = 'visible';
+            console.log('🔧 ✅ TIPO ADESÃO FORÇADO PARA VISÍVEL');
+            
+            // 🆕 POPULAR FILTRO DE TIPO DE ADESÃO IMEDIATAMENTE
+            setTimeout(() => {
+                console.log('🔧 Populando filtro Tipo de Adesão DIRETAMENTE...');
+                
+                if (allData && allData.length > 0) {
+                    tipoAdesaoFilter.empty();
+                    
+                    console.log('🔧 allData disponível, length:', allData.length);
+                    console.log('🔧 Amostra allData (primeiros 3):', allData.slice(0, 3));
+                    
+                    // Verificar venda_posvenda na amostra
+                    const amostraVendaPosvenda = allData.slice(0, 10).map(d => ({
+                        unidade: d.nm_unidade,
+                        venda_posvenda: d.venda_posvenda,
+                        valor: d.vl_plano
+                    }));
+                    console.log('🔧 Amostra venda_posvenda em allData:', amostraVendaPosvenda);
+                    
+                    const tiposAdesao = allData
+                        .map((d) => d.venda_posvenda || '')
+                        .filter(t => t && t !== 'N/A' && t.trim() !== '')
+                        .map(t => t.trim().toUpperCase());
+                    
+                    console.log('🔧 Tipos BRUTOS (primeiros 10):', tiposAdesao.slice(0, 10));
+                    
+                    const tiposAdesaoUnicos = [...new Set(tiposAdesao)].sort();
+                    
+                    console.log('🔧 Tipos ÚNICOS encontrados:', tiposAdesaoUnicos);
+                    
+                    tiposAdesaoUnicos.forEach((t) => {
+                        tipoAdesaoFilter.append($("<option>", { value: t, text: t }));
+                        console.log('🔧 Adicionando opção:', t);
+                    });
+                } else {
+                    console.log('🔧 ❌ allData não disponível ainda');
+                }
+            }, 50);
+            
+            // 🆕 REINICIALIZAR MULTISELECT DO TIPO ADESÃO QUANDO FICAR VISÍVEL
+            setTimeout(() => {
+                console.log('🔧 Reinicializando multiselect do TIPO ADESÃO...');
+                try {
+                    // Destruir multiselect existente se houver
+                    if (tipoAdesaoFilter.data('multiselect')) {
+                        tipoAdesaoFilter.multiselect('destroy');
+                    }
+                    
+                    // Recriar multiselect
+                    tipoAdesaoFilter.multiselect({
+                        includeSelectAllOption: true,
+                        selectAllText: "Marcar todos",
+                        allSelectedText: "Todos selecionados",
+                        noneSelectedText: "Selecionar tipo...",
+                        enableFiltering: false,
+                        buttonWidth: '100%',
+                        maxHeight: 300,
+                        numberDisplayed: 2,
+                        onChange: function(option, checked) {
+                            console.log('🔧 Tipo Adesão filter changed:', option, 'checked:', checked);
+                            // Só atualizar se estivermos na página 2
+                            const currentPage = document.getElementById('btn-page2')?.classList.contains('active') ? 'page2' : 'other';
+                            console.log('🔧 Página detectada no onChange:', currentPage);
+                            if (currentPage === 'page2') {
+                                console.log('🔧 ✅ Atualizando dashboard...');
+                                updateDashboard();
+                            } else {
+                                console.log('🔧 ❌ Ignorando mudança de filtro - não estamos na página 2');
+                            }
+                        }
+                    });
+                    console.log('🔧 ✅ Multiselect TIPO ADESÃO reinicializado com sucesso');
+                } catch (error) {
+                    console.error('🔧 ❌ Erro ao reinicializar multiselect TIPO ADESÃO:', error);
+                }
+            }, 100);
+            
+        } else {
+            tipoAdesaoFilterContainer.style.display = 'none';
+            tipoAdesaoFilterContainer.style.visibility = 'hidden';
+            console.log('🔧 ✅ TIPO ADESÃO FORÇADO PARA OCULTO');
+        }
+    } else {
+        console.log('🔧 ❌ tipoAdesaoFilterContainer não encontrado');
+    }
+}
+
+// 🆕 Função para controlar visibilidade do filtro Tipo de Serviço (só página 2)
+function applyTipoServicoFilterVisibility() {
+    // Determinar página ativa
+    let currentActivePage = 'page1';
+    if (document.getElementById('btn-page1')?.classList.contains('active')) {
+        currentActivePage = 'page1';
+    } else if (document.getElementById('btn-page2')?.classList.contains('active')) {
+        currentActivePage = 'page2';
+    } else if (document.getElementById('btn-page3')?.classList.contains('active')) {
+        currentActivePage = 'page3';
+    }
+    
+    const shouldShowTipoServico = (currentActivePage === 'page2');
+    const tipoServicoFilterContainer = document.getElementById('tipo-servico-filter-container');
+    const tipoServicoFilter = $("#tipo-servico-filter");
+    
+    console.log('🔧 applyTipoServicoFilterVisibility - currentActivePage:', currentActivePage);
+    console.log('🔧 applyTipoServicoFilterVisibility - shouldShowTipoServico:', shouldShowTipoServico);
+    console.log('🔧 applyTipoServicoFilterVisibility - allData disponível:', !!(allData && allData.length > 0));
+    console.log('🔧 applyTipoServicoFilterVisibility - fundosData disponível:', !!(fundosData && fundosData.length > 0));
+    
+    if (tipoServicoFilterContainer) {
+        if (shouldShowTipoServico) {
+            tipoServicoFilterContainer.style.display = 'block';
+            tipoServicoFilterContainer.style.visibility = 'visible';
+            console.log('🔧 ✅ TIPO SERVIÇO FORÇADO PARA VISÍVEL');
+            
+            // 🆕 POPULAR FILTRO DE TIPO DE SERVIÇO IMEDIATAMENTE
+            setTimeout(() => {
+                console.log('🔧 Populando filtro Tipo de Serviço DIRETAMENTE...');
+                
+                const tiposServico = new Set();
+                
+                // Buscar dados de ADESÕES
+                if (allData && allData.length > 0) {
+                    allData.forEach(d => {
+                        if (d.tp_servico && d.tp_servico !== 'N/A' && d.tp_servico.trim() !== '') {
+                            tiposServico.add(d.tp_servico.trim().toUpperCase());
+                        }
+                    });
+                    console.log('🔧 Tipos de serviço encontrados em ADESÕES:', tiposServico.size);
+                }
+                
+                // Buscar dados de FUNDOS
+                if (fundosData && fundosData.length > 0) {
+                    fundosData.forEach(d => {
+                        if (d.tipo_servico && d.tipo_servico !== 'N/A' && d.tipo_servico.trim() !== '') {
+                            tiposServico.add(d.tipo_servico.trim().toUpperCase());
+                        }
+                    });
+                    console.log('🔧 Tipos de serviço encontrados em FUNDOS:', tiposServico.size);
+                }
+                
+                if (tiposServico.size > 0) {
+                    tipoServicoFilter.empty();
+                    
+                    const tiposServicoUnicos = [...tiposServico].sort();
+                    console.log('🔧 Tipos de Serviço ÚNICOS encontrados:', tiposServicoUnicos);
+                    
+                    tiposServicoUnicos.forEach((t) => {
+                        tipoServicoFilter.append($("<option>", { value: t, text: t }));
+                        console.log('🔧 Adicionando opção Tipo Serviço:', t);
+                    });
+                } else {
+                    console.log('🔧 ❌ Nenhum tipo de serviço encontrado');
+                }
+            }, 50);
+            
+            // 🆕 REINICIALIZAR MULTISELECT DO TIPO SERVIÇO QUANDO FICAR VISÍVEL
+            setTimeout(() => {
+                console.log('🔧 Reinicializando multiselect do TIPO SERVIÇO...');
+                try {
+                    // Destruir multiselect existente se houver
+                    if (tipoServicoFilter.data('multiselect')) {
+                        tipoServicoFilter.multiselect('destroy');
+                    }
+                    
+                    // Recriar multiselect
+                    tipoServicoFilter.multiselect({
+                        includeSelectAllOption: true,
+                        selectAllText: "Marcar todos",
+                        allSelectedText: "Todos selecionados",
+                        noneSelectedText: "Selecionar tipo...",
+                        enableFiltering: false,
+                        buttonWidth: '100%',
+                        maxHeight: 300,
+                        numberDisplayed: 2,
+                        onChange: function(option, checked) {
+                            console.log('🔧 Tipo Serviço filter changed:', option, 'checked:', checked);
+                            // Só atualizar se estivermos na página 2
+                            const currentPage = document.getElementById('btn-page2')?.classList.contains('active') ? 'page2' : 'other';
+                            console.log('🔧 Página detectada no onChange:', currentPage);
+                            if (currentPage === 'page2') {
+                                console.log('🔧 ✅ Atualizando dashboard...');
+                                updateDashboard();
+                            } else {
+                                console.log('🔧 ❌ Ignorando mudança de filtro - não estamos na página 2');
+                            }
+                        },
+                        onSelectAll: function() {
+                            console.log('🔧 Tipo Serviço - MARCAR TODOS acionado');
+                            const currentPage = document.getElementById('btn-page2')?.classList.contains('active') ? 'page2' : 'other';
+                            if (currentPage === 'page2') {
+                                console.log('🔧 ✅ Atualizando dashboard (selectAll)...');
+                                updateDashboard();
+                            } else {
+                                console.log('🔧 ❌ Ignorando selectAll - não estamos na página 2');
+                            }
+                        },
+                        onDeselectAll: function() {
+                            console.log('🔧 Tipo Serviço - DESMARCAR TODOS acionado');
+                            const currentPage = document.getElementById('btn-page2')?.classList.contains('active') ? 'page2' : 'other';
+                            if (currentPage === 'page2') {
+                                console.log('🔧 ✅ Atualizando dashboard (deselectAll)...');
+                                updateDashboard();
+                            } else {
+                                console.log('🔧 ❌ Ignorando deselectAll - não estamos na página 2');
+                            }
+                        }
+                    });
+                    console.log('🔧 ✅ Multiselect TIPO SERVIÇO reinicializado com sucesso');
+                } catch (error) {
+                    console.error('🔧 ❌ Erro ao reinicializar multiselect TIPO SERVIÇO:', error);
+                }
+            }, 100);
+            
+        } else {
+            tipoServicoFilterContainer.style.display = 'none';
+            tipoServicoFilterContainer.style.visibility = 'hidden';
+            console.log('🔧 ✅ TIPO SERVIÇO FORÇADO PARA OCULTO');
+        }
+    } else {
+        console.log('🔧 ❌ tipoServicoFilterContainer não encontrado');
+    }
+}
+
+// 🆕 Função para controlar visibilidade do filtro Instituição (só página 2)
+function applyInstituicaoFilterVisibility() {
+    // Determinar página ativa
+    let currentActivePage = 'page1';
+    if (document.getElementById('btn-page1')?.classList.contains('active')) {
+        currentActivePage = 'page1';
+    } else if (document.getElementById('btn-page2')?.classList.contains('active')) {
+        currentActivePage = 'page2';
+    } else if (document.getElementById('btn-page3')?.classList.contains('active')) {
+        currentActivePage = 'page3';
+    }
+    
+    const shouldShowInstituicao = (currentActivePage === 'page2');
+    const instituicaoFilterContainer = document.getElementById('instituicao-filter-container');
+    const instituicaoFilter = $("#instituicao-filter");
+    
+    console.log('🔧 applyInstituicaoFilterVisibility - currentActivePage:', currentActivePage);
+    console.log('🔧 applyInstituicaoFilterVisibility - shouldShowInstituicao:', shouldShowInstituicao);
+    console.log('🔧 applyInstituicaoFilterVisibility - allData disponível:', !!(allData && allData.length > 0));
+    console.log('🔧 applyInstituicaoFilterVisibility - fundosData disponível:', !!(fundosData && fundosData.length > 0));
+    
+    if (instituicaoFilterContainer) {
+        if (shouldShowInstituicao) {
+            instituicaoFilterContainer.style.display = 'block';
+            instituicaoFilterContainer.style.visibility = 'visible';
+            console.log('🔧 ✅ INSTITUIÇÃO FORÇADO PARA VISÍVEL');
+            
+            // 🆕 POPULAR FILTRO DE INSTITUIÇÃO IMEDIATAMENTE
+            setTimeout(() => {
+                console.log('🔧 Populando filtro Instituição DIRETAMENTE...');
+                
+                const instituicoes = new Set();
+                
+                // Buscar dados de ADESÕES
+                if (allData && allData.length > 0) {
+                    allData.forEach(d => {
+                        if (d.nm_instituicao && d.nm_instituicao !== 'N/A' && d.nm_instituicao.trim() !== '') {
+                            instituicoes.add(d.nm_instituicao.trim().toUpperCase());
+                        }
+                    });
+                    console.log('🔧 Instituições encontradas em ADESÕES:', instituicoes.size);
+                }
+                
+                // Buscar dados de FUNDOS
+                if (fundosData && fundosData.length > 0) {
+                    fundosData.forEach(d => {
+                        if (d.instituicao && d.instituicao !== 'N/A' && d.instituicao.trim() !== '') {
+                            instituicoes.add(d.instituicao.trim().toUpperCase());
+                        }
+                    });
+                    console.log('🔧 Instituições encontradas em FUNDOS:', instituicoes.size);
+                }
+                
+                if (instituicoes.size > 0) {
+                    instituicaoFilter.empty();
+                    
+                    const instituicoesUnicas = [...instituicoes].sort();
+                    console.log('🔧 Instituições ÚNICAS encontradas:', instituicoesUnicas);
+                    
+                    instituicoesUnicas.forEach((t) => {
+                        instituicaoFilter.append($("<option>", { value: t, text: t }));
+                        console.log('🔧 Adicionando opção Instituição:', t);
+                    });
+                } else {
+                    console.log('🔧 ❌ Nenhuma instituição encontrada');
+                }
+            }, 50);
+            
+            // 🆕 REINICIALIZAR MULTISELECT DA INSTITUIÇÃO QUANDO FICAR VISÍVEL
+            setTimeout(() => {
+                console.log('🔧 Reinicializando multiselect da INSTITUIÇÃO...');
+                try {
+                    // Destruir multiselect existente se houver
+                    if (instituicaoFilter.data('multiselect')) {
+                        instituicaoFilter.multiselect('destroy');
+                    }
+                    
+                    // Recriar multiselect
+                    instituicaoFilter.multiselect({
+                        includeSelectAllOption: true,
+                        selectAllText: "Marcar todos",
+                        allSelectedText: "Todos selecionados",
+                        noneSelectedText: "Selecionar instituição...",
+                        enableFiltering: false,
+                        buttonWidth: '100%',
+                        maxHeight: 300,
+                        numberDisplayed: 2,
+                        onChange: function(option, checked) {
+                            console.log('🔧 Instituição filter changed:', option, 'checked:', checked);
+                            // Só atualizar se estivermos na página 2
+                            const currentPage = document.getElementById('btn-page2')?.classList.contains('active') ? 'page2' : 'other';
+                            console.log('🔧 Página detectada no onChange:', currentPage);
+                            if (currentPage === 'page2') {
+                                console.log('🔧 ✅ Atualizando dashboard...');
+                                updateDashboard();
+                            } else {
+                                console.log('🔧 ❌ Ignorando mudança de filtro - não estamos na página 2');
+                            }
+                        },
+                        onSelectAll: function() {
+                            console.log('🔧 Instituição - MARCAR TODOS acionado');
+                            const currentPage = document.getElementById('btn-page2')?.classList.contains('active') ? 'page2' : 'other';
+                            if (currentPage === 'page2') {
+                                console.log('🔧 ✅ Atualizando dashboard (selectAll)...');
+                                updateDashboard();
+                            } else {
+                                console.log('🔧 ❌ Ignorando selectAll - não estamos na página 2');
+                            }
+                        },
+                        onDeselectAll: function() {
+                            console.log('🔧 Instituição - DESMARCAR TODOS acionado');
+                            const currentPage = document.getElementById('btn-page2')?.classList.contains('active') ? 'page2' : 'other';
+                            if (currentPage === 'page2') {
+                                console.log('🔧 ✅ Atualizando dashboard (deselectAll)...');
+                                updateDashboard();
+                            } else {
+                                console.log('🔧 ❌ Ignorando deselectAll - não estamos na página 2');
+                            }
+                        }
+                    });
+                    console.log('🔧 ✅ Multiselect INSTITUIÇÃO reinicializado com sucesso');
+                } catch (error) {
+                    console.error('🔧 ❌ Erro ao reinicializar multiselect INSTITUIÇÃO:', error);
+                }
+            }, 100);
+            
+        } else {
+            instituicaoFilterContainer.style.display = 'none';
+            instituicaoFilterContainer.style.visibility = 'hidden';
+            console.log('🔧 ✅ INSTITUIÇÃO FORÇADO PARA OCULTO');
+        }
+    } else {
+        console.log('🔧 ❌ instituicaoFilterContainer não encontrado');
     }
 }
 
@@ -2343,6 +2868,48 @@ function updateDependentFilters(selectedUnidades = []) {
         });
     }
     
+    // 🆕 Popular filtro de tipo de adesão (apenas para página 2)
+    const shouldShowTipoAdesao = (currentActivePage === 'page2');
+    const tipoAdesaoFilter = $("#tipo-adesao-filter");
+    
+    if (shouldShowTipoAdesao) {
+        console.log('🔧 Populando filtro Tipo de Adesão...');
+        console.log('🔧 dadosFiltrados length:', dadosFiltrados.length);
+        console.log('🔧 Amostra de dadosFiltrados (primeiros 3):', dadosFiltrados.slice(0, 3));
+        
+        tipoAdesaoFilter.empty();
+        
+        // 🆕 Debug: Verificar se venda_posvenda existe nos dados
+        const amostraVendaPosvenda = dadosFiltrados.slice(0, 10).map(d => ({
+            unidade: d.nm_unidade,
+            venda_posvenda: d.venda_posvenda,
+            valor: d.vl_plano
+        }));
+        console.log('🔧 Amostra venda_posvenda:', amostraVendaPosvenda);
+        
+        // 🆕 CORREÇÃO: Usar TODOS os dados de vendas, não apenas filtrados por unidade
+        // para que o filtro mostre todas as opções disponíveis
+        const dadosParaTipoAdesao = allData; // Em vez de dadosFiltrados
+        console.log('🔧 Usando allData para tipos de adesão. Total:', dadosParaTipoAdesao.length);
+        
+        const tiposAdesao = dadosParaTipoAdesao
+            .map((d) => d.venda_posvenda || '')
+            .filter(t => t && t !== 'N/A' && t.trim() !== '')
+            .map(t => t.trim().toUpperCase()); // Normalizar para maiúsculo
+        
+        console.log('🔧 Tipos de adesão BRUTOS (antes do Set):', tiposAdesao.slice(0, 20));
+        
+        const tiposAdesaoUnicos = [...new Set(tiposAdesao)].sort();
+        
+        console.log('🔧 Tipos de adesão encontrados (únicos):', tiposAdesaoUnicos);
+        console.log('🔧 Quantidade total de registros processados:', dadosFiltrados.length);
+        console.log('🔧 Quantidade de tipos válidos:', tiposAdesao.length);
+        
+        tiposAdesaoUnicos.forEach((t) => {
+            tipoAdesaoFilter.append($("<option>", { value: t, text: t }));
+        });
+    }
+    
     // Recriar multiselects para cursos
     cursoFilter.multiselect({
         enableFiltering: true,
@@ -2499,6 +3066,34 @@ function updateDependentFilters(selectedUnidades = []) {
             }
         });
     }
+    
+    // 🆕 Recriar multiselect para tipo de adesão (apenas se for página 2)
+    if (shouldShowTipoAdesao) {
+        console.log('🔧 Inicializando multiselect Tipo de Adesão...');
+        tipoAdesaoFilter.multiselect({
+            includeSelectAllOption: true,
+            selectAllText: "Marcar todos",
+            allSelectedText: "Todos selecionados",
+            nonSelectedText: "Selecionar tipo...",
+            nSelectedText: "tipos",
+            buttonWidth: "100%",
+            maxHeight: 300,
+            onChange: function() {
+                console.log('🔧 Tipo Adesão filter changed, updating dashboard...');
+                updateDashboard();
+            },
+            onSelectAll: updateDashboard,
+            onDeselectAll: updateDashboard,
+            enableFiltering: false,
+            dropUp: false,
+            dropRight: false,
+            templates: {
+                button: '<button type="button" class="multiselect dropdown-toggle" data-toggle="dropdown"><span class="multiselect-selected-text"></span></button>',
+                ul: '<ul class="multiselect-container dropdown-menu" style="width: auto; min-width: 100%;"></ul>'
+            }
+        });
+        console.log('🔧 ✅ Multiselect Tipo de Adesão inicializado');
+    }
 }
 
 // Arquivo: script.js (do Dashboard de Vendas)
@@ -2610,14 +3205,14 @@ function populateFilters(selectedUnidades = []) {
         }
     }
     
-    // Lógica simples: MOSTRAR FUNDOS apenas na página 2
-    const shouldShowFundos = (currentActivePage === 'page2');
-    const shouldHideFundos = !shouldShowFundos;
+    // Lógica de exibição dos filtros por página
+    const shouldShowFundos = true; // ✅ FUNDOS deve aparecer em TODAS as páginas
+    const shouldHideFundos = false; // ✅ NUNCA ocultar fundos
     
     console.log('🔍 Detecção de página (populateFilters):');
     console.log('  - currentActivePage:', currentActivePage);
-    console.log('  - shouldShowFundos:', shouldShowFundos);
-    console.log('  - shouldHideFundos:', shouldHideFundos);
+    console.log('  - shouldShowFundos:', shouldShowFundos, '(sempre true)');
+    console.log('  - shouldHideFundos:', shouldHideFundos, '(sempre false)');
     
     // Ocultar/mostrar filtros baseado na página
     const fundoFilterContainer = document.getElementById('fundo-filter-container');
