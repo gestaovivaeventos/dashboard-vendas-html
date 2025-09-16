@@ -1094,10 +1094,22 @@ function updateDashboard() {
     let finalSelectedUnidades = selectedUnidades;
     
     if (userAccessLevel === 'ALL_UNITS') {
-        // Admin: se não selecionou nada, usar todas as unidades
+        // Admin: se não selecionou nada, usar TODAS as unidades (vendas + metas + fundos + funil)
         if (selectedUnidades.length === 0) {
-            finalSelectedUnidades = [...new Set(allData.map(d => d.nm_unidade))];
-            console.log('🔍 Admin sem seleção - usando todas as unidades:', finalSelectedUnidades.length);
+            const unidadesVendas = [...new Set(allData.map(d => d.nm_unidade))];
+            const unidadesMetas = Array.from(metasData.keys()).map(key => key.split("-")[0]);
+            const unidadesFundos = [...new Set(fundosData.map(d => d.nm_unidade))];
+            const unidadesFunil = funilData ? [...new Set(funilData.map(d => d.nm_unidade).filter(Boolean))] : [];
+            
+            // 🆕 CORREÇÃO CRÍTICA: Combinar TODAS as unidades
+            finalSelectedUnidades = [...new Set([...unidadesVendas, ...unidadesMetas, ...unidadesFundos, ...unidadesFunil])];
+            
+            console.log('🔍 Admin sem seleção - TODAS as unidades:');
+            console.log('  - Vendas:', unidadesVendas.length);
+            console.log('  - Metas:', [...new Set(unidadesMetas)].length);
+            console.log('  - Fundos:', unidadesFundos.length);
+            console.log('  - Funil:', unidadesFunil.length);
+            console.log('  - TOTAL FINAL:', finalSelectedUnidades.length);
         }
     } else if (Array.isArray(userAccessLevel)) {
         // Multi-franqueado: se não selecionou nada, usar suas unidades
