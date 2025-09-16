@@ -285,6 +285,8 @@ async function initializeDashboard() {
         applyTipoAdesaoFilterVisibility();
         applyTipoServicoFilterVisibility();
         applyTipoClienteFilterVisibility();
+        applyConsultorComercialFilterVisibility();
+        applyIndicacaoAdesaoFilterVisibility();
         applyInstituicaoFilterVisibility();
       }, 500);
       
@@ -360,6 +362,7 @@ async function fetchAllSalesDataFromSheet() {
 
         const tipoVendaIndex = headers.indexOf("venda_posvenda");
         const indicadoPorIndex = headers.indexOf("indicado_por");
+        const consultorComercialIndex = headers.indexOf("consultor_comercial");  // ✅ NOVO: coluna O
         const codigoIntegranteIndex = headers.indexOf("codigo_integrante");
         const nomeIntegranteIndex = headers.indexOf("nm_integrante");
         const idFundoIndex = headers.indexOf("id_fundo");
@@ -378,6 +381,7 @@ async function fetchAllSalesDataFromSheet() {
                 vl_plano: parseFloat(String(row[valorIndex] || "0").replace(",", ".")) || 0,
                 venda_posvenda: tipoVendaIndex !== -1 ? row[tipoVendaIndex] || "VENDA" : "N/A",
                 indicado_por: indicadoPorIndex !== -1 ? row[indicadoPorIndex] || "N/A" : "N/A",
+                consultor_comercial: consultorComercialIndex !== -1 ? row[consultorComercialIndex] || "N/A" : "N/A",  // ✅ NOVO: consultor_comercial
                 codigo_integrante: codigoIntegranteIndex !== -1 ? row[codigoIntegranteIndex] || "N/A" : "N/A",
                 nm_integrante: nomeIntegranteIndex !== -1 ? row[nomeIntegranteIndex] || "N/A" : "N/A",
                 id_fundo: idFundoIndex !== -1 ? row[idFundoIndex] || "N/A" : "N/A",
@@ -1200,7 +1204,7 @@ function updateDashboard() {
     console.log('🔍 Valor BRUTO do filtro de fundos:', selectedFundos);
     
     // 🚨 FILTRO DE FUNDOS - aplicar APENAS na página 2
-    let selectedTipoAdesao, selectedTipoServico, selectedTipoCliente, selectedInstituicao, selectedFundosForFiltering;
+    let selectedTipoAdesao, selectedTipoServico, selectedTipoCliente, selectedConsultorComercial, selectedIndicacaoAdesao, selectedInstituicao, selectedFundosForFiltering;
     
     // 🔒 VERIFICAÇÃO ROBUSTA: SE NÃO ESTIVERMOS NA PÁGINA 2, FORÇAR FUNDOS VAZIO
     if (currentActivePage !== 'page2') {
@@ -1209,6 +1213,8 @@ function updateDashboard() {
         selectedTipoAdesao = [];
         selectedTipoServico = [];
         selectedTipoCliente = [];
+        selectedConsultorComercial = [];
+        selectedIndicacaoAdesao = [];
         selectedInstituicao = [];
         console.log('🔍 🛑 PÁGINAS 1/3 - FORÇANDO filtro de fundos VAZIO (ignorando valor:', selectedFundos, ')');
     } else {
@@ -1216,6 +1222,8 @@ function updateDashboard() {
         selectedTipoAdesao = $("#tipo-adesao-filter").val() || [];
         selectedTipoServico = $("#tipo-servico-filter").val() || [];
         selectedTipoCliente = $("#tipo-cliente-filter").val() || [];
+        selectedConsultorComercial = $("#consultor-comercial-filter").val() || [];
+        selectedIndicacaoAdesao = $("#indicacao-adesao-filter").val() || [];
         selectedInstituicao = $("#instituicao-filter").val() || [];
         selectedFundosForFiltering = selectedFundos; // APLICAR filtro de fundos na página 2
         console.log('🔍 ✅ PÁGINA 2 - aplicando filtro de fundos:', selectedFundos);
@@ -1291,10 +1299,24 @@ function updateDashboard() {
             const tipoClienteMatch = selectedTipoCliente.length === 0 || 
                 (d.tipo_cliente && selectedTipoCliente.includes(d.tipo_cliente.trim().toUpperCase()));
             
+            const consultorComercialMatch = selectedConsultorComercial.length === 0 || 
+                selectedConsultorComercial.some(selected => {
+                    if (selected === "VAZIO") {
+                        // Filtrar campos vazios/N/A
+                        return !d.consultor_comercial || d.consultor_comercial === 'N/A' || d.consultor_comercial.trim() === '';
+                    } else {
+                        // Filtrar por valor específico
+                        return d.consultor_comercial && selectedConsultorComercial.includes(d.consultor_comercial.trim().toUpperCase());
+                    }
+                });
+            
+            const indicacaoAdesaoMatch = selectedIndicacaoAdesao.length === 0 || 
+                (d.indicado_por && selectedIndicacaoAdesao.includes(d.indicado_por.trim().toUpperCase()));
+            
             const instituicaoMatch = selectedInstituicao.length === 0 || 
                 (d.nm_instituicao && selectedInstituicao.includes(d.nm_instituicao.trim().toUpperCase()));
             
-            return unidadeMatch && cursoMatch && fundoMatch && tipoAdesaoMatch && tipoServicoMatch && tipoClienteMatch && instituicaoMatch;
+            return unidadeMatch && cursoMatch && fundoMatch && tipoAdesaoMatch && tipoServicoMatch && tipoClienteMatch && consultorComercialMatch && indicacaoAdesaoMatch && instituicaoMatch;
         };
         
         // Filtrar dados de adesões
@@ -1917,7 +1939,7 @@ function updateContractsCharts() {
     console.log('  - Fundos BRUTO:', selectedFundos);
     
     // 🚨 FILTRO DE FUNDOS - aplicar APENAS na página 2
-    let selectedTipoServico, selectedTipoCliente, selectedInstituicao, selectedFundosForCharts;
+    let selectedTipoServico, selectedTipoCliente, selectedConsultorComercial, selectedIndicacaoAdesao, selectedInstituicao, selectedFundosForCharts;
     
     const currentActivePage = document.getElementById('btn-page2')?.classList.contains('active') ? 'page2' : 'other';
     
@@ -1926,6 +1948,8 @@ function updateContractsCharts() {
         // 🛑 FORÇAR filtro de fundos como vazio nas páginas 1 e 3
         selectedTipoServico = [];
         selectedTipoCliente = [];
+        selectedConsultorComercial = [];
+        selectedIndicacaoAdesao = [];
         selectedInstituicao = [];
         selectedFundosForCharts = [];
         console.log('📊 🛑 updateContractsCharts - PÁGINAS 1/3 - FORÇANDO fundos VAZIO (ignorando:', selectedFundos, ')');
@@ -1933,11 +1957,15 @@ function updateContractsCharts() {
         // ✅ PÁGINA 2: Aplicar filtro de fundos + filtros específicos
         selectedTipoServico = $("#tipo-servico-filter").val() || [];
         selectedTipoCliente = $("#tipo-cliente-filter").val() || [];
+        selectedConsultorComercial = $("#consultor-comercial-filter").val() || [];
+        selectedIndicacaoAdesao = $("#indicacao-adesao-filter").val() || [];
         selectedInstituicao = $("#instituicao-filter").val() || [];
         selectedFundosForCharts = selectedFundos;
         console.log('📊 ✅ updateContractsCharts - PÁGINA 2 - aplicando filtro de fundos:', selectedFundos);
         console.log('  - Tipo Serviço:', selectedTipoServico);
         console.log('  - Tipo Cliente:', selectedTipoCliente);
+        console.log('  - Consultor Comercial:', selectedConsultorComercial);
+        console.log('  - Indicação Adesão:', selectedIndicacaoAdesao);
         console.log('  - Instituição:', selectedInstituicao);
     }
     
@@ -2153,6 +2181,8 @@ function addEventListeners() {
                 $("#tipo-adesao-filter").val([]);
                 $("#tipo-servico-filter").val([]);
                 $("#tipo-cliente-filter").val([]);
+                $("#consultor-comercial-filter").val([]);
+                $("#indicacao-adesao-filter").val([]);
                 $("#instituicao-filter").val([]);
                 
                 // Atualizar o multiselect SILENCIOSAMENTE (sem triggers)
@@ -2165,6 +2195,12 @@ function addEventListeners() {
                     }
                     if ($("#tipo-cliente-filter").data('multiselect')) {
                         $("#tipo-cliente-filter").multiselect('refresh');
+                    }
+                    if ($("#consultor-comercial-filter").data('multiselect')) {
+                        $("#consultor-comercial-filter").multiselect('refresh');
+                    }
+                    if ($("#indicacao-adesao-filter").data('multiselect')) {
+                        $("#indicacao-adesao-filter").multiselect('refresh');
                     }
                     if ($("#instituicao-filter").data('multiselect')) {
                         $("#instituicao-filter").multiselect('refresh');
@@ -2212,6 +2248,8 @@ function addEventListeners() {
                 applyTipoAdesaoFilterVisibility();
                 applyTipoServicoFilterVisibility();
                 applyTipoClienteFilterVisibility();
+                applyConsultorComercialFilterVisibility();
+                applyIndicacaoAdesaoFilterVisibility();
                 applyInstituicaoFilterVisibility();
                 
                 // 🆕 🎯 LIMPEZA ADICIONAL: Se entramos numa página que NÃO é a 2, garantir que fundos está vazio
@@ -2715,6 +2753,218 @@ function applyTipoClienteFilterVisibility() {
         }
     } else {
         console.log('👥 ❌ tipoClienteFilterContainer não encontrado');
+    }
+}
+
+// 🆕 Função para controlar visibilidade do filtro Consultor Comercial (só página 2)
+function applyConsultorComercialFilterVisibility() {
+    const consultorComercialFilterContainer = document.getElementById('consultor-comercial-filter-container');
+    
+    if (consultorComercialFilterContainer) {
+        const currentActivePage = document.getElementById('btn-page2')?.classList.contains('active') ? 'page2' : 'other';
+        
+        if (currentActivePage === 'page2') {
+            consultorComercialFilterContainer.style.display = 'block';
+            consultorComercialFilterContainer.style.visibility = 'visible';
+            console.log('👨‍💼 ✅ CONSULTOR COMERCIAL mostrado para página 2');
+            
+            const consultorComercialFilter = $('#consultor-comercial-filter');
+            
+            // População baseada apenas em ADESÕES
+            setTimeout(() => {
+                const consultoresComerciais = new Set();
+                let temCamposVazios = false;
+                
+                // Buscar dados de ADESÕES
+                if (allData && allData.length > 0) {
+                    allData.forEach(d => {
+                        if (d.consultor_comercial && d.consultor_comercial !== 'N/A' && d.consultor_comercial.trim() !== '') {
+                            consultoresComerciais.add(d.consultor_comercial.trim().toUpperCase());
+                        } else {
+                            // Detectar se há campos vazios
+                            temCamposVazios = true;
+                        }
+                    });
+                    console.log('👨‍💼 Consultores comerciais encontrados em ADESÕES:', consultoresComerciais.size);
+                    console.log('👨‍💼 Tem campos vazios/N/A:', temCamposVazios);
+                }
+                
+                if (consultoresComerciais.size > 0 || temCamposVazios) {
+                    consultorComercialFilter.empty();
+                    
+                    const consultoresUnicos = [...consultoresComerciais].sort();
+                    
+                    // ✅ ADICIONAR opção para campos vazios se existirem
+                    if (temCamposVazios) {
+                        consultorComercialFilter.append($("<option>", { value: "VAZIO", text: "(Campos Vazios/N/A)" }));
+                        console.log('👨‍💼 Adicionando opção para campos vazios');
+                    }
+                    
+                    console.log('👨‍💼 Consultores Comerciais ÚNICOS encontrados:', consultoresUnicos);
+                    
+                    consultoresUnicos.forEach((c) => {
+                        consultorComercialFilter.append($("<option>", { value: c, text: c }));
+                        console.log('👨‍💼 Adicionando opção Consultor Comercial:', c);
+                    });
+                } else {
+                    console.log('👨‍💼 ❌ Nenhum consultor comercial encontrado');
+                }
+            }, 50);
+            
+            // Reinicializar multiselect
+            setTimeout(() => {
+                console.log('👨‍💼 Reinicializando multiselect do CONSULTOR COMERCIAL...');
+                try {
+                    if (consultorComercialFilter.data('multiselect')) {
+                        consultorComercialFilter.multiselect('destroy');
+                    }
+                    
+                    consultorComercialFilter.multiselect({
+                        includeSelectAllOption: true,
+                        selectAllText: "Marcar todos",
+                        allSelectedText: "Todos os consultores",
+                        nonSelectedText: "Todos os consultores",
+                        enableFiltering: true,  // ✅ ADICIONAR caixa de pesquisa
+                        filterPlaceholder: "Pesquisar consultores...",  // ✅ Placeholder da pesquisa
+                        buttonWidth: '100%',
+                        maxHeight: 300,
+                        numberDisplayed: 2,
+                        onChange: function(option, checked) {
+                            console.log('👨‍💼 Consultor Comercial filter changed:', option, 'checked:', checked);
+                            const currentPage = document.getElementById('btn-page2')?.classList.contains('active') ? 'page2' : 'other';
+                            if (currentPage === 'page2') {
+                                console.log('👨‍💼 ✅ Atualizando dashboard...');
+                                updateDashboard();
+                            } else {
+                                console.log('👨‍💼 ❌ Ignorando mudança de filtro - não estamos na página 2');
+                            }
+                        },
+                        onSelectAll: function() {
+                            const currentPage = document.getElementById('btn-page2')?.classList.contains('active') ? 'page2' : 'other';
+                            if (currentPage === 'page2') {
+                                updateDashboard();
+                            }
+                        },
+                        onDeselectAll: function() {
+                            const currentPage = document.getElementById('btn-page2')?.classList.contains('active') ? 'page2' : 'other';
+                            if (currentPage === 'page2') {
+                                updateDashboard();
+                            }
+                        }
+                    });
+                    console.log('👨‍💼 ✅ Multiselect CONSULTOR COMERCIAL reinicializado com sucesso');
+                } catch (error) {
+                    console.error('👨‍💼 ❌ Erro ao reinicializar multiselect CONSULTOR COMERCIAL:', error);
+                }
+            }, 100);
+            
+        } else {
+            consultorComercialFilterContainer.style.display = 'none';
+            consultorComercialFilterContainer.style.visibility = 'hidden';
+            console.log('👨‍💼 ✅ CONSULTOR COMERCIAL FORÇADO PARA OCULTO');
+        }
+    } else {
+        console.log('👨‍💼 ❌ consultorComercialFilterContainer não encontrado');
+    }
+}
+
+// 🆕 Função para controlar visibilidade do filtro Indicação Adesão (só página 2)
+function applyIndicacaoAdesaoFilterVisibility() {
+    const indicacaoAdesaoFilterContainer = document.getElementById('indicacao-adesao-filter-container');
+    
+    if (indicacaoAdesaoFilterContainer) {
+        const currentActivePage = document.getElementById('btn-page2')?.classList.contains('active') ? 'page2' : 'other';
+        
+        if (currentActivePage === 'page2') {
+            indicacaoAdesaoFilterContainer.style.display = 'block';
+            indicacaoAdesaoFilterContainer.style.visibility = 'visible';
+            console.log('📌 ✅ INDICAÇÃO ADESÃO mostrado para página 2');
+            
+            const indicacaoAdesaoFilter = $('#indicacao-adesao-filter');
+            
+            // População baseada apenas em ADESÕES
+            setTimeout(() => {
+                const indicacoesAdesao = new Set();
+                
+                // Buscar dados de ADESÕES
+                if (allData && allData.length > 0) {
+                    allData.forEach(d => {
+                        if (d.indicado_por && d.indicado_por !== 'N/A' && d.indicado_por.trim() !== '') {
+                            indicacoesAdesao.add(d.indicado_por.trim().toUpperCase());
+                        }
+                    });
+                    console.log('📌 Indicações de adesão encontradas em ADESÕES:', indicacoesAdesao.size);
+                }
+                
+                if (indicacoesAdesao.size > 0) {
+                    indicacaoAdesaoFilter.empty();
+                    
+                    const indicacoesUnicas = [...indicacoesAdesao].sort();
+                    console.log('📌 Indicações Adesão ÚNICAS encontradas:', indicacoesUnicas);
+                    
+                    indicacoesUnicas.forEach((i) => {
+                        indicacaoAdesaoFilter.append($("<option>", { value: i, text: i }));
+                        console.log('📌 Adicionando opção Indicação Adesão:', i);
+                    });
+                } else {
+                    console.log('📌 ❌ Nenhuma indicação de adesão encontrada');
+                }
+            }, 50);
+            
+            // Reinicializar multiselect
+            setTimeout(() => {
+                console.log('📌 Reinicializando multiselect do INDICAÇÃO ADESÃO...');
+                try {
+                    if (indicacaoAdesaoFilter.data('multiselect')) {
+                        indicacaoAdesaoFilter.multiselect('destroy');
+                    }
+                    
+                    indicacaoAdesaoFilter.multiselect({
+                        includeSelectAllOption: true,
+                        selectAllText: "Marcar todos",
+                        allSelectedText: "Todas as indicações",
+                        nonSelectedText: "Todas as indicações",
+                        enableFiltering: true,  // ✅ ADICIONAR caixa de pesquisa
+                        filterPlaceholder: "Pesquisar indicações...",  // ✅ Placeholder da pesquisa
+                        buttonWidth: '100%',
+                        maxHeight: 300,
+                        numberDisplayed: 2,
+                        onChange: function(option, checked) {
+                            console.log('📌 Indicação Adesão filter changed:', option, 'checked:', checked);
+                            const currentPage = document.getElementById('btn-page2')?.classList.contains('active') ? 'page2' : 'other';
+                            if (currentPage === 'page2') {
+                                console.log('📌 ✅ Atualizando dashboard...');
+                                updateDashboard();
+                            } else {
+                                console.log('📌 ❌ Ignorando mudança de filtro - não estamos na página 2');
+                            }
+                        },
+                        onSelectAll: function() {
+                            const currentPage = document.getElementById('btn-page2')?.classList.contains('active') ? 'page2' : 'other';
+                            if (currentPage === 'page2') {
+                                updateDashboard();
+                            }
+                        },
+                        onDeselectAll: function() {
+                            const currentPage = document.getElementById('btn-page2')?.classList.contains('active') ? 'page2' : 'other';
+                            if (currentPage === 'page2') {
+                                updateDashboard();
+                            }
+                        }
+                    });
+                    console.log('📌 ✅ Multiselect INDICAÇÃO ADESÃO reinicializado com sucesso');
+                } catch (error) {
+                    console.error('📌 ❌ Erro ao reinicializar multiselect INDICAÇÃO ADESÃO:', error);
+                }
+            }, 100);
+            
+        } else {
+            indicacaoAdesaoFilterContainer.style.display = 'none';
+            indicacaoAdesaoFilterContainer.style.visibility = 'hidden';
+            console.log('📌 ✅ INDICAÇÃO ADESÃO FORÇADO PARA OCULTO');
+        }
+    } else {
+        console.log('📌 ❌ indicacaoAdesaoFilterContainer não encontrado');
     }
 }
 
