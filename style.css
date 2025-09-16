@@ -398,12 +398,75 @@ body {
 
         .page-header p {
             color: #adb5bd;
-            font-size: 1.1rem;
-            margin: 0;
-            max-width: 600px;
-            margin: 0 auto;
         }
 
+/* Indicadores Operacionais */
+.indicators-operacionais {
+    grid-column: span 12;
+    background: linear-gradient(180deg, #343a40 0%, #2e363b 100%);
+    border-radius: 8px;
+    padding: 16px;
+    margin-top: 12px;
+    border: 1px solid rgba(255,255,255,0.03);
+}
+.indicators-operacionais h2 {
+    margin: 0 0 12px 0;
+    color: #adb5bd;
+    font-size: 0.95rem;
+    letter-spacing: 0.06em;
+}
+.indicators-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+}
+.indicator-card {
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.03));
+    border-radius: 6px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: flex-start;
+}
+.indicator-value {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #ffffff;
+}
+.indicator-label {
+    font-size: 0.75rem;
+    color: #adb5bd;
+    font-weight: 600;
+}
+.indicator-meta {
+    font-size: 0.75rem;
+    color: #ffc107;
+}
+.indicator-progress-bg {
+    width: 100%;
+    height: 8px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 6px;
+    margin-top: 6px;
+    overflow: hidden;
+}
+.indicator-progress-fg {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #ffc107 0%, #ffd54f 100%);
+    border-radius: 6px;
+    transition: width 600ms ease-in-out;
+}
+
+/* Responsividade: empilha em telas pequenas */
+@media (max-width: 900px) {
+    .indicators-row { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 520px) {
+    .indicators-row { grid-template-columns: 1fr; }
+}
+        
         /* Estilos para os indicadores do funil */
         .funil-indicators-grid {
             display: grid;

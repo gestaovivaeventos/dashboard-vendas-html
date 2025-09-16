@@ -265,8 +265,9 @@ async function initializeDashboard() {
         "chart-yearly-stacked-section", "chart-monthly-stacked-section",
         "chart-yearly-ticket-section", "chart-monthly-ticket-section",
         "chart-yearly-contracts-section", "chart-monthly-contracts-section",
-        "chart-monthly-adesoes-section", "chart-yearly-adesoes-stacked-section",
+    "chart-monthly-adesoes-section", "chart-yearly-adesoes-stacked-section",
         "chart-monthly-adesoes-stacked-section", "consultor-table-section",
+    "indicadores-operacionais",
         "detalhada-adesoes-table-section", "fundos-detalhados-table-section",
         "funil-indicators-section", "funil-captacoes-section",
       ].forEach((id) => {
@@ -495,12 +496,24 @@ async function fetchMetasData() {
     const headers = rows[0].map((h) => h.trim().toLowerCase());
     console.log('🔍 Headers encontrados:', headers);
     
-    const unidadeIndex = headers.indexOf("nm_unidade"),
-      anoIndex = headers.indexOf("ano"),
-      mesIndex = headers.indexOf("mês"),
-      metaVendasIndex = headers.indexOf("meta vvr_venda"),
-      metaPosvendasIndex = headers.indexOf("meta vvr_pos_venda"),
-      metaAdesoesIndex = headers.indexOf("meta adesões");
+        const unidadeIndex = headers.indexOf("nm_unidade"),
+            anoIndex = headers.indexOf("ano"),
+            mesIndex = headers.indexOf("mês"),
+            metaVendasIndex = headers.indexOf("meta vvr_venda"),
+            metaPosvendasIndex = headers.indexOf("meta vvr_pos_venda"),
+            metaAdesoesIndex = headers.indexOf("meta adesões");
+
+        // Tentar detectar coluna de meta_leads (coluna I conforme informado)
+        let metaLeadsIndex = headers.indexOf("meta_leads");
+        if (metaLeadsIndex === -1) metaLeadsIndex = headers.indexOf("meta leads");
+        if (metaLeadsIndex === -1) metaLeadsIndex = 8; // fallback para coluna I (índice 8)
+
+        console.log('🔍 Índice meta_leads detectado em:', metaLeadsIndex);
+    // Detectar coluna meta_contratos (coluna K conforme informado)
+    let metaContratosIndex = headers.indexOf("meta_contratos");
+    if (metaContratosIndex === -1) metaContratosIndex = headers.indexOf("meta contratos");
+    if (metaContratosIndex === -1) metaContratosIndex = 10; // fallback para coluna K (índice 10)
+    console.log('🔍 Índice meta_contratos detectado em:', metaContratosIndex);
 
     console.log('🔍 Índices das colunas:');
     console.log(`  - nm_unidade: ${unidadeIndex}`);
@@ -568,16 +581,20 @@ async function fetchMetasData() {
         console.log(`  - row:`, row);
       }
       
-      if (deveProcessar) {
-        const chave = `${unidade}-${ano}-${mes}`;
-        metasMap.set(chave, {
-          meta_vvr_vendas: metaVendas,
-          meta_vvr_posvendas: metaPosvendas,
-          meta_vvr_total: metaVendas + metaPosvendas,
-          meta_adesoes: metaAdesoes,
-        });
-        linhasProcessadas++;
-      }
+                if (deveProcessar) {
+                    const chave = `${unidade}-${ano}-${mes}`;
+                    const metaLeads = parseInt(row[metaLeadsIndex]) || 0;
+                    const metaContratos = parseInt(row[metaContratosIndex]) || 0;
+                    metasMap.set(chave, {
+                        meta_vvr_vendas: metaVendas,
+                        meta_vvr_posvendas: metaPosvendas,
+                        meta_vvr_total: metaVendas + metaPosvendas,
+                        meta_adesoes: metaAdesoes,
+                        meta_leads: metaLeads,
+                        meta_contratos: metaContratos,
+                    });
+                    linhasProcessadas++;
+                }
     });
     
     console.log(`🔍 Linhas processadas: ${linhasProcessadas}`);
@@ -1277,6 +1294,68 @@ function updateDashboard() {
 
     const anoVigenteParaGrafico = startDate.getFullYear();
 
+        // --- Indicadores Operacionais: LEADS ---
+        try {
+            // funilData já foi carregado em initializeDashboard()
+            const funilFiltered = (funilData || []).filter(item => {
+                // item.criado_em pode ser string; tentar parse se necessário
+                let criado = item.criado_em || (item.row_data && item.row_data[12]) || item.criado_em;
+                let criadoDate = null;
+                if (criado instanceof Date) criadoDate = criado;
+                else if (typeof criado === 'string') {
+                    const parts = criado.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+                    if (parts) criadoDate = new Date(parts[3], parts[2]-1, parts[1]);
+                    else criadoDate = new Date(criado);
+                }
+                const dentroPeriodo = criadoDate && criadoDate >= startDate && criadoDate < endDate;
+                const unidadeMatch = finalSelectedUnidades.length === 0 || finalSelectedUnidades.includes(item.nm_unidade);
+                return dentroPeriodo && unidadeMatch && item.titulo && item.titulo.trim() !== '';
+            });
+
+            const totalLeads = funilFiltered.length;
+
+            // Calcular meta de leads a partir de metasData: somar meta_leads para os períodos/unidades relevantes
+            let totalMetaLeads = 0;
+            if (metasData && metasData.size > 0) {
+                // normalizar unidades selecionadas para comparação insensível a case
+                const unidadesSelecionadasNorm = finalSelectedUnidades.map(u => u ? u.toString().toLowerCase().trim() : '');
+                metasData.forEach((metaInfo, chave) => {
+                    // chave tem formato 'Unidade-Ano-Mes' ou similar
+                    const [unidadeMetaRaw, anoMeta, mesMeta] = chave.split("-");
+                    const unidadeMeta = unidadeMetaRaw ? unidadeMetaRaw.toString().toLowerCase().trim() : '';
+                    if (!unidadeMeta) return;
+                    // verificar unidade (se houver seleção)
+                    if (unidadesSelecionadasNorm.length > 0 && unidadesSelecionadasNorm[0] !== undefined && unidadesSelecionadasNorm.length > 0) {
+                        if (!unidadesSelecionadasNorm.includes(unidadeMeta)) return;
+                    }
+                    // verificar se o meta pertence ao período selecionado (usar mês/ano)
+                    if (anoMeta && mesMeta) {
+                        const metaDate = new Date(Number(anoMeta), Number(mesMeta) - 1, 1);
+                        // incluir meta se o mês/ano estiver dentro do intervalo selecionado
+                        const metaRangeStart = new Date(metaDate.getFullYear(), metaDate.getMonth(), 1);
+                        const metaRangeEnd = new Date(metaDate.getFullYear(), metaDate.getMonth() + 1, 1);
+                        if (metaRangeStart < endDate && metaRangeEnd > startDate) {
+                            totalMetaLeads += (metaInfo.meta_leads || 0);
+                        }
+                    }
+                });
+            }
+
+            // Atualizar DOM
+            const leadsEl = document.getElementById('ind-leads');
+            const leadsMetaEl = document.getElementById('ind-leads-meta');
+            const leadsPercentEl = document.getElementById('ind-leads-percent');
+            const leadsProgressEl = document.getElementById('ind-leads-progress');
+
+            if (leadsEl) leadsEl.textContent = totalLeads.toLocaleString('pt-BR');
+            if (leadsMetaEl) leadsMetaEl.textContent = totalMetaLeads.toLocaleString('pt-BR');
+            const percent = totalMetaLeads > 0 ? (totalLeads / totalMetaLeads) : 0;
+            if (leadsPercentEl) leadsPercentEl.textContent = `${(percent * 100).toFixed(1)}%`;
+            if (leadsProgressEl) leadsProgressEl.style.width = `${Math.min(100, percent * 100)}%`;
+        } catch (err) {
+            console.error('Erro ao calcular indicadores de leads:', err);
+        }
+
     let dataBrutaFiltrada = [], dataParaGraficoAnual = [], allDataForOtherCharts = [], fundosDataFiltrado = [], dataBrutaFiltradaPY = [];
     const hasPermissionToViewData = (userAccessLevel === 'ALL_UNITS' || selectedUnidades.length > 0);
 
@@ -1323,6 +1402,46 @@ function updateDashboard() {
         dataBrutaFiltrada = allData.filter(d => filterLogic(d) && d.dt_cadastro_integrante >= startDate && d.dt_cadastro_integrante < endDate);
         dataParaGraficoAnual = allData.filter(d => filterLogic(d) && d.dt_cadastro_integrante.getFullYear() === anoVigenteParaGrafico);
         allDataForOtherCharts = allData.filter(filterLogic);
+
+        // --- Indicadores Operacionais: ADESÃO TOTAL ---
+        try {
+            const adesoesValidas = dataBrutaFiltrada.filter(d => d.codigo_integrante && d.codigo_integrante.toString().trim() !== '');
+            const totalAdesoes = adesoesValidas.length;
+
+            // Somar metas de adesões (meta_adesoes) a partir de metasData para o período/unidades
+            let totalMetaAdesoes = 0;
+            if (metasData && metasData.size > 0) {
+                const unidadesSelecionadasNorm = finalSelectedUnidades.map(u => u ? u.toString().toLowerCase().trim() : '');
+                metasData.forEach((metaInfo, chave) => {
+                    const [unidadeMetaRaw, anoMeta, mesMeta] = chave.split("-");
+                    const unidadeMeta = unidadeMetaRaw ? unidadeMetaRaw.toString().toLowerCase().trim() : '';
+                    if (!unidadeMeta) return;
+                    if (unidadesSelecionadasNorm.length > 0 && !unidadesSelecionadasNorm.includes(unidadeMeta)) return;
+                    if (anoMeta && mesMeta) {
+                        const metaDate = new Date(Number(anoMeta), Number(mesMeta) - 1, 1);
+                        const metaRangeStart = new Date(metaDate.getFullYear(), metaDate.getMonth(), 1);
+                        const metaRangeEnd = new Date(metaDate.getFullYear(), metaDate.getMonth() + 1, 1);
+                        if (metaRangeStart < endDate && metaRangeEnd > startDate) {
+                            totalMetaAdesoes += (metaInfo.meta_adesoes || 0);
+                        }
+                    }
+                });
+            }
+
+            // Atualizar DOM
+            const adesaoEl = document.getElementById('ind-adesao');
+            const adesaoMetaEl = document.getElementById('ind-adesao-meta');
+            const adesaoPercentEl = document.getElementById('ind-adesao-percent');
+            const adesaoProgressEl = document.getElementById('ind-adesao-progress');
+
+            if (adesaoEl) adesaoEl.textContent = totalAdesoes.toLocaleString('pt-BR');
+            if (adesaoMetaEl) adesaoMetaEl.textContent = totalMetaAdesoes.toLocaleString('pt-BR');
+            const percentAd = totalMetaAdesoes > 0 ? (totalAdesoes / totalMetaAdesoes) : 0;
+            if (adesaoPercentEl) adesaoPercentEl.textContent = `${(percentAd * 100).toFixed(1)}%`;
+            if (adesaoProgressEl) adesaoProgressEl.style.width = `${Math.min(100, percentAd * 100)}%`;
+        } catch (err) {
+            console.error('Erro ao calcular indicador de adesão total:', err);
+        }
 
         // ✅ Log simples para verificar filtro de fundos
         if (currentActivePage === 'page2' && selectedFundosForFiltering.length > 0) {
@@ -1371,6 +1490,43 @@ function updateDashboard() {
     updateConsultorTable(dataBrutaFiltrada);
     updateDetalhadaAdesoesTable(dataBrutaFiltrada);
     updateFundosDetalhadosTable(fundosDataFiltrado, finalSelectedUnidades, startDate, endDate);
+    // --- Indicadores Operacionais: CONTRATOS (MV) ---
+    try {
+        const contratosValidos = fundosDataFiltrado.filter(d => d.id_fundo && d.id_fundo.toString().trim() !== '');
+        const totalContratos = contratosValidos.length;
+
+        let totalMetaContratos = 0;
+        if (metasData && metasData.size > 0) {
+            const unidadesSelecionadasNorm = finalSelectedUnidades.map(u => u ? u.toString().toLowerCase().trim() : '');
+            metasData.forEach((metaInfo, chave) => {
+                const [unidadeMetaRaw, anoMeta, mesMeta] = chave.split("-");
+                const unidadeMeta = unidadeMetaRaw ? unidadeMetaRaw.toString().toLowerCase().trim() : '';
+                if (!unidadeMeta) return;
+                if (unidadesSelecionadasNorm.length > 0 && !unidadesSelecionadasNorm.includes(unidadeMeta)) return;
+                if (anoMeta && mesMeta) {
+                    const metaDate = new Date(Number(anoMeta), Number(mesMeta) - 1, 1);
+                    const metaRangeStart = new Date(metaDate.getFullYear(), metaDate.getMonth(), 1);
+                    const metaRangeEnd = new Date(metaDate.getFullYear(), metaDate.getMonth() + 1, 1);
+                    if (metaRangeStart < endDate && metaRangeEnd > startDate) {
+                        totalMetaContratos += (metaInfo.meta_contratos || 0);
+                    }
+                }
+            });
+        }
+
+        const contratosEl = document.getElementById('ind-contratos');
+        const contratosMetaEl = document.getElementById('ind-contratos-meta');
+        const contratosPercentEl = document.getElementById('ind-contratos-percent');
+        const contratosProgressEl = document.getElementById('ind-contratos-progress');
+
+        if (contratosEl) contratosEl.textContent = totalContratos.toLocaleString('pt-BR');
+        if (contratosMetaEl) contratosMetaEl.textContent = totalMetaContratos.toLocaleString('pt-BR');
+        const percentCt = totalMetaContratos > 0 ? (totalContratos / totalMetaContratos) : 0;
+        if (contratosPercentEl) contratosPercentEl.textContent = `${(percentCt * 100).toFixed(1)}%`;
+        if (contratosProgressEl) contratosProgressEl.style.width = `${Math.min(100, percentCt * 100)}%`;
+    } catch (err) {
+        console.error('Erro ao calcular indicador de contratos:', err);
+    }
     updateFunilIndicators(startDate, endDate, finalSelectedUnidades);
     updateMainKPIs(dataBrutaFiltrada, finalSelectedUnidades, startDate, endDate);
     
