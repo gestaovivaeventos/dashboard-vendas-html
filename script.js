@@ -234,6 +234,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 
 async function initializeDashboard() {
+  console.log("🚀 INICIANDO DASHBOARD...");
   displayLastUpdateMessage();
   const loader = document.getElementById("loader");
   try {
@@ -441,11 +442,14 @@ async function fetchFundosData() {
 }
 
 async function fetchMetasData() {
+  console.log("� fetchMetasData INICIADA!");
+  console.log("�🔍 === INÍCIO fetchMetasData ===");
   if (!METAS_SPREADSHEET_ID || !METAS_SHEET_NAME || !API_KEY) {
     console.error("Configurações da planilha de metas incompletas.");
     return new Map();
   }
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${METAS_SPREADSHEET_ID}/values/${METAS_SHEET_NAME}?key=${API_KEY}`;
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${METAS_SPREADSHEET_ID}/values/${METAS_SHEET_NAME}!A:Z?key=${API_KEY}`;
+  console.log('🔍 URL da API:', url);
   try {
     const response = await fetch(url);
     if (!response.ok) {
@@ -454,8 +458,20 @@ async function fetchMetasData() {
     }
     const data = await response.json();
     const rows = data.values || [];
+    console.log(`🔍 Total de linhas recebidas: ${rows.length}`);
+    
+    // Debug: Mostrar as últimas 10 linhas recebidas
+    console.log('🔍 ÚLTIMAS 10 LINHAS RECEBIDAS:');
+    const ultimasLinhas = rows.slice(-10);
+    ultimasLinhas.forEach((row, index) => {
+      const linhaReal = rows.length - 10 + index + 1;
+      console.log(`  Linha ${linhaReal}:`, row);
+    });
+    
     const metasMap = new Map();
     const headers = rows[0].map((h) => h.trim().toLowerCase());
+    console.log('🔍 Headers encontrados:', headers);
+    
     const unidadeIndex = headers.indexOf("nm_unidade"),
       anoIndex = headers.indexOf("ano"),
       mesIndex = headers.indexOf("mês"),
@@ -463,15 +479,73 @@ async function fetchMetasData() {
       metaPosvendasIndex = headers.indexOf("meta vvr_pos_venda"),
       metaAdesoesIndex = headers.indexOf("meta adesões");
 
-    rows.slice(1).forEach((row) => {
+    console.log('🔍 Índices das colunas:');
+    console.log(`  - nm_unidade: ${unidadeIndex}`);
+    console.log(`  - ano: ${anoIndex}`);
+    console.log(`  - mês: ${mesIndex}`);
+    console.log(`  - meta vvr_venda: ${metaVendasIndex}`);
+    console.log(`  - meta vvr_pos_venda: ${metaPosvendasIndex}`);
+
+    let linhasProcessadas = 0;
+    let vitoriaDaConquistaEncontrada = false;
+    
+    // Lista de unidades que deveriam estar mas não aparecem
+    const unidadesPerdidas = ['cacoal', 'cuiaba', 'londrina', 'maceio', 'palmas', 'jose de campos', 'sete lagoas', 'vitoria da conquista'];
+    const unidadesEncontradas = [];
+
+    rows.slice(1).forEach((row, index) => {
       const unidade = row[unidadeIndex],
         ano = row[anoIndex],
         mes = String(row[mesIndex]).padStart(2, "0");
+      
+      // Debug específico para as unidades perdidas
+      if (unidade) {
+        const unidadeLower = unidade.toLowerCase();
+        unidadesPerdidas.forEach(perdida => {
+          if (unidadeLower.includes(perdida.split(' ')[0])) { // Busca pelo primeiro nome
+            unidadesEncontradas.push({
+              linha: index + 2,
+              unidade: unidade,
+              ano: ano,
+              mes: mes,
+              buscada: perdida
+            });
+            console.log(`🎯 UNIDADE PERDIDA ENCONTRADA: ${perdida} -> linha ${index + 2}: "${unidade}"`);
+          }
+        });
+      }
+      
+      // Debug específico para Vitória da Conquista
+      if (unidade && unidade.includes('Vitória da Conquista')) {
+        vitoriaDaConquistaEncontrada = true;
+        console.log(`🎯 VITÓRIA DA CONQUISTA ENCONTRADA na linha ${index + 2}:`);
+        console.log(`  - unidade: "${unidade}"`);
+        console.log(`  - ano: "${ano}"`);
+        console.log(`  - mes: "${mes}"`);
+        console.log(`  - row completa:`, row);
+      }
+      
       const parseMetaValue = (index) => parseFloat(String(row[index] || "0").replace(/\./g, "").replace(",", ".")) || 0;
       const metaVendas = parseMetaValue(metaVendasIndex),
         metaPosvendas = parseMetaValue(metaPosvendasIndex),
         metaAdesoes = parseInt(row[metaAdesoesIndex]) || 0;
-      if (unidade && ano && mes) {
+      
+      // 🆕 Debug: Verificar por que algumas linhas não são processadas
+      const temUnidade = !!unidade;
+      const temAno = !!ano;
+      const temMes = !!mes;
+      const deveProcessar = temUnidade && temAno && temMes;
+      
+      if (unidade && unidadesPerdidas.some(perdida => unidade.toLowerCase().includes(perdida.split(' ')[0]))) {
+        console.log(`🔍 VALIDAÇÃO linha ${index + 2} (${unidade}):`);
+        console.log(`  - unidade: "${unidade}" (válida: ${temUnidade})`);
+        console.log(`  - ano: "${ano}" (válido: ${temAno})`);
+        console.log(`  - mes: "${mes}" (válido: ${temMes})`);
+        console.log(`  - deve processar: ${deveProcessar}`);
+        console.log(`  - row:`, row);
+      }
+      
+      if (deveProcessar) {
         const chave = `${unidade}-${ano}-${mes}`;
         metasMap.set(chave, {
           meta_vvr_vendas: metaVendas,
@@ -479,8 +553,25 @@ async function fetchMetasData() {
           meta_vvr_total: metaVendas + metaPosvendas,
           meta_adesoes: metaAdesoes,
         });
+        linhasProcessadas++;
       }
     });
+    
+    console.log(`🔍 Linhas processadas: ${linhasProcessadas}`);
+    console.log(`🔍 Total de metas carregadas: ${metasMap.size}`);
+    console.log(`🔍 Vitória da Conquista encontrada: ${vitoriaDaConquistaEncontrada}`);
+    
+    // Resumo das unidades perdidas
+    console.log('📊 RESUMO DAS UNIDADES PERDIDAS:');
+    console.log(`  - Total buscadas: ${unidadesPerdidas.length}`);
+    console.log(`  - Total encontradas: ${unidadesEncontradas.length}`);
+    console.log('  - Unidades encontradas:', unidadesEncontradas);
+    
+    const naoEncontradas = unidadesPerdidas.filter(perdida => 
+      !unidadesEncontradas.some(enc => enc.buscada === perdida)
+    );
+    console.log('  - Unidades NÃO encontradas:', naoEncontradas);
+    
     return metasMap;
   } catch (error) {
     console.error("Erro CRÍTICO ao buscar metas:", error);
@@ -720,7 +811,45 @@ function processAndCrossReferenceData(salesData) {
   });
 }
 
-function updateMainKPIs(dataBruta, selectedUnidades, startDate, endDate) {
+function updateMainKPIs(dataBruta, selectedUnidades, startDate, endDate, retryCount = 0) {
+    console.log('🔍 updateMainKPIs called with:');
+    console.log('  - selectedUnidades:', selectedUnidades);
+    console.log('  - selectedUnidades length:', selectedUnidades.length);
+    console.log('  - userAccessLevel:', userAccessLevel);
+    console.log('  - startDate:', startDate);
+    console.log('  - endDate:', endDate);
+    console.log('  - retryCount:', retryCount);
+    
+    // 🆕 VALIDAÇÃO CRÍTICA: Não calcular se dados não estão prontos
+    if (!metasData || metasData.size === 0) {
+        if (retryCount < 20) { // Máximo 20 tentativas (2 segundos)
+            console.log('⚠️ METAS NÃO CARREGADAS (vazia) - adiando cálculo...');
+            setTimeout(() => {
+                updateMainKPIs(dataBruta, selectedUnidades, startDate, endDate, retryCount + 1);
+            }, 100);
+        } else {
+            console.error('❌ TIMEOUT: Metas não carregaram após 20 tentativas');
+        }
+        return;
+    }
+    
+    // 🆕 VALIDAÇÃO ADICIONAL: Verificar se todas as metas foram carregadas
+    if (metasData.size < 40) { // Esperamos pelo menos 40 metas
+        if (retryCount < 20) {
+            console.log(`⚠️ METAS INCOMPLETAS (${metasData.size} < 40) - adiando cálculo...`);
+            setTimeout(() => {
+                updateMainKPIs(dataBruta, selectedUnidades, startDate, endDate, retryCount + 1);
+            }, 100);
+        } else {
+            console.error(`❌ TIMEOUT: Só carregaram ${metasData.size} metas após 20 tentativas`);
+            // Prosseguir mesmo assim
+        }
+        return;
+    }
+    
+    console.log('✅ Dados validados - prosseguindo com cálculo de KPIs');
+    console.log('  - metasData.size:', metasData.size);
+    
     const getColorForPercentage = (percent) => {
         if (percent >= 1) return "#28a745";
         if (percent >= 0.5) return "#ffc107";
@@ -738,25 +867,118 @@ function updateMainKPIs(dataBruta, selectedUnidades, startDate, endDate) {
     // --- TRAVA DE SEGURANÇA DEFINITIVA DENTRO DA FUNÇÃO ---
     // Só calcula a meta se o usuário for admin OU se for um franqueado com unidades selecionadas.
     const canCalculateMeta = (userAccessLevel === 'ALL_UNITS' || selectedUnidades.length > 0);
+    console.log('🔍 canCalculateMeta:', canCalculateMeta);
 
     if (canCalculateMeta) {
-        // Se for admin e não selecionou nada, considera todas as unidades. Senão, usa as selecionadas.
-        const unitsToConsider = (userAccessLevel === 'ALL_UNITS' && selectedUnidades.length === 0)
-            ? [...new Set(allData.map(d => d.nm_unidade))]
-            : selectedUnidades;
+        // 🆕 CORREÇÃO: Para cálculo de metas, devemos incluir TODAS as unidades com meta,
+        // não apenas as que têm vendas!
+        let unitsToConsider;
+        
+        if (userAccessLevel === 'ALL_UNITS' && selectedUnidades.length === 0) {
+            // Admin sem filtro: considera todas as unidades que têm META (não apenas vendas)
+            const unidadesComMeta = [...new Set(Array.from(metasData.keys()).map(key => key.split("-")[0]))];
+            const unidadesComVenda = [...new Set(allData.map(d => d.nm_unidade))];
+            unitsToConsider = [...new Set([...unidadesComMeta, ...unidadesComVenda])];
+            console.log('🔍 Admin sem filtro - unidades com META:', unidadesComMeta);
+            console.log('🔍 Admin sem filtro - unidades com VENDA:', unidadesComVenda);
+        } else {
+            // Usuário específico ou admin com filtro: usa as unidades selecionadas
+            unitsToConsider = selectedUnidades;
+        }
+        
+        console.log('🔍 unitsToConsider FINAL:', unitsToConsider);
+        console.log('🔍 unitsToConsider length:', unitsToConsider.length);
+        
+        // 🆕 Debug: Mostrar todas as unidades disponíveis
+        const todasUnidades = [...new Set(allData.map(d => d.nm_unidade))];
+        console.log('🔍 Todas as unidades disponíveis:', todasUnidades);
+        console.log('🔍 Total de unidades disponíveis:', todasUnidades.length);
 
+        // 🆕 Debug específico: Verificar dados de meta para Vitória da Conquista
+        console.log('🔍 DEBUG VITÓRIA DA CONQUISTA:');
+        console.log('  - Procurando por "Vitória da Conquista" em todasUnidades...');
+        const vitoriaNasUnidades = todasUnidades.filter(u => 
+            u.includes('Vitória') || u.includes('Conquista') || 
+            u.toLowerCase().includes('vitoria') || u.toLowerCase().includes('conquista')
+        );
+        console.log('  - Unidades com "Vitória/Conquista":', vitoriaNasUnidades);
+        
+        console.log('  - Procurando por "Vitória da Conquista" em metasData...');
+        const vitoriaNasMetas = [];
+        metasData.forEach((metaInfo, key) => {
+            const [unidade, ano, mes] = key.split("-");
+            if (unidade.includes('Vitória') || unidade.includes('Conquista') || 
+                unidade.toLowerCase().includes('vitoria') || unidade.toLowerCase().includes('conquista')) {
+                vitoriaNasMetas.push({
+                    key: key,
+                    unidade: unidade,
+                    ano: ano,
+                    mes: mes,
+                    metaVendas: metaInfo.meta_vvr_vendas,
+                    metaPosVendas: metaInfo.meta_vvr_posvendas,
+                    total: metaInfo.meta_vvr_vendas + metaInfo.meta_vvr_posvendas
+                });
+            }
+        });
+        // 🆕 Debug específico para Vitória da Conquista (com e sem acento)
+        console.log('🔍 PROCURANDO VITORIA DA CONQUISTA (sem acento):');
+        const vitoriaNasMetasSimplificado = [];
+        metasData.forEach((metaInfo, key) => {
+            const [unidade, ano, mes] = key.split("-");
+            if (unidade.toLowerCase().includes('vitoria') && unidade.toLowerCase().includes('conquista')) {
+                vitoriaNasMetasSimplificado.push({
+                    key: key,
+                    unidade: unidade,
+                    total: metaInfo.meta_vvr_vendas + metaInfo.meta_vvr_posvendas
+                });
+                console.log(`🎯 ENCONTROU: ${key} = ${metaInfo.meta_vvr_vendas + metaInfo.meta_vvr_posvendas}`);
+            }
+        });
+        console.log('🔍 Total de metas Vitoria da Conquista:', vitoriaNasMetasSimplificado.length);
+
+        let metasEncontradas = 0;
+        
+        console.log('🔍 BUSCANDO METAS PARA UNIDADES SELECIONADAS:');
+        
         metasData.forEach((metaInfo, key) => {
             const [unidade, ano, mes] = key.split("-");
             const metaDate = new Date(ano, parseInt(mes) - 1, 1);
-            if (unitsToConsider.includes(unidade) && metaDate >= startDate && metaDate < endDate) {
-                metaVendas += metaInfo.meta_vvr_vendas;
-                metaPosVendas += metaInfo.meta_vvr_posvendas;
+            
+            if (metaDate >= startDate && metaDate < endDate) {
+                if (unitsToConsider.includes(unidade)) {
+                    metaVendas += metaInfo.meta_vvr_vendas;
+                    metaPosVendas += metaInfo.meta_vvr_posvendas;
+                    metasEncontradas++;
+                    console.log(`✅ Meta encontrada: ${unidade}-${ano}-${mes} = ${metaInfo.meta_vvr_vendas + metaInfo.meta_vvr_posvendas}`);
+                }
             }
         });
+        
+        // 🆕 Debug: Verificar quais unidades NÃO têm meta
+        console.log('❌ UNIDADES SEM META:');
+        unitsToConsider.forEach(unit => {
+            const temMeta = Array.from(metasData.keys()).some(key => {
+                const [unidade, ano, mes] = key.split("-");
+                const metaDate = new Date(ano, parseInt(mes) - 1, 1);
+                return unidade === unit && metaDate >= startDate && metaDate < endDate;
+            });
+            
+            if (!temMeta) {
+                console.log(`  - "${unit}" não tem meta cadastrada no período`);
+            }
+        });
+        
+        console.log('🔍 Total de metas encontradas:', metasEncontradas);
+        console.log('🔍 metaVendas:', metaVendas);
+        console.log('🔍 metaPosVendas:', metaPosVendas);
     }
     // Se 'canCalculateMeta' for falso, as metas permanecerão 0.
 
     const metaTotal = metaVendas + metaPosVendas;
+    console.log('🔍 RESULTADO FINAL:');
+    console.log('  - metaTotal:', metaTotal);
+    console.log('  - metaTotal formatado:', formatCurrency(metaTotal));
+    
     const percentTotal = metaTotal > 0 ? realizadoTotal / metaTotal : 0;
     const percentVendas = metaVendas > 0 ? realizadoVendas / metaVendas : 0;
     const percentPosVendas = metaPosVendas > 0 ? realizadoPosVendas / metaPosVendas : 0;
@@ -861,9 +1083,36 @@ function updatePreviousYearKPIs(dataBruta, selectedUnidades, startDate, endDate)
 // ...
 
 function updateDashboard() {
-    console.log('updateDashboard called');
+    console.log('🔍 updateDashboard called');
     const selectedUnidades = $("#unidade-filter").val() || [];
-    console.log('Selected unidades in updateDashboard:', selectedUnidades);
+    console.log('🔍 Selected unidades in updateDashboard:', selectedUnidades);
+    console.log('🔍 userAccessLevel:', userAccessLevel);
+    console.log('🔍 Type of userAccessLevel:', typeof userAccessLevel);
+    console.log('🔍 Is array?', Array.isArray(userAccessLevel));
+    
+    // 🆕 CORREÇÃO: Determinar selectedUnidades baseado no tipo de usuário
+    let finalSelectedUnidades = selectedUnidades;
+    
+    if (userAccessLevel === 'ALL_UNITS') {
+        // Admin: se não selecionou nada, usar todas as unidades
+        if (selectedUnidades.length === 0) {
+            finalSelectedUnidades = [...new Set(allData.map(d => d.nm_unidade))];
+            console.log('🔍 Admin sem seleção - usando todas as unidades:', finalSelectedUnidades.length);
+        }
+    } else if (Array.isArray(userAccessLevel)) {
+        // Multi-franqueado: se não selecionou nada, usar suas unidades
+        if (selectedUnidades.length === 0) {
+            finalSelectedUnidades = userAccessLevel;
+            console.log('🔍 Multi-franqueado sem seleção - usando suas unidades:', finalSelectedUnidades);
+        }
+    } else if (typeof userAccessLevel === 'string') {
+        // Franqueado único: sempre usar sua unidade
+        finalSelectedUnidades = [userAccessLevel];
+        console.log('🔍 Franqueado único - usando sua unidade:', finalSelectedUnidades);
+    }
+    
+    console.log('🔍 Final selectedUnidades para cálculos:', finalSelectedUnidades);
+    
     const selectedCursos = $("#curso-filter").val() || [];
     const selectedFundos = $("#fundo-filter").val() || [];
     
@@ -883,7 +1132,7 @@ function updateDashboard() {
 
     if (hasPermissionToViewData) {
         const filterLogic = d => {
-            const unidadeMatch = selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade);
+            const unidadeMatch = finalSelectedUnidades.length === 0 || finalSelectedUnidades.includes(d.nm_unidade);
             const cursoMatch = selectedCursos.length === 0 || (d.curso_fundo && selectedCursos.includes(d.curso_fundo));
             const fundoMatch = selectedFundos.length === 0 || (d.nm_fundo && selectedFundos.includes(d.nm_fundo));
             return unidadeMatch && cursoMatch && fundoMatch;
@@ -896,7 +1145,7 @@ function updateDashboard() {
 
         // Filtrar dados de fundos usando dt_contrato
         fundosDataFiltrado = fundosData.filter(d => {
-            const unidadeMatch = selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade);
+            const unidadeMatch = finalSelectedUnidades.length === 0 || finalSelectedUnidades.includes(d.nm_unidade);
             const cursoMatch = selectedCursos.length === 0 || (d.curso_fundo && selectedCursos.includes(d.curso_fundo));
             const fundoMatch = selectedFundos.length === 0 || (d.nm_fundo && selectedFundos.includes(d.nm_fundo));
             const dateMatch = d.dt_contrato && d.dt_contrato >= startDate && d.dt_contrato < endDate;
@@ -910,8 +1159,8 @@ function updateDashboard() {
     
     // ATUALIZAÇÃO DOS COMPONENTES
     updateVvrVsMetaPorMesChart(dataParaGraficoAnual, anoVigenteParaGrafico);
-    updateCumulativeVvrChart(allDataForOtherCharts, selectedUnidades);
-    updateMonthlyVvrChart(allDataForOtherCharts, selectedUnidades);
+    updateCumulativeVvrChart(allDataForOtherCharts, finalSelectedUnidades);
+    updateMonthlyVvrChart(allDataForOtherCharts, finalSelectedUnidades);
     
     // A chamada para a função corrigida agora passa só um parâmetro
     updateMonthlyAdesoesChart(allDataForOtherCharts);
@@ -924,16 +1173,16 @@ function updateDashboard() {
     
     updateConsultorTable(dataBrutaFiltrada);
     updateDetalhadaAdesoesTable(dataBrutaFiltrada);
-    updateFundosDetalhadosTable(fundosDataFiltrado, selectedUnidades, startDate, endDate);
-    updateFunilIndicators(startDate, endDate, selectedUnidades);
-    updateMainKPIs(dataBrutaFiltrada, selectedUnidades, startDate, endDate);
+    updateFundosDetalhadosTable(fundosDataFiltrado, finalSelectedUnidades, startDate, endDate);
+    updateFunilIndicators(startDate, endDate, finalSelectedUnidades);
+    updateMainKPIs(dataBrutaFiltrada, finalSelectedUnidades, startDate, endDate);
     
     const dataAgregadaComVendas = processAndCrossReferenceData(dataBrutaFiltrada);
     currentFilteredDataForTable = dataAgregadaComVendas; 
     updateDataTable(dataAgregadaComVendas);
     
     document.getElementById("kpi-section-py").style.display = "block";
-    updatePreviousYearKPIs(dataBrutaFiltradaPY, selectedUnidades, startDate, endDate);
+    updatePreviousYearKPIs(dataBrutaFiltradaPY, finalSelectedUnidades, startDate, endDate);
 }
 
 // ...
@@ -2454,8 +2703,12 @@ function populateFilters(selectedUnidades = []) {
         const unidadesFundos = fundosData.map((d) => d.nm_unidade);
         const unidadesFunil = funilData ? funilData.map((d) => d.nm_unidade).filter(Boolean) : [];
         
-        // Combina todas as unidades: vendas, fundos E funil
-        const unidades = [...new Set([...unidadesVendas, ...unidadesFundos, ...unidadesFunil])].sort();
+        // 🆕 CORREÇÃO: Incluir unidades que só existem nas metas
+        const unidadesMetas = Array.from(metasData.keys()).map(key => key.split("-")[0]);
+        console.log('🎯 Unidades das metas:', unidadesMetas.length);
+        
+        // Combina TODAS as unidades: vendas, fundos, funil E metas
+        const unidades = [...new Set([...unidadesVendas, ...unidadesFundos, ...unidadesFunil, ...unidadesMetas])].sort();
         
         if (isFunilPage && funilData && funilData.some(item => item.nm_unidade === 'Sem unidade') && !unidades.includes('Sem unidade')) {
             unidades.push('Sem unidade');
