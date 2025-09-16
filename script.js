@@ -1607,6 +1607,14 @@ function updateDashboard() {
     
     document.getElementById("kpi-section-py").style.display = "block";
     updatePreviousYearKPIs(dataBrutaFiltradaPY, finalSelectedUnidades, startDate, endDate);
+
+    // Atualiza a tabela de indicadores operacionais
+    try {
+        updateIndicatorsTable(finalSelectedUnidades, startDate, endDate);
+        document.getElementById('indicadores-table-section').style.display = 'block';
+    } catch (err) {
+        console.error('Erro ao atualizar tabela de indicadores:', err);
+    }
 }
 
 // ...
@@ -7219,4 +7227,169 @@ function updatePerdasPorFaseChart(dados) {
     });
     
     console.log("✅ Gráfico de perdas por fase atualizado com", dados.length, "fases");
+}
+
+// --- Nova função: Monta e inicializa a tabela de indicadores operacionais ---
+function updateIndicatorsTable(selectedUnidades, startDate, endDate) {
+    // Construir mapa por unidade
+    const unidades = selectedUnidades && selectedUnidades.length > 0 ? selectedUnidades :
+        [...new Set([...(allData || []).map(d => d.nm_unidade).filter(Boolean), ...(funilData || []).map(d => d.nm_unidade).filter(Boolean), ...(fundosData || []).map(d => d.nm_unidade).filter(Boolean)])];
+
+    const rows = unidades.map(unidade => {
+        // LEADS: contar títulos do funil no período para a unidade
+        const leadsResultado = (funilData || []).filter(f => f.nm_unidade === unidade).filter(item => {
+            let criado = item.criado_em || (item.row_data && item.row_data[12]) || item.criado_em;
+            let criadoDate = null;
+            if (criado instanceof Date) criadoDate = criado;
+            else if (typeof criado === 'string') {
+                const parts = criado.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+                if (parts) criadoDate = new Date(parts[3], parts[2]-1, parts[1]);
+                else criadoDate = new Date(criado);
+            }
+            return criadoDate && criadoDate >= startDate && criadoDate < endDate && item.titulo && item.titulo.trim() !== '';
+        }).length;
+
+        // LEADS meta: somar metasData para essa unidade no período
+        let leadsMeta = 0;
+        metasData.forEach((metaInfo, chave) => {
+            const [u, ano, mes] = chave.split('-');
+            if (!u || u !== unidade) return;
+            if (ano && mes) {
+                const metaDate = new Date(Number(ano), Number(mes)-1, 1);
+                const metaRangeStart = new Date(metaDate.getFullYear(), metaDate.getMonth(), 1);
+                const metaRangeEnd = new Date(metaDate.getFullYear(), metaDate.getMonth()+1, 1);
+                if (metaRangeStart < endDate && metaRangeEnd > startDate) {
+                    leadsMeta += (metaInfo.meta_leads || 0);
+                }
+            }
+        });
+
+        // REUNIÕES: aplicar regra BH/BJ
+        const reunioesResultado = (funilData || []).filter(f => f.nm_unidade === unidade).reduce((acc, item) => {
+            let dateStr = item.diagnostico_realizado && item.diagnostico_realizado.toString().trim() !== '' ? item.diagnostico_realizado :
+                (item.proposta_enviada && item.proposta_enviada.toString().trim() !== '' ? item.proposta_enviada : null);
+            if (!dateStr) return acc;
+            let parsedDate = null;
+            if (typeof dateStr === 'string') {
+                const parts = dateStr.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+                if (parts) parsedDate = new Date(Number(parts[3]), Number(parts[2]) - 1, Number(parts[1]));
+                else {
+                    const dt = new Date(dateStr);
+                    if (!isNaN(dt)) parsedDate = dt;
+                }
+            } else if (dateStr instanceof Date) parsedDate = dateStr;
+            if (!parsedDate) return acc;
+            if (parsedDate >= startDate && parsedDate < endDate) return acc + 1;
+            return acc;
+        }, 0);
+
+        let reunioesMeta = 0;
+        metasData.forEach((metaInfo, chave) => {
+            const [u, ano, mes] = chave.split('-');
+            if (!u || u !== unidade) return;
+            if (ano && mes) {
+                const metaDate = new Date(Number(ano), Number(mes)-1, 1);
+                const metaRangeStart = new Date(metaDate.getFullYear(), metaDate.getMonth(), 1);
+                const metaRangeEnd = new Date(metaDate.getFullYear(), metaDate.getMonth()+1, 1);
+                if (metaRangeStart < endDate && metaRangeEnd > startDate) {
+                    reunioesMeta += (metaInfo.meta_reunioes || 0);
+                }
+            }
+        });
+
+        // CONTRATOS: contar id_fundo em fundosData dentro do periodo
+        const contratosResultado = (fundosData || []).filter(f => f.nm_unidade === unidade && f.dt_contrato && f.dt_contrato >= startDate && f.dt_contrato < endDate).length;
+        let contratosMeta = 0;
+        metasData.forEach((metaInfo, chave) => {
+            const [u, ano, mes] = chave.split('-');
+            if (!u || u !== unidade) return;
+            if (ano && mes) {
+                const metaDate = new Date(Number(ano), Number(mes)-1, 1);
+                const metaRangeStart = new Date(metaDate.getFullYear(), metaDate.getMonth(), 1);
+                const metaRangeEnd = new Date(metaDate.getFullYear(), metaDate.getMonth()+1, 1);
+                if (metaRangeStart < endDate && metaRangeEnd > startDate) {
+                    contratosMeta += (metaInfo.meta_contratos || 0);
+                }
+            }
+        });
+
+        // ADESOES: contar codigo_integrante em allData dentro do periodo
+        const adesoesResultado = (allData || []).filter(d => d.nm_unidade === unidade && d.dt_cadastro_integrante && d.dt_cadastro_integrante >= startDate && d.dt_cadastro_integrante < endDate && d.codigo_integrante && d.codigo_integrante.toString().trim() !== '').length;
+        let adesoesMeta = 0;
+        metasData.forEach((metaInfo, chave) => {
+            const [u, ano, mes] = chave.split('-');
+            if (!u || u !== unidade) return;
+            if (ano && mes) {
+                const metaDate = new Date(Number(ano), Number(mes)-1, 1);
+                const metaRangeStart = new Date(metaDate.getFullYear(), metaDate.getMonth(), 1);
+                const metaRangeEnd = new Date(metaDate.getFullYear(), metaDate.getMonth()+1, 1);
+                if (metaRangeStart < endDate && metaRangeEnd > startDate) {
+                    adesoesMeta += (metaInfo.meta_adesoes || 0);
+                }
+            }
+        });
+
+        // VVR: percentual (usar charts/calculations existentes se quiser precisão por unidade)
+        // Aqui calculamos um valor simplificado: se houver vendas na unidade no período, usar média percentual (realizado/meta_total)
+        let vvrPercent = 0;
+        // tentar encontrar meta_vvr_total e realizado por unidade no periodo
+        let totalRealizado = 0, totalMeta = 0;
+        (allData || []).filter(d => d.nm_unidade === unidade && d.dt_cadastro_integrante && d.dt_cadastro_integrante >= startDate && d.dt_cadastro_integrante < endDate).forEach(d => {
+            totalRealizado += (d.vl_plano || 0);
+        });
+        metasData.forEach((metaInfo, chave) => {
+            const [u, ano, mes] = chave.split('-');
+            if (!u || u !== unidade) return;
+            if (ano && mes) {
+                const metaDate = new Date(Number(ano), Number(mes)-1, 1);
+                const metaRangeStart = new Date(metaDate.getFullYear(), metaDate.getMonth(), 1);
+                const metaRangeEnd = new Date(metaDate.getFullYear(), metaDate.getMonth()+1, 1);
+                if (metaRangeStart < endDate && metaRangeEnd > startDate) {
+                    totalMeta += (metaInfo.meta_vvr_total || 0);
+                }
+            }
+        });
+        if (totalMeta > 0) vvrPercent = totalRealizado / totalMeta;
+
+        return {
+            unidade,
+            leadsPercent: leadsMeta > 0 ? leadsResultado / leadsMeta : 0,
+            reunioesPercent: reunioesMeta > 0 ? reunioesResultado / reunioesMeta : 0,
+            contratosPercent: contratosMeta > 0 ? contratosResultado / contratosMeta : 0,
+            adesoesPercent: adesoesMeta > 0 ? adesoesResultado / adesoesMeta : 0
+        };
+    });
+
+    // Montar linhas para DataTable (apenas porcentagens conforme solicitado)
+    const tableData = rows.map(r => [
+        r.unidade,
+        `${(r.leadsPercent * 100).toFixed(1)}%`,
+        `${(r.reunioesPercent * 100).toFixed(1)}%`,
+        `${(r.contratosPercent * 100).toFixed(1)}%`,
+        `${(r.adesoesPercent * 100).toFixed(1)}%`
+    ]);
+
+    // Inicializar/atualizar DataTable
+    if ($.fn.DataTable.isDataTable('#indicadores-table')) {
+        const dt = $('#indicadores-table').DataTable();
+        dt.clear();
+        dt.rows.add(tableData);
+        dt.draw();
+    } else {
+        $('#indicadores-table').DataTable({
+            data: tableData,
+            columns: [
+                { title: 'Unidade' },
+                { title: 'Leads (%)' },
+                { title: 'Reuniões (%)' },
+                { title: 'Contratos (%)' },
+                { title: 'Adesões (%)' }
+            ],
+            language: { url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json" },
+            dom: 'Bfrtip',
+            buttons: [{
+                extend: 'excelHtml5', text: 'Exportar para Excel', title: `Indicadores_Operacionais_${new Date().toLocaleDateString('pt-BR')}`
+            }]
+        });
+    }
 }
