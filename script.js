@@ -362,6 +362,7 @@ async function fetchAllSalesDataFromSheet() {
         const codigoIntegranteIndex = headers.indexOf("codigo_integrante");
         const nomeIntegranteIndex = headers.indexOf("nm_integrante");
         const idFundoIndex = headers.indexOf("id_fundo");
+        const fundoIndex = headers.indexOf("nm_fundo");  // ✅ ADICIONAR busca do nm_fundo
         const cursoFundoIndex = headers.indexOf("curso_fundo");
         const tipoServicoIndex = headers.indexOf("tp_servico");
         const instituicaoIndex = headers.indexOf("nm_instituicao");
@@ -378,6 +379,7 @@ async function fetchAllSalesDataFromSheet() {
                 codigo_integrante: codigoIntegranteIndex !== -1 ? row[codigoIntegranteIndex] || "N/A" : "N/A",
                 nm_integrante: nomeIntegranteIndex !== -1 ? row[nomeIntegranteIndex] || "N/A" : "N/A",
                 id_fundo: idFundoIndex !== -1 ? row[idFundoIndex] || "N/A" : "N/A",
+                nm_fundo: fundoIndex !== -1 ? row[fundoIndex] || "N/A" : "N/A",  // ✅ ADICIONAR campo nm_fundo
                 curso_fundo: cursoFundoIndex !== -1 ? row[cursoFundoIndex] || "" : "",
                 tp_servico: tipoServicoIndex !== -1 ? row[tipoServicoIndex] || "N/A" : "N/A",
                 nm_instituicao: instituicaoIndex !== -1 ? row[instituicaoIndex] || "N/A" : "N/A",
@@ -1215,8 +1217,39 @@ function updateDashboard() {
     console.log('🔍 Filtros aplicados:');
     console.log('  - Unidades (sempre):', finalSelectedUnidades.length, finalSelectedUnidades);
     console.log('  - Cursos (sempre):', selectedCursos.length, selectedCursos);
-    console.log('  - 🎯 FUNDOS (APENAS página 2):', selectedFundosForFiltering.length, selectedFundosForFiltering);
+    console.log('  - 🎯 FUNDOS (APENAS página 2) - filtrando por nm_fundo:', selectedFundosForFiltering.length, selectedFundosForFiltering);
     console.log('  - Página 2 específicos - TipoAdesao:', selectedTipoAdesao.length, 'TipoServico:', selectedTipoServico.length, 'Instituicao:', selectedInstituicao.length);
+    
+    // 🆕 DEBUG: Verificar se há dados com nm_fundo nos dados de adesões
+    if (currentActivePage === 'page2' && selectedFundosForFiltering.length > 0) {
+        // 🆕 DEBUG DETALHADO: Verificar estrutura real dos dados
+        console.log('🔍 DEBUG ESTRUTURA DOS DADOS:');
+        console.log('📋 ADESÕES - Exemplo de registro completo:', allData[0]);
+        console.log('📋 ADESÕES - Campos relacionados a fundo:');
+        console.log('  - nm_fundo:', allData[0]?.nm_fundo);
+        console.log('  - curso_fundo:', allData[0]?.curso_fundo);
+        
+        const totalAdesoes = allData.length;
+        const adesoesComNmFundo = allData.filter(d => d.nm_fundo && d.nm_fundo !== 'N/A' && d.nm_fundo.trim() !== '').length;
+        const adesoesComCursoFundo = allData.filter(d => d.curso_fundo && d.curso_fundo !== 'N/A' && d.curso_fundo.trim() !== '').length;
+        
+        console.log('� CONTAGEM ADESÕES:');
+        console.log('  - Total adesões:', totalAdesoes);
+        console.log('  - Adesões com nm_fundo válido:', adesoesComNmFundo);
+        console.log('  - Adesões com curso_fundo válido:', adesoesComCursoFundo);
+        
+        console.log('📝 EXEMPLOS nm_fundo (primeiros 10):');
+        allData.slice(0, 10).forEach((d, i) => {
+            console.log(`  [${i}] nm_fundo: "${d.nm_fundo}"`);
+        });
+        
+        console.log('📝 EXEMPLOS curso_fundo (primeiros 10):');
+        allData.slice(0, 10).forEach((d, i) => {
+            console.log(`  [${i}] curso_fundo: "${d.curso_fundo}"`);
+        });
+        
+        console.log('🎯 Filtro de fundos selecionado:', selectedFundosForFiltering);
+    }
     
     const startDateString = document.getElementById("start-date").value;
     const [startYear, startMonth, startDay] = startDateString.split('-').map(Number);
@@ -1236,9 +1269,12 @@ function updateDashboard() {
         const filterLogic = d => {
             const unidadeMatch = finalSelectedUnidades.length === 0 || finalSelectedUnidades.includes(d.nm_unidade);
             const cursoMatch = selectedCursos.length === 0 || (d.curso_fundo && selectedCursos.includes(d.curso_fundo));
-            const fundoMatch = selectedFundosForFiltering.length === 0 || (d.nm_fundo && selectedFundosForFiltering.includes(d.nm_fundo));
             
-            // 🆕 Filtros específicos da página 2 - arrays já estão vazios se não estivermos na página 2
+            // ✅ FILTRO DE FUNDOS: usar nm_fundo (coluna F) para filtrar adesões
+            const fundoMatch = selectedFundosForFiltering.length === 0 || 
+                (d.nm_fundo && selectedFundosForFiltering.includes(d.nm_fundo));
+            
+            // Filtros específicos da página 2
             const tipoAdesaoMatch = selectedTipoAdesao.length === 0 || 
                 (d.venda_posvenda && selectedTipoAdesao.includes(d.venda_posvenda.trim().toUpperCase()));
             
@@ -1255,6 +1291,11 @@ function updateDashboard() {
         dataBrutaFiltrada = allData.filter(d => filterLogic(d) && d.dt_cadastro_integrante >= startDate && d.dt_cadastro_integrante < endDate);
         dataParaGraficoAnual = allData.filter(d => filterLogic(d) && d.dt_cadastro_integrante.getFullYear() === anoVigenteParaGrafico);
         allDataForOtherCharts = allData.filter(filterLogic);
+
+        // ✅ Log simples para verificar filtro de fundos
+        if (currentActivePage === 'page2' && selectedFundosForFiltering.length > 0) {
+            console.log('🎯 FILTRO ATIVO | Fundos:', selectedFundosForFiltering.length, '| Dados antes:', allData.length, '| Dados depois:', allDataForOtherCharts.length);
+        }
 
         // Filtrar dados de fundos usando dt_contrato
         fundosDataFiltrado = fundosData.filter(d => {
@@ -1283,14 +1324,14 @@ function updateDashboard() {
     updateCumulativeVvrChart(allDataForOtherCharts, finalSelectedUnidades);
     updateMonthlyVvrChart(allDataForOtherCharts, finalSelectedUnidades);
     
-    // A chamada para a função corrigida agora passa só um parâmetro
-    updateMonthlyAdesoesChart(allDataForOtherCharts);
+    // ✅ CORREÇÃO CRÍTICA: Gráficos de adesões devem usar dados FILTRADOS
+    updateMonthlyAdesoesChart(allDataForOtherCharts);  // allDataForOtherCharts já é filtrado pela filterLogic
     
     // Todas as chamadas abaixo estão corrigidas e seguras
     updateDrillDownCharts(allDataForOtherCharts);
     updateTicketCharts(allDataForOtherCharts);
     updateContractsCharts(); // 🆕 Sem parâmetro - faz própria filtragem sem período
-    updateAdesoesDrillDownCharts(allDataForOtherCharts);
+    updateAdesoesDrillDownCharts(allDataForOtherCharts);  // ✅ CORREÇÃO: usar dados filtrados
     
     updateConsultorTable(dataBrutaFiltrada);
     updateDetalhadaAdesoesTable(dataBrutaFiltrada);
@@ -2925,13 +2966,29 @@ function updateDependentFilters(selectedUnidades = []) {
     
     // Popular filtro de fundos (apenas se não deve ocultar FUNDOS)
     if (!shouldHideFundos) {
+        console.log('🔧 🎯 POPULANDO FILTRO DE FUNDOS...');
+        console.log('  - dadosFiltrados length:', dadosFiltrados.length);
+        console.log('  - fundosFiltrados length:', fundosFiltrados.length);
+        
         const fundosFromVendas = dadosFiltrados.map((d) => d.nm_fundo || '').filter(f => f && f !== 'N/A');
         const fundosFromFundos = fundosFiltrados.map((d) => d.nm_fundo || '').filter(f => f && f !== 'N/A');
+        
+        console.log('  - fundosFromVendas length:', fundosFromVendas.length);
+        console.log('  - fundosFromVendas examples:', fundosFromVendas.slice(0, 5));
+        console.log('  - fundosFromFundos length:', fundosFromFundos.length);
+        console.log('  - fundosFromFundos examples:', fundosFromFundos.slice(0, 5));
+        
         const fundosUnicos = [...new Set([...fundosFromVendas, ...fundosFromFundos])].sort();
+        console.log('  - fundosUnicos length:', fundosUnicos.length);
+        console.log('  - fundosUnicos:', fundosUnicos);
         
         fundosUnicos.forEach((f) => {
             fundoFilter.append($("<option>", { value: f, text: f }));
         });
+        
+        console.log('🔧 ✅ Filtro de fundos populado com', fundosUnicos.length, 'opções');
+    } else {
+        console.log('🔧 ❌ Filtro de fundos OCULTO (shouldHideFundos = true)');
     }
     
     // 🆕 Popular filtro de tipo de adesão (apenas para página 2)
