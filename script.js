@@ -781,7 +781,8 @@ async function fetchFunilData() {
   }
 }
 
-function processAndCrossReferenceData(salesData) {
+function processAndCrossReferenceData(salesData, startDate, endDate) {
+  // 🔄 Primeiro: Processar dados de vendas
   const vendasPorMesUnidade = salesData.reduce((acc, d) => {
     const year = d.dt_cadastro_integrante.getFullYear();
     const month = String(d.dt_cadastro_integrante.getMonth() + 1).padStart(2, "0");
@@ -799,6 +800,43 @@ function processAndCrossReferenceData(salesData) {
     acc[chave].realizado_adesoes += 1;
     return acc;
   }, {});
+
+  // 🆕 Segundo: Adicionar unidades que só têm metas (sem vendas) DENTRO DO PERÍODO
+  if (metasData && metasData.size > 0 && startDate && endDate) {
+    console.log('🔍 Adicionando unidades só com metas ao período:', startDate, 'até', endDate);
+    
+    metasData.forEach((meta, chaveMeta) => {
+      if (!vendasPorMesUnidade[chaveMeta]) {
+        // Extrair unidade e período da chave (formato: "Unidade-AAAA-MM")
+        const lastDash = chaveMeta.lastIndexOf('-');
+        if (lastDash !== -1) {
+          const secondLastDash = chaveMeta.lastIndexOf('-', lastDash - 1);
+          if (secondLastDash !== -1) {
+            const unidade = chaveMeta.substring(0, secondLastDash);
+            const periodo = chaveMeta.substring(secondLastDash + 1); // AAAA-MM
+            
+            // 🆕 Verificar se a meta está dentro do período selecionado
+            const [ano, mes] = periodo.split('-');
+            const metaDate = new Date(parseInt(ano), parseInt(mes) - 1, 1);
+            
+            if (metaDate >= startDate && metaDate < endDate) {
+              console.log(`✅ Adicionando unidade só com meta: ${unidade} - ${periodo}`);
+              vendasPorMesUnidade[chaveMeta] = {
+                unidade: unidade,
+                periodo: periodo,
+                realizado_vvr: 0,
+                realizado_adesoes: 0,
+              };
+            } else {
+              console.log(`❌ Meta fora do período: ${unidade} - ${periodo} (${metaDate})`);
+            }
+          }
+        }
+      }
+    });
+  }
+
+  // 🔄 Terceiro: Combinar vendas com metas
   return Object.values(vendasPorMesUnidade).map((item) => {
     const chaveMeta = `${item.unidade}-${item.periodo}`;
     const meta = metasData.get(chaveMeta) || {
@@ -1189,7 +1227,7 @@ function updateDashboard() {
     updateFunilIndicators(startDate, endDate, finalSelectedUnidades);
     updateMainKPIs(dataBrutaFiltrada, finalSelectedUnidades, startDate, endDate);
     
-    const dataAgregadaComVendas = processAndCrossReferenceData(dataBrutaFiltrada);
+    const dataAgregadaComVendas = processAndCrossReferenceData(dataBrutaFiltrada, startDate, endDate);
     currentFilteredDataForTable = dataAgregadaComVendas; 
     updateDataTable(dataAgregadaComVendas);
     
