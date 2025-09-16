@@ -1,3 +1,17 @@
+/* Título das sessões principais (igual indicadores operacionais) */
+
+
+.kpi-vvr-title {
+    margin: 0 0 12px 0;
+    color: #adb5bd;
+    font-size: 0.95rem;
+    letter-spacing: 0.06em;
+    font-family: 'Poppins', Arial, sans-serif;
+    font-weight: 600;
+    text-transform: uppercase;
+    border-bottom: 1px solid #555;
+    padding-bottom: 2px;
+}
 body { 
     font-family: 'Poppins', sans-serif; 
     background-color: #212529; 
@@ -881,12 +895,23 @@ body {
             box-sizing: border-box; 
             max-width: 100%;
         }
-        .header, .filters, .kpi-container, .chart-container, .table-container { 
+        .header, .filters, .chart-container, .table-container { 
             grid-column: span 12; 
             background-color: #343A40; 
             padding: 20px; 
             border-radius: 10px; 
             border: 1px solid #495057; 
+            display: flex;
+            flex-direction: column;
+        }
+
+        .kpi-container {
+            grid-column: span 12;
+            background: linear-gradient(180deg, #343a40 0%, #2e363b 100%);
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 12px;
+            border: 1px solid rgba(255,255,255,0.03);
             display: flex;
             flex-direction: column;
         }
@@ -1070,8 +1095,22 @@ body {
         
         .kpi-main-wrapper { display: flex; flex-wrap: wrap; align-items: center; gap: 20px; }
         .kpi-main-cards-container { display: flex; flex-grow: 1; flex-wrap: wrap; gap: 20px; }
-        .kpi-main-card { flex: 1; min-width: 220px; display: flex; flex-direction: column; gap: 8px; border-left: 1px solid #495057; padding-left: 20px; }
-        .kpi-main-card:first-child { border-left: none; padding-left: 0; }
+        .kpi-main-card {
+            flex: 1;
+            min-width: 220px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.03));
+            border-radius: 6px;
+            padding: 12px 14px;
+            align-items: flex-start;
+            justify-content: flex-start;
+            text-align: left;
+            box-shadow: none;
+            border-left: none;
+        }
+        .kpi-main-card:first-child { padding-left: 0; }
         .kpi-card-title { font-size: 0.9em; color: #ADB5BD; font-weight: bold; }
         .kpi-card-value { font-size: 2.1em; font-weight: bold; color: #F8F9FA; }
         .kpi-card-details { font-size: 0.8em; color: #ADB5BD; }
