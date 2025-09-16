@@ -284,6 +284,7 @@ async function initializeDashboard() {
         applyFundosFilterVisibility();
         applyTipoAdesaoFilterVisibility();
         applyTipoServicoFilterVisibility();
+        applyTipoClienteFilterVisibility();
         applyInstituicaoFilterVisibility();
       }, 500);
       
@@ -366,6 +367,7 @@ async function fetchAllSalesDataFromSheet() {
         const cursoFundoIndex = headers.indexOf("curso_fundo");
         const tipoServicoIndex = headers.indexOf("tp_servico");
         const instituicaoIndex = headers.indexOf("nm_instituicao");
+        const tipoClienteIndex = headers.indexOf("tipo_cliente");  // ✅ NOVO: coluna R
 
         return rows.slice(1).map((row) => {
             const dateValue = parseDate(row[dataIndex]);
@@ -383,6 +385,7 @@ async function fetchAllSalesDataFromSheet() {
                 curso_fundo: cursoFundoIndex !== -1 ? row[cursoFundoIndex] || "" : "",
                 tp_servico: tipoServicoIndex !== -1 ? row[tipoServicoIndex] || "N/A" : "N/A",
                 nm_instituicao: instituicaoIndex !== -1 ? row[instituicaoIndex] || "N/A" : "N/A",
+                tipo_cliente: tipoClienteIndex !== -1 ? row[tipoClienteIndex] || "N/A" : "N/A",  // ✅ NOVO: tipo_cliente
             };
         }).filter(Boolean);
     } catch (error) {
@@ -416,6 +419,7 @@ async function fetchFundosData() {
     const tipoServicoIndex = headers.indexOf("tp_servico");
     const instituicaoIndex = headers.indexOf("nm_instituicao");
     const cursoFundoIndex = headers.indexOf("curso_fundo");
+    const tipoClienteIndex = headers.indexOf("tipo_cliente");  // ✅ NOVO: coluna Q
     const dtBaileIndex = headers.indexOf("dt_baile");
 
     if (unidadeIndex === -1 || idFundoIndex === -1 || dtContratoIndex === -1) {
@@ -447,6 +451,7 @@ async function fetchFundosData() {
         instituicao: instituicaoIndex !== -1 ? row[instituicaoIndex] || "N/A" : "N/A",
         dt_baile: dtBaileIndex !== -1 ? parsePtBrDate(row[dtBaileIndex]) : null,
         curso_fundo: cursoFundoIndex !== -1 ? row[cursoFundoIndex] || "" : "",
+        tipo_cliente: tipoClienteIndex !== -1 ? row[tipoClienteIndex] || "N/A" : "N/A",  // ✅ NOVO: tipo_cliente
       };
     }).filter(Boolean);
   } catch (error) {
@@ -1195,7 +1200,7 @@ function updateDashboard() {
     console.log('🔍 Valor BRUTO do filtro de fundos:', selectedFundos);
     
     // 🚨 FILTRO DE FUNDOS - aplicar APENAS na página 2
-    let selectedTipoAdesao, selectedTipoServico, selectedInstituicao, selectedFundosForFiltering;
+    let selectedTipoAdesao, selectedTipoServico, selectedTipoCliente, selectedInstituicao, selectedFundosForFiltering;
     
     // 🔒 VERIFICAÇÃO ROBUSTA: SE NÃO ESTIVERMOS NA PÁGINA 2, FORÇAR FUNDOS VAZIO
     if (currentActivePage !== 'page2') {
@@ -1203,12 +1208,14 @@ function updateDashboard() {
         selectedFundosForFiltering = [];
         selectedTipoAdesao = [];
         selectedTipoServico = [];
+        selectedTipoCliente = [];
         selectedInstituicao = [];
         console.log('🔍 🛑 PÁGINAS 1/3 - FORÇANDO filtro de fundos VAZIO (ignorando valor:', selectedFundos, ')');
     } else {
         // ✅ PÁGINA 2: Aplicar filtro de fundos + filtros específicos
         selectedTipoAdesao = $("#tipo-adesao-filter").val() || [];
         selectedTipoServico = $("#tipo-servico-filter").val() || [];
+        selectedTipoCliente = $("#tipo-cliente-filter").val() || [];
         selectedInstituicao = $("#instituicao-filter").val() || [];
         selectedFundosForFiltering = selectedFundos; // APLICAR filtro de fundos na página 2
         console.log('🔍 ✅ PÁGINA 2 - aplicando filtro de fundos:', selectedFundos);
@@ -1281,10 +1288,13 @@ function updateDashboard() {
             const tipoServicoMatch = selectedTipoServico.length === 0 || 
                 (d.tp_servico && selectedTipoServico.includes(d.tp_servico.trim().toUpperCase()));
             
+            const tipoClienteMatch = selectedTipoCliente.length === 0 || 
+                (d.tipo_cliente && selectedTipoCliente.includes(d.tipo_cliente.trim().toUpperCase()));
+            
             const instituicaoMatch = selectedInstituicao.length === 0 || 
                 (d.nm_instituicao && selectedInstituicao.includes(d.nm_instituicao.trim().toUpperCase()));
             
-            return unidadeMatch && cursoMatch && fundoMatch && tipoAdesaoMatch && tipoServicoMatch && instituicaoMatch;
+            return unidadeMatch && cursoMatch && fundoMatch && tipoAdesaoMatch && tipoServicoMatch && tipoClienteMatch && instituicaoMatch;
         };
         
         // Filtrar dados de adesões
@@ -1307,11 +1317,14 @@ function updateDashboard() {
             const tipoServicoMatch = selectedTipoServico.length === 0 || 
                 (d.tipo_servico && selectedTipoServico.includes(d.tipo_servico.trim().toUpperCase()));
             
+            const tipoClienteMatch = selectedTipoCliente.length === 0 || 
+                (d.tipo_cliente && selectedTipoCliente.includes(d.tipo_cliente.trim().toUpperCase()));
+            
             const instituicaoMatch = selectedInstituicao.length === 0 || 
                 (d.instituicao && selectedInstituicao.includes(d.instituicao.trim().toUpperCase()));
             
             const dateMatch = d.dt_contrato && d.dt_contrato >= startDate && d.dt_contrato < endDate;
-            return unidadeMatch && cursoMatch && fundoMatch && tipoServicoMatch && instituicaoMatch && dateMatch;
+            return unidadeMatch && cursoMatch && fundoMatch && tipoServicoMatch && tipoClienteMatch && instituicaoMatch && dateMatch;
         });
 
         const sDPY = new Date(startDate); sDPY.setFullYear(sDPY.getFullYear() - 1);
@@ -1904,7 +1917,7 @@ function updateContractsCharts() {
     console.log('  - Fundos BRUTO:', selectedFundos);
     
     // 🚨 FILTRO DE FUNDOS - aplicar APENAS na página 2
-    let selectedTipoServico, selectedInstituicao, selectedFundosForCharts;
+    let selectedTipoServico, selectedTipoCliente, selectedInstituicao, selectedFundosForCharts;
     
     const currentActivePage = document.getElementById('btn-page2')?.classList.contains('active') ? 'page2' : 'other';
     
@@ -1912,16 +1925,19 @@ function updateContractsCharts() {
     if (currentActivePage !== 'page2') {
         // 🛑 FORÇAR filtro de fundos como vazio nas páginas 1 e 3
         selectedTipoServico = [];
+        selectedTipoCliente = [];
         selectedInstituicao = [];
         selectedFundosForCharts = [];
         console.log('📊 🛑 updateContractsCharts - PÁGINAS 1/3 - FORÇANDO fundos VAZIO (ignorando:', selectedFundos, ')');
     } else {
         // ✅ PÁGINA 2: Aplicar filtro de fundos + filtros específicos
         selectedTipoServico = $("#tipo-servico-filter").val() || [];
+        selectedTipoCliente = $("#tipo-cliente-filter").val() || [];
         selectedInstituicao = $("#instituicao-filter").val() || [];
         selectedFundosForCharts = selectedFundos;
         console.log('📊 ✅ updateContractsCharts - PÁGINA 2 - aplicando filtro de fundos:', selectedFundos);
         console.log('  - Tipo Serviço:', selectedTipoServico);
+        console.log('  - Tipo Cliente:', selectedTipoCliente);
         console.log('  - Instituição:', selectedInstituicao);
     }
     
@@ -1936,10 +1952,13 @@ function updateContractsCharts() {
         const tipoServicoMatch = selectedTipoServico.length === 0 || 
             (d.tipo_servico && selectedTipoServico.includes(d.tipo_servico.trim().toUpperCase()));
         
+        const tipoClienteMatch = selectedTipoCliente.length === 0 || 
+            (d.tipo_cliente && selectedTipoCliente.includes(d.tipo_cliente.trim().toUpperCase()));
+        
         const instituicaoMatch = selectedInstituicao.length === 0 || 
             (d.instituicao && selectedInstituicao.includes(d.instituicao.trim().toUpperCase()));
         
-        return unidadeMatch && cursoMatch && fundoMatch && tipoServicoMatch && instituicaoMatch;
+        return unidadeMatch && cursoMatch && fundoMatch && tipoServicoMatch && tipoClienteMatch && instituicaoMatch;
     });
     
     console.log('📊 updateContractsCharts - dados filtrados:', fundosParaGraficos.length, 'contratos');
@@ -2133,6 +2152,7 @@ function addEventListeners() {
                 // Limpar seleções dos filtros específicos da página 2 SILENCIOSAMENTE
                 $("#tipo-adesao-filter").val([]);
                 $("#tipo-servico-filter").val([]);
+                $("#tipo-cliente-filter").val([]);
                 $("#instituicao-filter").val([]);
                 
                 // Atualizar o multiselect SILENCIOSAMENTE (sem triggers)
@@ -2142,6 +2162,9 @@ function addEventListeners() {
                     }
                     if ($("#tipo-servico-filter").data('multiselect')) {
                         $("#tipo-servico-filter").multiselect('refresh');
+                    }
+                    if ($("#tipo-cliente-filter").data('multiselect')) {
+                        $("#tipo-cliente-filter").multiselect('refresh');
                     }
                     if ($("#instituicao-filter").data('multiselect')) {
                         $("#instituicao-filter").multiselect('refresh');
@@ -2188,6 +2211,7 @@ function addEventListeners() {
                 applyFundosFilterVisibility();
                 applyTipoAdesaoFilterVisibility();
                 applyTipoServicoFilterVisibility();
+                applyTipoClienteFilterVisibility();
                 applyInstituicaoFilterVisibility();
                 
                 // 🆕 🎯 LIMPEZA ADICIONAL: Se entramos numa página que NÃO é a 2, garantir que fundos está vazio
@@ -2573,6 +2597,124 @@ function applyTipoServicoFilterVisibility() {
         }
     } else {
         console.log('🔧 ❌ tipoServicoFilterContainer não encontrado');
+    }
+}
+
+// 🆕 Função para controlar visibilidade do filtro Tipo de Cliente (só página 2)
+function applyTipoClienteFilterVisibility() {
+    const tipoClienteFilterContainer = document.getElementById('tipo-cliente-filter-container');
+    
+    if (tipoClienteFilterContainer) {
+        const currentActivePage = document.getElementById('btn-page2')?.classList.contains('active') ? 'page2' : 'other';
+        
+        if (currentActivePage === 'page2') {
+            tipoClienteFilterContainer.style.display = 'block';
+            tipoClienteFilterContainer.style.visibility = 'visible';
+            console.log('👥 ✅ TIPO CLIENTE mostrado para página 2');
+            
+            const tipoClienteFilter = $('#tipo-cliente-filter');
+            
+            // População similar ao tipo serviço
+            setTimeout(() => {
+                const tiposCliente = new Set();
+                
+                // Buscar dados de ADESÕES
+                if (allData && allData.length > 0) {
+                    allData.forEach(d => {
+                        if (d.tipo_cliente && d.tipo_cliente !== 'N/A' && d.tipo_cliente.trim() !== '') {
+                            tiposCliente.add(d.tipo_cliente.trim().toUpperCase());
+                        }
+                    });
+                    console.log('👥 Tipos de cliente encontrados em ADESÕES:', tiposCliente.size);
+                }
+                
+                // Buscar dados de FUNDOS
+                if (fundosData && fundosData.length > 0) {
+                    fundosData.forEach(d => {
+                        if (d.tipo_cliente && d.tipo_cliente !== 'N/A' && d.tipo_cliente.trim() !== '') {
+                            tiposCliente.add(d.tipo_cliente.trim().toUpperCase());
+                        }
+                    });
+                    console.log('👥 Tipos de cliente encontrados em FUNDOS:', tiposCliente.size);
+                }
+                
+                if (tiposCliente.size > 0) {
+                    tipoClienteFilter.empty();
+                    
+                    const tiposClienteUnicos = [...tiposCliente].sort();
+                    console.log('👥 Tipos de Cliente ÚNICOS encontrados:', tiposClienteUnicos);
+                    
+                    tiposClienteUnicos.forEach((t) => {
+                        tipoClienteFilter.append($("<option>", { value: t, text: t }));
+                        console.log('👥 Adicionando opção Tipo Cliente:', t);
+                    });
+                } else {
+                    console.log('👥 ❌ Nenhum tipo de cliente encontrado');
+                }
+            }, 50);
+            
+            // Reinicializar multiselect
+            setTimeout(() => {
+                console.log('👥 Reinicializando multiselect do TIPO CLIENTE...');
+                try {
+                    if (tipoClienteFilter.data('multiselect')) {
+                        tipoClienteFilter.multiselect('destroy');
+                    }
+                    
+                    tipoClienteFilter.multiselect({
+                        includeSelectAllOption: true,
+                        selectAllText: "Marcar todos",
+                        allSelectedText: "Todos os tipos",
+                        nonSelectedText: "Todos os tipos",
+                        enableFiltering: false,
+                        buttonWidth: '100%',
+                        maxHeight: 300,
+                        numberDisplayed: 2,
+                        onChange: function(option, checked) {
+                            console.log('👥 Tipo Cliente filter changed:', option, 'checked:', checked);
+                            const currentPage = document.getElementById('btn-page2')?.classList.contains('active') ? 'page2' : 'other';
+                            console.log('👥 Página detectada no onChange:', currentPage);
+                            if (currentPage === 'page2') {
+                                console.log('👥 ✅ Atualizando dashboard...');
+                                updateDashboard();
+                            } else {
+                                console.log('👥 ❌ Ignorando mudança de filtro - não estamos na página 2');
+                            }
+                        },
+                        onSelectAll: function() {
+                            console.log('👥 Tipo Cliente - MARCAR TODOS acionado');
+                            const currentPage = document.getElementById('btn-page2')?.classList.contains('active') ? 'page2' : 'other';
+                            if (currentPage === 'page2') {
+                                console.log('👥 ✅ Atualizando dashboard (selectAll)...');
+                                updateDashboard();
+                            } else {
+                                console.log('👥 ❌ Ignorando selectAll - não estamos na página 2');
+                            }
+                        },
+                        onDeselectAll: function() {
+                            console.log('👥 Tipo Cliente - DESMARCAR TODOS acionado');
+                            const currentPage = document.getElementById('btn-page2')?.classList.contains('active') ? 'page2' : 'other';
+                            if (currentPage === 'page2') {
+                                console.log('👥 ✅ Atualizando dashboard (deselectAll)...');
+                                updateDashboard();
+                            } else {
+                                console.log('👥 ❌ Ignorando deselectAll - não estamos na página 2');
+                            }
+                        }
+                    });
+                    console.log('👥 ✅ Multiselect TIPO CLIENTE reinicializado com sucesso');
+                } catch (error) {
+                    console.error('👥 ❌ Erro ao reinicializar multiselect TIPO CLIENTE:', error);
+                }
+            }, 100);
+            
+        } else {
+            tipoClienteFilterContainer.style.display = 'none';
+            tipoClienteFilterContainer.style.visibility = 'hidden';
+            console.log('👥 ✅ TIPO CLIENTE FORÇADO PARA OCULTO');
+        }
+    } else {
+        console.log('👥 ❌ tipoClienteFilterContainer não encontrado');
     }
 }
 
