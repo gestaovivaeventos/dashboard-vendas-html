@@ -2301,8 +2301,8 @@ function applyTipoAdesaoFilterVisibility() {
                     tipoAdesaoFilter.multiselect({
                         includeSelectAllOption: true,
                         selectAllText: "Marcar todos",
-                        allSelectedText: "Todos selecionados",
-                        noneSelectedText: "Selecionar tipo...",
+                        allSelectedText: "Todos os tipos",
+                        nonSelectedText: "Todos os tipos",
                         enableFiltering: false,
                         buttonWidth: '100%',
                         maxHeight: 300,
@@ -2317,6 +2317,26 @@ function applyTipoAdesaoFilterVisibility() {
                                 updateDashboard();
                             } else {
                                 console.log('🔧 ❌ Ignorando mudança de filtro - não estamos na página 2');
+                            }
+                        },
+                        onSelectAll: function() {
+                            console.log('🔧 Tipo Adesão - MARCAR TODOS acionado');
+                            const currentPage = document.getElementById('btn-page2')?.classList.contains('active') ? 'page2' : 'other';
+                            if (currentPage === 'page2') {
+                                console.log('🔧 ✅ Atualizando dashboard (selectAll)...');
+                                updateDashboard();
+                            } else {
+                                console.log('🔧 ❌ Ignorando selectAll - não estamos na página 2');
+                            }
+                        },
+                        onDeselectAll: function() {
+                            console.log('🔧 Tipo Adesão - DESMARCAR TODOS acionado');
+                            const currentPage = document.getElementById('btn-page2')?.classList.contains('active') ? 'page2' : 'other';
+                            if (currentPage === 'page2') {
+                                console.log('🔧 ✅ Atualizando dashboard (deselectAll)...');
+                                updateDashboard();
+                            } else {
+                                console.log('🔧 ❌ Ignorando deselectAll - não estamos na página 2');
                             }
                         }
                     });
@@ -2417,8 +2437,8 @@ function applyTipoServicoFilterVisibility() {
                     tipoServicoFilter.multiselect({
                         includeSelectAllOption: true,
                         selectAllText: "Marcar todos",
-                        allSelectedText: "Todos selecionados",
-                        noneSelectedText: "Selecionar tipo...",
+                        allSelectedText: "Todos os tipos",
+                        nonSelectedText: "Todos os tipos",
                         enableFiltering: false,
                         buttonWidth: '100%',
                         maxHeight: 300,
@@ -2551,14 +2571,17 @@ function applyInstituicaoFilterVisibility() {
                     
                     // Recriar multiselect
                     instituicaoFilter.multiselect({
+                        enableFiltering: true,
                         includeSelectAllOption: true,
                         selectAllText: "Marcar todos",
-                        allSelectedText: "Todos selecionados",
-                        noneSelectedText: "Selecionar instituição...",
-                        enableFiltering: false,
+                        filterPlaceholder: "Pesquisar...",
+                        allSelectedText: "Todas as instituições",
+                        nonSelectedText: "Todas as instituições",
                         buttonWidth: '100%',
                         maxHeight: 300,
                         numberDisplayed: 2,
+                        enableCaseInsensitiveFiltering: true,
+                        filterBehavior: 'text',
                         onChange: function(option, checked) {
                             console.log('🔧 Instituição filter changed:', option, 'checked:', checked);
                             // Só atualizar se estivermos na página 2
@@ -3073,8 +3096,8 @@ function updateDependentFilters(selectedUnidades = []) {
         tipoAdesaoFilter.multiselect({
             includeSelectAllOption: true,
             selectAllText: "Marcar todos",
-            allSelectedText: "Todos selecionados",
-            nonSelectedText: "Selecionar tipo...",
+            allSelectedText: "Todos os tipos",
+            nonSelectedText: "Todos os tipos",
             nSelectedText: "tipos",
             buttonWidth: "100%",
             maxHeight: 300,
@@ -4027,6 +4050,124 @@ function populateFilters(selectedUnidades = []) {
 
             console.log('✅ Filtros do funil configurados para usuário único');
         }
+    }
+
+    // 🆕 INICIALIZAÇÃO DOS FILTROS TIPO SERVIÇO E INSTITUIÇÃO
+    // Adicionar inicialização básica para mostrar texto padrão correto
+    const tipoServicoFilter = $("#tipo-servico-filter");
+    const instituicaoFilter = $("#instituicao-filter");
+    
+    try {
+        console.log('🔧 Inicializando filtros Tipo Serviço e Instituição com texto padrão...');
+        
+        // Inicializar Tipo Serviço com texto padrão
+        if (tipoServicoFilter.length && !tipoServicoFilter.data('multiselect')) {
+            tipoServicoFilter.multiselect({
+                includeSelectAllOption: true,
+                selectAllText: "Marcar todos",
+                allSelectedText: "Todos os tipos",
+                nonSelectedText: "Todos os tipos",
+                enableFiltering: false,
+                buttonWidth: '100%',
+                maxHeight: 300,
+                numberDisplayed: 2,
+                onChange: function() {
+                    // Só atualizar se estivermos na página 2
+                    const currentPage = document.getElementById('btn-page2')?.classList.contains('active') ? 'page2' : 'other';
+                    if (currentPage === 'page2') {
+                        updateDashboard();
+                    }
+                },
+                onSelectAll: function() {
+                    const currentPage = document.getElementById('btn-page2')?.classList.contains('active') ? 'page2' : 'other';
+                    if (currentPage === 'page2') {
+                        updateDashboard();
+                    }
+                },
+                onDeselectAll: function() {
+                    const currentPage = document.getElementById('btn-page2')?.classList.contains('active') ? 'page2' : 'other';
+                    if (currentPage === 'page2') {
+                        updateDashboard();
+                    }
+                }
+            });
+            console.log('✅ Filtro Tipo Serviço inicializado com texto padrão');
+        }
+        
+        // Inicializar Instituição com texto padrão
+        if (instituicaoFilter.length && !instituicaoFilter.data('multiselect')) {
+            instituicaoFilter.multiselect({
+                enableFiltering: true,
+                includeSelectAllOption: true,
+                selectAllText: "Marcar todos",
+                filterPlaceholder: "Pesquisar...",
+                allSelectedText: "Todas as instituições",
+                nonSelectedText: "Todas as instituições",
+                buttonWidth: '100%',
+                maxHeight: 300,
+                numberDisplayed: 2,
+                enableCaseInsensitiveFiltering: true,
+                filterBehavior: 'text',
+                onChange: function() {
+                    // Só atualizar se estivermos na página 2
+                    const currentPage = document.getElementById('btn-page2')?.classList.contains('active') ? 'page2' : 'other';
+                    if (currentPage === 'page2') {
+                        updateDashboard();
+                    }
+                },
+                onSelectAll: function() {
+                    const currentPage = document.getElementById('btn-page2')?.classList.contains('active') ? 'page2' : 'other';
+                    if (currentPage === 'page2') {
+                        updateDashboard();
+                    }
+                },
+                onDeselectAll: function() {
+                    const currentPage = document.getElementById('btn-page2')?.classList.contains('active') ? 'page2' : 'other';
+                    if (currentPage === 'page2') {
+                        updateDashboard();
+                    }
+                }
+            });
+            console.log('✅ Filtro Instituição inicializado com texto padrão');
+        }
+        
+        // Inicializar Tipo de Adesão com texto padrão
+        const tipoAdesaoFilter = $("#tipo-adesao-filter");
+        if (tipoAdesaoFilter.length && !tipoAdesaoFilter.data('multiselect')) {
+            tipoAdesaoFilter.multiselect({
+                includeSelectAllOption: true,
+                selectAllText: "Marcar todos",
+                allSelectedText: "Todos os tipos",
+                nonSelectedText: "Todos os tipos",
+                enableFiltering: false,
+                buttonWidth: '100%',
+                maxHeight: 300,
+                numberDisplayed: 2,
+                onChange: function() {
+                    // Só atualizar se estivermos na página 2
+                    const currentPage = document.getElementById('btn-page2')?.classList.contains('active') ? 'page2' : 'other';
+                    if (currentPage === 'page2') {
+                        updateDashboard();
+                    }
+                },
+                onSelectAll: function() {
+                    const currentPage = document.getElementById('btn-page2')?.classList.contains('active') ? 'page2' : 'other';
+                    if (currentPage === 'page2') {
+                        updateDashboard();
+                    }
+                },
+                onDeselectAll: function() {
+                    const currentPage = document.getElementById('btn-page2')?.classList.contains('active') ? 'page2' : 'other';
+                    if (currentPage === 'page2') {
+                        updateDashboard();
+                    }
+                }
+            });
+            console.log('✅ Filtro Tipo de Adesão inicializado com texto padrão');
+        }
+        
+    } catch (error) {
+        console.error('❌ Erro ao inicializar filtros básicos:', error);
     }
 
     // Define as datas padrão
