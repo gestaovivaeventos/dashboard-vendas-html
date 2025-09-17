@@ -2040,12 +2040,49 @@ function updateMonthlyVvrChart(historicalData, selectedUnidades) {
         salesByYearMonth[year][month] += d.vl_plano;
     });
 
-    const colors = ["#ffc107", "#FF6600", "#6c757d", "#28a745", "#dc3545", "#17a2b8", "#fd7e14"];
+    // Gera a paleta cinza -> amarelo saturado -> laranja (reutiliza a mesma lógica do chart de adesões)
+    function hexToRgb(hex) {
+        const m = hex.replace('#','');
+        return [parseInt(m.substring(0,2),16), parseInt(m.substring(2,4),16), parseInt(m.substring(4,6),16)];
+    }
+    function rgbToHex(r,g,b){
+        return '#'+[r,g,b].map(v=>v.toString(16).padStart(2,'0')).join('');
+    }
+    function generateThreeStopScale(startHex, midHex, endHex, steps){
+        if (steps <= 1) return [endHex];
+        const start = hexToRgb(startHex);
+        const mid = hexToRgb(midHex);
+        const end = hexToRgb(endHex);
+        const out = [];
+        for(let i=0;i<steps;i++){
+            const t = i/(steps-1);
+            if (t <= 0.5) {
+                const localT = t / 0.5;
+                const r = Math.round(start[0] + (mid[0]-start[0]) * localT);
+                const g = Math.round(start[1] + (mid[1]-start[1]) * localT);
+                const b = Math.round(start[2] + (mid[2]-start[2]) * localT);
+                out.push(rgbToHex(r,g,b));
+            } else {
+                const localT = (t-0.5) / 0.5;
+                const r = Math.round(mid[0] + (end[0]-mid[0]) * localT);
+                const g = Math.round(mid[1] + (end[1]-mid[1]) * localT);
+                const b = Math.round(mid[2] + (end[2]-mid[2]) * localT);
+                out.push(rgbToHex(r,g,b));
+            }
+        }
+        return out;
+    }
+
+    const baseGray = '#6c757d';
+    const midYellow = '#FFB300';
+    const baseOrange = '#FF6600';
+    const palette = generateThreeStopScale(baseGray, midYellow, baseOrange, uniqueYears.length || 1);
+
     const datasets = uniqueYears.map((year, index) => ({
         label: year,
         data: salesByYearMonth[year] || Array(12).fill(0),
-        borderColor: colors[index % colors.length],
-        backgroundColor: colors[index % colors.length] + "33",
+        borderColor: palette[index % palette.length],
+        backgroundColor: palette[index % palette.length] + "33",
         fill: true,
         tension: 0.1,
         hidden: !activeYears.includes(year),
@@ -5507,11 +5544,52 @@ function updateMonthlyAdesoesChart(filteredData) {
     }
 
     const activeYears = Array.from(selectorContainer.querySelectorAll("button.active")).map((btn) => parseInt(btn.dataset.year));
-    const colors = ["#6c757d", "#28a745", "#dc3545", "#ffc107", "#007bff", "#17a2b8", "#fd7e14"];
+
+    // Gera uma paleta monotônica do cinza (#6c757d) até o laranja padrão (#FF6600)
+    function hexToRgb(hex) {
+        const m = hex.replace('#','');
+        return [parseInt(m.substring(0,2),16), parseInt(m.substring(2,4),16), parseInt(m.substring(4,6),16)];
+    }
+    function rgbToHex(r,g,b){
+        return '#'+[r,g,b].map(v=>v.toString(16).padStart(2,'0')).join('');
+    }
+    function generateThreeStopScale(startHex, midHex, endHex, steps){
+        // If only 1 step, return the end color (more visible)
+        if (steps <= 1) return [endHex];
+        const start = hexToRgb(startHex);
+        const mid = hexToRgb(midHex);
+        const end = hexToRgb(endHex);
+        const out = [];
+        for(let i=0;i<steps;i++){
+            const t = i/(steps-1);
+            // decide se estamos na metade inferior ou superior
+            if (t <= 0.5) {
+                const localT = t / 0.5; // 0..1
+                const r = Math.round(start[0] + (mid[0]-start[0]) * localT);
+                const g = Math.round(start[1] + (mid[1]-start[1]) * localT);
+                const b = Math.round(start[2] + (mid[2]-start[2]) * localT);
+                out.push(rgbToHex(r,g,b));
+            } else {
+                const localT = (t-0.5) / 0.5; // 0..1
+                const r = Math.round(mid[0] + (end[0]-mid[0]) * localT);
+                const g = Math.round(mid[1] + (end[1]-mid[1]) * localT);
+                const b = Math.round(mid[2] + (end[2]-mid[2]) * localT);
+                out.push(rgbToHex(r,g,b));
+            }
+        }
+        return out;
+    }
+
+    const baseGray = '#6c757d';
+    // Amarelo intermediário mais saturado para melhor contraste
+    const midYellow = '#FFB300';
+    const baseOrange = '#FF6600';
+    const palette = generateThreeStopScale(baseGray, midYellow, baseOrange, uniqueYears.length || 1);
+
     const datasets = uniqueYears.map((year, index) => ({
         label: year,
         data: adesoesByYearMonth[year] || Array(12).fill(0),
-        backgroundColor: colors[index % colors.length],
+        backgroundColor: palette[index % palette.length],
         hidden: !activeYears.includes(parseInt(year)),
     }));
 
@@ -5525,6 +5603,14 @@ function updateMonthlyAdesoesChart(filteredData) {
             interaction: { mode: "index", intersect: false },
             plugins: {
                 tooltip: {
+                    displayColors: true,
+                    usePointStyle: true,
+                    padding: 12,
+                    backgroundColor: 'rgba(0,0,0,0.85)',
+                    titleFont: { family: 'Poppins, Arial, sans-serif', size: 16, weight: '600' },
+                    bodyFont: { family: 'Poppins, Arial, sans-serif', size: 18, weight: '700' },
+                    footerFont: { family: 'Poppins, Arial, sans-serif', size: 16, weight: '600' },
+                    cornerRadius: 6,
                     callbacks: {
                         label: function (context) {
                             let label = context.dataset.label || "";
@@ -5535,14 +5621,38 @@ function updateMonthlyAdesoesChart(filteredData) {
                     },
                 },
                 datalabels: {
-                    display: true, align: "center", anchor: "center", color: "#FFFFFF", font: { size: 14, weight: "bold" },
-                    formatter: (value) => (value > 0 ? value : ""),
+                    display: true,
+                    align: "center",
+                    anchor: "center",
+                    color: "#FFFFFF",
+                    font: { family: 'Poppins, Arial, sans-serif', size: 16, weight: "700" },
+                    formatter: (value) => {
+                        if (!value || value === 0) return "";
+                        const num = Number(value);
+                        if (Math.abs(num) >= 1000000) return (num / 1000000).toFixed(1).replace('.0','') + ' mi';
+                        if (Math.abs(num) >= 1000) return (num / 1000).toFixed(1).replace('.0','') + 'k';
+                        return num.toString();
+                    },
                 },
             },
             scales: {
                 y: {
                     beginAtZero: true,
-                    ticks: { callback: function (value) { return value >= 1000 ? value / 1000 + " mil" : value; } },
+                    ticks: {
+                        font: { family: 'Poppins, Arial, sans-serif', size: 16 },
+                        color: '#adb5bd',
+                        callback: function (value) {
+                            const num = Number(value);
+                            if (Math.abs(num) >= 1000000) return (num / 1000000).toFixed(1).replace('.0','') + ' mi';
+                            if (Math.abs(num) >= 1000) return (num / 1000).toFixed(1).replace('.0','') + 'k';
+                            return num;
+                        }
+                    },
+                    grid: { color: 'rgba(255,255,255,0.04)' },
+                },
+                x: {
+                    ticks: { font: { family: 'Poppins, Arial, sans-serif', size: 16 }, color: '#adb5bd' },
+                    grid: { color: 'rgba(255,255,255,0.04)' },
                 },
             },
         },
@@ -5583,23 +5693,60 @@ function updateAdesoesDrillDownCharts(filteredData) {
             interaction: { mode: "y", intersect: false },
             maintainAspectRatio: false,
             indexAxis: "y",
-            scales: { x: { stacked: true }, y: { stacked: true } },
+            scales: {
+                x: {
+                    stacked: true,
+                    ticks: {
+                        font: { family: 'Poppins, Arial, sans-serif', size: 16 },
+                        color: '#adb5bd',
+                        callback: function(value) {
+                            const num = Number(value);
+                            if (Math.abs(num) >= 1000000) return (num / 1000000).toFixed(1).replace('.0','') + ' mi';
+                            if (Math.abs(num) >= 1000) return (num / 1000).toFixed(1).replace('.0','') + 'k';
+                            return num.toString();
+                        }
+                    },
+                    grid: { color: 'rgba(255,255,255,0.04)' },
+                },
+                y: {
+                    stacked: true,
+                    ticks: { font: { family: 'Poppins, Arial, sans-serif', size: 16 }, color: '#adb5bd' }
+                }
+            },
             plugins: {
                 datalabels: {
-                    color: "white", font: { weight: "bold" },
-                    formatter: (value) => (value > 0 ? value : ""),
+                    color: "white", font: { family: 'Poppins, Arial, sans-serif', size: 16, weight: '700' },
+                    formatter: (value) => {
+                        if (!value || value === 0) return "";
+                        const num = Number(value);
+                        if (Math.abs(num) >= 1000000) return (num / 1000000).toFixed(1).replace('.0','') + ' mi';
+                        if (Math.abs(num) >= 1000) return (num / 1000).toFixed(1).replace('.0','') + 'k';
+                        return num.toString();
+                    },
                 },
                 tooltip: {
+                    displayColors: true,
+                    usePointStyle: true,
+                    padding: 12,
+                    backgroundColor: 'rgba(0,0,0,0.85)',
+                    titleFont: { family: 'Poppins, Arial, sans-serif', size: 16, weight: '600' },
+                    bodyFont: { family: 'Poppins, Arial, sans-serif', size: 18, weight: '700' },
+                    footerFont: { family: 'Poppins, Arial, sans-serif', size: 16, weight: '600' },
+                    cornerRadius: 6,
                     callbacks: {
                         label: function (context) {
                             let label = context.dataset.label || "";
                             if (label) { label += ": "; }
-                            if (context.parsed.x !== null) { label += context.parsed.x; }
+                            const v = context.parsed.x;
+                            if (v !== null && v !== undefined) {
+                                const num = Number(v);
+                                label += num.toLocaleString('pt-BR');
+                            }
                             return label;
                         },
                         footer: function (tooltipItems) {
                             let sum = tooltipItems.reduce((acc, item) => acc + item.parsed.x, 0);
-                            return "Total: " + sum;
+                            return 'Total: ' + sum.toLocaleString('pt-BR');
                         },
                     },
                 },
@@ -5655,23 +5802,67 @@ function drawMonthlyAdesoesDetailChart(data, year) {
             devicePixelRatio: window.devicePixelRatio,
             interaction: { mode: "index", intersect: false },
             maintainAspectRatio: false,
-            scales: { x: { stacked: true }, y: { stacked: true } },
+            scales: {
+                x: {
+                    stacked: true,
+                    ticks: { font: { family: 'Poppins, Arial, sans-serif', size: 16 }, color: '#adb5bd' },
+                    grid: { color: 'rgba(255,255,255,0.04)' },
+                },
+                y: {
+                    stacked: true,
+                    ticks: {
+                        font: { family: 'Poppins, Arial, sans-serif', size: 16 },
+                        color: '#adb5bd',
+                        callback: function(value) {
+                            const num = Number(value);
+                            if (Math.abs(num) >= 1000000) return (num / 1000000).toFixed(1).replace('.0','') + ' mi';
+                            if (Math.abs(num) >= 1000) return (num / 1000).toFixed(1).replace('.0','') + 'k';
+                            return num;
+                        }
+                    },
+                    grid: { color: 'rgba(255,255,255,0.04)' },
+                }
+            },
             plugins: {
                 datalabels: {
-                    color: "white", font: { weight: "bold" },
-                    formatter: (value) => (value > 0 ? value : ""),
+                    display: true,
+                    color: "#FFFFFF",
+                    align: "center",
+                    anchor: "center",
+                    clip: true,
+                    font: { family: 'Poppins, Arial, sans-serif', size: 16, weight: '700' },
+                    formatter: (value) => {
+                        if (!value || value === 0) return "";
+                        const num = Number(value);
+                        if (Math.abs(num) >= 1000000) return (num / 1000000).toFixed(1).replace('.0','') + ' mi';
+                        if (Math.abs(num) >= 1000) return (num / 1000).toFixed(1).replace('.0','') + 'k';
+                        return num.toString();
+                    },
                 },
                 tooltip: {
+                    displayColors: true,
+                    usePointStyle: true,
+                    padding: 12,
+                    backgroundColor: 'rgba(0,0,0,0.85)',
+                    titleFont: { family: 'Poppins, Arial, sans-serif', size: 16, weight: '600' },
+                    bodyFont: { family: 'Poppins, Arial, sans-serif', size: 18, weight: '700' },
+                    footerFont: { family: 'Poppins, Arial, sans-serif', size: 16, weight: '600' },
+                    cornerRadius: 6,
                     callbacks: {
                         label: function (context) {
                             let label = context.dataset.label || "";
                             if (label) { label += ": "; }
-                            if (context.parsed.y !== null) { label += context.parsed.y; }
+                            const v = context.parsed.y;
+                            if (v !== null && v !== undefined) {
+                                const num = Number(v);
+                                // show integer in tooltip but keep pt-BR formatting
+                                label += num.toLocaleString('pt-BR');
+                            }
                             return label;
                         },
                         footer: function (tooltipItems) {
                             let sum = tooltipItems.reduce((acc, item) => acc + item.parsed.y, 0);
-                            return "Total: " + sum;
+                            return 'Total: ' + sum.toLocaleString('pt-BR');
                         },
                     },
                 },
