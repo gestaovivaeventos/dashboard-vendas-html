@@ -1911,7 +1911,7 @@ function updateCumulativeVvrChart(historicalData, selectedUnidades) {
         salesByYearMonth[year][month] += d.vl_plano;
     });
     
-    const colors = ["#ffc107", "#FF6600", "#FFB380", "#28a745", "#dc3545", "#17a2b8", "#fd7e14"];
+    const colors = ["#ffc107", "#FF6600", "#6c757d", "#28a745", "#dc3545", "#17a2b8", "#fd7e14"];
     const datasets = uniqueYears.map((year, index) => {
         const monthlyData = salesByYearMonth[year] || Array(12).fill(0);
         const cumulativeData = monthlyData.reduce((acc, val) => [...acc, (acc.length > 0 ? acc[acc.length - 1] : 0) + val], []);
@@ -2040,7 +2040,7 @@ function updateMonthlyVvrChart(historicalData, selectedUnidades) {
         salesByYearMonth[year][month] += d.vl_plano;
     });
 
-    const colors = ["#ffc107", "#FF6600", "#FFB380", "#28a745", "#dc3545", "#17a2b8", "#fd7e14"];
+    const colors = ["#ffc107", "#FF6600", "#6c757d", "#28a745", "#dc3545", "#17a2b8", "#fd7e14"];
     const datasets = uniqueYears.map((year, index) => ({
         label: year,
         data: salesByYearMonth[year] || Array(12).fill(0),
@@ -2137,7 +2137,7 @@ function updateDrillDownCharts(filteredData) {
         data: {
             labels: years,
             datasets: [
-                { label: "Pós Venda", data: posVendasAnual, backgroundColor: "#FFB380" },
+                { label: "Pós Venda", data: posVendasAnual, backgroundColor: "#6c757d" },
                 { label: "Venda", data: vendasAnual, backgroundColor: "#FF6600" },
             ],
         },
@@ -2260,7 +2260,7 @@ function drawMonthlyDetailChart(data, year) {
         data: {
             labels: monthLabels,
             datasets: [
-                { label: "Pós Venda", data: posVendasMensal, backgroundColor: "#FFB380" },
+                { label: "Pós Venda", data: posVendasMensal, backgroundColor: "#6c757d" },
                 { label: "Venda", data: vendasMensal, backgroundColor: "#FF6600" },
             ],
         },
@@ -5436,7 +5436,7 @@ function updateAdesoesDrillDownCharts(filteredData) {
         data: {
             labels: years,
             datasets: [
-                { label: "Pós Venda", data: adesoesPosVendasAnual, backgroundColor: "#FFB380" },
+                { label: "Pós Venda", data: adesoesPosVendasAnual, backgroundColor: "#6c757d" },
                 { label: "Venda", data: adesoesVendasAnual, backgroundColor: "#FF6600" },
             ],
         },
@@ -5509,7 +5509,7 @@ function drawMonthlyAdesoesDetailChart(data, year) {
         data: {
             labels: monthLabels,
             datasets: [
-                { label: "Pós Venda", data: adesoesPosVendasMensal, backgroundColor: "#FFB380" },
+                { label: "Pós Venda", data: adesoesPosVendasMensal, backgroundColor: "#6c757d" },
                 { label: "Venda", data: adesoesVendasMensal, backgroundColor: "#FF6600" },
             ],
         },
