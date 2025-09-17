@@ -2496,7 +2496,19 @@ function updateDataTable(data) {
                 { title: `Meta VVR ${getTipo()}` },
                 { title: `Atingimento VVR ${getTipo()}` }
             ],
-            language: { url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json" },
+            language: {
+                sEmptyTable: "Nenhum registro disponível na tabela",
+                sInfo: "Mostrando _START_ a _END_ de _TOTAL_ entradas",
+                sInfoEmpty: "Mostrando 0 a 0 de 0 entradas",
+                sInfoFiltered: "(filtrado de _MAX_ registros no total)",
+                sLengthMenu: "Mostrar _MENU_ entradas",
+                sLoadingRecords: "Carregando...",
+                sProcessing: "Processando...",
+                sSearch: "Pesquisar:",
+                sZeroRecords: "Nenhum registro encontrado",
+                oPaginate: { sFirst: "Primeiro", sPrevious: "Anterior", sNext: "Próximo", sLast: "Último" },
+                oAria: { sSortAscending: ": ativar para ordenar a coluna de forma ascendente", sSortDescending: ": ativar para ordenar a coluna de forma descendente" }
+            },
             destroy: true,
             dom: "Bfrtip",
             buttons: [{
@@ -5431,7 +5443,19 @@ function updateConsultorTable(filteredData) {
         consultorDataTable = $("#consultor-table").DataTable({
             data: tableData,
             pageLength: 10,
-            language: { url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json" },
+            language: {
+                sEmptyTable: "Nenhum registro disponível na tabela",
+                sInfo: "Mostrando _START_ a _END_ de _TOTAL_ entradas",
+                sInfoEmpty: "Mostrando 0 a 0 de 0 entradas",
+                sInfoFiltered: "(filtrado de _MAX_ registros no total)",
+                sLengthMenu: "Mostrar _MENU_ entradas",
+                sLoadingRecords: "Carregando...",
+                sProcessing: "Processando...",
+                sSearch: "Pesquisar:",
+                sZeroRecords: "Nenhum registro encontrado",
+                oPaginate: { sFirst: "Primeiro", sPrevious: "Anterior", sNext: "Próximo", sLast: "Último" },
+                oAria: { sSortAscending: ": ativar para ordenar a coluna de forma ascendente", sSortDescending: ": ativar para ordenar a coluna de forma descendente" }
+            },
             destroy: true,
             dom: "Bfrtip",
             buttons: [{
@@ -5469,7 +5493,19 @@ function updateDetalhadaAdesoesTable(filteredData) {
             data: tableData,
             columns: [null, null, null, null, null, null, null, { render: (data) => formatCurrency(data) }],
             pageLength: 10,
-            language: { url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json" },
+            language: {
+                sEmptyTable: "Nenhum registro disponível na tabela",
+                sInfo: "Mostrando _START_ a _END_ de _TOTAL_ entradas",
+                sInfoEmpty: "Mostrando 0 a 0 de 0 entradas",
+                sInfoFiltered: "(filtrado de _MAX_ registros no total)",
+                sLengthMenu: "Mostrar _MENU_ entradas",
+                sLoadingRecords: "Carregando...",
+                sProcessing: "Processando...",
+                sSearch: "Pesquisar:",
+                sZeroRecords: "Nenhum registro encontrado",
+                oPaginate: { sFirst: "Primeiro", sPrevious: "Anterior", sNext: "Próximo", sLast: "Último" },
+                oAria: { sSortAscending: ": ativar para ordenar a coluna de forma ascendente", sSortDescending: ": ativar para ordenar a coluna de forma descendente" }
+            },
             destroy: true,
             dom: "Bfrtip",
             buttons: [{
@@ -5511,7 +5547,19 @@ function updateFundosDetalhadosTable(fundosData, selectedUnidades, startDate, en
         fundosDetalhadosDataTable = $("#fundos-detalhados-table").DataTable({
             data: tableData,
             pageLength: 10,
-            language: { url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json" },
+            language: {
+                sEmptyTable: "Nenhum registro disponível na tabela",
+                sInfo: "Mostrando _START_ a _END_ de _TOTAL_ entradas",
+                sInfoEmpty: "Mostrando 0 a 0 de 0 entradas",
+                sInfoFiltered: "(filtrado de _MAX_ registros no total)",
+                sLengthMenu: "Mostrar _MENU_ entradas",
+                sLoadingRecords: "Carregando...",
+                sProcessing: "Processando...",
+                sSearch: "Pesquisar:",
+                sZeroRecords: "Nenhum registro encontrado",
+                oPaginate: { sFirst: "Primeiro", sPrevious: "Anterior", sNext: "Próximo", sLast: "Último" },
+                oAria: { sSortAscending: ": ativar para ordenar a coluna de forma ascendente", sSortDescending: ": ativar para ordenar a coluna de forma descendente" }
+            },
             destroy: true,
             dom: "Bfrtip",
             buttons: [{
