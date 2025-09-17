@@ -976,18 +976,19 @@ body {
         }
 
         /* Estilo para cada item de filtro */
-        .filter-item {
-            flex: 1;
-            min-width: 200px;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            /* ✅ TRANSIÇÕES SUAVES para navegação fluida */
-            transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s ease;
-            opacity: 1;
-            transform: translateY(0);
-        }
+       .filter-item {
+    flex: 1;
+    min-width: 200px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s ease;
+    opacity: 1;
+    transform: translateY(0);
+    /* LINHA ADICIONADA: Define uma camada padrão */
+    z-index: 2;
+}
 
         /* ✅ Estados para transição suave - apenas quando navegando */
         .filter-item.smooth-hiding {
