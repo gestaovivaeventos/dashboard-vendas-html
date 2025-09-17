@@ -2268,10 +2268,30 @@ function drawMonthlyDetailChart(data, year) {
             devicePixelRatio: window.devicePixelRatio,
             maintainAspectRatio: false,
             interaction: { mode: "index", intersect: false },
-            scales: { x: { stacked: true }, y: { stacked: true } },
+            scales: {
+                x: {
+                    stacked: true,
+                    ticks: { font: { size: 16, family: 'Poppins, Arial, sans-serif' }, color: '#adb5bd' },
+                    grid: { color: 'rgba(255,255,255,0.04)' }
+                },
+                y: {
+                    stacked: true,
+                    ticks: {
+                        font: { size: 16, family: 'Poppins, Arial, sans-serif' },
+                        color: '#adb5bd',
+                        callback: function(value) {
+                            const num = Number(value);
+                            if (Math.abs(num) >= 1000000) return (num / 1000000).toFixed(1).replace('.0','') + ' mi';
+                            if (Math.abs(num) >= 1000) return (num / 1000).toFixed(0) + 'k';
+                            return num;
+                        }
+                    },
+                    grid: { color: 'rgba(255,255,255,0.04)' }
+                }
+            },
             plugins: {
                 datalabels: {
-                    color: "white", font: { weight: "bold" },
+                    color: "white", font: { weight: "bold", family: 'Poppins, Arial, sans-serif', size: 14 },
                     formatter: function (value) {
                         if (value === 0) return "";
                         if (value >= 1000000) return (value / 1000000).toFixed(1).replace(".0", "") + " mi";
@@ -2280,6 +2300,15 @@ function drawMonthlyDetailChart(data, year) {
                     },
                 },
                 tooltip: {
+                    padding: 12,
+                    caretPadding: 6,
+                    backgroundColor: 'rgba(0,0,0,0.85)',
+                    titleFont: { family: 'Poppins, Arial, sans-serif', size: 16, weight: '600' },
+                    bodyFont: { family: 'Poppins, Arial, sans-serif', size: 18, weight: '700' },
+                    footerFont: { family: 'Poppins, Arial, sans-serif', size: 16, weight: '600' },
+                    cornerRadius: 6,
+                    usePointStyle: true,
+                    displayColors: true,
                     callbacks: {
                         label: function (context) {
                             let label = context.dataset.label || "";
@@ -2290,8 +2319,8 @@ function drawMonthlyDetailChart(data, year) {
                         footer: function (tooltipItems) {
                             let sum = tooltipItems.reduce((acc, item) => acc + item.parsed.y, 0);
                             return "Total: " + formatCurrency(sum);
-                        },
-                    },
+                        }
+                    }
                 },
             },
         },
