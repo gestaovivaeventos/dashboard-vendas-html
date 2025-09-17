@@ -475,6 +475,52 @@ body {
     transition: width 600ms ease-in-out;
 }
 
+/* Make percent and meta values more prominent in both indicator cards and VVR KPI cards */
+.indicator-meta span[id$='-percent'] {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: inherit; /* color set inline by JS */
+}
+.indicator-meta span[id$='-meta'] {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #ADB5BD;
+}
+
+/* KPI (VVR) cards detail sizing to match indicators */
+.kpi-card-details .percent {
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+.kpi-card-details span[id$='-meta'] {
+    font-size: 1.05rem;
+    font-weight: 600;
+}
+
+/* Make previous-year meta amounts use the same sizing and color as the main VVR meta values */
+#kpi-section-py .kpi-card-details span[id$='-meta'] {
+    font-size: 1.05rem; /* same as main section */
+    font-weight: 600;
+    color: #ADB5BD;
+}
+
+/* Ensure both KPI sections use identical meta value typography (force equality) */
+#kpi-section .kpi-card-details span[id$='-meta'],
+#kpi-section-py .kpi-card-details span[id$='-meta'] {
+    font-size: 1.05rem !important;
+    font-weight: 600 !important;
+    color: #ADB5BD !important;
+}
+
+/* Explicitly set the exact same typography on each meta ID (first and previous year) to guarantee equality */
+#kpi-total-meta, #kpi-vendas-meta, #kpi-posvendas-meta,
+#kpi-total-meta-py, #kpi-vendas-meta-py, #kpi-posvendas-meta-py {
+    font-size: 1.05rem !important;
+    font-weight: 600 !important;
+    line-height: 1 !important;
+    color: #ADB5BD !important;
+}
+
 /* Responsividade: empilha em telas pequenas */
 @media (max-width: 900px) {
     .indicators-row { grid-template-columns: repeat(2, 1fr); }
@@ -1113,6 +1159,12 @@ body {
         .kpi-card-details .percent { font-weight: bold; transition: color 0.5s ease-in-out; }
         .progress-bar-bg { width: 100%; height: 10px; background-color: #495057; border-radius: 5px; overflow: hidden; }
         .progress-bar-fg { height: 100%; border-radius: 5px; width: 0%; transition: width 0.5s ease-in-out, background-color 0.5s ease-in-out; }
+
+        /* Make PY VVR cards use the same typography as the main VVR cards */
+        #kpi-section-py .kpi-card-title { font-size: 0.9em; color: #ADB5BD; font-weight: bold; }
+        #kpi-section-py .kpi-card-value { font-size: 2.1em; font-weight: bold; color: #F8F9FA; }
+        #kpi-section-py .kpi-card-details { font-size: 0.8em; color: #ADB5BD; }
+        #kpi-section-py .kpi-card-details .percent { font-weight: bold; transition: color 0.5s ease-in-out; }
         
         .loader { text-align: center; font-size: 1.5em; padding: 50px; }
         .dataTables_wrapper { color: #F8F9FA; }
