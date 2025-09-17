@@ -379,9 +379,10 @@ body {
     box-shadow: 0 2px 3px rgba(0, 0, 0, 0.2);
 }
 .page-navigation button.active {
-    background-image: linear-gradient(to bottom, #ffca2c, #ffc107);
-    color: #212529;
-    border-color: #b38600;
+    background-image: none !important;
+    background-color: #FF6600 !important;
+    color: #fff !important;
+    border-color: #b34700 !important;
     font-weight: bold;
     text-shadow: none;
 }
