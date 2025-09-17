@@ -1782,7 +1782,7 @@ function updateVvrVsMetaPorMesChart(salesDataForYear, anoVigente) {
                     font: {
                         weight: "bold",
                         size: 20,
-                        family: 'Montserrat, Arial, sans-serif'
+                        family: 'Poppins, Arial, sans-serif'
                     },
                 },
                 tooltip: {
@@ -1796,17 +1796,17 @@ function updateVvrVsMetaPorMesChart(salesDataForYear, anoVigente) {
                     },
                     bodyFont: {
                         size: 18,
-                        family: 'Montserrat, Arial, sans-serif',
+                        family: 'Poppins, Arial, sans-serif',
                         weight: 'bold'
                     },
                     titleFont: {
                         size: 16,
-                        family: 'Montserrat, Arial, sans-serif',
+                        family: 'Poppins, Arial, sans-serif',
                         weight: 'bold'
                     },
                     footerFont: {
                         size: 16,
-                        family: 'Montserrat, Arial, sans-serif',
+                        family: 'Poppins, Arial, sans-serif',
                         weight: 'bold'
                     },
                 },
@@ -1910,6 +1910,25 @@ function updateCumulativeVvrChart(historicalData, selectedUnidades) {
             interaction: { mode: "index", intersect: false },
             plugins: {
                 tooltip: {
+                    padding: 12,
+                    usePointStyle: true,
+                    backgroundColor: 'rgba(0,0,0,0.85)',
+                    borderRadius: 6,
+                    bodyFont: {
+                        size: 18,
+                        family: 'Poppins, Arial, sans-serif',
+                        weight: 'bold'
+                    },
+                    titleFont: {
+                        size: 16,
+                        family: 'Poppins, Arial, sans-serif',
+                        weight: 'bold'
+                    },
+                    footerFont: {
+                        size: 16,
+                        family: 'Poppins, Arial, sans-serif',
+                        weight: 'bold'
+                    },
                     callbacks: {
                         label: function (context) {
                             let label = context.dataset.label || "";
@@ -1931,7 +1950,26 @@ function updateCumulativeVvrChart(historicalData, selectedUnidades) {
                     },
                 },
             },
-            scales: { y: { beginAtZero: true } },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        // Show axis labels rounded in millions (mi)
+                        callback: function(value) {
+                            const num = Number(value);
+                            if (Math.abs(num) >= 1000000) return Math.round(num / 1000000) + ' mi';
+                            if (Math.abs(num) >= 1000) return Math.round(num / 1000) + 'k';
+                            return num;
+                        },
+                        font: { size: 16 },
+                        color: '#adb5bd'
+                    },
+                    grid: { color: 'rgba(255,255,255,0.04)' }
+                },
+                x: {
+                    ticks: { font: { size: 16 }, color: '#adb5bd' }
+                }
+            },
         },
     });
 }
