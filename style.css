@@ -106,19 +106,50 @@ body {
         #sidebar-toggle.collapsed { left: 10px; }
 
         .page-navigation { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #495057; padding-bottom: 20px; }
-       .page-navigation button {
-    background-image: linear-gradient(to bottom, #6c757d, #495057);
-    color: #F8F9FA;
-    border: 1px solid #343a40;
-    border-bottom: 3px solid #343a40;
+.page-navigation button {
+    /* Reaplicando visual de botão consistente com os chart-selector */
+    background: linear-gradient(180deg, #3a3f44 0%, #2e3236 100%);
+    color: #e9ecef;
+    border: 1px solid rgba(0,0,0,0.45);
     padding: 10px 20px;
     cursor: pointer;
-    transition: all 0.1s ease-in-out;
+    transition: transform 120ms ease, box-shadow 120ms ease, filter 120ms ease, background 120ms ease;
     width: 100%;
     text-align: left;
-    border-radius: 6px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.02);
+    text-shadow: 0 1px 0 rgba(0,0,0,0.4);
+    display: inline-flex;
+    align-items: center;
+}
+
+.page-navigation button:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.05);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.02);
+}
+
+.page-navigation button:active {
+    transform: translateY(1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.35) inset;
+}
+
+.page-navigation button.active {
+    /* Gradiente laranja escuro (topo) -> laranja claro (base) para sidebar */
+    background-image:
+        linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0) 22%),
+        linear-gradient(180deg, #b34a00 0%, #ff7a1a 30%, #FF6600 55%, #ff9b5a 85%, #ffb37a 100%);
+    background-size: 100% 100%, 100% 100%;
+    background-repeat: no-repeat;
+    color: #ffffff !important;
+    border: 1px solid rgba(0,0,0,0.6);
+    border-top: 1px solid rgba(255,255,255,0.04);
+    box-shadow: 0 8px 18px rgba(0,0,0,0.45), inset 0 2px 6px rgba(255,255,255,0.02);
+}
+
+.page-navigation button:focus {
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(255,102,0,0.12), 0 8px 18px rgba(0,0,0,0.4);
 }
 
 /* Estilos modernos para o multiselect */
@@ -1178,37 +1209,48 @@ body {
         .dt-button:hover { background-color: #ADB5BD !important; color: #212529 !important; }
 
         .chart-selector { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
-       .chart-selector button {
-    background-image: linear-gradient(to bottom, #6c757d, #495057);
-    color: #F8F9FA;
-    border: 1px solid #343a40;
-    border-bottom: 3px solid #343a40;
-    padding: 5px 15px;
-    cursor: pointer;
-    transition: all 0.1s ease-in-out;
-    border-radius: 6px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
-}
+        .chart-selector button {
+            /* Botões inativos: tom de cinza para contraste com o fundo escuro */
+            background: linear-gradient(180deg, #3a3f44 0%, #2e3236 100%);
+            color: #e9ecef;
+            border: 1px solid rgba(0,0,0,0.45);
+            padding: 8px 18px;
+            cursor: pointer;
+            transition: transform 120ms ease, box-shadow 120ms ease, filter 120ms ease, background 120ms ease;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.02);
+            text-shadow: 0 1px 0 rgba(0,0,0,0.4);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
 .chart-selector button:hover {
-    /* Hover leve com versão laranja mais escura para indicar foco */
-    background-image: linear-gradient(to bottom, #ff8a33, #ff6a00);
-    color: #fff;
-    border-color: #e65c00;
+    transform: translateY(-2px);
+    filter: brightness(1.05);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.02);
 }
 .chart-selector button:active {
-    transform: translateY(2px);
-    border-bottom-width: 1px;
-    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.2);
+    transform: translateY(1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.35) inset;
 }
 .chart-selector button.active {
-    /* Cor solicitada para estado ativo */
-    background-color: #FF6600 !important;
-    background-image: none !important;
+    /* Gradiente laranja escuro (topo) -> laranja claro (base) */
+    background-image:
+        linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0) 22%),
+        linear-gradient(180deg, #b34a00 0%, #ff7a1a 30%, #FF6600 55%, #ff9b5a 85%, #ffb37a 100%);
+    background-size: 100% 100%, 100% 100%;
+    background-repeat: no-repeat;
     color: #ffffff !important;
-    border-color: #cc5200 !important;
-    font-weight: bold;
-    text-shadow: none;
+    border: 1px solid rgba(0,0,0,0.6);
+    border-top: 1px solid rgba(255,255,255,0.04);
+    box-shadow: 0 8px 18px rgba(0,0,0,0.45), inset 0 2px 6px rgba(255,255,255,0.02);
+    transform: translateY(0);
+}
+
+/* Acessibilidade: foco visível */
+.chart-selector button:focus {
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(255,102,0,0.12), 0 8px 18px rgba(0,0,0,0.4);
 }
 
         .chart-row {
