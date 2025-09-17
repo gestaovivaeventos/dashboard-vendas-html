@@ -45,6 +45,40 @@ const API_KEY = "AIzaSyBuGRH91CnRuDtN5RGsb5DvHEfhTxJnWSs"; // <-- SUBSTITUA PELA
 
 Chart.defaults.color = "#FFFFFF";
 
+// Padronizar legenda: usar mesmo tamanho/família dos gráficos da primeira página
+if (Chart && Chart.defaults && Chart.defaults.plugins) {
+    Chart.defaults.plugins.legend = Chart.defaults.plugins.legend || {};
+    Chart.defaults.plugins.legend.labels = Chart.defaults.plugins.legend.labels || {};
+    Chart.defaults.plugins.legend.labels.font = { size: 18, family: 'Poppins, Arial, sans-serif', weight: 'bold' };
+    // Garantir que a cor padrão da legenda seja branca
+    Chart.defaults.plugins.legend.labels.color = '#FFFFFF';
+    // Force legend labels to use the same font family as titles and render in UPPERCASE
+    // Uses Chart's generateLabels hook to transform the label text while preserving dataset order
+    Chart.defaults.plugins.legend.labels.generateLabels = function(chart) {
+        const original = Chart.overrides && Chart.overrides[chart.config.type] && Chart.overrides[chart.config.type].plugins && Chart.overrides[chart.config.type].plugins.legend && Chart.overrides[chart.config.type].plugins.legend.generateLabels;
+        // if a per-type override exists, try to call it to preserve behavior
+        if (typeof original === 'function') {
+            try { return original(chart).map(l => ({ ...l, text: (l.text || '').toString().toUpperCase() })); } catch (e) { /* fallthrough */ }
+        }
+        const datasets = chart.data && chart.data.datasets ? chart.data.datasets : [];
+        return datasets.map((ds, i) => {
+            const text = ds.label || ds.name || `dataset ${i + 1}`;
+            return {
+                text: (text || '').toString().toUpperCase(),
+                fillStyle: ds.backgroundColor || ds.fillStyle || ds.borderColor || '#000',
+                hidden: !!ds.hidden,
+                lineCap: ds.borderCapStyle || 'butt',
+                lineDash: ds.borderDash || [],
+                lineDashOffset: ds.borderDashOffset || 0,
+                lineJoin: ds.borderJoinStyle || 'miter',
+                lineWidth: ds.borderWidth || 2,
+                strokeStyle: ds.borderColor || '#000',
+                datasetIndex: i
+            };
+        });
+    };
+}
+
 // --- REMOVIDO: O mapeamento de códigos de acesso fixo foi retirado daqui ---
 
 let userAccessLevel = null;
@@ -152,6 +186,9 @@ async function fetchAccessData() {
         return false;
     }
 }
+
+// End of script.js - ensure all blocks are closed
+
 
 // ...
 
@@ -308,18 +345,16 @@ document.getElementById("sidebar-toggle").addEventListener("click", function () 
   this.classList.toggle("collapsed");
 
   setTimeout(() => {
-    if (vvrVsMetaPorMesChart) vvrVsMetaPorMesChart.resize();
-    if (cumulativeVvrChart) cumulativeVvrChart.resize();
-    if (monthlyVvrChart) monthlyVvrChart.resize();
-    if (yearlyStackedChart) yearlyStackedChart.resize();
-    if (monthlyStackedChart) monthlyStackedChart.resize();
-    if (yearlyTicketChart) yearlyTicketChart.resize();
-    if (monthlyTicketChart) monthlyTicketChart.resize();
-    if (yearlyContractsChart) yearlyContractsChart.resize();
-    if (monthlyContractsChart) monthlyContractsChart.resize();
-    if (monthlyAdesoesChart) monthlyAdesoesChart.resize();
-    if (yearlyAdesoesStackedChart) yearlyAdesoesStackedChart.resize();
-    if (monthlyAdesoesStackedChart) monthlyAdesoesStackedChart.resize();
+        if (vvrVsMetaPorMesChart) vvrVsMetaPorMesChart.resize();
+        if (cumulativeVvrChart) cumulativeVvrChart.resize();
+        if (monthlyVvrChart) monthlyVvrChart.resize();
+        if (yearlyStackedChart) yearlyStackedChart.resize();
+        if (monthlyStackedChart) monthlyStackedChart.resize();
+        if (yearlyContractsChart) yearlyContractsChart.resize();
+        if (monthlyContractsChart) monthlyContractsChart.resize();
+        if (monthlyAdesoesChart) monthlyAdesoesChart.resize();
+        if (yearlyAdesoesStackedChart) yearlyAdesoesStackedChart.resize();
+        if (monthlyAdesoesStackedChart) monthlyAdesoesStackedChart.resize();
   }, 300);
 });
 
@@ -329,18 +364,8 @@ async function fetchAllSalesDataFromSheet() {
         console.error("ID da Planilha de Vendas, Nome da Aba ou Chave de API não configurados.");
         return [];
     }
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SALES_SPREADSHEET_ID}/values/${SALES_SHEET_NAME}?key=${API_KEY}`;
-    
-    const parseDate = (dateString) => {
-        if (!dateString || typeof dateString !== 'string') return null;
-        const parts = dateString.match(/(\d{2})\/(\d{2})\/(\d{4})/);
-        if (parts) {
-            return new Date(parts[3], parts[2] - 1, parts[1]);
-        }
-        const date = new Date(dateString);
-        return isNaN(date) ? null : date;
-    };
 
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SALES_SPREADSHEET_ID}/values/${SALES_SHEET_NAME}?key=${API_KEY}`;
     try {
         const response = await fetch(url);
         if (!response.ok) {
@@ -351,7 +376,7 @@ async function fetchAllSalesDataFromSheet() {
         const rows = data.values || [];
         if (rows.length < 2) return [];
 
-        const headers = rows[0].map((h) => h.trim().toLowerCase());
+        const headers = rows[0].map((h) => String(h).trim().toLowerCase());
         const unidadeIndex = headers.indexOf("nm_unidade");
         const dataIndex = headers.indexOf("dt_cadastro_integrante");
         const valorIndex = headers.indexOf("vl_plano");
@@ -363,18 +388,28 @@ async function fetchAllSalesDataFromSheet() {
 
         const tipoVendaIndex = headers.indexOf("venda_posvenda");
         const indicadoPorIndex = headers.indexOf("indicado_por");
-        const consultorComercialIndex = headers.indexOf("consultor_comercial");  // ✅ NOVO: coluna O
+        const consultorComercialIndex = headers.indexOf("consultor_comercial");
         const codigoIntegranteIndex = headers.indexOf("codigo_integrante");
         const nomeIntegranteIndex = headers.indexOf("nm_integrante");
         const idFundoIndex = headers.indexOf("id_fundo");
-        const fundoIndex = headers.indexOf("nm_fundo");  // ✅ ADICIONAR busca do nm_fundo
+        const fundoIndex = headers.indexOf("nm_fundo");
         const cursoFundoIndex = headers.indexOf("curso_fundo");
         const tipoServicoIndex = headers.indexOf("tp_servico");
         const instituicaoIndex = headers.indexOf("nm_instituicao");
-        const tipoClienteIndex = headers.indexOf("tipo_cliente");  // ✅ NOVO: coluna R
+        const tipoClienteIndex = headers.indexOf("tipo_cliente");
+
+        // local date parser: accepts DD/MM/YYYY or ISO-like strings
+        const localParseDate = (dateString) => {
+            if (!dateString) return null;
+            if (typeof dateString !== 'string') return new Date(dateString);
+            const parts = dateString.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+            if (parts) return new Date(parts[3], parts[2] - 1, parts[1]);
+            const d = new Date(dateString);
+            return isNaN(d) ? null : d;
+        };
 
         return rows.slice(1).map((row) => {
-            const dateValue = parseDate(row[dataIndex]);
+            const dateValue = localParseDate(row[dataIndex]);
             if (!dateValue) return null;
             return {
                 nm_unidade: row[unidadeIndex] || "N/A",
@@ -382,15 +417,15 @@ async function fetchAllSalesDataFromSheet() {
                 vl_plano: parseFloat(String(row[valorIndex] || "0").replace(",", ".")) || 0,
                 venda_posvenda: tipoVendaIndex !== -1 ? row[tipoVendaIndex] || "VENDA" : "N/A",
                 indicado_por: indicadoPorIndex !== -1 ? row[indicadoPorIndex] || "N/A" : "N/A",
-                consultor_comercial: consultorComercialIndex !== -1 ? row[consultorComercialIndex] || "N/A" : "N/A",  // ✅ NOVO: consultor_comercial
+                consultor_comercial: consultorComercialIndex !== -1 ? row[consultorComercialIndex] || "N/A" : "N/A",
                 codigo_integrante: codigoIntegranteIndex !== -1 ? row[codigoIntegranteIndex] || "N/A" : "N/A",
                 nm_integrante: nomeIntegranteIndex !== -1 ? row[nomeIntegranteIndex] || "N/A" : "N/A",
                 id_fundo: idFundoIndex !== -1 ? row[idFundoIndex] || "N/A" : "N/A",
-                nm_fundo: fundoIndex !== -1 ? row[fundoIndex] || "N/A" : "N/A",  // ✅ ADICIONAR campo nm_fundo
+                nm_fundo: fundoIndex !== -1 ? row[fundoIndex] || "N/A" : "N/A",
                 curso_fundo: cursoFundoIndex !== -1 ? row[cursoFundoIndex] || "" : "",
                 tp_servico: tipoServicoIndex !== -1 ? row[tipoServicoIndex] || "N/A" : "N/A",
                 nm_instituicao: instituicaoIndex !== -1 ? row[instituicaoIndex] || "N/A" : "N/A",
-                tipo_cliente: tipoClienteIndex !== -1 ? row[tipoClienteIndex] || "N/A" : "N/A",  // ✅ NOVO: tipo_cliente
+                tipo_cliente: tipoClienteIndex !== -1 ? row[tipoClienteIndex] || "N/A" : "N/A",
             };
         }).filter(Boolean);
     } catch (error) {
@@ -1805,7 +1840,7 @@ function updateVvrVsMetaPorMesChart(salesDataForYear, anoVigente) {
                 // increase legend font size to match cumulative chart
                 legend: {
                     labels: {
-                        font: { size: 20 }
+                        font: { size: 18 }
                     }
                 },
             },
@@ -1876,7 +1911,7 @@ function updateCumulativeVvrChart(historicalData, selectedUnidades) {
         salesByYearMonth[year][month] += d.vl_plano;
     });
     
-    const colors = ["#ffc107", "#007bff", "#6c757d", "#28a745", "#dc3545", "#17a2b8", "#fd7e14"];
+    const colors = ["#ffc107", "#FF6600", "#FFB380", "#28a745", "#dc3545", "#17a2b8", "#fd7e14"];
     const datasets = uniqueYears.map((year, index) => {
         const monthlyData = salesByYearMonth[year] || Array(12).fill(0);
         const cumulativeData = monthlyData.reduce((acc, val) => [...acc, (acc.length > 0 ? acc[acc.length - 1] : 0) + val], []);
@@ -1899,6 +1934,9 @@ function updateCumulativeVvrChart(historicalData, selectedUnidades) {
             maintainAspectRatio: false,
             interaction: { mode: "index", intersect: false },
             plugins: {
+                legend: {
+                    labels: { font: { size: 18 } }
+                },
                 tooltip: {
                     padding: 12,
                     usePointStyle: true,
@@ -1942,7 +1980,7 @@ function updateCumulativeVvrChart(historicalData, selectedUnidades) {
                 // Legend: keep same style as the VVR vs Meta chart but increase font size
                 legend: {
                     labels: {
-                        font: { size: 20 }
+                        font: { size: 18 }
                     }
                 },
             },
@@ -2002,7 +2040,7 @@ function updateMonthlyVvrChart(historicalData, selectedUnidades) {
         salesByYearMonth[year][month] += d.vl_plano;
     });
 
-    const colors = ["#ffc107", "#007bff", "#6c757d", "#28a745", "#dc3545", "#17a2b8", "#fd7e14"];
+    const colors = ["#ffc107", "#FF6600", "#FFB380", "#28a745", "#dc3545", "#17a2b8", "#fd7e14"];
     const datasets = uniqueYears.map((year, index) => ({
         label: year,
         data: salesByYearMonth[year] || Array(12).fill(0),
@@ -2022,7 +2060,18 @@ function updateMonthlyVvrChart(historicalData, selectedUnidades) {
             maintainAspectRatio: false,
             interaction: { mode: "index", intersect: false },
             plugins: {
+                legend: {
+                    position: 'top',
+                    labels: { font: { size: 18, family: 'Poppins, Arial, sans-serif', weight: 'bold' } }
+                },
                 tooltip: {
+                    padding: 12,
+                    usePointStyle: true,
+                    backgroundColor: 'rgba(0,0,0,0.85)',
+                    borderRadius: 6,
+                    titleFont: { size: 16, family: 'Poppins, Arial, sans-serif', weight: 'bold' },
+                    bodyFont: { size: 18, family: 'Poppins, Arial, sans-serif', weight: 'bold' },
+                    footerFont: { size: 16, family: 'Poppins, Arial, sans-serif', weight: 'bold' },
                     callbacks: {
                         label: function (context) {
                             let label = context.dataset.label || "";
@@ -2030,21 +2079,35 @@ function updateMonthlyVvrChart(historicalData, selectedUnidades) {
                             if (context.parsed.y !== null) { label += formatCurrency(context.parsed.y); }
                             return label;
                         },
+                        footer: function (tooltipItems) {
+                            let sum = tooltipItems.reduce((acc, item) => acc + item.parsed.y, 0);
+                            return "Total: " + formatCurrency(sum);
+                        },
                     },
                 },
                 datalabels: {
-                    display: true, align: "top", offset: 8, backgroundColor: "rgba(52, 58, 64, 0.7)", borderRadius: 4, color: "white", font: { size: 14 }, padding: 4,
-                    formatter: (value) => {
-                        if (value > 0) {
-                            if (value >= 1000000) return `${(value / 1000000).toFixed(1)} mi`;
-                            if (value >= 1000) return `${(value / 1000).toFixed(0)}k`;
-                            return value.toFixed(0);
-                        }
-                        return "";
-                    },
+                    display: false,
                 },
             },
-            scales: { y: { beginAtZero: true } },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            const num = Number(value);
+                            if (Math.abs(num) >= 1000000) return (num / 1000000).toFixed(1) + ' mi';
+                            if (Math.abs(num) >= 1000) return (num / 1000).toFixed(0) + 'k';
+                            return num;
+                        },
+                        font: { size: 16 },
+                        color: '#adb5bd'
+                    },
+                    grid: { color: 'rgba(255,255,255,0.04)' }
+                },
+                x: {
+                    ticks: { font: { size: 16 }, color: '#adb5bd' }
+                }
+            },
         },
     });
 }
@@ -2074,8 +2137,8 @@ function updateDrillDownCharts(filteredData) {
         data: {
             labels: years,
             datasets: [
-                { label: "Pós Venda", data: posVendasAnual, backgroundColor: "#007bff" },
-                { label: "Venda", data: vendasAnual, backgroundColor: "#6c757d" },
+                { label: "Pós Venda", data: posVendasAnual, backgroundColor: "#FFB380" },
+                { label: "Venda", data: vendasAnual, backgroundColor: "#FF6600" },
             ],
         },
         options: {
@@ -2083,18 +2146,50 @@ function updateDrillDownCharts(filteredData) {
             maintainAspectRatio: false,
             indexAxis: "y",
             interaction: { mode: "y", intersect: false },
-            scales: { x: { stacked: true }, y: { stacked: true } },
+            scales: {
+                x: {
+                    stacked: true,
+                    ticks: {
+                        font: { size: 16, family: 'Poppins, Arial, sans-serif' },
+                        color: '#adb5bd',
+                        callback: function(value) {
+                            const num = Number(value);
+                            if (Math.abs(num) >= 1000000) return (num / 1000000).toFixed(1).replace('.0','') + ' mi';
+                            if (Math.abs(num) >= 1000) return (num / 1000).toFixed(1).replace('.0','') + 'k';
+                            return num;
+                        }
+                    },
+                    grid: { color: 'rgba(255,255,255,0.04)' }
+                },
+                y: {
+                    stacked: true,
+                    ticks: {
+                        font: { size: 16, family: 'Poppins, Arial, sans-serif' },
+                        color: '#adb5bd'
+                    }
+                }
+            },
             plugins: {
                 datalabels: {
-                    color: "white", font: { weight: "bold" },
+                    color: "white", font: { weight: "bold", size: 14, family: 'Poppins, Arial, sans-serif' },
+                    align: 'center',
+                    anchor: 'center',
+                    clip: true,
                     formatter: function (value) {
                         if (value === 0) return "";
-                        if (value >= 1000000) return (value / 1000000).toFixed(1).replace(".0", "") + " M";
+                        if (value >= 1000000) return (value / 1000000).toFixed(1).replace(".0", "") + " mi";
                         if (value >= 1000) return (value / 1000).toFixed(1).replace(".0", "") + "k";
                         return value;
                     },
                 },
                 tooltip: {
+                    padding: 12,
+                    usePointStyle: true,
+                    backgroundColor: 'rgba(0,0,0,0.85)',
+                    borderRadius: 6,
+                    bodyFont: { size: 18, family: 'Poppins, Arial, sans-serif', weight: 'bold' },
+                    titleFont: { size: 16, family: 'Poppins, Arial, sans-serif', weight: 'bold' },
+                    footerFont: { size: 16, family: 'Poppins, Arial, sans-serif', weight: 'bold' },
                     callbacks: {
                         label: function (context) {
                             let label = context.dataset.label || "";
@@ -2165,8 +2260,8 @@ function drawMonthlyDetailChart(data, year) {
         data: {
             labels: monthLabels,
             datasets: [
-                { label: "Pós Venda", data: posVendasMensal, backgroundColor: "#007bff" },
-                { label: "Venda", data: vendasMensal, backgroundColor: "#6c757d" },
+                { label: "Pós Venda", data: posVendasMensal, backgroundColor: "#FFB380" },
+                { label: "Venda", data: vendasMensal, backgroundColor: "#FF6600" },
             ],
         },
         options: {
@@ -2179,7 +2274,7 @@ function drawMonthlyDetailChart(data, year) {
                     color: "white", font: { weight: "bold" },
                     formatter: function (value) {
                         if (value === 0) return "";
-                        if (value >= 1000000) return (value / 1000000).toFixed(1).replace(".0", "") + " M";
+                        if (value >= 1000000) return (value / 1000000).toFixed(1).replace(".0", "") + " mi";
                         if (value >= 1000) return (value / 1000).toFixed(0) + "k";
                         return value;
                     },
@@ -5312,8 +5407,8 @@ function updateAdesoesDrillDownCharts(filteredData) {
         data: {
             labels: years,
             datasets: [
-                { label: "Pós Venda", data: adesoesPosVendasAnual, backgroundColor: "#007bff" },
-                { label: "Venda", data: adesoesVendasAnual, backgroundColor: "#6c757d" },
+                { label: "Pós Venda", data: adesoesPosVendasAnual, backgroundColor: "#FFB380" },
+                { label: "Venda", data: adesoesVendasAnual, backgroundColor: "#FF6600" },
             ],
         },
         options: {
@@ -5385,8 +5480,8 @@ function drawMonthlyAdesoesDetailChart(data, year) {
         data: {
             labels: monthLabels,
             datasets: [
-                { label: "Pós Venda", data: adesoesPosVendasMensal, backgroundColor: "#007bff" },
-                { label: "Venda", data: adesoesVendasMensal, backgroundColor: "#6c757d" },
+                { label: "Pós Venda", data: adesoesPosVendasMensal, backgroundColor: "#FFB380" },
+                { label: "Venda", data: adesoesVendasMensal, backgroundColor: "#FF6600" },
             ],
         },
         options: {
@@ -6535,15 +6630,17 @@ function updateCaptacoesChart(dados) {
                             if (data.labels.length && data.datasets.length) {
                                 return data.labels.map((label, index) => {
                                     const dataset = data.datasets[0];
+                                    const txt = (label || '').toString().toUpperCase();
                                     return {
-                                        text: label, // Apenas o nome do tipo
+                                        text: txt, // Nome do tipo em MAIÚSCULAS
                                         fillStyle: dataset.backgroundColor[index],
                                         strokeStyle: dataset.borderColor,
                                         lineWidth: dataset.borderWidth,
                                         pointStyle: 'circle',
                                         hidden: false,
                                         index: index,
-                                        fontColor: '#FFFFFF' // Forçar cor branca
+                                        textColor: '#FFFFFF',
+                                        font: { family: 'Poppins, Arial, sans-serif', size: 16, weight: 'bold' }
                                     };
                                 });
                             }
@@ -6574,7 +6671,7 @@ function updateCaptacoesChart(dados) {
                     color: '#2c3e50',
                     font: {
                         weight: 'bold',
-                        size: 20 /* Fonte muito maior para os rótulos */
+                        size: 18 /* Fonte reduzida para consistência */
                     },
                     formatter: function(value, context) {
                         const percentual = dados[context.dataIndex].percentual;

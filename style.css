@@ -944,6 +944,15 @@ body {
             color: #FFFFFF !important;
         }
 
+        /* Regra global e definitiva para legendas (HTML) criadas pelo Chart.js
+           Força branco em qualquer elemento de legenda e seus filhos para
+           evitar textos pretos por overrides inline ou plugins. */
+        .chartjs-legend, .chartjs-legend *,
+        .chart-legend, .chart-legend *,
+        .chartjs-legend ul, .chartjs-legend ul li, .chartjs-legend ul li span {
+            color: #FFFFFF !important;
+        }
+
         /* CSS adicional para legenda branca */
         .chart-legend {
             color: #FFFFFF !important;
