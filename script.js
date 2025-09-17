@@ -2388,6 +2388,7 @@ function updateTicketCharts(filteredData) {
                     displayColors: true,
                     callbacks: { label: (context) => `Ticket Médio: ${formatCurrency(context.parsed.x)}` }
                 },
+                legend: { display: false },
             },
             scales: {
                 x: {
@@ -2477,6 +2478,7 @@ function drawMonthlyTicketChart(data, year) {
                     displayColors: true,
                     callbacks: { label: (context) => `Ticket Médio: ${formatCurrency(context.parsed.y)}` }
                 },
+                legend: { display: false },
             },
             scales: {
                 x: {
@@ -2588,22 +2590,47 @@ function updateContractsCharts() {
         type: "bar",
         data: {
             labels: years,
-            datasets: [{ label: "Contratos", data: annualContractsData, backgroundColor: "#28a745" }],
+            datasets: [{ label: "Contratos", data: annualContractsData, backgroundColor: "#FF6600" }],
         },
         options: {
             maintainAspectRatio: false,
             indexAxis: "y",
             plugins: {
                 datalabels: {
-                    anchor: "end", align: "end", color: "white", font: { weight: "bold" },
+                    anchor: "end",
+                    align: "end",
+                    color: "white",
+                    font: { family: 'Poppins, Arial, sans-serif', size: 14, weight: "600" },
                     formatter: (value) => value.toLocaleString("pt-BR"),
+                    clamp: true,
                 },
-                tooltip: { callbacks: { label: (context) => `Contratos: ${context.parsed.x.toLocaleString("pt-BR")}` } },
+                tooltip: {
+                    displayColors: true,
+                    usePointStyle: true,
+                    backgroundColor: 'rgba(0,0,0,0.85)',
+                    titleFont: { family: 'Poppins, Arial, sans-serif', size: 16 },
+                    bodyFont: { family: 'Poppins, Arial, sans-serif', size: 18, weight: '700' },
+                    padding: 12,
+                    cornerRadius: 6,
+                    callbacks: { label: (context) => `Contratos: ${context.parsed.x.toLocaleString("pt-BR")}` }
+                },
+                legend: { display: false },
             },
             onClick: (event, elements) => {
                 if (elements.length > 0) {
                     const clickedYear = years[elements[0].index];
                     drawMonthlyContractsChart(fundosParaGraficos, clickedYear);
+                }
+            },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    ticks: { font: { family: 'Poppins, Arial, sans-serif', size: 16 }, color: '#adb5bd' },
+                    grid: { color: 'rgba(255,255,255,0.04)' },
+                },
+                y: {
+                    ticks: { font: { family: 'Poppins, Arial, sans-serif', size: 16 }, color: '#adb5bd' },
+                    grid: { color: 'rgba(255,255,255,0.04)' },
                 }
             },
         },
@@ -2638,18 +2665,42 @@ function drawMonthlyContractsChart(data, year) {
         type: "bar",
         data: {
             labels: monthLabels,
-            datasets: [{ label: "Contratos", data: contractsByMonth, backgroundColor: "#28a745" }],
+            datasets: [{ label: "Contratos", data: contractsByMonth, backgroundColor: "#FF6600" }],
         },
         options: {
             maintainAspectRatio: false,
             plugins: {
                 datalabels: {
-                    anchor: "end", align: "end", color: "white", font: { weight: "bold" },
+                    anchor: "end",
+                    align: "end",
+                    color: "white",
+                    font: { family: 'Poppins, Arial, sans-serif', size: 14, weight: "600" },
                     formatter: (value) => (value > 0 ? value.toLocaleString("pt-BR") : ""),
+                    clamp: true,
                 },
-                tooltip: { callbacks: { label: (context) => `Contratos: ${context.parsed.y.toLocaleString("pt-BR")}` } },
+                tooltip: {
+                    displayColors: true,
+                    usePointStyle: true,
+                    backgroundColor: 'rgba(0,0,0,0.85)',
+                    titleFont: { family: 'Poppins, Arial, sans-serif', size: 16 },
+                    bodyFont: { family: 'Poppins, Arial, sans-serif', size: 18, weight: '700' },
+                    padding: 12,
+                    cornerRadius: 6,
+                    callbacks: { label: (context) => `Contratos: ${context.parsed.y.toLocaleString("pt-BR")}` }
+                },
+                legend: { display: false },
             },
-            scales: { y: { beginAtZero: true } },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { font: { family: 'Poppins, Arial, sans-serif', size: 16 }, color: '#adb5bd' },
+                    grid: { color: 'rgba(255,255,255,0.04)' },
+                },
+                x: {
+                    ticks: { font: { family: 'Poppins, Arial, sans-serif', size: 16 }, color: '#adb5bd' },
+                    grid: { color: 'rgba(255,255,255,0.04)' },
+                }
+            },
         },
     });
 }
