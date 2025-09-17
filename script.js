@@ -2086,7 +2086,18 @@ function updateMonthlyVvrChart(historicalData, selectedUnidades) {
                     },
                 },
                 datalabels: {
-                    display: false,
+                    color: 'white',
+                    font: { family: 'Poppins, Arial, sans-serif', size: 14, weight: '700' },
+                    anchor: 'end',
+                    align: 'top',
+                    clamp: true,
+                    formatter: function(value) {
+                        if (!value || value === 0) return '';
+                        const num = Number(value);
+                        if (Math.abs(num) >= 1000000) return 'R$ ' + (num / 1000000).toFixed(1).replace('.0','') + ' mi';
+                        if (Math.abs(num) >= 1000) return 'R$ ' + (num / 1000).toFixed(1).replace('.0','') + 'k';
+                        return 'R$ ' + num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    }
                 },
             },
             scales: {
@@ -2348,19 +2359,57 @@ function updateTicketCharts(filteredData) {
         type: "bar",
         data: {
             labels: years,
-            datasets: [{ label: "Ticket Médio", data: annualTicketData, backgroundColor: "#17a2b8" }],
+            datasets: [{ label: "Ticket Médio", data: annualTicketData, backgroundColor: "#FF6600" }],
         },
         options: {
             maintainAspectRatio: false,
             indexAxis: "y",
             plugins: {
                 datalabels: {
-                    anchor: "end", align: "end", color: "white", font: { weight: "bold" },
-                    formatter: (value) => (value > 0 ? formatCurrency(value) : ""),
+                    anchor: "end",
+                    align: "end",
+                    color: "white",
+                    font: { weight: "bold", family: 'Poppins, Arial, sans-serif', size: 14 },
+                    formatter: function(value) {
+                        if (!value || value === 0) return "";
+                        const num = Number(value);
+                        if (Math.abs(num) >= 1000000) return 'R$ ' + (num / 1000000).toFixed(1).replace('.0','') + ' mi';
+                        if (Math.abs(num) >= 1000) return 'R$ ' + (num / 1000).toFixed(1).replace('.0','') + 'k';
+                        return formatCurrency(value);
+                    }
                 },
-                tooltip: { callbacks: { label: (context) => `Ticket Médio: ${formatCurrency(context.parsed.x)}` } },
+                tooltip: {
+                    padding: 12,
+                    backgroundColor: 'rgba(0,0,0,0.85)',
+                    titleFont: { family: 'Poppins, Arial, sans-serif', size: 16, weight: '600' },
+                    bodyFont: { family: 'Poppins, Arial, sans-serif', size: 18, weight: '700' },
+                    footerFont: { family: 'Poppins, Arial, sans-serif', size: 16, weight: '600' },
+                    cornerRadius: 6,
+                    displayColors: true,
+                    callbacks: { label: (context) => `Ticket Médio: ${formatCurrency(context.parsed.x)}` }
+                },
             },
-            scales: { x: { beginAtZero: true, afterDataLimits: (scale) => { scale.max *= 1.2; } } },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    afterDataLimits: (scale) => { scale.max *= 1.2; },
+                    ticks: {
+                        font: { size: 16, family: 'Poppins, Arial, sans-serif' },
+                        color: '#adb5bd',
+                        callback: function(value) {
+                            const num = Number(value);
+                            if (Math.abs(num) >= 1000000) return (num / 1000000).toFixed(1).replace('.0','') + ' mi';
+                            if (Math.abs(num) >= 1000) return (num / 1000).toFixed(0) + 'k';
+                            return num;
+                        }
+                    },
+                    grid: { color: 'rgba(255,255,255,0.04)' }
+                },
+                y: {
+                    ticks: { font: { size: 16, family: 'Poppins, Arial, sans-serif' }, color: '#adb5bd' },
+                    grid: { color: 'rgba(255,255,255,0.04)' }
+                }
+            },
             onClick: (event, elements) => {
                 if (elements.length > 0) {
                     const clickedYear = years[elements[0].index];
@@ -2400,18 +2449,56 @@ function drawMonthlyTicketChart(data, year) {
         type: "bar",
         data: {
             labels: monthLabels,
-            datasets: [{ label: "Ticket Médio", data: monthlyTicketData, backgroundColor: "#17a2b8" }],
+            datasets: [{ label: "Ticket Médio", data: monthlyTicketData, backgroundColor: "#FF6600" }],
         },
         options: {
             maintainAspectRatio: false,
             plugins: {
                 datalabels: {
-                    anchor: "end", align: "end", color: "white", font: { weight: "bold" },
-                    formatter: (value) => (value > 0 ? formatCurrency(value) : ""),
+                    anchor: "end",
+                    align: "end",
+                    color: "white",
+                    font: { weight: "bold", family: 'Poppins, Arial, sans-serif', size: 14 },
+                    formatter: function(value) {
+                        if (!value || value === 0) return "";
+                        const num = Number(value);
+                        if (Math.abs(num) >= 1000000) return 'R$ ' + (num / 1000000).toFixed(1).replace('.0','') + ' mi';
+                        if (Math.abs(num) >= 1000) return 'R$ ' + (num / 1000).toFixed(1).replace('.0','') + 'k';
+                        return formatCurrency(value);
+                    }
                 },
-                tooltip: { callbacks: { label: (context) => `Ticket Médio: ${formatCurrency(context.parsed.y)}` } },
+                tooltip: {
+                    padding: 12,
+                    backgroundColor: 'rgba(0,0,0,0.85)',
+                    titleFont: { family: 'Poppins, Arial, sans-serif', size: 16, weight: '600' },
+                    bodyFont: { family: 'Poppins, Arial, sans-serif', size: 18, weight: '700' },
+                    footerFont: { family: 'Poppins, Arial, sans-serif', size: 16, weight: '600' },
+                    cornerRadius: 6,
+                    displayColors: true,
+                    callbacks: { label: (context) => `Ticket Médio: ${formatCurrency(context.parsed.y)}` }
+                },
             },
-            scales: { y: { beginAtZero: true, max: maxValue > 0 ? maxValue * 1.2 : undefined } },
+            scales: {
+                x: {
+                    ticks: { font: { size: 16, family: 'Poppins, Arial, sans-serif' }, color: '#adb5bd' },
+                    grid: { color: 'rgba(255,255,255,0.04)' }
+                },
+                y: {
+                    beginAtZero: true,
+                    max: maxValue > 0 ? maxValue * 1.2 : undefined,
+                    ticks: {
+                        font: { size: 16, family: 'Poppins, Arial, sans-serif' },
+                        color: '#adb5bd',
+                        callback: function(value) {
+                            const num = Number(value);
+                            if (Math.abs(num) >= 1000000) return (num / 1000000).toFixed(1).replace('.0','') + ' mi';
+                            if (Math.abs(num) >= 1000) return (num / 1000).toFixed(0) + 'k';
+                            return num;
+                        }
+                    },
+                    grid: { color: 'rgba(255,255,255,0.04)' }
+                }
+            },
         },
     });
 }
