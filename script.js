@@ -1767,54 +1767,45 @@ function updateVvrVsMetaPorMesChart(salesDataForYear, anoVigente) {
             maintainAspectRatio: false,
             interaction: { mode: "index", intersect: false },
             plugins: {
+                // make datalabels visually match the cumulative chart pattern
                 datalabels: {
                     anchor: "end",
                     align: "end",
+                    display: true,
+                    backgroundColor: "rgba(52, 58, 64, 0.7)",
+                    borderRadius: 4,
+                    color: "white",
+                    font: { weight: "bold", size: 14, family: 'Poppins, Arial, sans-serif' },
+                    padding: 4,
                     formatter: (value) => {
-                        if (value >= 1000000) {
-                            return `${(value / 1000000).toFixed(0)} mi`;
-                        } else if (value >= 1000) {
-                            return `${(value / 1000).toFixed(0)} k`;
-                        }
-                        return value;
-                    },
-                    color: "#F8F9FA",
-                    font: {
-                        weight: "bold",
-                        size: 20,
-                        family: 'Poppins, Arial, sans-serif'
-                    },
+                        if (value === null || value === undefined) return '';
+                        if (value >= 1000000) return `${(value / 1000000).toFixed(1)} mi`;
+                        if (value >= 1000) return `${(value / 1000).toFixed(0)}k`;
+                        return value.toFixed ? value.toFixed(0) : value;
+                    }
                 },
+                // tooltip: match cumulative tooltip sizing and font family
                 tooltip: {
+                    padding: 12,
+                    usePointStyle: true,
+                    backgroundColor: 'rgba(0,0,0,0.85)',
+                    borderRadius: 6,
+                    bodyFont: { size: 18, family: 'Poppins, Arial, sans-serif', weight: 'bold' },
+                    titleFont: { size: 16, family: 'Poppins, Arial, sans-serif', weight: 'bold' },
+                    footerFont: { size: 16, family: 'Poppins, Arial, sans-serif', weight: 'bold' },
                     callbacks: {
                         label: function (context) {
                             let label = context.dataset.label || "";
                             if (label) { label += ": "; }
                             if (context.parsed.y !== null) { label += formatCurrency(context.parsed.y); }
                             return label;
-                        },
-                    },
-                    bodyFont: {
-                        size: 18,
-                        family: 'Poppins, Arial, sans-serif',
-                        weight: 'bold'
-                    },
-                    titleFont: {
-                        size: 16,
-                        family: 'Poppins, Arial, sans-serif',
-                        weight: 'bold'
-                    },
-                    footerFont: {
-                        size: 16,
-                        family: 'Poppins, Arial, sans-serif',
-                        weight: 'bold'
-                    },
+                        }
+                    }
                 },
+                // increase legend font size to match cumulative chart
                 legend: {
                     labels: {
-                        font: {
-                            size: 16
-                        }
+                        font: { size: 20 }
                     }
                 },
             },
@@ -1822,9 +1813,9 @@ function updateVvrVsMetaPorMesChart(salesDataForYear, anoVigente) {
                 y: {
                     beginAtZero: true,
                     ticks: {
-                        font: {
-                            size: 18
-                        },
+                        // match cumulative axis style: slightly smaller and lighter color
+                        font: { size: 16 },
+                        color: '#adb5bd',
                         callback: function(value) {
                             if (value >= 1000000) {
                                 return (value / 1000000).toFixed(0) + ' mi';
@@ -1837,9 +1828,8 @@ function updateVvrVsMetaPorMesChart(salesDataForYear, anoVigente) {
                 },
                 x: {
                     ticks: {
-                        font: {
-                            size: 18
-                        }
+                        font: { size: 16 },
+                        color: '#adb5bd'
                     }
                 }
             },
