@@ -1823,6 +1823,17 @@ function updateVvrVsMetaPorMesChart(salesDataForYear, anoVigente) {
                 tooltip: {
                     padding: 12,
                     usePointStyle: true,
+                    displayColors: true,
+                    /* Ensure tooltip marker is filled with the dataset color */
+                    callbacks: Object.assign({
+                        labelColor: function(context) {
+                            const color = context.dataset.borderColor || context.dataset.backgroundColor || '#ffffff';
+                            return { borderColor: color, backgroundColor: color, borderWidth: 1 };
+                        }
+                    }, (function(){
+                        // preserve existing callbacks if any (label defined later)
+                        return {};
+                    })()),
                     backgroundColor: 'rgba(0,0,0,0.85)',
                     borderRadius: 6,
                     bodyFont: { size: 18, family: 'Poppins, Arial, sans-serif', weight: 'bold' },
@@ -1911,14 +1922,51 @@ function updateCumulativeVvrChart(historicalData, selectedUnidades) {
         salesByYearMonth[year][month] += d.vl_plano;
     });
     
-    const colors = ["#ffc107", "#FF6600", "#6c757d", "#28a745", "#dc3545", "#17a2b8", "#fd7e14"];
+    // Generate a perceptual 3-stop palette: gray -> saturated yellow -> brand orange
+    function hexToRgb(hex) {
+        const m = hex.replace('#','');
+        return [parseInt(m.substring(0,2),16), parseInt(m.substring(2,4),16), parseInt(m.substring(4,6),16)];
+    }
+    function rgbToHex(r,g,b){
+        return '#'+[r,g,b].map(v=>v.toString(16).padStart(2,'0')).join('');
+    }
+    function generateThreeStopScale(startHex, midHex, endHex, steps){
+        if (steps <= 1) return [endHex];
+        const start = hexToRgb(startHex);
+        const mid = hexToRgb(midHex);
+        const end = hexToRgb(endHex);
+        const out = [];
+        for(let i=0;i<steps;i++){
+            const t = i/(steps-1);
+            if (t <= 0.5) {
+                const localT = t / 0.5;
+                const r = Math.round(start[0] + (mid[0]-start[0]) * localT);
+                const g = Math.round(start[1] + (mid[1]-start[1]) * localT);
+                const b = Math.round(start[2] + (mid[2]-start[2]) * localT);
+                out.push(rgbToHex(r,g,b));
+            } else {
+                const localT = (t-0.5) / 0.5;
+                const r = Math.round(mid[0] + (end[0]-mid[0]) * localT);
+                const g = Math.round(mid[1] + (end[1]-mid[1]) * localT);
+                const b = Math.round(mid[2] + (end[2]-mid[2]) * localT);
+                out.push(rgbToHex(r,g,b));
+            }
+        }
+        return out;
+    }
+
+    const baseGray = '#6c757d';
+    const midYellow = '#FFB300';
+    const baseOrange = '#FF6600';
+    const palette = generateThreeStopScale(baseGray, midYellow, baseOrange, uniqueYears.length || 1);
+
     const datasets = uniqueYears.map((year, index) => {
         const monthlyData = salesByYearMonth[year] || Array(12).fill(0);
         const cumulativeData = monthlyData.reduce((acc, val) => [...acc, (acc.length > 0 ? acc[acc.length - 1] : 0) + val], []);
         return {
             label: year,
             data: cumulativeData,
-            borderColor: colors[index % colors.length],
+            borderColor: palette[index % palette.length],
             fill: false,
             tension: 0.1,
             hidden: !activeYears.includes(year),
