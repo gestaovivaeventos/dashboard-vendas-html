@@ -5769,7 +5769,7 @@ function updateAdesoesDrillDownCharts(filteredData) {
 }
 
 function drawMonthlyAdesoesDetailChart(data, year) {
-    document.getElementById("monthly-adesoes-stacked-title").textContent = `Adesões por Tipo (Mensal ${year})`;
+    document.getElementById("monthly-adesoes-stacked-title").textContent = `ADESÕES POR TIPO MENSAL (${year})`;
     const adesoesByMonth = Array(12).fill(0).map(() => ({ vendas: 0, posVendas: 0 }));
     
     const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
