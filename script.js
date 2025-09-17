@@ -1736,12 +1736,12 @@ function updateVvrVsMetaPorMesChart(salesDataForYear, anoVigente) {
         data: {
             labels: formattedLabels,
             datasets: [
-                { label: "VVR Realizado", data: realizadoValues, backgroundColor: "rgba(255, 193, 7, 0.7)", order: 1 },
+                { label: "VVR Realizado", data: realizadoValues, backgroundColor: "#FF6600", order: 1 },
                 {
                     label: "Meta VVR",
                     data: metaValues,
                     type: "line",
-                    borderColor: "rgb(220, 53, 69)",
+                    borderColor: "#FFFFFF",
                     order: 0,
                     datalabels: {
                         display: true,
@@ -1751,7 +1751,14 @@ function updateVvrVsMetaPorMesChart(salesDataForYear, anoVigente) {
                         color: "white",
                         font: { size: 15 },
                         padding: 4,
-                        formatter: (value) => (value > 0 ? `${(value / 1000).toFixed(0)}k` : ""),
+                        formatter: (value) => {
+                            if (value >= 1000000) {
+                                return `${(value / 1000000).toFixed(0)} mi`;
+                            } else if (value >= 1000) {
+                                return `${(value / 1000).toFixed(0)} k`;
+                            }
+                            return value;
+                        },
                     },
                 },
             ],
@@ -1763,9 +1770,20 @@ function updateVvrVsMetaPorMesChart(salesDataForYear, anoVigente) {
                 datalabels: {
                     anchor: "end",
                     align: "end",
-                    formatter: (value) => (value >= 1000 ? `${(value / 1000).toFixed(0)}k` : ""),
+                    formatter: (value) => {
+                        if (value >= 1000000) {
+                            return `${(value / 1000000).toFixed(0)} mi`;
+                        } else if (value >= 1000) {
+                            return `${(value / 1000).toFixed(0)} k`;
+                        }
+                        return value;
+                    },
                     color: "#F8F9FA",
-                    font: { weight: "bold" },
+                    font: {
+                        weight: "bold",
+                        size: 20,
+                        family: 'Montserrat, Arial, sans-serif'
+                    },
                 },
                 tooltip: {
                     callbacks: {
@@ -1776,9 +1794,55 @@ function updateVvrVsMetaPorMesChart(salesDataForYear, anoVigente) {
                             return label;
                         },
                     },
+                    bodyFont: {
+                        size: 18,
+                        family: 'Montserrat, Arial, sans-serif',
+                        weight: 'bold'
+                    },
+                    titleFont: {
+                        size: 16,
+                        family: 'Montserrat, Arial, sans-serif',
+                        weight: 'bold'
+                    },
+                    footerFont: {
+                        size: 16,
+                        family: 'Montserrat, Arial, sans-serif',
+                        weight: 'bold'
+                    },
+                },
+                legend: {
+                    labels: {
+                        font: {
+                            size: 18
+                        }
+                    }
                 },
             },
-            scales: { y: { beginAtZero: true } },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        font: {
+                            size: 18
+                        },
+                        callback: function(value) {
+                            if (value >= 1000000) {
+                                return (value / 1000000).toFixed(0) + ' mi';
+                            } else if (value >= 1000) {
+                                return (value / 1000).toFixed(0) + ' K';
+                            }
+                            return value;
+                        }
+                    }
+                },
+                x: {
+                    ticks: {
+                        font: {
+                            size: 18
+                        }
+                    }
+                }
+            },
         },
     });
 }
