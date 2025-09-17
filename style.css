@@ -4,7 +4,7 @@
 .kpi-vvr-title {
     margin: 0 0 12px 0;
     color: #adb5bd;
-    font-size: 0.95rem;
+    font-size: 1.2rem;
     letter-spacing: 0.06em;
     font-family: 'Poppins', Arial, sans-serif;
     font-weight: 600;
@@ -1013,6 +1013,46 @@ body {
         .header { display: flex; justify-content: space-between; align-items: center; flex-direction: row; }
         #company-logo { height: 100px; width: auto; }
         h1, h2 { margin-top: 0; border-bottom: 2px solid #495057; padding-bottom: 10px; }
+
+        /* Make chart titles match the KPI/session card title style and be uppercase */
+        .chart-container > h2 {
+            margin: 0 0 12px 0;
+            color: #adb5bd;
+            font-size: 1.2rem; /* same as .kpi-vvr-title */
+            letter-spacing: 0.06em;
+            font-family: 'Poppins', Arial, sans-serif;
+            font-weight: 600;
+            text-transform: uppercase;
+            border-bottom: 1px solid #555;
+            padding-bottom: 2px;
+        }
+
+        /* Make table/container titles match KPI/session card title and be uppercase */
+        .table-container > h2 {
+            margin: 0 0 12px 0;
+            color: #adb5bd;
+            font-size: 1.2rem;
+            letter-spacing: 0.06em;
+            font-family: 'Poppins', Arial, sans-serif;
+            font-weight: 600;
+            text-transform: uppercase;
+            border-bottom: 1px solid #555;
+            padding-bottom: 2px;
+        }
+
+        /* Ensure Indicators section title matches other session titles */
+        .indicators-operacionais > h2,
+        .indicators-operacionais h2 {
+            margin: 0 0 12px 0;
+            color: #adb5bd;
+            font-size: 1.2rem;
+            letter-spacing: 0.06em;
+            font-family: 'Poppins', Arial, sans-serif;
+            font-weight: 600;
+            text-transform: uppercase;
+            border-bottom: 1px solid #555;
+            padding-bottom: 2px;
+        }
         .filters { 
             display: flex; 
             flex-direction: row; 
