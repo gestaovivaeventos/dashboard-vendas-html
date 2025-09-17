@@ -1357,8 +1357,21 @@ function updateDashboard() {
             if (leadsEl) leadsEl.textContent = totalLeads.toLocaleString('pt-BR');
             if (leadsMetaEl) leadsMetaEl.textContent = totalMetaLeads.toLocaleString('pt-BR');
             const percent = totalMetaLeads > 0 ? (totalLeads / totalMetaLeads) : 0;
-            if (leadsPercentEl) leadsPercentEl.textContent = `${(percent * 100).toFixed(1)}%`;
-            if (leadsProgressEl) leadsProgressEl.style.width = `${Math.min(100, percent * 100)}%`;
+            if (leadsPercentEl) {
+                leadsPercentEl.textContent = `${(percent * 100).toFixed(1)}%`;
+                leadsPercentEl.style.color = getColorForPercentage(percent);
+            }
+            if (leadsProgressEl) {
+                leadsProgressEl.style.width = `${Math.min(100, percent * 100)}%`;
+                // Use background instead of backgroundColor to override the CSS linear-gradient
+                leadsProgressEl.style.background = getColorForPercentage(percent);
+            }
+// Regra de cor igual VVR
+function getColorForPercentage(percent) {
+    if (percent >= 1) return "#28a745";
+    if (percent >= 0.5) return "#ffc107";
+    return "#dc3545";
+}
         } catch (err) {
             console.error('Erro ao calcular indicadores de leads:', err);
         }
@@ -1444,8 +1457,15 @@ function updateDashboard() {
             if (adesaoEl) adesaoEl.textContent = totalAdesoes.toLocaleString('pt-BR');
             if (adesaoMetaEl) adesaoMetaEl.textContent = totalMetaAdesoes.toLocaleString('pt-BR');
             const percentAd = totalMetaAdesoes > 0 ? (totalAdesoes / totalMetaAdesoes) : 0;
-            if (adesaoPercentEl) adesaoPercentEl.textContent = `${(percentAd * 100).toFixed(1)}%`;
-            if (adesaoProgressEl) adesaoProgressEl.style.width = `${Math.min(100, percentAd * 100)}%`;
+            if (adesaoPercentEl) {
+                adesaoPercentEl.textContent = `${(percentAd * 100).toFixed(1)}%`;
+                adesaoPercentEl.style.color = getColorForPercentage(percentAd);
+            }
+            if (adesaoProgressEl) {
+                adesaoProgressEl.style.width = `${Math.min(100, percentAd * 100)}%`;
+                // Use background instead of backgroundColor to override the CSS linear-gradient
+                adesaoProgressEl.style.background = getColorForPercentage(percentAd);
+            }
         } catch (err) {
             console.error('Erro ao calcular indicador de adesão total:', err);
         }
@@ -1529,8 +1549,15 @@ function updateDashboard() {
         if (contratosEl) contratosEl.textContent = totalContratos.toLocaleString('pt-BR');
         if (contratosMetaEl) contratosMetaEl.textContent = totalMetaContratos.toLocaleString('pt-BR');
         const percentCt = totalMetaContratos > 0 ? (totalContratos / totalMetaContratos) : 0;
-        if (contratosPercentEl) contratosPercentEl.textContent = `${(percentCt * 100).toFixed(1)}%`;
-        if (contratosProgressEl) contratosProgressEl.style.width = `${Math.min(100, percentCt * 100)}%`;
+        if (contratosPercentEl) {
+            contratosPercentEl.textContent = `${(percentCt * 100).toFixed(1)}%`;
+            contratosPercentEl.style.color = getColorForPercentage(percentCt);
+        }
+        if (contratosProgressEl) {
+            contratosProgressEl.style.width = `${Math.min(100, percentCt * 100)}%`;
+            // Use background instead of backgroundColor to override the CSS linear-gradient
+            contratosProgressEl.style.background = getColorForPercentage(percentCt);
+        }
     } catch (err) {
         console.error('Erro ao calcular indicador de contratos:', err);
     }
@@ -1593,8 +1620,15 @@ function updateDashboard() {
         if (reunioesEl) reunioesEl.textContent = reunioesCount.toLocaleString('pt-BR');
         if (reunioesMetaEl) reunioesMetaEl.textContent = totalMetaReunioes.toLocaleString('pt-BR');
         const percentRe = totalMetaReunioes > 0 ? (reunioesCount / totalMetaReunioes) : 0;
-        if (reunioesPercentEl) reunioesPercentEl.textContent = `${(percentRe * 100).toFixed(1)}%`;
-        if (reunioesProgressEl) reunioesProgressEl.style.width = `${Math.min(100, percentRe * 100)}%`;
+        if (reunioesPercentEl) {
+            reunioesPercentEl.textContent = `${(percentRe * 100).toFixed(1)}%`;
+            reunioesPercentEl.style.color = getColorForPercentage(percentRe);
+        }
+        if (reunioesProgressEl) {
+            reunioesProgressEl.style.width = `${Math.min(100, percentRe * 100)}%`;
+            // Use background instead of backgroundColor to override the CSS linear-gradient
+            reunioesProgressEl.style.background = getColorForPercentage(percentRe);
+        }
     } catch (err) {
         console.error('Erro ao calcular indicador de reunioes:', err);
     }

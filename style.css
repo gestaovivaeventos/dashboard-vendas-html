@@ -456,12 +456,8 @@ body {
     color: #F8F9FA;
 }
 .indicator-meta {
-    font-size: 0.8em; /* igual ao kpi-card-details */
-    color: #ADB5BD;
-}
-.indicator-meta {
-    font-size: 0.75rem;
-    color: #ffc107;
+    font-size: 0.75rem; /* igual ao kpi-card-details */
+    color: #ADB5BD; /* mesma cor do título do card */
 }
 .indicator-progress-bg {
     width: 100%;
