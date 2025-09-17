@@ -1813,7 +1813,7 @@ function updateVvrVsMetaPorMesChart(salesDataForYear, anoVigente) {
                 legend: {
                     labels: {
                         font: {
-                            size: 18
+                            size: 16
                         }
                     }
                 },
@@ -1948,6 +1948,12 @@ function updateCumulativeVvrChart(historicalData, selectedUnidades) {
                         }
                         return "";
                     },
+                },
+                // Legend: keep same style as the VVR vs Meta chart but increase font size
+                legend: {
+                    labels: {
+                        font: { size: 20 }
+                    }
                 },
             },
             scales: {
@@ -6482,7 +6488,7 @@ function updateCaptacoesChart(dados) {
                     labels: {
                         color: '#FFFFFF', // Legenda branca
                         font: {
-                            size: 18 // Fonte ainda maior para legenda
+                            size: 16 // Fonte reduzida para legenda
                         },
                         padding: 25, /* Ainda mais espaçamento */
                         usePointStyle: true,
