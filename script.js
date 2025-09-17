@@ -7550,26 +7550,53 @@ function updateIndicatorsTable(selectedUnidades, startDate, endDate) {
     ]);
 
     // Inicializar/atualizar DataTable
+    // Ensure DataTable is created with Portuguese language even if it was initialized elsewhere
     if ($.fn.DataTable.isDataTable('#indicadores-table')) {
-        const dt = $('#indicadores-table').DataTable();
-        dt.clear();
-        dt.rows.add(tableData);
-        dt.draw();
-    } else {
-        $('#indicadores-table').DataTable({
-            data: tableData,
-            columns: [
-                { title: 'Unidade' },
-                { title: 'Leads (%)' },
-                { title: 'Reuniões (%)' },
-                { title: 'Contratos (%)' },
-                { title: 'Adesões (%)' }
-            ],
-            language: { url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json" },
-            dom: 'Bfrtip',
-            buttons: [{
-                extend: 'excelHtml5', text: 'Exportar para Excel', title: `Indicadores_Operacionais_${new Date().toLocaleDateString('pt-BR')}`
-            }]
-        });
+        // Destroy previous instance to avoid residual English labels from other initializers
+        $('#indicadores-table').DataTable().destroy();
+        $('#indicadores-table').empty();
+    }
+
+    // (Re)create the DataTable with the correct language and data
+    $('#indicadores-table').DataTable({
+        data: tableData,
+        columns: [
+            { title: 'Unidade' },
+            { title: 'Leads (%)' },
+            { title: 'Reuniões (%)' },
+            { title: 'Contratos (%)' },
+            { title: 'Adesões (%)' }
+        ],
+        language: {
+            sEmptyTable: "Nenhum registro disponível na tabela",
+            sInfo: "Mostrando _START_ a _END_ de _TOTAL_ entradas",
+            sInfoEmpty: "Mostrando 0 a 0 de 0 entradas",
+            sInfoFiltered: "(filtrado de _MAX_ registros no total)",
+            sLengthMenu: "Mostrar _MENU_ entradas",
+            sLoadingRecords: "Carregando...",
+            sProcessing: "Processando...",
+            sSearch: "Pesquisar:",
+            searchPlaceholder: "Pesquisar...",
+            sZeroRecords: "Nenhum registro encontrado",
+            oPaginate: { sFirst: "Primeiro", sPrevious: "Anterior", sNext: "Próximo", sLast: "Último" },
+            oAria: { sSortAscending: ": ativar para ordenar a coluna de forma ascendente", sSortDescending: ": ativar para ordenar a coluna de forma descendente" }
+        },
+        dom: 'Bfrtip',
+        buttons: [{
+            extend: 'excelHtml5', text: 'Exportar para Excel', title: `Indicadores_Operacionais_${new Date().toLocaleDateString('pt-BR')}`
+        }]
+    });
+
+    // Garantir que o label e o placeholder fiquem em Português mesmo que uma inicialização anterior
+    // tenha criado elementos em Inglês (forçar substituição direta no DOM do wrapper)
+    try {
+        const wrapper = $('#indicadores-table_wrapper');
+        const label = wrapper.find('.dataTables_filter label');
+        // Substitui apenas o nó de texto (não remove o input)
+        label.contents().filter(function() { return this.nodeType === 3; }).each(function() { this.nodeValue = 'Pesquisar: '; });
+        wrapper.find('input[type="search"]').attr('placeholder', 'Pesquisar...');
+    } catch (e) {
+        // se algo falhar aqui, não quebramos a página; log opcional
+        console.warn('Não foi possível forçar o label do DataTable indicadores para PT-BR', e);
     }
 }
