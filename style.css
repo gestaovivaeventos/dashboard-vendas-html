@@ -987,7 +987,7 @@ body {
     opacity: 1;
     transform: translateY(0);
     /* LINHA ADICIONADA: Define uma camada padrão */
-    z-index: 2;
+    z-index: 99999;
 }
 
         /* ✅ Estados para transição suave - apenas quando navegando */
@@ -1191,7 +1191,10 @@ body {
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
 }
 .chart-selector button:hover {
-    background-image: linear-gradient(to bottom, #8a9198, #5a6268);
+    /* Hover leve com versão laranja mais escura para indicar foco */
+    background-image: linear-gradient(to bottom, #ff8a33, #ff6a00);
+    color: #fff;
+    border-color: #e65c00;
 }
 .chart-selector button:active {
     transform: translateY(2px);
@@ -1199,9 +1202,11 @@ body {
     box-shadow: 0 2px 3px rgba(0, 0, 0, 0.2);
 }
 .chart-selector button.active {
-    background-image: linear-gradient(to bottom, #ffca2c, #ffc107);
-    color: #212529;
-    border-color: #b38600;
+    /* Cor solicitada para estado ativo */
+    background-color: #FF6600 !important;
+    background-image: none !important;
+    color: #ffffff !important;
+    border-color: #cc5200 !important;
     font-weight: bold;
     text-shadow: none;
 }
