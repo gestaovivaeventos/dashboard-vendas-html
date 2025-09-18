@@ -8235,7 +8235,7 @@ function updateCaptacoesFunilTable(funilRows) {
                     { title: 'TOTAL', className: 'dt-left' }
                 ],
                 // Let DataTables handle widths; use paging instead of scroll to avoid cloned headers
-                pageLength: 6,
+                pageLength: 7,
                 paging: true,
                 language: {
                     sEmptyTable: "Nenhum registro disponível na tabela",
