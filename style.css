@@ -398,6 +398,41 @@ body {
     color: #FFFFFF !important;
 }
 
+/* Modern styling for the Captações pie chart card */
+.captacoes-chart-container {
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.02));
+    border: 1px solid rgba(255,255,255,0.04);
+    border-radius: 10px;
+    padding: 18px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.02);
+    min-height: 320px;
+}
+
+.captacoes-chart-container .chart-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start; /* keep chart left and legend on the right */
+    padding: 6px 0;
+}
+
+.captacoes-chart-container canvas {
+    border-radius: 8px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+}
+
+/* Slightly larger legend markers and neutral text color */
+.captacoes-chart-container .chart-legend li span {
+    width: 14px !important;
+    height: 14px !important;
+    border-radius: 50% !important;
+}
+
+/* Legend label neutral color (matches other charts) */
+.captacoes-chart-container .chart-legend li {
+    color: #adb5bd !important;
+    font-weight: 600;
+}
+
 /* Visual container for tables to improve separation and clarity */
 .table-card {
     background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
@@ -870,28 +905,53 @@ body {
         /* Estilos para a seção de captações */
         .captacoes-content {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
+            grid-template-columns: 1fr; /* single column so table can span full width */
+            gap: 18px;
             grid-column: span 12;
             margin-top: 20px;
         }
 
-        /* Quando o sidebar está recolhido, ajusta o layout das captações */
+        /* Quando o sidebar está recolhido, manter o layout das captações igual (single column)
+           para que a tabela continue acima do gráfico independente do estado do sidebar */
         #main-content.full-width .captacoes-content {
-            grid-template-columns: 1fr 1fr; /* Mantém duas colunas mas com melhor espaçamento */
-            gap: 20px; /* Reduz o gap para evitar overflow */
-            max-width: 100%; /* Garante que não saia da tela */
-            overflow: hidden; /* Previne vazamento horizontal */
+            grid-template-columns: 1fr; /* manter single column */
+            gap: 18px;
+            max-width: 100%;
+            overflow: hidden;
         }
 
-        .captacoes-table-container, .captacoes-chart-container {
+        .captacoes-table-container {
             background: linear-gradient(135deg, #343a40 0%, #495057 100%);
             border-radius: 8px;
-            padding: 10px; /* Padding ainda menor */
+            padding: 10px;
             border: 1px solid #495057;
-            height: 700px; /* Altura muito maior */
             display: flex;
             flex-direction: column;
+            width: 100%;
+        }
+
+        /* stacked bar container (below the table) */
+        .captacoes-stackedbar-container {
+            background: linear-gradient(135deg, #343a40 0%, #495057 100%);
+            border-radius: 8px;
+            padding: 12px;
+            border: 1px solid #495057;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            min-height: 120px;
+            align-items: stretch;
+        }
+
+        .captacoes-stackedbar-container .chart-wrapper {
+            width: 100%;
+            display: block;
+            height: 100%;
+        }
+
+        .captacoes-stackedbar-container canvas {
+            width: 100% !important;
+            height: 72px !important; /* controls the visible thickness of the bar */
         }
 
         /* Quando o sidebar está recolhido, ajusta os containers das captações */

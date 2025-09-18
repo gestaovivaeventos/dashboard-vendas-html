@@ -6962,7 +6962,8 @@ function updateCaptacoes(dadosFiltrados) {
     }));
     
     // Atualizar gráfico
-    updateCaptacoesChart(dadosGrafico);
+    // Render 100% stacked bar instead of doughnut
+    updateCaptacoesStackedBar(dadosGrafico);
     
     console.log("=== FIM updateCaptacoes ===");
 }
@@ -7100,36 +7101,30 @@ function updateCaptacoesChart(dados) {
     const backgroundColor = dados.map((_, index) => cores[index % cores.length]);
     
     captacoesChartInstance = new Chart(ctx, {
-        type: 'pie',
+        type: 'doughnut',
         data: {
             labels: labels, // Sem percentuais na legenda
             datasets: [{
                 data: valores,
                 backgroundColor: backgroundColor,
-                borderColor: '#495057',
-                borderWidth: 2
+                borderColor: '#2b2f31',
+                borderWidth: 2,
+                hoverOffset: 12,
+                borderRadius: 8
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false, /* Permitir que ocupe todo espaço */
-            layout: {
-                padding: {
-                    top: 0,
-                    bottom: 0,
-                    left: 0,
-                    right: 180 /* Mais espaço à direita para legenda completa */
-                }
-            },
+            cutout: '45%',
+            layout: { padding: { top: 0, bottom: 0, left: 0, right: 180 } },
             plugins: {
                 legend: {
                     position: 'right', // Legenda à direita
                     labels: {
-                        color: '#FFFFFF', // Legenda branca
-                        font: {
-                            size: 16 // Fonte reduzida para legenda
-                        },
-                        padding: 25, /* Ainda mais espaçamento */
+                        color: '#adb5bd', // use canonical neutral color
+                        font: { size: 15, family: 'Poppins, Arial, sans-serif', weight: 600 },
+                        padding: 18,
                         usePointStyle: true,
                         generateLabels: function(chart) {
                             const data = chart.data;
@@ -7145,8 +7140,8 @@ function updateCaptacoesChart(dados) {
                                         pointStyle: 'circle',
                                         hidden: false,
                                         index: index,
-                                        textColor: '#FFFFFF',
-                                        font: { family: 'Poppins, Arial, sans-serif', size: 16, weight: 'bold' }
+                                        textColor: '#adb5bd',
+                                        font: { family: 'Poppins, Arial, sans-serif', size: 15, weight: '600' }
                                     };
                                 });
                             }
@@ -7174,11 +7169,11 @@ function updateCaptacoesChart(dados) {
                     }
                 },
                 datalabels: {
-                    color: '#2c3e50',
-                    font: {
-                        weight: 'bold',
-                        size: 18 /* Fonte reduzida para consistência */
-                    },
+                    color: '#FFFFFF',
+                    backgroundColor: 'rgba(0,0,0,0.35)',
+                    borderRadius: 6,
+                    padding: 6,
+                    font: { weight: '700', size: 16, family: 'Poppins, Arial, sans-serif' },
                     formatter: function(value, context) {
                         const percentual = dados[context.dataIndex].percentual;
                         return `${percentual}%`;
@@ -7190,6 +7185,86 @@ function updateCaptacoesChart(dados) {
     });
     
     console.log("✅ Gráfico de captações atualizado com", dados.length, "categorias");
+}
+
+// Nova função: cria um gráfico de barras 100% empilhadas (horizontal) com os mesmos dados
+let captacoesStackedBarInstance = null;
+function updateCaptacoesStackedBar(dados) {
+    const ctx = document.getElementById('captacoesStackedBar');
+    if (!ctx) {
+        console.error("❌ Elemento 'captacoesStackedBar' não encontrado");
+        return;
+    }
+
+    // destruir instância anterior
+    if (captacoesStackedBarInstance) captacoesStackedBarInstance.destroy();
+
+    const cores = [
+        '#FFC107', // Amarelo
+        '#FF9800', // Laranja
+        '#FF5722', // Vermelho
+        '#9C27B0', // Roxo
+        '#3F51B5', // Azul
+        '#009688', // Verde água
+        '#4CAF50', // Verde
+        '#FFB74D'  // Laranja claro
+    ];
+
+    const labels = dados.map(d => d.tipo);
+    const valores = dados.map(d => d.total);
+    const total = valores.reduce((s, v) => s + v, 0) || 1;
+    const percents = valores.map(v => (v / total) * 100);
+
+    // For Chart.js stacked 100% we create one dataset per category with the percentage
+    const datasets = valores.map((v, idx) => ({
+        label: labels[idx],
+        data: [percents[idx]],
+        backgroundColor: cores[idx % cores.length],
+        borderColor: '#2b2f31',
+        borderWidth: 0
+    }));
+
+    captacoesStackedBarInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: [''], // single stacked bar
+            datasets: datasets
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: { stacked: true, display: false, max: 100 },
+                y: { stacked: true, display: false }
+            },
+            plugins: {
+                legend: { position: 'bottom', labels: { color: '#adb5bd', boxWidth: 14, boxHeight: 14, padding: 10, font: { size: 16, family: 'Poppins, Arial, sans-serif', weight: 700 } } },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const idx = context.datasetIndex;
+                            const item = dados[idx];
+                            return `${item.tipo}: ${item.total} leads (${item.percentual}%)`;
+                        }
+                    }
+                },
+                datalabels: {
+                    display: true,
+                    color: '#ffffff',
+                    anchor: 'center',
+                    align: 'center',
+                    clamp: true,
+                    formatter: function(value, context) { return `${value.toFixed(1)}%`; },
+                    font: { weight: '800', size: 16, family: 'Poppins, Arial, sans-serif' }
+                }
+            },
+            elements: {
+                bar: { borderRadius: 6 }
+            }
+        },
+        plugins: [ChartDataLabels]
+    });
 }
 
 // === NOVA SEÇÃO: LEADS PERDIDOS DETALHADOS ===
