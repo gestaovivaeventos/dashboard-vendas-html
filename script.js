@@ -6908,63 +6908,99 @@ function updateCaptacoes(dadosFiltrados) {
 }
 
 // Função para atualizar a tabela de captações
+// DataTable instance for captacoes
+let captacoesDataTable = null;
+
+// Função para atualizar a tabela de captações usando DataTables (mantém estilo consistente com outros relatórios)
 function updateCaptacoesTable(dados) {
-    const tbody = document.getElementById('captacoes-table-body');
-    if (!tbody) {
-        console.error("❌ Elemento 'captacoes-table-body' não encontrado");
+    // Preparar linhas para DataTable
+    const rows = dados.map(item => [
+        item.origem,
+        item.tipo,
+        `${item.percentual}%`,
+        item.total
+    ]);
+
+    // Se já existe, apenas recarrega os dados
+    if (captacoesDataTable) {
+        captacoesDataTable.clear().rows.add(rows).draw();
+        // Atualizar footer manualmente
+        updateCaptacoesFooter(dados);
         return;
     }
-    
-    // Limpar tabela
-    tbody.innerHTML = '';
-    
-    // Calcular totais para a linha de resumo
-    const totalAbsoluto = dados.reduce((sum, item) => sum + item.total, 0);
-    const totalPercentual = dados.reduce((sum, item) => sum + item.percentual, 0);
-    
-    // Encontrar valores min e max para o mapa de calor (excluindo o total)
-    const percentuais = dados.map(item => item.percentual);
+
+    // Inicializa DataTable com opções e botão de exportação, linguagem pt-BR
+    captacoesDataTable = $("#captacoes-table").DataTable({
+        data: rows,
+        columns: [
+            { title: "Origem do Lead" },
+            { title: "Tipo de captação" },
+            { title: "%" },
+            { title: "TOTAL" },
+        ],
+        pageLength: 10,
+        language: {
+            sEmptyTable: "Nenhum registro disponível na tabela",
+            sInfo: "Mostrando _START_ a _END_ de _TOTAL_ entradas",
+            sInfoEmpty: "Mostrando 0 a 0 de 0 entradas",
+            sInfoFiltered: "(filtrado de _MAX_ registros no total)",
+            sLengthMenu: "Mostrar _MENU_ entradas",
+            sLoadingRecords: "Carregando...",
+            sProcessing: "Processando...",
+            sSearch: "Pesquisar:",
+            sZeroRecords: "Nenhum registro encontrado",
+            oPaginate: { sFirst: "Primeiro", sPrevious: "Anterior", sNext: "Próximo", sLast: "Último" },
+            oAria: { sSortAscending: ": ativar para ordenar a coluna de forma ascendente", sSortDescending: ": ativar para ordenar a coluna de forma descendente" }
+        },
+        destroy: true,
+        dom: "Bfrtip",
+        buttons: [{
+            extend: "excelHtml5", text: "Exportar para Excel", title: `Relatorio_Captacoes_${new Date().toLocaleDateString("pt-BR")}`, className: "excel-button",
+            exportOptions: {
+                format: {
+                    body: function (data, row, column, node) {
+                        // Remove formatting to export raw numbers for TOTAL
+                        if (column === 3) { return Number(String(data).replace(/[^0-9\-\.]/g, '')) || 0; }
+                        return data;
+                    }
+                }
+            }
+        }],
+        createdRow: function(row, data, dataIndex) {
+            // no heatmap classes — keep neutral rows like the Fundos/Consultor table
+            $(row).find('td').css({ 'text-align': 'center' });
+            $(row).find('td:first-child').css({ 'text-align': 'left' });
+            $(row).find('td:nth-child(2)').css({ 'text-align': 'left' });
+        }
+    });
+
+    // Atualizar footer
+    updateCaptacoesFooter(dados);
+}
+
+// Atualiza o conteúdo do tfoot com os totais e aplica classes heat conforme thresholds
+function updateCaptacoesFooter(dados) {
+    const percentuais = dados.map(d => d.percentual);
     const maxPercent = Math.max(...percentuais);
     const minPercent = Math.min(...percentuais);
-    
-    // Função para determinar a classe do mapa de calor
-    function getHeatClass(percentual) {
-        const threshold1 = minPercent + (maxPercent - minPercent) * 0.33;
-        const threshold2 = minPercent + (maxPercent - minPercent) * 0.66;
-        
-        if (percentual <= threshold1) return 'heat-low';
-        if (percentual <= threshold2) return 'heat-medium';
-        return 'heat-high';
+    const threshold1 = minPercent + (maxPercent - minPercent) * 0.33;
+    const threshold2 = minPercent + (maxPercent - minPercent) * 0.66;
+
+    // Atualiza footer valores
+    const totalAbsoluto = dados.reduce((s, i) => s + i.total, 0);
+    const totalPercentual = dados.reduce((s, i) => s + i.percentual, 0);
+
+    const $tfoot = $('#captacoes-table tfoot tr');
+    if ($tfoot.length) {
+        $tfoot.find('td').eq(2).text(totalPercentual.toFixed(1) + '%');
+        $tfoot.find('td').eq(3).text(totalAbsoluto);
+
+        // No heatmap: keep footer visually highlighted but neutral classes
+        $tfoot.find('td').eq(2).css({ 'font-weight': '700', 'color': '#ffc107' });
+        $tfoot.find('td').eq(3).css({ 'font-weight': '700', 'color': '#ffc107' });
     }
-    
-    // Preencher tabela com dados
-    dados.forEach(item => {
-        const tr = document.createElement('tr');
-        
-        tr.innerHTML = `
-            <td>${item.origem}</td>
-            <td>${item.tipo}</td>
-            <td class="${getHeatClass(item.percentual)}">${item.percentual}%</td>
-            <td class="${getHeatClass(item.percentual)}">${item.total}</td>
-        `;
-        
-        tbody.appendChild(tr);
-    });
-    
-    // Adicionar linha de resumo/total
-    const trTotal = document.createElement('tr');
-    trTotal.className = 'captacoes-table-footer';
-    
-    trTotal.innerHTML = `
-        <td>TOTAL GERAL</td>
-        <td>-</td>
-        <td>${totalPercentual.toFixed(1)}%</td>
-        <td>${totalAbsoluto}</td>
-    `;
-    
-    tbody.appendChild(trTotal);
-    
-    console.log("✅ Tabela de captações atualizada com", dados.length, "itens + linha de resumo");
+
+    // No per-row heatmap assignment — rows remain neutral like other DataTables
 }
 
 // Variável global para armazenar a instância do gráfico
