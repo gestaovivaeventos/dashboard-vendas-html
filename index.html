@@ -424,17 +424,19 @@
                     </div>
                     <section class="table-container" id="consultor-table-section" style="display: none;">
                         <h2>Desempenho por Consultor Comercial</h2>
-                        <table id="consultor-table" class="display" style="width:100%">
-                            <thead>
-                                <tr>
-                                    <th>Unidade</th>
-                                    <th>Consultor Comercial</th>
-                                    <th>VVR Total</th>
-                                    <th>Total de Adesões</th>
-                                </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
+                        <div class="table-card" role="region" aria-label="Tabela Desempenho por Consultor Comercial">
+                            <table id="consultor-table" class="display" style="width:100%">
+                                <thead>
+                                    <tr>
+                                        <th>Unidade</th>
+                                        <th>Consultor Comercial</th>
+                                        <th>VVR Total</th>
+                                        <th>Total de Adesões</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
                     </section>
                     <section class="table-container" id="detalhada-adesoes-table-section" style="display: none;">
                         <h2>Adesões Detalhadas no Período</h2>
@@ -527,17 +529,19 @@
                                 <!-- Placeholder para nova tabela de captações: a tabela original foi removida conforme solicitado -->
                                 <div id="captacoes-table-placeholder" class="captacoes-table-placeholder">
                                     <h2 class="kpi-vvr-title" style="margin-top:0;">Desempenho por Captação (Funil)</h2>
-                                    <table id="captacoes-funil-table" class="display" style="width:100%">
-                                        <thead>
-                                            <tr>
-                                                <th>Origem do Lead</th>
-                                                <th>Tipo de captação</th>
-                                                <th>%</th>
-                                                <th>TOTAL</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody></tbody>
-                                    </table>
+                                        <div class="table-card" role="region" aria-label="Tabela de Captações">
+                                            <table id="captacoes-funil-table" class="display" style="width:100%">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Origem do Lead</th>
+                                                        <th>Tipo de captação</th>
+                                                        <th>%</th>
+                                                        <th>TOTAL</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody></tbody>
+                                            </table>
+                                        </div>
                                 </div>
                             </div>
                             
@@ -581,48 +585,51 @@
                         <!-- Container com duas colunas para as tabelas -->
                         <div class="leads-perdidos-content">
                             <div class="tabelas-lado-a-lado">
-                                <!-- Tabela de Motivos de Perda (esquerda) -->
+                                <!-- Placeholder para Motivos de Perda (tabela removida; espaço preservado) -->
                                 <div class="leads-perdidos-table-container">
                                     <div class="leads-perdidos-table-wrapper">
-                                        <table class="leads-perdidos-table" id="motivos-perda-table">
-                                            <thead>
-                                                <tr>
-                                                    <th>Motivo da Perda</th>
-                                                    <th>%</th>
-                                                    <th>Total</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="motivos-perda-table-body">
-                                                <!-- Dados serão inseridos via JavaScript -->
-                                            </tbody>
-                                        </table>
+                                        <div class="table-card" role="region" aria-label="Tabela de Motivos de Perda">
+                                            <h2 class="kpi-vvr-title" style="margin-top:0; font-size: 1rem;">Motivos de Perda</h2>
+                                            <table id="motivos-perda-table" class="display" style="width:100%">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Motivo de Perda</th>
+                                                        <th>%</th>
+                                                        <th>Total</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="motivos-perda-table-body"></tbody>
+                                            </table>
+                                        </div>
                                     </div>
                                 </div>
                                 
                                 <!-- Tabela de Descartes (direita) -->
                                 <div class="leads-perdidos-table-container">
                                     <div class="leads-perdidos-table-wrapper">
-                                        <table class="leads-perdidos-table" id="descartes-table">
-                                            <thead>
-                                                <tr>
-                                                    <th>Motivo do Descarte</th>
-                                                    <th>%</th>
-                                                    <th>Total</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="descartes-table-body">
-                                                <!-- Dados serão inseridos via JavaScript -->
-                                            </tbody>
-                                        </table>
+                                        <div class="table-card" role="region" aria-label="Tabela de Descartes">
+                                            <h2 class="kpi-vvr-title" style="margin-top:0; font-size: 1rem;">Motivos do Descarte</h2>
+                                            <table id="descartes-table" class="display" style="width:100%">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Motivo do Descarte</th>
+                                                        <th>%</th>
+                                                        <th>Total</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="descartes-table-body"></tbody>
+                                            </table>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                             
-                            <!-- Tabela de Concorrentes (abaixo das duas anteriores) - FORA do container lado-a-lado -->
-                            <div class="concorrentes-section">
-                                <div class="leads-perdidos-table-container concorrentes-container">
-                                    <div class="leads-perdidos-table-wrapper">
-                                        <table class="leads-perdidos-table" id="concorrentes-table">
+                            <!-- Tabela de Concorrentes (Leads Perdidos) -->
+                            <div class="leads-perdidos-table-container">
+                                <div class="leads-perdidos-table-wrapper">
+                                    <div class="table-card" role="region" aria-label="Tabela de Concorrentes">
+                                        <h2 class="kpi-vvr-title" style="margin-top:0; font-size: 1rem;">Concorrentes (Leads Perdidos)</h2>
+                                        <table id="concorrentes-table" class="display" style="width:100%">
                                             <thead>
                                                 <tr>
                                                     <th>Concorrente</th>
@@ -630,9 +637,7 @@
                                                     <th>Total</th>
                                                 </tr>
                                             </thead>
-                                            <tbody id="concorrentes-table-body">
-                                                <!-- Dados serão inseridos via JavaScript -->
-                                            </tbody>
+                                            <tbody></tbody>
                                         </table>
                                     </div>
                                 </div>

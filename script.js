@@ -304,6 +304,7 @@ async function initializeDashboard() {
         "chart-yearly-contracts-section", "chart-monthly-contracts-section",
     "chart-monthly-adesoes-section", "chart-yearly-adesoes-stacked-section",
         "chart-monthly-adesoes-stacked-section", "consultor-table-section",
+    "concorrentes-table-section",
     "indicadores-operacionais",
         "detalhada-adesoes-table-section", "fundos-detalhados-table-section",
         "funil-indicators-section", "funil-captacoes-section",
@@ -7035,6 +7036,10 @@ function updateCaptacoesFooter(dados) {
 
 // Variável global para armazenar a instância do gráfico
 let captacoesChartInstance = null;
+// DataTable instance for motivos de perda
+let motivosPerdaDataTable = null;
+// DataTable instance for descartes
+let descartesDataTable = null;
 
 // Função para atualizar o gráfico de captações
 function updateCaptacoesChart(dados) {
@@ -7165,9 +7170,9 @@ function updateMotivosPerdaTable(dadosFiltrados) {
     console.log("=== INÍCIO updateMotivosPerdaTable ===");
     console.log("📊 Dados filtrados recebidos:", dadosFiltrados ? dadosFiltrados.length : 0);
     
-    const tbody = document.getElementById('motivos-perda-table-body');
-    if (!tbody) {
-        console.error("❌ Elemento 'motivos-perda-table-body' não encontrado");
+    const tableEl = document.getElementById('motivos-perda-table');
+    if (!tableEl) {
+        console.error("❌ Elemento 'motivos-perda-table' não encontrado");
         return;
     }
 
@@ -7281,51 +7286,64 @@ function updateMotivosPerdaTable(dadosFiltrados) {
             percentual: totalLeadsPerdidos > 0 ? ((motivoContador[motivo] / totalLeadsPerdidos) * 100).toFixed(1) : 0
         })).sort((a, b) => b.total - a.total);
 
-        // Limpar tabela
-        tbody.innerHTML = '';
+    // Preparar dados para DataTable
+    const tableData = dadosTabela.map(item => [item.motivo, item.percentual + '%', item.total]);
 
-        // Adicionar linhas de dados
-        dadosTabela.forEach(item => {
-            try {
-                const tr = document.createElement('tr');
-                
-                // Determinar classe do mapa de calor baseada na porcentagem
-                let heatClass = 'heat-low';
-                const percentualNumerico = parseFloat(item.percentual);
-                if (percentualNumerico >= 30) {
-                    heatClass = 'heat-high';
-                } else if (percentualNumerico >= 15) {
-                    heatClass = 'heat-medium';
-                }
-                
-                tr.innerHTML = `
-                    <td>${item.motivo}</td>
-                    <td class="${heatClass}">${item.percentual}%</td>
-                    <td class="${heatClass}">${item.total}</td>
-                `;
-                
-                tbody.appendChild(tr);
-            } catch (error) {
-                console.error("Erro ao criar linha da tabela:", item, error);
-            }
-        });
+        // Se já existe DataTable, atualiza os dados
+        if (motivosPerdaDataTable) {
+            motivosPerdaDataTable.clear().rows.add(tableData).draw();
+        } else {
+            // Inicializar DataTable com configuração similar às outras tabelas (export, paginação, linguagem)
+            motivosPerdaDataTable = $("#motivos-perda-table").DataTable({
+                data: tableData,
+                columns: [
+                    { title: 'Motivo de Perda' },
+                    { title: '%' },
+                    { title: 'Total' }
+                ],
+                pageLength: 7,
+                destroy: true,
+                dom: 'Brtip',
+                buttons: [{
+                    extend: 'excelHtml5',
+                    text: 'Exportar para Excel',
+                    title: `Relatorio_Motivos_Perda_${new Date().toLocaleDateString('pt-BR')}`,
+                    className: 'excel-button',
+                    exportOptions: {
+                        columns: [0,1,2],
+                        format: {
+                            body: function(data, row, column, node) {
+                                // Remover '%' do valor percentual antes de exportar
+                                if (column === 1 && typeof data === 'string') return data.replace('%','');
+                                return data;
+                            }
+                        }
+                    }
+                }],
+                language: {
+                    sEmptyTable: 'Nenhum registro disponível na tabela',
+                    sInfo: 'Mostrando _START_ a _END_ de _TOTAL_ entradas',
+                    sInfoEmpty: 'Mostrando 0 a 0 de 0 entradas',
+                    sInfoFiltered: '(filtrado de _MAX_ registros no total)',
+                    sLengthMenu: 'Mostrar _MENU_ entradas',
+                    sLoadingRecords: 'Carregando...',
+                    sProcessing: 'Processando...',
+                    sSearch: 'Pesquisar:',
+                    sZeroRecords: 'Nenhum registro encontrado',
+                    oPaginate: { sFirst: 'Primeiro', sPrevious: 'Anterior', sNext: 'Próximo', sLast: 'Último' },
+                    oAria: { sSortAscending: ': ativar para ordenar a coluna de forma ascendente', sSortDescending: ': ativar para ordenar a coluna de forma descendente' }
+                },
+                createdRow: function(row, data, dataIndex) {
+                    // Alinhar a primeira coluna à esquerda (motivo) e as demais ao centro
+                    $(row).find('td').css({ 'text-align': 'center' });
+                    $(row).find('td:first-child').css({ 'text-align': 'left' });
+                    $(row).find('td:nth-child(2)').css({ 'text-align': 'left' });
+                },
+                autoWidth: false
+            });
+        }
 
-        // Adicionar linha de resumo/total
-        const totalPercentual = dadosTabela.reduce((sum, item) => sum + parseFloat(item.percentual), 0);
-        const totalAbsoluto = dadosTabela.reduce((sum, item) => sum + item.total, 0);
-        
-        const trTotal = document.createElement('tr');
-        trTotal.className = 'leads-perdidos-table-footer';
-        
-        trTotal.innerHTML = `
-            <td><strong>TOTAL GERAL</strong></td>
-            <td><strong>${totalPercentual.toFixed(1)}%</strong></td>
-            <td><strong>${totalAbsoluto}</strong></td>
-        `;
-        
-        tbody.appendChild(trTotal);
-
-        console.log("✅ Tabela de motivos de perda atualizada com", dadosTabela.length, "motivos + linha de resumo");
+        console.log('✅ Tabela de motivos de perda atualizada com', dadosTabela.length, 'motivos (DataTable)');
         
     } catch (error) {
         console.error("❌ Erro geral na função updateMotivosPerdaTable:", error);
@@ -7339,9 +7357,9 @@ function updateDescartesTable(dadosFiltrados) {
     console.log("=== INÍCIO updateDescartesTable ===");
     
     try {
-        const tbody = document.getElementById('descartes-table-body');
-        if (!tbody) {
-            console.error("❌ Elemento descartes-table-body não encontrado");
+        const tableEl = document.getElementById('descartes-table');
+        if (!tableEl) {
+            console.warn("⚠️ Elemento 'descartes-table' não encontrado — a placeholder provavelmente está ativa. Saindo sem atualizar.");
             return;
         }
 
@@ -7426,51 +7444,65 @@ function updateDescartesTable(dadosFiltrados) {
             percentual: totalLeadsDescartados > 0 ? ((motivoContador[motivo] / totalLeadsDescartados) * 100).toFixed(1) : 0
         })).sort((a, b) => b.total - a.total);
 
-        // Limpar tabela
-        tbody.innerHTML = '';
+        // Preparar dados para DataTable
+        const tableData = dadosTabela.map(item => [item.motivo, item.percentual + '%', item.total]);
 
-        // Adicionar linhas de dados
-        dadosTabela.forEach(item => {
-            try {
-                const tr = document.createElement('tr');
-                
-                // Determinar classe do mapa de calor baseada na porcentagem
-                let heatClass = 'heat-low';
-                const percentualNumerico = parseFloat(item.percentual);
-                if (percentualNumerico >= 30) {
-                    heatClass = 'heat-high';
-                } else if (percentualNumerico >= 15) {
-                    heatClass = 'heat-medium';
-                }
-                
-                tr.innerHTML = `
-                    <td>${item.motivo}</td>
-                    <td class="${heatClass}">${item.percentual}%</td>
-                    <td class="${heatClass}">${item.total}</td>
-                `;
-                
-                tbody.appendChild(tr);
-            } catch (error) {
-                console.error("Erro ao criar linha da tabela de descartes:", item, error);
-            }
-        });
+        if (descartesDataTable) {
+            descartesDataTable.clear().rows.add(tableData).draw();
+        } else {
+            descartesDataTable = $("#descartes-table").DataTable({
+                data: tableData,
+                columns: [
+                    { title: 'Motivo do Descarte' },
+                    { title: '%' },
+                    { title: 'Total' }
+                ],
+                columnDefs: [
+                    { targets: 0, width: '58%', className: 'dt-left' },
+                    { targets: 1, width: '12%', className: 'dt-center' },
+                    { targets: 2, width: '12%', className: 'dt-center' },
+                ],
+                pageLength: 7,
+                destroy: true,
+                dom: 'Brtip',
+                buttons: [{
+                    extend: 'excelHtml5',
+                    text: 'Exportar para Excel',
+                    title: `Relatorio_Descartes_${new Date().toLocaleDateString('pt-BR')}`,
+                    className: 'excel-button',
+                    exportOptions: {
+                        columns: [0,1,2],
+                        format: {
+                            body: function(data, row, column, node) {
+                                if (column === 1 && typeof data === 'string') return data.replace('%','');
+                                return data;
+                            }
+                        }
+                    }
+                }],
+                language: {
+                    sEmptyTable: 'Nenhum registro disponível na tabela',
+                    sInfo: 'Mostrando _START_ a _END_ de _TOTAL_ entradas',
+                    sInfoEmpty: 'Mostrando 0 a 0 de 0 entradas',
+                    sInfoFiltered: '(filtrado de _MAX_ registros no total)',
+                    sLengthMenu: 'Mostrar _MENU_ entradas',
+                    sLoadingRecords: 'Carregando...',
+                    sProcessing: 'Processando...',
+                    sSearch: 'Pesquisar:',
+                    sZeroRecords: 'Nenhum registro encontrado',
+                    oPaginate: { sFirst: 'Primeiro', sPrevious: 'Anterior', sNext: 'Próximo', sLast: 'Último' },
+                    oAria: { sSortAscending: ': ativar para ordenar a coluna de forma ascendente', sSortDescending: ': ativar para ordenar a coluna de forma descendente' }
+                },
+                createdRow: function(row, data, dataIndex) {
+                    $(row).find('td').css({ 'text-align': 'center' });
+                    $(row).find('td:first-child').css({ 'text-align': 'left' });
+                    $(row).find('td:nth-child(2)').css({ 'text-align': 'left' });
+                },
+                autoWidth: false
+            });
+        }
 
-        // Adicionar linha de resumo/total
-        const totalPercentual = dadosTabela.reduce((sum, item) => sum + parseFloat(item.percentual), 0);
-        const totalAbsoluto = dadosTabela.reduce((sum, item) => sum + item.total, 0);
-        
-        const trTotal = document.createElement('tr');
-        trTotal.className = 'leads-perdidos-table-footer';
-        
-        trTotal.innerHTML = `
-            <td><strong>TOTAL GERAL</strong></td>
-            <td><strong>${totalPercentual.toFixed(1)}%</strong></td>
-            <td><strong>${totalAbsoluto}</strong></td>
-        `;
-        
-        tbody.appendChild(trTotal);
-
-        console.log("✅ Tabela de descartes atualizada com", dadosTabela.length, "motivos + linha de resumo");
+        console.log('✅ Tabela de descartes atualizada com', dadosTabela.length, 'motivos (DataTable)');
         
     } catch (error) {
         console.error("❌ Erro geral na função updateDescartesTable:", error);
@@ -7479,151 +7511,103 @@ function updateDescartesTable(dadosFiltrados) {
     console.log("=== FIM updateDescartesTable ===");
 }
 
-// Função para atualizar a tabela de concorrentes (motivo "Fechou com o Concorrente")
+// Função para atualizar a tabela de concorrentes (removida)
+let concorrentesDataTable = null;
 function updateConcorrentesTable(dadosFiltrados) {
-    console.log("=== INÍCIO updateConcorrentesTable ===");
-    
     try {
-        const tbody = document.getElementById('concorrentes-table-body');
-        if (!tbody) {
-            console.error("❌ Elemento concorrentes-table-body não encontrado");
+        console.log('=== INÍCIO updateConcorrentesTable ===');
+
+        const tbodyEl = document.getElementById('concorrentes-table') || null;
+        if (!tbodyEl) {
+            console.info('concorrentes table not present in DOM - skipping population');
             return;
         }
 
-        console.log("📊 Processando", dadosFiltrados.length, "registros para tabela de concorrentes");
-
-        // Filtrar apenas leads que fecharam com concorrente
-        const leadsComConcorrente = dadosFiltrados.filter(item => {
+        // Filtrar leads perdidos (fase ou campo indicativo) e cujo motivo mencione concorrente
+        const leadsPerdidos = dadosFiltrados.filter(item => {
             try {
-                if (!item.titulo || item.titulo.trim() === '') return false;
-                
-                // 1. Verificar se está realmente na fase 7.2 Perdido
-                const estaNaFasePerdido = item.fase_perdido && 
-                                         item.fase_perdido.trim() !== '' && 
-                                         (item.fase_perdido.includes("7.2") || 
-                                          item.fase_perdido.toLowerCase().includes("perdido"));
-                
-                if (!estaNaFasePerdido) return false;
-                
-                // 2. Deve ter motivo da perda igual a "Fechou com o Concorrente"
-                if (!item.concat_motivo_perda || item.concat_motivo_perda.trim() === '') return false;
-                
-                const motivo = item.concat_motivo_perda.trim();
-                const fechouComConcorrente = motivo === "Fechou com o Concorrente";
-                
-                console.log("🔍 Processando lead para concorrente:", {
-                    titulo: item.titulo,
-                    motivo: item.concat_motivo_perda,
-                    concorrente: item.concat_concorrente,
-                    fechou_com_concorrente: fechouComConcorrente
-                });
-                
-                if (fechouComConcorrente) {
-                    console.log("✅ Lead válido para tabela de concorrentes");
-                    return true;
-                }
-                
-                console.log("❌ Lead descartado (não fechou com concorrente)");
-                return false;
-            } catch (error) {
-                console.error("Erro ao processar item:", item, error);
+                const titulo = (item.titulo || '').toString().trim();
+                if (!titulo) return false;
+                const fase = (item.fase_perdido || '').toString().toLowerCase();
+                const estaPerdido = fase.includes('7.2') || fase.includes('perdido');
+                if (!estaPerdido) return false;
+                const motivo = (item.concat_motivo_perda || '').toString().toLowerCase();
+                if (!motivo) return false;
+                // Aceitar variações que contenham 'concorrente' ou 'concorr' e termos de fechamento
+                return motivo.includes('concorrente') || motivo.includes('concorr') || motivo.includes('fechou com o concorrente') || motivo.includes('fechou com concorrente') || motivo.includes('fechou com o concorr') || motivo.includes('fechou com') && motivo.includes('concorr');
+            } catch (e) {
                 return false;
             }
         });
 
-        // Se não há leads válidos, mostrar mensagem
-        if (leadsComConcorrente.length === 0) {
-            console.log("⚠️ Nenhum lead que fechou com concorrente encontrado");
-            tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: #adb5bd; padding: 20px;">Nenhum concorrente encontrado no período selecionado</td></tr>';
-            console.log("=== FIM updateConcorrentesTable ===");
-            return;
-        }
-
-        // Contar concorrentes
-        const concorrenteContador = {};
-        let totalLeadsConcorrente = 0;
-
-        leadsComConcorrente.forEach(item => {
-            try {
-                // Usar o campo concat_concorrente
-                let concorrente = item.concat_concorrente || 'Concorrente não informado (Turma ativa por não informar)';
-                concorrente = concorrente.trim();
-                
-                if (concorrente === '') {
-                    concorrente = 'Concorrente não informado (Turma ativa por não informar)';
-                }
-                
-                if (!concorrenteContador[concorrente]) {
-                    concorrenteContador[concorrente] = 0;
-                }
-                concorrenteContador[concorrente]++;
-                totalLeadsConcorrente++;
-            } catch (error) {
-                console.error("Erro ao contar concorrente:", item, error);
-            }
+        // Agregar por nome do concorrente (campo concat_concorrente)
+        const contador = {};
+        let total = 0;
+        leadsPerdidos.forEach(item => {
+            let conc = (item.concat_concorrente || '').toString().trim();
+            if (!conc) conc = 'Concorrente não informado';
+            contador[conc] = (contador[conc] || 0) + 1;
+            total++;
         });
 
-        console.log("📈 Contagem de concorrentes:", concorrenteContador);
-        console.log("📊 Total de leads com concorrente contabilizados:", totalLeadsConcorrente);
-
-        // Converter para array e ordenar por quantidade (descendente)
-        const dadosTabela = Object.keys(concorrenteContador).map(concorrente => ({
-            concorrente,
-            total: concorrenteContador[concorrente],
-            percentual: totalLeadsConcorrente > 0 ? ((concorrenteContador[concorrente] / totalLeadsConcorrente) * 100).toFixed(1) : 0
+        const tabela = Object.keys(contador).map(c => ({
+            concorrente: c,
+            total: contador[c],
+            percentual: total === 0 ? 0 : parseFloat(((contador[c] / total) * 100).toFixed(1))
         })).sort((a, b) => b.total - a.total);
 
-        // Limpar tabela
-        tbody.innerHTML = '';
+        const rows = tabela.map(item => [item.concorrente, `${item.percentual}%`, item.total]);
 
-        // Adicionar linhas de dados
-        dadosTabela.forEach(item => {
-            try {
-                const tr = document.createElement('tr');
-                
-                // Determinar classe do mapa de calor baseada na porcentagem
-                let heatClass = 'heat-low';
-                const percentualNumerico = parseFloat(item.percentual);
-                if (percentualNumerico >= 30) {
-                    heatClass = 'heat-high';
-                } else if (percentualNumerico >= 15) {
-                    heatClass = 'heat-medium';
-                }
-                
-                tr.innerHTML = `
-                    <td>${item.concorrente}</td>
-                    <td class="${heatClass}">${item.percentual}%</td>
-                    <td class="${heatClass}">${item.total}</td>
-                `;
-                
-                tbody.appendChild(tr);
-            } catch (error) {
-                console.error("Erro ao criar linha da tabela de concorrentes:", item, error);
-            }
-        });
+        if (concorrentesDataTable) {
+            concorrentesDataTable.clear().rows.add(rows).draw();
+        } else {
+            concorrentesDataTable = $("#concorrentes-table").DataTable({
+                data: rows,
+                pageLength: 10,
+                language: {
+                    sEmptyTable: "Nenhum registro disponível na tabela",
+                    sInfo: "Mostrando _START_ a _END_ de _TOTAL_ entradas",
+                    sInfoEmpty: "Mostrando 0 a 0 de 0 entradas",
+                    sInfoFiltered: "(filtrado de _MAX_ registros no total)",
+                    sLengthMenu: "Mostrar _MENU_ entradas",
+                    sLoadingRecords: "Carregando...",
+                    sProcessing: "Processando...",
+                    sSearch: "Pesquisar:",
+                    sZeroRecords: "Nenhum registro encontrado",
+                    oPaginate: { sFirst: "Primeiro", sPrevious: "Anterior", sNext: "Próximo", sLast: "Último" },
+                    oAria: { sSortAscending: ": ativar para ordenar a coluna de forma ascendente", sSortDescending: ": ativar para ordenar a coluna de forma descendente" }
+                },
+                destroy: true,
+                dom: "Brtip",
+                buttons: [{
+                    extend: "excelHtml5", text: "Exportar para Excel", title: `Relatorio_Concorrentes_${new Date().toLocaleDateString("pt-BR")}`, className: "excel-button",
+                    exportOptions: {
+                        format: {
+                            body: function (data, row, column, node) {
+                                if (column === 1) { return Number(String(data).replace(/[^0-9\-\.]/g, '')) || 0; }
+                                if (column === 2) { return Number(String(data).replace(/[^0-9\-\.]/g, '')) || 0; }
+                                return data;
+                            }
+                        }
+                    }
+                }],
+                createdRow: function(row, data, dataIndex) {
+                    $(row).find('td').css({ 'text-align': 'center' });
+                    $(row).find('td:nth-child(1)').css({ 'text-align': 'left' });
+                    $(row).find('td:nth-child(2)').css({ 'text-align': 'right' });
+                    $(row).find('td:nth-child(3)').css({ 'text-align': 'right' });
+                },
+                autoWidth: false
+            });
+            setTimeout(function() { try { concorrentesDataTable.columns.adjust(); } catch (e) { } }, 120);
+        }
 
-        // Adicionar linha de resumo/total
-        const totalPercentual = dadosTabela.reduce((sum, item) => sum + parseFloat(item.percentual), 0);
-        const totalAbsoluto = dadosTabela.reduce((sum, item) => sum + item.total, 0);
-        
-        const trTotal = document.createElement('tr');
-        trTotal.className = 'leads-perdidos-table-footer';
-        
-        trTotal.innerHTML = `
-            <td><strong>TOTAL GERAL</strong></td>
-            <td><strong>${totalPercentual.toFixed(1)}%</strong></td>
-            <td><strong>${totalAbsoluto}</strong></td>
-        `;
-        
-        tbody.appendChild(trTotal);
+        console.log('✅ Tabela de concorrentes atualizada com', tabela.length, 'linhas');
 
-        console.log("✅ Tabela de concorrentes atualizada com", dadosTabela.length, "concorrentes + linha de resumo");
-        
-    } catch (error) {
-        console.error("❌ Erro geral na função updateConcorrentesTable:", error);
+    } catch (err) {
+        console.error('Erro em updateConcorrentesTable:', err);
     }
-    
-    console.log("=== FIM updateConcorrentesTable ===");
+    console.log('=== FIM updateConcorrentesTable ===');
 }
 
 // === NOVA SEÇÃO: NEGOCIAÇÕES E PERDAS POR FASE ===
@@ -8228,11 +8212,17 @@ function updateCaptacoesFunilTable(funilRows) {
             captacoesFunilDataTable = $('#captacoes-funil-table').DataTable({
                 data: rows,
                 // Use standard paging (like consultor table) to keep alignment consistent
+                // Set explicit approximate column widths so the % and TOTAL columns
+                // have more room and the first two text columns are slightly narrower.
                 columns: [
-                    { title: 'Origem do Lead', className: 'dt-left' },
-                    { title: 'Tipo de captação', className: 'dt-left' },
-                    { title: '%', className: 'dt-left' },
-                    { title: 'TOTAL', className: 'dt-left' }
+                    { title: 'Origem do Lead', className: 'dt-left', width: '30%' },
+                    { title: 'Tipo de captação', className: 'dt-left', width: '28%' },
+                    { title: '%', className: 'dt-left', width: '18%' },
+                    { title: 'TOTAL', className: 'dt-left', width: '24%' }
+                ],
+                columnDefs: [
+                    { targets: [2,3], className: 'dt-right' },
+                    { targets: [0,1], className: 'dt-left' }
                 ],
                 // Let DataTables handle widths; use paging instead of scroll to avoid cloned headers
                 pageLength: 7,
@@ -8322,3 +8312,45 @@ function adjustCaptacoesClonedWidths() {
     // final adjust
     try { if (captacoesFunilDataTable) captacoesFunilDataTable.columns.adjust(); } catch(e) { }
 }
+
+// Equaliza a altura dos .table-card lado-a-lado sem forçar o conteúdo da tabela a esticar
+function equalizeSideBySideTableCards() {
+    try {
+        const container = document.querySelector('.tabelas-lado-a-lado');
+        if (!container) return;
+        const cards = Array.from(container.querySelectorAll('.table-card'));
+        if (!cards.length) return;
+
+        // reset inline heights
+        cards.forEach(c => c.style.height = '');
+
+        // measure heights and set all to the max
+        const heights = cards.map(c => c.getBoundingClientRect().height);
+        const max = Math.max(...heights);
+        cards.forEach(c => c.style.height = Math.ceil(max) + 'px');
+    } catch (e) {
+        console.warn('equalizeSideBySideTableCards failed', e);
+    }
+}
+
+// Debounce helper
+function debounce(fn, wait) {
+    let t;
+    return function(...args) { clearTimeout(t); t = setTimeout(() => fn.apply(this, args), wait); };
+}
+
+// Run on load
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(equalizeSideBySideTableCards, 200);
+});
+
+// Re-run on resize (debounced)
+window.addEventListener('resize', debounce(equalizeSideBySideTableCards, 120));
+
+// Observe mutations inside the side-by-side container (tables redraws/paginacao)
+(function observeSideBySideChanges() {
+    const container = document.querySelector('.tabelas-lado-a-lado');
+    if (!container) return;
+    const mo = new MutationObserver(debounce(() => equalizeSideBySideTableCards(), 100));
+    mo.observe(container, { childList: true, subtree: true, attributes: true, characterData: false });
+})();

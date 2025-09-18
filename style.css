@@ -398,6 +398,65 @@ body {
     color: #FFFFFF !important;
 }
 
+/* Visual container for tables to improve separation and clarity */
+.table-card {
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border: 1px solid rgba(255,255,255,0.03);
+    border-radius: 8px;
+    padding: 14px;
+    margin: 6px 0 18px 0;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.45);
+}
+.table-card h2 {
+    margin: 0 0 8px 0;
+    color: #cfd8dc;
+    font-size: 1rem;
+}
+
+/* Ensure DataTables wrappers inside the card don't overflow the rounded corners */
+.table-card .dataTables_wrapper {
+    overflow: visible;
+}
+
+/* Ensure side-by-side table cards have equal height */
+.tabelas-lado-a-lado {
+    display: flex;
+    gap: 18px;
+    align-items: flex-start; /* keep natural flow; we control card height separately */
+}
+.leads-perdidos-table-container {
+    flex: 1 1 0;
+}
+.leads-perdidos-table-wrapper {
+    display: block;
+}
+/* Keep table internals default so table height does not force card height */
+.table-card {
+    display: block;
+}
+.table-card table {
+    width: 100% !important;
+}
+/* When side-by-side, give both cards the same visual height (tweak `min-height` as needed) */
+.tabelas-lado-a-lado .table-card {
+    min-height: 340px;
+}
+
+/* Force left alignment for headers and cells in the funil tables */
+.tabelas-lado-a-lado .table-card table thead th,
+.tabelas-lado-a-lado .table-card table tbody td,
+.table-card table thead th,
+.table-card table tbody td {
+    text-align: left !important;
+    vertical-align: middle !important;
+}
+
+/* Ensure the percent and total columns also align left visually */
+.tabelas-lado-a-lado .table-card table tbody td.percent-col,
+.tabelas-lado-a-lado .table-card table thead th.percent-col {
+    text-align: left !important;
+}
+
 /* Regras adicionais específicas para a barra de pesquisa */
 .multiselect-container li.multiselect-item.filter input,
 .multiselect-container li.filter input,
@@ -1703,7 +1762,7 @@ input[type=number] {
             gap: 20px;
             width: 100%;
             align-items: stretch; /* Garante que ambas tenham a mesma altura */
-            margin-bottom: 30px; /* Espaço para a tabela de concorrentes abaixo */
+            margin-bottom: 12px; /* usar espaçamento padrão do dashboard */
         }
 
         .leads-perdidos-table-container {
@@ -1711,7 +1770,7 @@ input[type=number] {
             flex-direction: column;
             flex: 1;
             min-width: 0; /* Permite que as colunas encolham */
-            min-height: 600px; /* Altura mínima para ambas as tabelas */
+            min-height: 0; /* usar comportamento natural do conteúdo */
         }
 
         /* Quando o sidebar está recolhido, ajusta o container dos leads perdidos */
