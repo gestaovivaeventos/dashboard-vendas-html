@@ -8199,20 +8199,16 @@ function updateCaptacoesFunilTable(funilRows) {
         } else {
             captacoesFunilDataTable = $('#captacoes-funil-table').DataTable({
                 data: rows,
-                // Forçar larguras de coluna e habilitar scroll horizontal para evitar desalinhamento
+                // Use standard paging (like consultor table) to keep alignment consistent
                 columns: [
-                    { title: 'Origem do Lead', width: '48%' },
-                    { title: 'Tipo de captação', width: '30%' },
-                    { title: '%', width: '12%', className: 'dt-center' },
-                    { title: 'TOTAL', width: '10%', className: 'dt-right' }
+                    { title: 'Origem do Lead', className: 'dt-left' },
+                    { title: 'Tipo de captação', className: 'dt-left' },
+                    { title: '%', className: 'dt-center' },
+                    { title: 'TOTAL', className: 'dt-right' }
                 ],
-                autoWidth: false,
-                scrollX: true,
-                // Mostrar aproximadamente 6 linhas e usar barra de rolagem vertical
+                // Let DataTables handle widths; use paging instead of scroll to avoid cloned headers
                 pageLength: 6,
-                paging: false,
-                scrollY: '260px',
-                scrollCollapse: true,
+                paging: true,
                 language: {
                     sEmptyTable: "Nenhum registro disponível na tabela",
                     sInfo: "Mostrando _START_ a _END_ de _TOTAL_ entradas",
@@ -8243,6 +8239,7 @@ function updateCaptacoesFunilTable(funilRows) {
                     $(row).find('td').css({ 'text-align': 'center' });
                     $(row).find('td:first-child').css({ 'text-align': 'left' });
                     $(row).find('td:nth-child(2)').css({ 'text-align': 'left' });
+                    $(row).find('td:nth-child(4)').css({ 'text-align': 'right' });
                 }
             });
             // Forçar ajuste das colunas logo após render para evitar desalinhamento do header/body
@@ -8258,53 +8255,8 @@ function updateCaptacoesFunilTable(funilRows) {
             });
         }
 
-        // Atualizar footer (usar API do DataTables para lidar com scroll/clonagem de header/footer)
-        const totalPercent = tabela.reduce((s, i) => s + i.percentual, 0);
-        const totalAbs = tabela.reduce((s, i) => s + i.total, 0);
-        try {
-            // Atualiza o footer original (caso exista)
-            if (captacoesFunilDataTable && typeof captacoesFunilDataTable.table === 'function') {
-                const footerNode = $(captacoesFunilDataTable.table().footer());
-                if (footerNode && footerNode.length) {
-                    // Garantir que o footer original receba os textos primeiro
-                    footerNode.find('td').eq(2).text(totalPercent.toFixed(1) + '%');
-                    footerNode.find('td').eq(3).text(totalAbs);
-                    footerNode.find('td').eq(2).css({ 'font-weight': '700', 'color': '#ffc107' });
-                    footerNode.find('td').eq(3).css({ 'font-weight': '700', 'color': '#ffc107' });
-                }
-
-                // Atualiza também o footer clonado criado pelo DataTables quando scroll está ativo
-                const $clonedTable = $('#captacoes-funil-table_wrapper .dataTables_scrollFootInner table');
-                const $origTfoot = $('#captacoes-funil-table tfoot');
-                if ($clonedTable.length && $origTfoot.length) {
-                    try {
-                        // Substitui o tfoot do cloned table por uma cópia exata do original
-                        const $newTfoot = $origTfoot.clone(true);
-                        // Garante estilos de destaque nos mesmos índices
-                        $newTfoot.find('td').eq(2).css({ 'font-weight': '700', 'color': '#ffc107' });
-                        $newTfoot.find('td').eq(3).css({ 'font-weight': '700', 'color': '#ffc107' });
-                        // Remove tfoot existente e anexa o novo (mantém 1:1 estrutura)
-                        $clonedTable.find('tfoot').remove();
-                        $clonedTable.append($newTfoot);
-                        // Ajuste de larguras após a substituição
-                        try { adjustCaptacoesClonedWidths(); } catch (e) { }
-                    } catch (e) {
-                        console.warn('Falha ao clonar tfoot para tabela captacoes-funil:', e);
-                    }
-                }
-            } else {
-                const $tfoot = $('#captacoes-funil-table tfoot tr');
-                if ($tfoot.length) {
-                    $tfoot.find('td').eq(2).text(totalPercent.toFixed(1) + '%');
-                    $tfoot.find('td').eq(3).text(totalAbs);
-                    $tfoot.find('td').eq(2).css({ 'font-weight': '700', 'color': '#ffc107' });
-                    $tfoot.find('td').eq(3).css({ 'font-weight': '700', 'color': '#ffc107' });
-                }
-            }
-        } catch (errFooter) {
-            console.warn('Erro ao atualizar footer captacoes-funil-table:', errFooter);
-        }
-
+        // No footer summary: intentionally removed per user request.
+        try { adjustCaptacoesClonedWidths(); } catch (e) { }
     } catch (err) {
         console.error('Erro em updateCaptacoesFunilTable:', err);
     }
@@ -8320,33 +8272,22 @@ function adjustCaptacoesClonedWidths() {
     const $headTable = $wrapper.find('.dataTables_scrollHeadInner table');
     const $footTable = $wrapper.find('.dataTables_scrollFootInner table');
     if (!$bodyTable.length || !$headTable.length) return;
+    // Use the original table's THEAD TH widths as the authoritative source
+    const $origHeader = $table.find('thead tr th');
+    if (!$origHeader.length) return;
 
-    // Pega larguras das colunas do body (da primeira linha visível)
-    const $bodyCols = $bodyTable.find('tr:first-child td');
     const $headCols = $headTable.find('tr th, tr td');
     const $footCols = $footTable.find('tr td');
 
-    // Se body não tiver tds (p. ex. sem linhas), usa larguras do header original
-    let sourceCols = $bodyCols;
-    if ($bodyCols.length === 0) {
-        // tenta pegar as th do header original (não-clonado)
-        const $origHeader = $table.find('thead tr th');
-        if ($origHeader.length) sourceCols = $origHeader;
-        else return;
-    }
-
-    sourceCols.each(function(i, td) {
-        const w = $(td).outerWidth();
-        // Aplica largura como estilo inline nas colunas clonadas
+    $origHeader.each(function(i, th) {
+        const w = $(th).outerWidth();
         if ($headCols.eq(i).length) $headCols.eq(i).css({ 'width': w + 'px', 'min-width': w + 'px' });
         if ($footCols.eq(i).length) $footCols.eq(i).css({ 'width': w + 'px', 'min-width': w + 'px' });
-        // também garante alinhamento de texto consistente
-        if ($footCols.eq(i).length) {
-            const align = $(td).css('text-align') || 'left';
-            $footCols.eq(i).css('text-align', align);
-        }
+        // preserve alignment
+        const align = $(th).css('text-align') || 'left';
+        if ($footCols.eq(i).length) $footCols.eq(i).css('text-align', align);
     });
 
-    // Forçar um ajuste final nas colunas DataTable (segurança)
+    // final adjust
     try { if (captacoesFunilDataTable) captacoesFunilDataTable.columns.adjust(); } catch(e) { }
 }

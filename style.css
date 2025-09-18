@@ -838,39 +838,10 @@ body {
             flex: 1; /* Expandir para ocupar espaço disponível */
         }
 
-        /* Fix para DataTables com scroll: força o wrapper a alinhar cabeçalho e corpo */
-        #captacoes-funil-table_wrapper, #captacoes-funil-table {
-            box-sizing: border-box;
+        /* For tables without scroll cloning, keep a stable table-layout and box-sizing */
+        #captacoes-funil-table, #captacoes-funil-table table {
+            table-layout: auto;
             width: 100% !important;
-        }
-        #captacoes-funil-table_wrapper .dataTables_scrollHeadInner, #captacoes-funil-table_wrapper .dataTables_scrollHeadInner table {
-            width: 100% !important;
-        }
-        #captacoes-funil-table_wrapper .dataTables_scrollBody {
-            overflow-y: auto;
-        }
-
-        /* Forçar table-layout fixed e remover padding extra dos cabeçalhos clonados */
-        #captacoes-funil-table_wrapper .dataTables_scrollHeadInner table,
-        #captacoes-funil-table_wrapper .dataTables_scrollBody table,
-        #captacoes-funil-table_wrapper .dataTables_scrollFootInner table {
-            table-layout: fixed !important;
-            width: 100% !important;
-            border-collapse: collapse;
-            box-sizing: border-box;
-        }
-
-        /* Remover padding dos TH clonados que causam deslocamento */
-        #captacoes-funil-table_wrapper .dataTables_scrollHeadInner table th,
-        #captacoes-funil-table_wrapper .dataTables_scrollHeadInner table td,
-        #captacoes-funil-table_wrapper .dataTables_scrollFootInner table td {
-            padding: 8px 6px !important;
-            box-sizing: border-box !important;
-        }
-
-        /* Garantir que o corpo use overflow-y e que a barra não empurre a largura */
-        #captacoes-funil-table_wrapper .dataTables_scrollBody {
-            -webkit-overflow-scrolling: touch;
             box-sizing: border-box;
         }
 
@@ -945,31 +916,7 @@ body {
             background-color: rgba(255, 193, 7, 0.1);
         }
 
-        /* Linha de resumo fixa no final da tabela */
-        .captacoes-table-footer {
-            position: sticky;
-            bottom: 0;
-            background: rgba(44, 62, 80, 0.95);
-            border-top: 2px solid #ffc107;
-            z-index: 10;
-        }
-
-        .captacoes-table-footer td {
-            padding: 15px 10px !important; /* Aumentado padding de 12px 8px para 15px 10px */
-            font-weight: bold !important;
-            color: #ffc107 !important;
-            background-color: rgba(255, 193, 7, 0.2) !important;
-            text-align: center !important;
-            border-bottom: none !important;
-            font-size: 1rem !important; /* Adicionado tamanho específico de fonte */
-        }
-
-        /* Footer com destaque no TOTAL (última célula) */
-        .captacoes-table-footer td:last-child {
-            background: linear-gradient(180deg, rgba(255,166,0,0.95), rgba(255,193,7,0.95));
-            color: #121212 !important;
-            font-size: 1.05rem !important;
-        }
+        /* No sticky footer: we use paging like other tables */
 
         .chart-wrapper {
             display: flex;
