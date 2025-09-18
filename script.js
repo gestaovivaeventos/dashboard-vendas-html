@@ -79,6 +79,35 @@ if (Chart && Chart.defaults && Chart.defaults.plugins) {
     };
 }
 
+// Global Chart.js axis/font defaults to match dashboard style
+if (Chart && Chart.defaults) {
+    // Default font family for charts
+    Chart.defaults.font.family = 'Poppins, Arial, sans-serif';
+    // Slightly larger axis tick labels and matching color
+    Chart.defaults.font.size = 16; // base font size for chart text (match other charts)
+    Chart.defaults.color = '#F8F9FA';
+
+    // Configure default scale (applies to linear/category axes)
+    Chart.defaults.scales = Chart.defaults.scales || {};
+    const defaultScale = {
+        ticks: {
+            color: '#adb5bd',
+            font: {
+                family: 'Poppins, Arial, sans-serif',
+                size: 16,
+                weight: '500'
+            }
+        },
+        grid: {
+            color: 'rgba(255,255,255,0.06)'
+        }
+    };
+    // Apply to common scale types
+    Chart.defaults.scales.linear = Chart.defaults.scales.linear || defaultScale;
+    Chart.defaults.scales.category = Chart.defaults.scales.category || defaultScale;
+    Chart.defaults.scales.time = Chart.defaults.scales.time || defaultScale;
+}
+
 // --- REMOVIDO: O mapeamento de códigos de acesso fixo foi retirado daqui ---
 
 let userAccessLevel = null;
