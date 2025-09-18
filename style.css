@@ -117,18 +117,19 @@ body {
     top: 20px;
     left: 360px;
     z-index: 1001;
-    background-color: #FFC107;
-    color: #212529;
+    background: linear-gradient(180deg, #ff8a33 0%, #FF6600 50%, #e65500 100%); /* Orange gradient */
+    color: #ffffff;
     border: none;
     border-radius: 0 5px 5px 0;
     width: 30px;
     height: 40px;
     cursor: pointer;
-    transition: left 0.3s ease-in-out;
+    transition: left 0.3s ease-in-out, background 150ms ease-in-out;
     /* Adicionado para centralizar a nova seta */
     display: flex;
     justify-content: center;
     align-items: center;
+    box-shadow: 0 4px 10px rgba(255,102,0,0.12), inset 0 1px 0 rgba(255,255,255,0.06);
 }
         #sidebar-toggle.collapsed { left: 10px; }
 
@@ -1599,6 +1600,60 @@ body {
     color: #adb5bd; 
 }
 
+/* Unified custom scrollbar styling
+   Apply only to the sidebar and inner scrollable containers so the main page keeps
+   the browser's native scrollbar (with arrows). Only colors/visuals are changed. */
+/* WebKit-based browsers (Chrome, Edge, Safari) */
+#sidebar::-webkit-scrollbar,
+#main-content::-webkit-scrollbar,
+.captacoes-table-wrapper::-webkit-scrollbar,
+.multiselect-container::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+/* Use explicit colors matching the sidebar background to ensure identical appearance */
+#sidebar::-webkit-scrollbar-track,
+#main-content::-webkit-scrollbar-track,
+.captacoes-table-wrapper::-webkit-scrollbar-track,
+.multiselect-container::-webkit-scrollbar-track {
+    background: #343A40; /* match sidebar background exactly */
+    border-left: 1px solid rgba(255,255,255,0.02);
+    border-radius: 8px;
+}
+
+#sidebar::-webkit-scrollbar-thumb,
+#main-content::-webkit-scrollbar-thumb,
+.captacoes-table-wrapper::-webkit-scrollbar-thumb,
+.multiselect-container::-webkit-scrollbar-thumb {
+    background: #343A40; /* sidebar base color */
+    border-radius: 8px;
+    border: 2px solid rgba(0,0,0,0.18);
+}
+
+/* Hover/focus state to increase contrast */
+#sidebar::-webkit-scrollbar-thumb:hover,
+#main-content::-webkit-scrollbar-thumb:hover,
+.captacoes-table-wrapper::-webkit-scrollbar-thumb:hover,
+.multiselect-container::-webkit-scrollbar-thumb:hover {
+    background: #495057; /* lighter on hover */
+}
+
+/* Corner styling for when both scrollbars are present */
+#sidebar::-webkit-scrollbar-corner,
+#main-content::-webkit-scrollbar-corner,
+.captacoes-table-wrapper::-webkit-scrollbar-corner,
+.multiselect-container::-webkit-scrollbar-corner {
+    background: #343A40;
+}
+
+/* Firefox: use scrollbar-color and scrollbar-width for similar effect on targeted elements */
+#sidebar, #main-content, .captacoes-table-wrapper, .multiselect-container {
+    scrollbar-width: thin;
+    scrollbar-color: #495057 rgba(0,0,0,0.12);
+}
+
+
 .access-control button { 
     background: linear-gradient(to bottom, #ffdd77, #FFC107); 
     color: #212529; 
@@ -1718,12 +1773,14 @@ input[type=number] {
 
 .arrow-icon {
     display: inline-block;
-    padding: 3px;
-    border: solid #212529; /* Cor da seta (escura, para contrastar com o botão amarelo) */
-    border-width: 0 3px 3px 0; /* Desenha a forma de "L" da seta */
-    width: 8px;
-    height: 8px;
+    padding: 2px;
+    border: solid #212529; /* Cor da seta: preta/escura, conforme solicitado */
+    border-width: 0 3px 3px 0; /* Mais espessa - estilo 'negrito' */
+    width: 7px;
+    height: 7px;
     transition: transform 0.3s ease-in-out;
+    /* garante boa legibilidade em fundos coloridos */
+    box-sizing: content-box;
 
     /* Posição inicial (menu aberto): Aponta para a Esquerda */
     transform: rotate(135deg);
@@ -1733,6 +1790,13 @@ input[type=number] {
 #sidebar-toggle.collapsed .arrow-icon {
     /* Gira a seta para apontar para a Direita */
     transform: rotate(-45deg);
+}
+
+/* Hover / focus state so the arrow remains readable on the orange gradient */
+#sidebar-toggle:hover .arrow-icon,
+#sidebar-toggle:focus .arrow-icon {
+    border-color: #212529;
+    filter: drop-shadow(0 1px 0 rgba(0,0,0,0.30));
 }
 
 /* === ESTILOS PARA NEGOCIAÇÕES E PERDAS POR FASE === */
