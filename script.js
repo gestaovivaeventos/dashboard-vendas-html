@@ -8193,10 +8193,26 @@ function updateCaptacoesFunilTable(funilRows) {
 
         if (captacoesFunilDataTable) {
             captacoesFunilDataTable.clear().rows.add(rows).draw();
+            try { captacoesFunilDataTable.columns.adjust(); } catch(e) { console.warn('adjust failed', e); }
+            // Ajusta larguras do header/footer clonados
+            try { adjustCaptacoesClonedWidths(); } catch(e) { }
         } else {
             captacoesFunilDataTable = $('#captacoes-funil-table').DataTable({
                 data: rows,
-                pageLength: 10,
+                // Forçar larguras de coluna e habilitar scroll horizontal para evitar desalinhamento
+                columns: [
+                    { title: 'Origem do Lead', width: '48%' },
+                    { title: 'Tipo de captação', width: '30%' },
+                    { title: '%', width: '12%', className: 'dt-center' },
+                    { title: 'TOTAL', width: '10%', className: 'dt-right' }
+                ],
+                autoWidth: false,
+                scrollX: true,
+                // Mostrar aproximadamente 6 linhas e usar barra de rolagem vertical
+                pageLength: 6,
+                paging: false,
+                scrollY: '260px',
+                scrollCollapse: true,
                 language: {
                     sEmptyTable: "Nenhum registro disponível na tabela",
                     sInfo: "Mostrando _START_ a _END_ de _TOTAL_ entradas",
@@ -8229,20 +8245,108 @@ function updateCaptacoesFunilTable(funilRows) {
                     $(row).find('td:nth-child(2)').css({ 'text-align': 'left' });
                 }
             });
+            // Forçar ajuste das colunas logo após render para evitar desalinhamento do header/body
+            setTimeout(function() {
+                try { captacoesFunilDataTable.columns.adjust(); } catch (e) { console.warn('captacoesFunil columns.adjust failed', e); }
+                try { adjustCaptacoesClonedWidths(); } catch (e) { }
+            }, 150);
+            // Reajustar em resize da janela
+            $(window).off('resize.captacoesFunil').on('resize.captacoesFunil', function() {
+                try { if (captacoesFunilDataTable) captacoesFunilDataTable.columns.adjust(); } catch (e) { }
+                try { adjustCaptacoesClonedWidths(); } catch (e) { }
+                setTimeout(function() { try { adjustCaptacoesClonedWidths(); } catch (e) { } }, 80);
+            });
         }
 
-        // Atualizar footer
-        const $tfoot = $('#captacoes-funil-table tfoot tr');
-        if ($tfoot.length) {
-            const totalPercent = tabela.reduce((s, i) => s + i.percentual, 0);
-            const totalAbs = tabela.reduce((s, i) => s + i.total, 0);
-            $tfoot.find('td').eq(2).text(totalPercent.toFixed(1) + '%');
-            $tfoot.find('td').eq(3).text(totalAbs);
-            $tfoot.find('td').eq(2).css({ 'font-weight': '700', 'color': '#ffc107' });
-            $tfoot.find('td').eq(3).css({ 'font-weight': '700', 'color': '#ffc107' });
+        // Atualizar footer (usar API do DataTables para lidar com scroll/clonagem de header/footer)
+        const totalPercent = tabela.reduce((s, i) => s + i.percentual, 0);
+        const totalAbs = tabela.reduce((s, i) => s + i.total, 0);
+        try {
+            // Atualiza o footer original (caso exista)
+            if (captacoesFunilDataTable && typeof captacoesFunilDataTable.table === 'function') {
+                const footerNode = $(captacoesFunilDataTable.table().footer());
+                if (footerNode && footerNode.length) {
+                    // Garantir que o footer original receba os textos primeiro
+                    footerNode.find('td').eq(2).text(totalPercent.toFixed(1) + '%');
+                    footerNode.find('td').eq(3).text(totalAbs);
+                    footerNode.find('td').eq(2).css({ 'font-weight': '700', 'color': '#ffc107' });
+                    footerNode.find('td').eq(3).css({ 'font-weight': '700', 'color': '#ffc107' });
+                }
+
+                // Atualiza também o footer clonado criado pelo DataTables quando scroll está ativo
+                const $clonedTable = $('#captacoes-funil-table_wrapper .dataTables_scrollFootInner table');
+                const $origTfoot = $('#captacoes-funil-table tfoot');
+                if ($clonedTable.length && $origTfoot.length) {
+                    try {
+                        // Substitui o tfoot do cloned table por uma cópia exata do original
+                        const $newTfoot = $origTfoot.clone(true);
+                        // Garante estilos de destaque nos mesmos índices
+                        $newTfoot.find('td').eq(2).css({ 'font-weight': '700', 'color': '#ffc107' });
+                        $newTfoot.find('td').eq(3).css({ 'font-weight': '700', 'color': '#ffc107' });
+                        // Remove tfoot existente e anexa o novo (mantém 1:1 estrutura)
+                        $clonedTable.find('tfoot').remove();
+                        $clonedTable.append($newTfoot);
+                        // Ajuste de larguras após a substituição
+                        try { adjustCaptacoesClonedWidths(); } catch (e) { }
+                    } catch (e) {
+                        console.warn('Falha ao clonar tfoot para tabela captacoes-funil:', e);
+                    }
+                }
+            } else {
+                const $tfoot = $('#captacoes-funil-table tfoot tr');
+                if ($tfoot.length) {
+                    $tfoot.find('td').eq(2).text(totalPercent.toFixed(1) + '%');
+                    $tfoot.find('td').eq(3).text(totalAbs);
+                    $tfoot.find('td').eq(2).css({ 'font-weight': '700', 'color': '#ffc107' });
+                    $tfoot.find('td').eq(3).css({ 'font-weight': '700', 'color': '#ffc107' });
+                }
+            }
+        } catch (errFooter) {
+            console.warn('Erro ao atualizar footer captacoes-funil-table:', errFooter);
         }
 
     } catch (err) {
         console.error('Erro em updateCaptacoesFunilTable:', err);
     }
+}
+
+// Copia larguras das colunas reais para os elementos clonados do DataTables (scroll mode)
+function adjustCaptacoesClonedWidths() {
+    const $table = $('#captacoes-funil-table');
+    const $wrapper = $('#captacoes-funil-table_wrapper');
+    if (!$table.length || !$wrapper.length) return;
+
+    const $bodyTable = $wrapper.find('.dataTables_scrollBody table');
+    const $headTable = $wrapper.find('.dataTables_scrollHeadInner table');
+    const $footTable = $wrapper.find('.dataTables_scrollFootInner table');
+    if (!$bodyTable.length || !$headTable.length) return;
+
+    // Pega larguras das colunas do body (da primeira linha visível)
+    const $bodyCols = $bodyTable.find('tr:first-child td');
+    const $headCols = $headTable.find('tr th, tr td');
+    const $footCols = $footTable.find('tr td');
+
+    // Se body não tiver tds (p. ex. sem linhas), usa larguras do header original
+    let sourceCols = $bodyCols;
+    if ($bodyCols.length === 0) {
+        // tenta pegar as th do header original (não-clonado)
+        const $origHeader = $table.find('thead tr th');
+        if ($origHeader.length) sourceCols = $origHeader;
+        else return;
+    }
+
+    sourceCols.each(function(i, td) {
+        const w = $(td).outerWidth();
+        // Aplica largura como estilo inline nas colunas clonadas
+        if ($headCols.eq(i).length) $headCols.eq(i).css({ 'width': w + 'px', 'min-width': w + 'px' });
+        if ($footCols.eq(i).length) $footCols.eq(i).css({ 'width': w + 'px', 'min-width': w + 'px' });
+        // também garante alinhamento de texto consistente
+        if ($footCols.eq(i).length) {
+            const align = $(td).css('text-align') || 'left';
+            $footCols.eq(i).css('text-align', align);
+        }
+    });
+
+    // Forçar um ajuste final nas colunas DataTable (segurança)
+    try { if (captacoesFunilDataTable) captacoesFunilDataTable.columns.adjust(); } catch(e) { }
 }
