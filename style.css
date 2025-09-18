@@ -163,10 +163,10 @@ body {
 }
 
 .page-navigation button.active {
-    /* Gradiente laranja escuro (topo) -> laranja claro (base) para sidebar */
+    /* Use o mesmo gradiente da ligueta da sidebar (ajustado para o botão) */
     background-image:
         linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0) 22%),
-        linear-gradient(180deg, #b34a00 0%, #ff7a1a 30%, #FF6600 55%, #ff9b5a 85%, #ffb37a 100%);
+        linear-gradient(180deg, #ff8a33 0%, #FF6600 50%, #e65500 100%);
     background-size: 100% 100%, 100% 100%;
     background-repeat: no-repeat;
     color: #ffffff !important;
@@ -185,7 +185,7 @@ body {
 .page-navigation button.active {
     background-image:
         linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0) 22%),
-        linear-gradient(180deg, #b34a00 0%, #ff7a1a 30%, #FF6600 55%, #ff9b5a 85%, #ffb37a 100%);
+        linear-gradient(180deg, #ff8a33 0%, #FF6600 50%, #e65500 100%);
     background-size: 100% 100%, 100% 100%;
     background-repeat: no-repeat;
     color: #ffffff !important;
@@ -538,18 +538,21 @@ body {
     -webkit-text-fill-color: #FFFFFF !important;
 }
 .page-navigation button:hover {
-    background-image: linear-gradient(to bottom, #8a9198, #5a6268);
+    transform: translateY(-2px);
+    filter: brightness(1.05);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.02);
+    /* Match chart-selector hover tone */
+    background: linear-gradient(180deg, #42474d 0%, #34383c 100%);
 }
 .page-navigation button:active {
-    transform: translateY(2px);
-    border-bottom-width: 1px;
-    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.2);
+    transform: translateY(1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.35) inset;
 }
 .page-navigation button.active {
-    /* Ativo: usar gradiente laranja escuro -> laranja claro (substitui estilo anterior) */
+    /* Use o mesmo gradiente da ligueta da sidebar (ajustado para o botão) */
     background-image:
         linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0) 22%),
-        linear-gradient(180deg, #b34a00 0%, #ff7a1a 30%, #FF6600 55%, #ff9b5a 85%, #ffb37a 100%);
+        linear-gradient(180deg, #ff8a33 0%, #FF6600 50%, #e65500 100%);
     background-size: 100% 100%, 100% 100%;
     background-repeat: no-repeat;
     color: #ffffff !important;
@@ -1323,7 +1326,7 @@ body {
             left: 0;
             right: 0;
             height: 2px;
-            background: linear-gradient(90deg, #FFC107, #FFD54F, #FFC107);
+            background: linear-gradient(90deg, #ff8a33 0%, #FF6600 50%, #e65500 100%);
             border-radius: 12px 12px 0 0;
         }
 
@@ -1443,16 +1446,18 @@ body {
     transform: translateY(-2px);
     filter: brightness(1.05);
     box-shadow: 0 10px 20px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.02);
+    /* Match sidebar button hover tone: slightly lighter/different gray gradient */
+    background: linear-gradient(180deg, #42474d 0%, #34383c 100%);
 }
 .chart-selector button:active {
     transform: translateY(1px);
     box-shadow: 0 4px 8px rgba(0,0,0,0.35) inset;
 }
 .chart-selector button.active {
-    /* Gradiente laranja escuro (topo) -> laranja claro (base) */
+    /* Use the same sidebar toggle gradient for chart buttons */
     background-image:
         linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0) 22%),
-        linear-gradient(180deg, #b34a00 0%, #ff7a1a 30%, #FF6600 55%, #ff9b5a 85%, #ffb37a 100%);
+        linear-gradient(180deg, #ff8a33 0%, #FF6600 50%, #e65500 100%);
     background-size: 100% 100%, 100% 100%;
     background-repeat: no-repeat;
     color: #ffffff !important;
@@ -1460,6 +1465,16 @@ body {
     border-top: 1px solid rgba(255,255,255,0.04);
     box-shadow: 0 8px 18px rgba(0,0,0,0.45), inset 0 2px 6px rgba(255,255,255,0.02);
     transform: translateY(0);
+}
+
+/* Ensure :active uses the same gradient so pressed state matches */
+.chart-selector button:active,
+.chart-selector button:active:focus {
+    background-image:
+        linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0) 22%),
+        linear-gradient(180deg, #ff8a33 0%, #FF6600 50%, #e65500 100%);
+    color: #ffffff !important;
+    border: 1px solid rgba(0,0,0,0.6);
 }
 
 /* Acessibilidade: foco visível */
@@ -1507,7 +1522,7 @@ body {
 .header > div {
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 2px; /* reduce vertical gap between title and subtitle */
 }
 
 #last-update-message {
@@ -1560,6 +1575,11 @@ body {
 /* Dashboard-specific override: reduce size only for header in main dashboard */
 .page-title.dashboard-title {
     font-size: 2.0em !important;
+    /* Tighten spacing specifically for the dashboard header title so the underline sits
+       closer to the last-update text seen below it. This is scoped to the dashboard
+       title to avoid changing other h1/h2 section paddings. */
+    margin-bottom: 6px; /* reduces extra space under the title */
+    padding-bottom: 6px; /* reduces the underline padding coming from h1,h2 rule */
 }
 
 .access-control { 
@@ -1759,6 +1779,27 @@ input[type=number] {
 @keyframes loader-spin {
     0% { opacity: 1; }
     100% { opacity: 0.15; }
+}
+
+/* Sidebar-scoped loader overrides: change only the loader inside the sidebar to brand orange */
+#sidebar #loader .bar,
+#sidebar #loader .css-loader div:after,
+#sidebar #loader .loader-text,
+#sidebar .css-loader {
+    background-color: transparent; /* keep defaults, colors set below per-element */
+}
+
+#sidebar #loader .bar {
+    background-color: #FF6600 !important;
+}
+
+#sidebar #loader .css-loader div:after {
+    background: #FF6600 !important;
+}
+
+#sidebar #loader .loader-text {
+    color: #FF6600 !important;
+    text-shadow: 0 0 6px rgba(255,102,0,0.35) !important;
 }
 .loader-text { font-size: 1.5em; font-weight: 500; color: #FFC107; text-shadow: 0 0 5px rgba(255, 193, 7, 0.5); }
 
