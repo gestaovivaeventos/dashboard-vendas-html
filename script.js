@@ -4793,6 +4793,8 @@ function populateFilters(selectedUnidades = []) {
         if (isFunilPage && funilData && funilData.length > 0) {
             funilFiltrado = funilData.filter(d => unidadesFiltradas.includes(d.nm_unidade));
             console.log('funilFiltrado:', funilFiltrado.length);
+            // Atualiza a tabela de captações baseada na base de funil
+            try { updateCaptacoesFunilTable(funilFiltrado); } catch(e) { console.error('Erro ao atualizar captacoes funil table:', e); }
         }
 
         // Populate cursos filter baseado na página atual
@@ -8137,5 +8139,110 @@ function updateIndicatorsTable(selectedUnidades, startDate, endDate) {
     } catch (e) {
         // se algo falhar aqui, não quebramos a página; log opcional
         console.warn('Não foi possível forçar o label do DataTable indicadores para PT-BR', e);
+    }
+}
+
+// --- Nova função: tabela de Captações (base FUNIL) no estilo da página 2 ---
+let captacoesFunilDataTable = null;
+function getTipoCaptacaoFromOrigem(origem) {
+    if (!origem) return 'Captação Ativa';
+    const o = origem.toString().trim();
+    switch (o) {
+        case 'Presencial - Ligação/WPP Telefone Consultor (a)': return 'Captação Passiva';
+        case 'Digital - Redes Sociais - VIVA Brasil': return 'Captação Passiva - Exclusiva Viva BR';
+        case 'Digital - Redes Sociais - Instagram Local': return 'Captação Passiva';
+        case 'Digital - Site VIVA Brasil': return 'Captação Passiva - Exclusiva Viva BR';
+        case 'Digital - Card Google': return 'Captação Passiva - Exclusiva Viva BR';
+        case 'Indicação - Via Atlética/DA/CA': return 'Captação Passiva';
+        case 'Indicação - Via outra Franquia/Consultor VIVA': return 'Captação Passiva';
+        case 'Digital - Redes Sociais - Instagram Consultor (a)': return 'Captação Passiva';
+        case 'Presencial - Ligação Telefone Franquia': return 'Captação Passiva';
+        case 'Indicação - Via Integrante de Turma': return 'Captação Passiva';
+        case 'Presencial - Visita Sede Franquia': return 'Captação Passiva';
+        case 'Digital - Campanha paga - Instagram Local': return 'Captação Passiva';
+        default: return 'Captação Ativa';
+    }
+}
+
+function updateCaptacoesFunilTable(funilRows) {
+    try {
+        if (!Array.isArray(funilRows)) {
+            console.warn('updateCaptacoesFunilTable: esperado array, recebeu:', funilRows);
+            return;
+        }
+
+        // Coluna G na planilha -> assumimos que o objeto tem propriedade 'origem_lead' ou similar
+        // Agrupar por origem
+        const contador = {};
+        funilRows.forEach(r => {
+            const origem = (r.origem_lead || r['Origem do Lead'] || r['origem'] || '').toString().trim() || 'Não informado';
+            contador[origem] = (contador[origem] || 0) + 1;
+        });
+
+        const total = Object.values(contador).reduce((s, v) => s + v, 0) || 0;
+
+        const tabela = Object.keys(contador).map(origem => {
+            const tot = contador[origem];
+            const tipo = getTipoCaptacaoFromOrigem(origem);
+            const percentual = total === 0 ? 0 : parseFloat(((tot / total) * 100).toFixed(1));
+            return { origem, tipo, percentual, total: tot };
+        }).sort((a, b) => b.total - a.total);
+
+        // Preparar linhas para DataTable
+        const rows = tabela.map(item => [item.origem, item.tipo, `${item.percentual}%`, item.total]);
+
+        if (captacoesFunilDataTable) {
+            captacoesFunilDataTable.clear().rows.add(rows).draw();
+        } else {
+            captacoesFunilDataTable = $('#captacoes-funil-table').DataTable({
+                data: rows,
+                pageLength: 10,
+                language: {
+                    sEmptyTable: "Nenhum registro disponível na tabela",
+                    sInfo: "Mostrando _START_ a _END_ de _TOTAL_ entradas",
+                    sInfoEmpty: "Mostrando 0 a 0 de 0 entradas",
+                    sInfoFiltered: "(filtrado de _MAX_ registros no total)",
+                    sLengthMenu: "Mostrar _MENU_ entradas",
+                    sLoadingRecords: "Carregando...",
+                    sProcessing: "Processando...",
+                    sSearch: "Pesquisar:",
+                    sZeroRecords: "Nenhum registro encontrado",
+                    oPaginate: { sFirst: "Primeiro", sPrevious: "Anterior", sNext: "Próximo", sLast: "Último" },
+                    oAria: { sSortAscending: ": ativar para ordenar a coluna de forma ascendente", sSortDescending: ": ativar para ordenar a coluna de forma descendente" }
+                },
+                destroy: true,
+                dom: "Bfrtip",
+                buttons: [{
+                    extend: "excelHtml5", text: "Exportar para Excel", title: `Relatorio_Captacoes_Funil_${new Date().toLocaleDateString("pt-BR")}`, className: "excel-button",
+                    exportOptions: {
+                        format: {
+                            body: function (data, row, column, node) {
+                                if (column === 3) { return Number(String(data).replace(/[^0-9\-\.]/g, '')) || 0; }
+                                return data;
+                            }
+                        }
+                    }
+                }],
+                createdRow: function(row, data, dataIndex) {
+                    $(row).find('td').css({ 'text-align': 'center' });
+                    $(row).find('td:first-child').css({ 'text-align': 'left' });
+                    $(row).find('td:nth-child(2)').css({ 'text-align': 'left' });
+                }
+            });
+        }
+
+        // Atualizar footer
+        const $tfoot = $('#captacoes-funil-table tfoot tr');
+        if ($tfoot.length) {
+            const totalPercent = tabela.reduce((s, i) => s + i.percentual, 0);
+            const totalAbs = tabela.reduce((s, i) => s + i.total, 0);
+            $tfoot.find('td').eq(2).text(totalPercent.toFixed(1) + '%');
+            $tfoot.find('td').eq(3).text(totalAbs);
+            $tfoot.find('td').eq(2).css({ 'font-weight': '700', 'color': '#ffc107' });
+            $tfoot.find('td').eq(3).css({ 'font-weight': '700', 'color': '#ffc107' });
+        }
+
+    } catch (err) {
+        console.error('Erro em updateCaptacoesFunilTable:', err);
     }
 }
