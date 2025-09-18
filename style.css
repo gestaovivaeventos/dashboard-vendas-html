@@ -20,6 +20,33 @@ body {
     padding: 0; 
 }
         .dashboard-wrapper { display: flex; }
+        /* Prevent content overflow when sidebar toggles:
+           - allow grid/flex children to shrink (min-width:0)
+           - contain overflow inside panels so they don't invade neighboring areas
+           - ensure tables and canvases are responsive within their containers */
+        *, *::before, *::after { box-sizing: border-box; }
+        #main-content { min-width: 0; overflow-x: hidden; }
+        .dashboard-wrapper { overflow-x: hidden; }
+        /* Make grid columns shrink instead of forcing overflow */
+        .captacoes-content { grid-template-columns: repeat(2, minmax(0, 1fr)); min-width: 0; }
+        /* Ensure primary containers can't push outside their parent */
+        .captacoes-table-container,
+        .captacoes-chart-container,
+        .funil-horizontal-container,
+        .funil-indicators-grid {
+            min-width: 0;
+            max-width: 100%;
+            overflow: hidden; /* contain children who might be wider */
+        }
+        /* Allow internal scrolling inside wrappers instead of overflowing the page */
+        .captacoes-table-wrapper, .chart-wrapper, .dataTables_wrapper {
+            overflow: auto;
+            max-width: 100%;
+        }
+        /* Make tables and canvases responsive and prevent long words/values stretching layout */
+        table { max-width: 100%; word-break: break-word; }
+        canvas { max-width: 100% !important; height: auto !important; }
+        .funil-horizontal-card { min-width: 0; }
         #sidebar { width: 350px; height: 100vh; background-color: #343A40; padding: 20px; position: fixed; top: 0; left: 0; overflow-y: auto; transition: transform 0.3s ease-in-out; z-index: 1000; }
 
 /* Estilos para os dropdowns do multiselect */
@@ -889,6 +916,7 @@ body {
             background: rgba(255,193,7,0.06);
             color: #ffd966; /* tom de amarelo mais claro para os números */
             font-weight: 700;
+            text-align: left; /* Forçar alinhamento à esquerda conforme solicitado */
         }
 
         .captacoes-table td:first-child {
@@ -908,9 +936,13 @@ body {
 
         .captacoes-table tbody tr:hover { background: rgba(255,255,255,0.02); }
 
-        /* Keep % and TOTAL columns visually distinct at header-level but neutral in rows */
-        .captacoes-table td:nth-child(3),
-        .captacoes-table td:nth-child(4) { color: #ffd966; font-weight: 600; background: transparent; }
+    /* Keep % and TOTAL columns visually distinct at header-level but neutral in rows */
+    .captacoes-table td:nth-child(3),
+    .captacoes-table td:nth-child(4) { color: #ffd966; font-weight: 600; background: transparent; text-align: left; }
+
+    /* Ensure header cells for % and TOTAL are left-aligned too */
+    .captacoes-table th:nth-child(3),
+    .captacoes-table th:nth-child(4) { text-align: left; }
 
         .captacoes-table tbody tr:hover {
             background-color: rgba(255, 193, 7, 0.1);

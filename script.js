@@ -4791,9 +4791,37 @@ function populateFilters(selectedUnidades = []) {
         // Só filtrar dados do funil se estivermos na página do funil E se houver dados do funil
         let funilFiltrado = [];
         if (isFunilPage && funilData && funilData.length > 0) {
-            funilFiltrado = funilData.filter(d => unidadesFiltradas.includes(d.nm_unidade));
-            console.log('funilFiltrado:', funilFiltrado.length);
-            // Atualiza a tabela de captações baseada na base de funil
+            // Primeiro filtra por unidade
+            let baseFiltrado = funilData.filter(d => unidadesFiltradas.includes(d.nm_unidade));
+            // Em seguida filtra por período usando a coluna 'criado_em' (coluna M)
+            const startDateString = document.getElementById("start-date").value;
+            const endDateString = document.getElementById("end-date").value;
+            let startDate = null, endDate = null;
+            try {
+                if (startDateString && endDateString) {
+                    const [sy, sm, sd] = startDateString.split('-').map(Number);
+                    startDate = new Date(sy, sm - 1, sd);
+                    const [ey, em, ed] = endDateString.split('-').map(Number);
+                    endDate = new Date(ey, em - 1, ed);
+                    endDate.setDate(endDate.getDate() + 1);
+                }
+            } catch (e) { startDate = null; endDate = null; }
+
+            funilFiltrado = baseFiltrado.filter(item => {
+                if (!startDate || !endDate) return true; // se não tem período definido, não filtra por data
+                let criado = item.criado_em || (item.row_data && item.row_data[12]) || item.criado_em;
+                let criadoDate = null;
+                if (criado instanceof Date) criadoDate = criado;
+                else if (typeof criado === 'string') {
+                    const parts = criado.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+                    if (parts) criadoDate = new Date(parts[3], parts[2]-1, parts[1]);
+                    else criadoDate = new Date(criado);
+                }
+                return criadoDate && criadoDate >= startDate && criadoDate < endDate;
+            });
+
+            console.log('funilFiltrado (unidade+periodo):', funilFiltrado.length);
+            // Atualiza a tabela de captações baseada na base de funil filtrada
             try { updateCaptacoesFunilTable(funilFiltrado); } catch(e) { console.error('Erro ao atualizar captacoes funil table:', e); }
         }
 
@@ -8203,8 +8231,8 @@ function updateCaptacoesFunilTable(funilRows) {
                 columns: [
                     { title: 'Origem do Lead', className: 'dt-left' },
                     { title: 'Tipo de captação', className: 'dt-left' },
-                    { title: '%', className: 'dt-center' },
-                    { title: 'TOTAL', className: 'dt-right' }
+                    { title: '%', className: 'dt-left' },
+                    { title: 'TOTAL', className: 'dt-left' }
                 ],
                 // Let DataTables handle widths; use paging instead of scroll to avoid cloned headers
                 pageLength: 6,
@@ -8236,10 +8264,13 @@ function updateCaptacoesFunilTable(funilRows) {
                     }
                 }],
                 createdRow: function(row, data, dataIndex) {
+                    // Default: center for visual balance, then force left alignment for the first
+                    // four columns to match the rest of the dashboard (user requested left alignment)
                     $(row).find('td').css({ 'text-align': 'center' });
-                    $(row).find('td:first-child').css({ 'text-align': 'left' });
+                    $(row).find('td:nth-child(1)').css({ 'text-align': 'left' });
                     $(row).find('td:nth-child(2)').css({ 'text-align': 'left' });
-                    $(row).find('td:nth-child(4)').css({ 'text-align': 'right' });
+                    $(row).find('td:nth-child(3)').css({ 'text-align': 'left' });
+                    $(row).find('td:nth-child(4)').css({ 'text-align': 'left' });
                 }
             });
             // Forçar ajuste das colunas logo após render para evitar desalinhamento do header/body
