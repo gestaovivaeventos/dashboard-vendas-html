@@ -859,14 +859,6 @@ body {
             z-index: 10;
         }
 
-        /* Destaque para as colunas % e TOTAL (últimas duas) */
-        .captacoes-table th:nth-child(3),
-        .captacoes-table th:nth-child(4) {
-            background: linear-gradient(180deg, rgba(255,193,7,0.95) 0%, rgba(255,166,0,0.95) 100%);
-            color: #212529;
-            border-left: 1px solid rgba(0,0,0,0.15);
-        }
-
         .captacoes-table td {
             padding: 12px 10px; /* Aumentado padding de 10px 8px para 12px 10px */
             text-align: center;
@@ -874,14 +866,6 @@ body {
             color: #f8f9fa;
             font-weight: 500;
             font-size: 0.95rem; /* Adicionado tamanho específico de fonte */
-        }
-
-        /* Destaque visual para as células das colunas % e TOTAL */
-        .captacoes-table td:nth-child(3),
-        .captacoes-table td:nth-child(4) {
-            background: rgba(255,193,7,0.06);
-            color: #ffd966; /* tom de amarelo mais claro para os números */
-            font-weight: 700;
         }
 
         .captacoes-table td:first-child {
@@ -896,14 +880,19 @@ body {
             font-size: 0.9rem; /* Aumentado de 0.8rem para 0.9rem */
         }
 
-        /* Neutral table rows to match other DataTables (no heatmap) */
-        .captacoes-table tbody tr { background: transparent; }
+        /* Mapa de calor - cores baseadas na porcentagem */
+        .captacoes-table .heat-low {
+            background-color: rgba(255, 193, 7, 0.2) !important;
+        }
 
-        .captacoes-table tbody tr:hover { background: rgba(255,255,255,0.02); }
+        .captacoes-table .heat-medium {
+            background-color: rgba(255, 193, 7, 0.5) !important;
+        }
 
-        /* Keep % and TOTAL columns visually distinct at header-level but neutral in rows */
-        .captacoes-table td:nth-child(3),
-        .captacoes-table td:nth-child(4) { color: #ffd966; font-weight: 600; background: transparent; }
+        .captacoes-table .heat-high {
+            background-color: rgba(255, 193, 7, 0.8) !important;
+            color: #212529 !important;
+        }
 
         .captacoes-table tbody tr:hover {
             background-color: rgba(255, 193, 7, 0.1);
@@ -926,13 +915,6 @@ body {
             text-align: center !important;
             border-bottom: none !important;
             font-size: 1rem !important; /* Adicionado tamanho específico de fonte */
-        }
-
-        /* Footer com destaque no TOTAL (última célula) */
-        .captacoes-table-footer td:last-child {
-            background: linear-gradient(180deg, rgba(255,166,0,0.95), rgba(255,193,7,0.95));
-            color: #121212 !important;
-            font-size: 1.05rem !important;
         }
 
         .chart-wrapper {
@@ -959,6 +941,15 @@ body {
         #captacoesChart + .chartjs-legend,
         .chartjs-legend ul,
         .chartjs-legend ul li span {
+            color: #FFFFFF !important;
+        }
+
+        /* Regra global e definitiva para legendas (HTML) criadas pelo Chart.js
+           Força branco em qualquer elemento de legenda e seus filhos para
+           evitar textos pretos por overrides inline ou plugins. */
+        .chartjs-legend, .chartjs-legend *,
+        .chart-legend, .chart-legend *,
+        .chartjs-legend ul, .chartjs-legend ul li, .chartjs-legend ul li span {
             color: #FFFFFF !important;
         }
 
@@ -1411,7 +1402,7 @@ body {
 .page-title { 
     font-family: 'Orbitron', sans-serif; 
     font-weight: 700; 
-    font-size: 2.8em; /* keep login title large */
+    font-size: 2.8em; 
     background: linear-gradient(180deg, #ffffff, #e9e9e9); 
     -webkit-background-clip: text; 
     background-clip: text;
@@ -1420,11 +1411,6 @@ body {
     margin-bottom: 30px; 
     text-transform: uppercase; 
     letter-spacing: 2px; 
-}
-
-/* Dashboard-specific override: reduce size only for header in main dashboard */
-.page-title.dashboard-title {
-    font-size: 2.0em !important;
 }
 
 .access-control { 
