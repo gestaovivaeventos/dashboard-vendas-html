@@ -50,35 +50,7 @@ if (Chart && Chart.defaults && Chart.defaults.plugins) {
     Chart.defaults.plugins.legend = Chart.defaults.plugins.legend || {};
     Chart.defaults.plugins.legend.labels = Chart.defaults.plugins.legend.labels || {};
     Chart.defaults.plugins.legend.labels.font = { size: 18, family: 'Poppins, Arial, sans-serif', weight: 'bold' };
-    // Garantir que a cor padrão da legenda seja branca
     Chart.defaults.plugins.legend.labels.color = '#FFFFFF';
-    // Force legend labels to use the same font family as titles and render in UPPERCASE
-    // Uses Chart's generateLabels hook to transform the label text while preserving dataset order
-    Chart.defaults.plugins.legend.labels.generateLabels = function(chart) {
-        const original = Chart.overrides && Chart.overrides[chart.config.type] && Chart.overrides[chart.config.type].plugins && Chart.overrides[chart.config.type].plugins.legend && Chart.overrides[chart.config.type].plugins.legend.generateLabels;
-        // if a per-type override exists, try to call it to preserve behavior
-        if (typeof original === 'function') {
-            try { return original(chart).map(l => ({ ...l, text: (l.text || '').toString().toUpperCase() })); } catch (e) { /* fallthrough */ }
-        }
-        const datasets = chart.data && chart.data.datasets ? chart.data.datasets : [];
-        return datasets.map((ds, i) => {
-            const text = ds.label || ds.name || `dataset ${i + 1}`;
-            return {
-                text: (text || '').toString().toUpperCase(),
-                fillStyle: ds.backgroundColor || ds.fillStyle || ds.borderColor || '#F8F9FA',
-                hidden: !!ds.hidden,
-                lineCap: ds.borderCapStyle || 'butt',
-                lineDash: ds.borderDash || [],
-                lineDashOffset: ds.borderDashOffset || 0,
-                lineJoin: ds.borderJoinStyle || 'miter',
-                lineWidth: ds.borderWidth || 0,
-                strokeStyle: ds.borderColor || 'transparent',
-                // ✅ LINHA FALTANTE: Adicione esta linha para definir a cor do TEXTO
-        fontColor: '#F8F9FA', // Você pode usar #FFFFFF também
-                datasetIndex: i
-            };
-        });
-    };
 }
 
 // Global Chart.js axis/font defaults to match dashboard style
@@ -1871,7 +1843,27 @@ function updateVvrVsMetaPorMesChart(salesDataForYear, anoVigente) {
         data: {
             labels: formattedLabels,
             datasets: [
-                { label: "VVR Realizado", data: realizadoValues, backgroundColor: "#FF6600", order: 1 },
+                {
+                    label: "VVR Realizado",
+                    data: realizadoValues,
+                    // ✅ ALTERAÇÃO: Troca a cor sólida por uma função que cria o gradiente
+                    backgroundColor: function(context) {
+                        const chart = context.chart;
+                        const {ctx, chartArea} = chart;
+                        if (!chartArea) {
+                            // Fallback para quando o gráfico ainda não está totalmente renderizado
+                            return '#FF6600';
+                        }
+                        // Cria o gradiente vertical (de cima para baixo)
+                        const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+                        // Adiciona as cores do botão, na mesma ordem (do mais claro no topo para o mais escuro na base)
+                        gradient.addColorStop(0, '#ff8a33');
+                        gradient.addColorStop(0.5, '#FF6600');
+                        gradient.addColorStop(1, '#e65500');
+                        return gradient;
+                    },
+                    order: 1
+                },
                 {
                     label: "Meta VVR",
                     data: metaValues,
@@ -1899,6 +1891,37 @@ function updateVvrVsMetaPorMesChart(salesDataForYear, anoVigente) {
             ],
         },
         options: {
+            plugins: {
+                legend: {
+                    labels: {
+                        generateLabels: function(chart) {
+                            const datasets = chart.data.datasets;
+                            return datasets.map((ds, i) => {
+                                let fillStyle = '#FF6600';
+                                if (ds.label === 'Meta VVR') fillStyle = '#FFFFFF';
+                                if (ds.label === 'VVR Realizado') fillStyle = '#FF6600';
+                                return {
+                                    text: (ds.label || '').toString().toUpperCase(),
+                                    fillStyle: fillStyle,
+                                    hidden: !!ds.hidden,
+                                    lineCap: ds.borderCapStyle || 'butt',
+                                    lineDash: ds.borderDash || [],
+                                    lineDashOffset: ds.borderDashOffset || 0,
+                                    lineJoin: ds.borderJoinStyle || 'miter',
+                                    fontColor: '#F8F9FA',
+                                    lineWidth: ds.borderWidth || 0,
+                                    strokeStyle: ds.borderColor || 'transparent',
+                                    datasetIndex: i,
+                                    pointStyle: ds.pointStyle || 'rect',
+                                    pointRadius: ds.pointRadius || 5,
+                                    boxWidth: 20,
+                                    boxHeight: 10
+                                };
+                            });
+                        }
+                    }
+                }
+            },
             maintainAspectRatio: false,
             interaction: { mode: "index", intersect: false },
             plugins: {
@@ -2082,8 +2105,21 @@ function updateCumulativeVvrChart(historicalData, selectedUnidades) {
             maintainAspectRatio: false,
             interaction: { mode: "index", intersect: false },
             plugins: {
+                // ✅ ADIÇÃO: Bloco 'legend' para customizar os ícones
                 legend: {
-                    labels: { font: { size: 18 } }
+                    labels: {
+                        usePointStyle: true,
+                        generateLabels: function(chart) {
+                            const originalLabels = Chart.defaults.plugins.legend.labels.generateLabels(chart);
+                            originalLabels.forEach(label => {
+                                label.pointStyle = 'rect';
+                                label.fillStyle = label.strokeStyle;
+                                label.text = label.text.toUpperCase();
+                            });
+                            return originalLabels;
+                        },
+                        font: { size: 18 }
+                    }
                 },
                 tooltip: {
                     padding: 12,
@@ -2333,11 +2369,74 @@ function updateDrillDownCharts(filteredData) {
         data: {
             labels: years,
             datasets: [
-                { label: "Pós Venda", data: posVendasAnual, backgroundColor: "#6c757d" },
-                { label: "Venda", data: vendasAnual, backgroundColor: "#FF6600" },
+                {
+                    label: "Pós Venda",
+                    data: posVendasAnual,
+                    backgroundColor: function(context) {
+                        const chart = context.chart;
+                        const {ctx, chartArea} = chart;
+                        if (!chartArea) {
+                            return '#6c757d';
+                        }
+                        // Gradiente horizontal: esquerda para direita
+                        const gradient = ctx.createLinearGradient(chartArea.left, 0, chartArea.right, 0);
+                        gradient.addColorStop(0, '#ADB5BD'); // Claro à esquerda
+                        gradient.addColorStop(0.5, '#6c757d');
+                        gradient.addColorStop(1, '#343A40'); // Escuro à direita
+                        return gradient;
+                    }
+                },
+                {
+                    label: "Venda",
+                    data: vendasAnual,
+                    backgroundColor: function(context) {
+                        const chart = context.chart;
+                        const {ctx, chartArea} = chart;
+                        if (!chartArea) {
+                            return '#FF6600';
+                        }
+                        // Gradiente horizontal: esquerda para direita
+                        const gradient = ctx.createLinearGradient(chartArea.left, 0, chartArea.right, 0);
+                        gradient.addColorStop(0, '#e65500'); // Escuro à esquerda
+                        gradient.addColorStop(0.5, '#FF6600');
+                        gradient.addColorStop(1, '#ff8a33'); // Claro à direita
+                        return gradient;
+                    }
+                },
             ],
         },
         options: {
+            plugins: {
+                legend: {
+                    labels: {
+                        generateLabels: function(chart) {
+                            const datasets = chart.data.datasets;
+                            return datasets.map((ds, i) => {
+                                let fillStyle = '#ADB5BD';
+                                if (ds.label === 'Venda') fillStyle = '#FF6600';
+                                if (ds.label === 'Pós Venda') fillStyle = '#ADB5BD';
+                                return {
+                                    text: (ds.label || '').toString().toUpperCase(),
+                                    fillStyle: fillStyle,
+                                    hidden: !!ds.hidden,
+                                    lineCap: ds.borderCapStyle || 'butt',
+                                    lineDash: ds.borderDash || [],
+                                    lineDashOffset: ds.borderDashOffset || 0,
+                                    lineJoin: ds.borderJoinStyle || 'miter',
+                                    fontColor: '#F8F9FA',
+                                    lineWidth: ds.borderWidth || 0,
+                                    strokeStyle: ds.borderColor || 'transparent',
+                                    datasetIndex: i,
+                                    pointStyle: ds.pointStyle || 'rect',
+                                    pointRadius: ds.pointRadius || 5,
+                                    boxWidth: 20,
+                                    boxHeight: 10
+                                };
+                            });
+                        }
+                    }
+                }
+            },
             devicePixelRatio: window.devicePixelRatio,
             maintainAspectRatio: false,
             indexAxis: "y",
@@ -2367,7 +2466,13 @@ function updateDrillDownCharts(filteredData) {
             },
             plugins: {
                 datalabels: {
-                    color: "white", font: { weight: "bold", size: 14, family: 'Poppins, Arial, sans-serif' },
+                    color: function(context) {
+                        if (context.dataset.label === 'Pós Venda') {
+                            return '#212529'; // Escuro para contraste no cinza
+                        }
+                        return '#FFFFFF'; // Branco para laranja
+                    },
+                    font: { weight: "bold", size: 14, family: 'Poppins, Arial, sans-serif' },
                     align: 'center',
                     anchor: 'center',
                     clip: true,
@@ -2456,11 +2561,74 @@ function drawMonthlyDetailChart(data, year) {
         data: {
             labels: monthLabels,
             datasets: [
-                { label: "Pós Venda", data: posVendasMensal, backgroundColor: "#6c757d" },
-                { label: "Venda", data: vendasMensal, backgroundColor: "#FF6600" },
+                {
+                    label: "Pós Venda",
+                    data: posVendasMensal,
+                    backgroundColor: function(context) {
+                        const chart = context.chart;
+                        const {ctx, chartArea} = chart;
+                        if (!chartArea) {
+                            return '#6c757d';
+                        }
+                        // Gradiente vertical: cima para baixo
+                        const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+                        gradient.addColorStop(0, '#E9ECEF'); // Cinza bem claro no topo
+                        gradient.addColorStop(0.5, '#ADB5BD'); // Cinza claro no meio
+                        gradient.addColorStop(1, '#6c757d'); // Cinza médio na base
+                        return gradient;
+                    }
+                },
+                {
+                    label: "Venda",
+                    data: vendasMensal,
+                    backgroundColor: function(context) {
+                        const chart = context.chart;
+                        const {ctx, chartArea} = chart;
+                        if (!chartArea) {
+                            return '#FF6600';
+                        }
+                        // Gradiente vertical: cima para baixo
+                        const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+                        gradient.addColorStop(0, '#ff8a33'); // Claro no topo
+                        gradient.addColorStop(0.5, '#FF6600');
+                        gradient.addColorStop(1, '#e65500'); // Escuro na base
+                        return gradient;
+                    }
+                },
             ],
         },
         options: {
+            plugins: {
+                legend: {
+                    labels: {
+                        generateLabels: function(chart) {
+                            const datasets = chart.data.datasets;
+                            return datasets.map((ds, i) => {
+                                let fillStyle = '#ADB5BD';
+                                if (ds.label === 'Venda') fillStyle = '#FF6600';
+                                if (ds.label === 'Pós Venda') fillStyle = '#ADB5BD';
+                                return {
+                                    text: (ds.label || '').toString().toUpperCase(),
+                                    fillStyle: fillStyle,
+                                    hidden: !!ds.hidden,
+                                    lineCap: ds.borderCapStyle || 'butt',
+                                    lineDash: ds.borderDash || [],
+                                    lineDashOffset: ds.borderDashOffset || 0,
+                                    lineJoin: ds.borderJoinStyle || 'miter',
+                                    fontColor: '#F8F9FA',
+                                    lineWidth: ds.borderWidth || 0,
+                                    strokeStyle: ds.borderColor || 'transparent',
+                                    datasetIndex: i,
+                                    pointStyle: ds.pointStyle || 'rect',
+                                    pointRadius: ds.pointRadius || 5,
+                                    boxWidth: 20,
+                                    boxHeight: 10
+                                };
+                            });
+                        }
+                    }
+                }
+            },
             devicePixelRatio: window.devicePixelRatio,
             maintainAspectRatio: false,
             interaction: { mode: "index", intersect: false },
@@ -2487,7 +2655,13 @@ function drawMonthlyDetailChart(data, year) {
             },
             plugins: {
                 datalabels: {
-                    color: "white", font: { weight: "bold", family: 'Poppins, Arial, sans-serif', size: 14 },
+                    color: function(context) {
+                        if (context.dataset.label === 'Pós Venda') {
+                            return '#212529'; // Escuro para contraste no cinza
+                        }
+                        return '#FFFFFF'; // Branco para laranja
+                    },
+                    font: { weight: "bold", family: 'Poppins, Arial, sans-serif', size: 14 },
                     formatter: function (value) {
                         if (value === 0) return "";
                         if (value >= 1000000) return (value / 1000000).toFixed(1).replace(".0", "") + " mi";
@@ -2544,7 +2718,23 @@ function updateTicketCharts(filteredData) {
         type: "bar",
         data: {
             labels: years,
-            datasets: [{ label: "Ticket Médio", data: annualTicketData, backgroundColor: "#FF6600" }],
+            datasets: [{
+                label: "Ticket Médio",
+                data: annualTicketData,
+                backgroundColor: function(context) {
+                    const chart = context.chart;
+                    const {ctx, chartArea} = chart;
+                    if (!chartArea) {
+                        return '#FF6600';
+                    }
+                    // Gradiente horizontal: esquerda para direita
+                    const gradient = ctx.createLinearGradient(chartArea.left, 0, chartArea.right, 0);
+                    gradient.addColorStop(0, '#e65500'); // Escuro à esquerda
+                    gradient.addColorStop(0.5, '#FF6600');
+                    gradient.addColorStop(1, '#ff8a33'); // Claro à direita
+                    return gradient;
+                }
+            }],
         },
         options: {
             maintainAspectRatio: false,
@@ -2635,7 +2825,23 @@ function drawMonthlyTicketChart(data, year) {
         type: "bar",
         data: {
             labels: monthLabels,
-            datasets: [{ label: "Ticket Médio", data: monthlyTicketData, backgroundColor: "#FF6600" }],
+            datasets: [{
+                label: "Ticket Médio",
+                data: monthlyTicketData,
+                backgroundColor: function(context) {
+                    const chart = context.chart;
+                    const {ctx, chartArea} = chart;
+                    if (!chartArea) {
+                        return '#FF6600';
+                    }
+                    // Gradiente vertical: cima para baixo
+                    const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+                    gradient.addColorStop(0, '#ff8a33'); // Claro no topo
+                    gradient.addColorStop(0.5, '#FF6600');
+                    gradient.addColorStop(1, '#e65500'); // Escuro na base
+                    return gradient;
+                }
+            }],
         },
         options: {
             maintainAspectRatio: false,
@@ -2775,9 +2981,55 @@ function updateContractsCharts() {
         type: "bar",
         data: {
             labels: years,
-            datasets: [{ label: "Contratos", data: annualContractsData, backgroundColor: "#FF6600" }],
+            datasets: [{
+                label: "Contratos",
+                data: annualContractsData,
+                backgroundColor: function(context) {
+                    const chart = context.chart;
+                    const {ctx, chartArea} = chart;
+                    if (!chartArea) {
+                        return '#FF6600';
+                    }
+                    // Gradiente horizontal: esquerda para direita
+                    const gradient = ctx.createLinearGradient(chartArea.left, 0, chartArea.right, 0);
+                    gradient.addColorStop(0, '#e65500'); // Escuro à esquerda
+                    gradient.addColorStop(0.5, '#FF6600');
+                    gradient.addColorStop(1, '#ff8a33'); // Claro à direita
+                    return gradient;
+                }
+            }],
         },
         options: {
+            plugins: {
+                legend: {
+                    labels: {
+                        generateLabels: function(chart) {
+                            const datasets = chart.data.datasets;
+                            return datasets.map((ds, i) => {
+                                let fillStyle = '#FF6600';
+                                if (ds.label === 'Contratos') fillStyle = '#FF6600';
+                                return {
+                                    text: (ds.label || '').toString().toUpperCase(),
+                                    fillStyle: fillStyle,
+                                    hidden: !!ds.hidden,
+                                    lineCap: ds.borderCapStyle || 'butt',
+                                    lineDash: ds.borderDash || [],
+                                    lineDashOffset: ds.borderDashOffset || 0,
+                                    lineJoin: ds.borderJoinStyle || 'miter',
+                                    fontColor: '#F8F9FA',
+                                    lineWidth: ds.borderWidth || 0,
+                                    strokeStyle: ds.borderColor || 'transparent',
+                                    datasetIndex: i,
+                                    pointStyle: ds.pointStyle || 'rect',
+                                    pointRadius: ds.pointRadius || 5,
+                                    boxWidth: 20,
+                                    boxHeight: 10
+                                };
+                            });
+                        }
+                    }
+                }
+            },
             maintainAspectRatio: false,
             indexAxis: "y",
             plugins: {
@@ -2850,9 +3102,55 @@ function drawMonthlyContractsChart(data, year) {
         type: "bar",
         data: {
             labels: monthLabels,
-            datasets: [{ label: "Contratos", data: contractsByMonth, backgroundColor: "#FF6600" }],
+            datasets: [{
+                label: "Contratos",
+                data: contractsByMonth,
+                backgroundColor: function(context) {
+                    const chart = context.chart;
+                    const {ctx, chartArea} = chart;
+                    if (!chartArea) {
+                        return '#FF6600';
+                    }
+                    // Gradiente vertical: cima para baixo
+                    const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+                    gradient.addColorStop(0, '#ff8a33'); // Claro no topo
+                    gradient.addColorStop(0.5, '#FF6600');
+                    gradient.addColorStop(1, '#e65500'); // Escuro na base
+                    return gradient;
+                }
+            }],
         },
         options: {
+            plugins: {
+                legend: {
+                    labels: {
+                        generateLabels: function(chart) {
+                            const datasets = chart.data.datasets;
+                            return datasets.map((ds, i) => {
+                                let fillStyle = '#FF6600';
+                                if (ds.label === 'Contratos') fillStyle = '#FF6600';
+                                return {
+                                    text: (ds.label || '').toString().toUpperCase(),
+                                    fillStyle: fillStyle,
+                                    hidden: !!ds.hidden,
+                                    lineCap: ds.borderCapStyle || 'butt',
+                                    lineDash: ds.borderDash || [],
+                                    lineDashOffset: ds.borderDashOffset || 0,
+                                    lineJoin: ds.borderJoinStyle || 'miter',
+                                    fontColor: '#F8F9FA',
+                                    lineWidth: ds.borderWidth || 0,
+                                    strokeStyle: ds.borderColor || 'transparent',
+                                    datasetIndex: i,
+                                    pointStyle: ds.pointStyle || 'rect',
+                                    pointRadius: ds.pointRadius || 5,
+                                    boxWidth: 20,
+                                    boxHeight: 10
+                                };
+                            });
+                        }
+                    }
+                }
+            },
             maintainAspectRatio: false,
             plugins: {
                 datalabels: {
@@ -5767,8 +6065,48 @@ function updateMonthlyAdesoesChart(filteredData) {
     const datasets = uniqueYears.map((year, index) => ({
         label: year,
         data: adesoesByYearMonth[year] || Array(12).fill(0),
-        backgroundColor: palette[index % palette.length],
+        legendColor: palette[index % palette.length],
+        backgroundColor: function(context) {
+            const chart = context.chart;
+            const {ctx, chartArea} = chart;
+            const baseColor = palette[index % palette.length];
+            // Funções utilitárias para clarear/escurecer cor
+            function hexToRgb(hex) {
+                const m = hex.replace('#','');
+                return [parseInt(m.substring(0,2),16), parseInt(m.substring(2,4),16), parseInt(m.substring(4,6),16)];
+            }
+            function rgbToHex(r,g,b){
+                return '#'+[r,g,b].map(v=>v.toString(16).padStart(2,'0')).join('');
+            }
+            function lighten(color, percent) {
+                const [r,g,b] = hexToRgb(color);
+                return rgbToHex(
+                    Math.min(255, Math.round(r + (255 - r) * percent / 100)),
+                    Math.min(255, Math.round(g + (255 - g) * percent / 100)),
+                    Math.min(255, Math.round(b + (255 - b) * percent / 100))
+                );
+            }
+            function darken(color, percent) {
+                const [r,g,b] = hexToRgb(color);
+                return rgbToHex(
+                    Math.max(0, Math.round(r * (1 - percent / 100))),
+                    Math.max(0, Math.round(g * (1 - percent / 100))),
+                    Math.max(0, Math.round(b * (1 - percent / 100)))
+                );
+            }
+            if (!chartArea) {
+                return baseColor;
+            }
+            // Gradiente vertical: cima para baixo, usando tons derivados da cor base
+            const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+            gradient.addColorStop(0, lighten(baseColor, 30)); // Mais claro no topo
+            gradient.addColorStop(0.5, baseColor); // Cor base no meio
+            gradient.addColorStop(1, darken(baseColor, 25)); // Mais escuro na base
+            return gradient;
+        },
         hidden: !activeYears.includes(parseInt(year)),
+        barPercentage: 0.8,
+        categoryPercentage: 0.8
     }));
 
     const monthLabels = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
@@ -5862,11 +6200,74 @@ function updateAdesoesDrillDownCharts(filteredData) {
         data: {
             labels: years,
             datasets: [
-                { label: "Pós Venda", data: adesoesPosVendasAnual, backgroundColor: "#6c757d" },
-                { label: "Venda", data: adesoesVendasAnual, backgroundColor: "#FF6600" },
+                {
+                    label: "Pós Venda",
+                    data: adesoesPosVendasAnual,
+                    legendColor: '#ADB5BD',
+                    backgroundColor: function(context) {
+                        const chart = context.chart;
+                        const {ctx, chartArea} = chart;
+                        if (!chartArea) {
+                            return '#6c757d';
+                        }
+                        const gradient = ctx.createLinearGradient(chartArea.left, 0, chartArea.right, 0);
+                        gradient.addColorStop(0, '#E9ECEF');
+                        gradient.addColorStop(0.5, '#ADB5BD');
+                        gradient.addColorStop(1, '#6c757d');
+                        return gradient;
+                    }
+                },
+                {
+                    label: "Venda",
+                    data: adesoesVendasAnual,
+                    legendColor: '#FF6600',
+                    backgroundColor: function(context) {
+                        const chart = context.chart;
+                        const {ctx, chartArea} = chart;
+                        if (!chartArea) {
+                            return '#FF6600';
+                        }
+                        const gradient = ctx.createLinearGradient(chartArea.left, 0, chartArea.right, 0);
+                        gradient.addColorStop(0, '#e65500');
+                        gradient.addColorStop(0.5, '#FF6600');
+                        gradient.addColorStop(1, '#ff8a33');
+                        return gradient;
+                    }
+                },
             ],
         },
         options: {
+            plugins: {
+                legend: {
+                    labels: {
+                        generateLabels: function(chart) {
+                            const datasets = chart.data.datasets;
+                            return datasets.map((ds, i) => {
+                                let fillStyle = '#ADB5BD';
+                                if (ds.label === 'Venda') fillStyle = '#FF6600';
+                                if (ds.label === 'Pós Venda') fillStyle = '#ADB5BD';
+                                return {
+                                    text: (ds.label || '').toString().toUpperCase(),
+                                    fillStyle: fillStyle,
+                                    hidden: !!ds.hidden,
+                                    lineCap: ds.borderCapStyle || 'butt',
+                                    lineDash: ds.borderDash || [],
+                                    lineDashOffset: ds.borderDashOffset || 0,
+                                    lineJoin: ds.borderJoinStyle || 'miter',
+                                    fontColor: '#F8F9FA',
+                                    lineWidth: ds.borderWidth || 0,
+                                    strokeStyle: ds.borderColor || 'transparent',
+                                    datasetIndex: i,
+                                    pointStyle: ds.pointStyle || 'rect',
+                                    pointRadius: ds.pointRadius || 5,
+                                    boxWidth: 20,
+                                    boxHeight: 10
+                                };
+                            });
+                        }
+                    }
+                }
+            },
             devicePixelRatio: window.devicePixelRatio,
             interaction: { mode: "y", intersect: false },
             maintainAspectRatio: false,
@@ -5893,7 +6294,13 @@ function updateAdesoesDrillDownCharts(filteredData) {
             },
             plugins: {
                 datalabels: {
-                    color: "white", font: { family: 'Poppins, Arial, sans-serif', size: 16, weight: '700' },
+                    color: function(context) {
+                        if (context.dataset.label === 'Pós Venda') {
+                            return '#212529'; // Escuro para contraste no cinza
+                        }
+                        return '#FFFFFF'; // Branco para laranja
+                    },
+                    font: { family: 'Poppins, Arial, sans-serif', size: 16, weight: '700' },
                     formatter: (value) => {
                         if (!value || value === 0) return "";
                         const num = Number(value);
@@ -5972,11 +6379,72 @@ function drawMonthlyAdesoesDetailChart(data, year) {
         data: {
             labels: monthLabels,
             datasets: [
-                { label: "Pós Venda", data: adesoesPosVendasMensal, backgroundColor: "#6c757d" },
-                { label: "Venda", data: adesoesVendasMensal, backgroundColor: "#FF6600" },
+                {
+                    label: "Pós Venda",
+                    data: adesoesPosVendasMensal,
+                    backgroundColor: function(context) {
+                        const chart = context.chart;
+                        const {ctx, chartArea} = chart;
+                        if (!chartArea) {
+                            return '#6c757d';
+                        }
+                        const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+                        gradient.addColorStop(0, '#E9ECEF');
+                        gradient.addColorStop(0.5, '#ADB5BD');
+                        gradient.addColorStop(1, '#6c757d');
+                        return gradient;
+                    }
+                },
+                {
+                    label: "Venda",
+                    data: adesoesVendasMensal,
+                    backgroundColor: function(context) {
+                        const chart = context.chart;
+                        const {ctx, chartArea} = chart;
+                        if (!chartArea) {
+                            return '#FF6600';
+                        }
+                        const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+                        gradient.addColorStop(0, '#ff8a33');
+                        gradient.addColorStop(0.5, '#FF6600');
+                        gradient.addColorStop(1, '#e65500');
+                        return gradient;
+                    }
+                },
             ],
         },
         options: {
+            plugins: {
+                legend: {
+                    labels: {
+                        generateLabels: function(chart) {
+                            const datasets = chart.data.datasets;
+                            return datasets.map((ds, i) => {
+                                let fillStyle = '#ADB5BD';
+                                if (ds.label === 'Venda') fillStyle = '#FF6600';
+                                if (ds.label === 'Pós Venda') fillStyle = '#ADB5BD';
+                                return {
+                                    text: (ds.label || '').toString().toUpperCase(),
+                                    fillStyle: fillStyle,
+                                    hidden: !!ds.hidden,
+                                    lineCap: ds.borderCapStyle || 'butt',
+                                    lineDash: ds.borderDash || [],
+                                    lineDashOffset: ds.borderDashOffset || 0,
+                                    lineJoin: ds.borderJoinStyle || 'miter',
+                                    fontColor: '#F8F9FA',
+                                    lineWidth: ds.borderWidth || 0,
+                                    strokeStyle: ds.borderColor || 'transparent',
+                                    datasetIndex: i,
+                                    pointStyle: ds.pointStyle || 'rect',
+                                    pointRadius: ds.pointRadius || 5,
+                                    boxWidth: 20,
+                                    boxHeight: 10
+                                };
+                            });
+                        }
+                    }
+                }
+            },
             devicePixelRatio: window.devicePixelRatio,
             interaction: { mode: "index", intersect: false },
             maintainAspectRatio: false,
@@ -6004,7 +6472,12 @@ function drawMonthlyAdesoesDetailChart(data, year) {
             plugins: {
                 datalabels: {
                     display: true,
-                    color: "#FFFFFF",
+                    color: function(context) {
+                        if (context.dataset.label === 'Pós Venda') {
+                            return '#212529'; // Escuro para contraste no cinza
+                        }
+                        return '#FFFFFF'; // Branco para laranja
+                    },
                     align: "center",
                     anchor: "center",
                     clip: true,
@@ -6012,7 +6485,6 @@ function drawMonthlyAdesoesDetailChart(data, year) {
                     formatter: (value) => {
                         if (!value || value === 0) return "";
                         const num = Number(value);
-                        if (Math.abs(num) >= 1000000) return (num / 1000000).toFixed(1).replace('.0','') + ' mi';
                         if (Math.abs(num) >= 1000) return (num / 1000).toFixed(1).replace('.0','') + 'k';
                         return num.toString();
                     },
