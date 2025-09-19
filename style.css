@@ -304,15 +304,15 @@ body {
 }
 
 .multiselect.dropdown-toggle:hover {
-    border-color: #FFC107 !important;
-    box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.15), inset 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+    border-color: #FF6600 !important;
+    box-shadow: 0 0 0 3px rgba(255, 102, 0, 0.15), inset 0 2px 4px rgba(0, 0, 0, 0.3) !important;
     transform: translateY(-1px) !important;
 }
 
 .multiselect.dropdown-toggle:focus,
 .multiselect.dropdown-toggle.focus {
-    border-color: #FFC107 !important;
-    box-shadow: 0 0 0 4px rgba(255, 193, 7, 0.25), inset 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+    border-color: #FF6600 !important;
+    box-shadow: 0 0 0 4px rgba(255, 102, 0, 0.25), inset 0 2px 4px rgba(0, 0, 0, 0.3) !important;
     transform: translateY(-1px) !important;
 }
 
@@ -331,7 +331,7 @@ body {
 
 .multiselect.dropdown-toggle[aria-expanded="true"]::after {
     transform: translateY(-50%) rotate(180deg) !important;
-    color: #FFC107 !important;
+    color: #FF6600 !important;
 }
 
 /* Estilo para o input de pesquisa */
@@ -351,8 +351,8 @@ body {
 }
 
 .multiselect-container .input-group input.multiselect-search:focus {
-    border-color: #FFC107 !important;
-    box-shadow: 0 0 0 2px rgba(255, 193, 7, 0.25) !important;
+    border-color: #FF6600 !important;
+    box-shadow: 0 0 0 2px rgba(255, 102, 0, 0.25) !important;
     outline: none !important;
     color: #FFFFFF !important;
     background-color: #343A40 !important;
@@ -632,6 +632,13 @@ body {
     font-weight: bold;
     color: #F8F9FA;
 }
+
+/* Make the main numeric values in the Indicadores Operacionais slightly smaller
+   to visually match the VVR KPI adjustments. Scoped to avoid global changes. */
+#indicadores-operacionais .indicator-value {
+    font-size: 1.7em;
+    line-height: 1.05;
+}
 .indicator-meta {
     font-size: 0.75rem; /* igual ao kpi-card-details */
     color: #ADB5BD; /* mesma cor do título do card */
@@ -647,7 +654,7 @@ body {
 .indicator-progress-fg {
     height: 100%;
     width: 0%;
-    background: linear-gradient(90deg, #ffc107 0%, #ffd54f 100%);
+    background: linear-gradient(90deg, #ff8a33 0%, #FF6600 50%, #e65500 100%);
     border-radius: 6px;
     transition: width 600ms ease-in-out;
 }
@@ -1267,7 +1274,7 @@ body {
         }
 
         .filter-item:hover .filter-label {
-            color: #FFC107;
+            color: #FF6600;
         }
 
         /* Estilo específico para o filtro de data */
@@ -1291,15 +1298,15 @@ body {
         }
 
         .date-range-input:hover {
-            border-color: #FFC107;
-            box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.15), inset 0 2px 4px rgba(0, 0, 0, 0.3);
+            border-color: #FF6600;
+            box-shadow: 0 0 0 3px rgba(255, 102, 0, 0.15), inset 0 2px 4px rgba(0, 0, 0, 0.3);
             transform: translateY(-1px);
         }
 
         .date-range-input:focus {
             outline: none;
-            border-color: #FFC107;
-            box-shadow: 0 0 0 4px rgba(255, 193, 7, 0.25), inset 0 2px 4px rgba(0, 0, 0, 0.3);
+            border-color: #FF6600;
+            box-shadow: 0 0 0 4px rgba(255, 102, 0, 0.25), inset 0 2px 4px rgba(0, 0, 0, 0.3);
             transform: translateY(-1px);
         }
 
@@ -1404,15 +1411,24 @@ body {
         .kpi-main-card:first-child { padding-left: 0; }
         .kpi-card-title { font-size: 0.9em; color: #ADB5BD; font-weight: bold; }
         .kpi-card-value { font-size: 2.1em; font-weight: bold; color: #F8F9FA; }
+
+        /* Reduce only the monetary 'valor realizado' size inside the main VVR sections
+           without affecting other usages of .kpi-card-value across the app. */
+        #kpi-section .kpi-card-value,
+        #kpi-section-py .kpi-card-value {
+            font-size: 1.7em; /* slightly smaller to match visual balance in the screenshot */
+            line-height: 1.05; /* keep tight line-height for large numbers */
+        }
         .kpi-card-details { font-size: 0.8em; color: #ADB5BD; }
         .kpi-card-details .percent { font-weight: bold; transition: color 0.5s ease-in-out; }
         .progress-bar-bg { width: 100%; height: 10px; background-color: #495057; border-radius: 5px; overflow: hidden; }
         .progress-bar-fg { height: 100%; border-radius: 5px; width: 0%; transition: width 0.5s ease-in-out, background-color 0.5s ease-in-out; }
 
-        /* Make PY VVR cards use the same typography as the main VVR cards */
-        #kpi-section-py .kpi-card-title { font-size: 0.9em; color: #ADB5BD; font-weight: bold; }
-        #kpi-section-py .kpi-card-value { font-size: 2.1em; font-weight: bold; color: #F8F9FA; }
-        #kpi-section-py .kpi-card-details { font-size: 0.8em; color: #ADB5BD; }
+    /* Make PY VVR cards use the same typography as the main VVR cards */
+    #kpi-section-py .kpi-card-title { font-size: 0.9em; color: #ADB5BD; font-weight: bold; }
+    /* Keep the same reduced size for PY cards so both sections are visually consistent */
+    #kpi-section-py .kpi-card-value { font-size: 1.7em; font-weight: bold; color: #F8F9FA; }
+    #kpi-section-py .kpi-card-details { font-size: 0.8em; color: #ADB5BD; }
         #kpi-section-py .kpi-card-details .percent { font-weight: bold; transition: color 0.5s ease-in-out; }
         
         .loader { text-align: center; font-size: 1.5em; padding: 50px; }

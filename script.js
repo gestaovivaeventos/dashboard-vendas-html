@@ -1002,9 +1002,16 @@ function updateMainKPIs(dataBruta, selectedUnidades, startDate, endDate, retryCo
     console.log('  - metasData.size:', metasData.size);
     
     const getColorForPercentage = (percent) => {
-        if (percent >= 1) return "#28a745";
-        if (percent >= 0.5) return "#ffc107";
-        return "#dc3545";
+        // Use subtle left-to-right gradients for each state
+        if (percent >= 1) return "linear-gradient(90deg, #51c46a 0%, #28a745 100%)"; // green gradient
+        if (percent >= 0.5) return "linear-gradient(90deg, #ff8a33 0%, #FF6600 50%, #e65500 100%)"; // brand orange gradient
+        return "linear-gradient(90deg, #ff6b6b 0%, #dc3545 100%)"; // red gradient
+    };
+    // Solid color counterpart (used for percent text) - no gradients
+    const getSolidColorForPercentage = (percent) => {
+        if (percent >= 1) return "#28a745"; // green
+        if (percent >= 0.5) return "#FF6600"; // brand orange
+        return "#dc3545"; // red
     };
     const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
@@ -1139,8 +1146,8 @@ function updateMainKPIs(dataBruta, selectedUnidades, startDate, endDate, retryCo
     document.getElementById("kpi-total-meta").textContent = formatCurrency(metaTotal);
     const totalPercentEl = document.getElementById("kpi-total-percent");
     totalPercentEl.textContent = formatPercent(percentTotal);
-    totalPercentEl.style.color = totalColor;
-    document.getElementById("kpi-total-progress").style.backgroundColor = totalColor;
+    totalPercentEl.style.color = getSolidColorForPercentage(percentTotal);
+    document.getElementById("kpi-total-progress").style.background = totalColor;
     document.getElementById("kpi-total-progress").style.width = `${Math.min(percentTotal * 100, 100)}%`;
 
     const vendasColor = getColorForPercentage(percentVendas);
@@ -1148,8 +1155,8 @@ function updateMainKPIs(dataBruta, selectedUnidades, startDate, endDate, retryCo
     document.getElementById("kpi-vendas-meta").textContent = formatCurrency(metaVendas);
     const vendasPercentEl = document.getElementById("kpi-vendas-percent");
     vendasPercentEl.textContent = formatPercent(percentVendas);
-    vendasPercentEl.style.color = vendasColor;
-    document.getElementById("kpi-vendas-progress").style.backgroundColor = vendasColor;
+    vendasPercentEl.style.color = getSolidColorForPercentage(percentVendas);
+    document.getElementById("kpi-vendas-progress").style.background = vendasColor;
     document.getElementById("kpi-vendas-progress").style.width = `${Math.min(percentVendas * 100, 100)}%`;
 
     const posVendasColor = getColorForPercentage(percentPosVendas);
@@ -1157,15 +1164,21 @@ function updateMainKPIs(dataBruta, selectedUnidades, startDate, endDate, retryCo
     document.getElementById("kpi-posvendas-meta").textContent = formatCurrency(metaPosVendas);
     const posVendasPercentEl = document.getElementById("kpi-posvendas-percent");
     posVendasPercentEl.textContent = formatPercent(percentPosVendas);
-    posVendasPercentEl.style.color = posVendasColor;
-    document.getElementById("kpi-posvendas-progress").style.backgroundColor = posVendasColor;
+    posVendasPercentEl.style.color = getSolidColorForPercentage(percentPosVendas);
+    document.getElementById("kpi-posvendas-progress").style.background = posVendasColor;
     document.getElementById("kpi-posvendas-progress").style.width = `${Math.min(percentPosVendas * 100, 100)}%`;
 }
 
 function updatePreviousYearKPIs(dataBruta, selectedUnidades, startDate, endDate) {
     const getColorForPercentage = (percent) => {
+        if (percent >= 1) return "linear-gradient(90deg, #51c46a 0%, #28a745 100%)"; // green gradient
+        if (percent >= 0.5) return "linear-gradient(90deg, #ff8a33 0%, #FF6600 50%, #e65500 100%)"; // brand orange gradient
+        return "linear-gradient(90deg, #ff6b6b 0%, #dc3545 100%)"; // red gradient
+    };
+    // helper to return solid color (in case other parts expect a gradient vs solid)
+    const getSolidColorForPercentage = (percent) => {
         if (percent >= 1) return "#28a745";
-        if (percent >= 0.5) return "#ffc107";
+        if (percent >= 0.5) return "#FF6600";
         return "#dc3545";
     };
     const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -1205,8 +1218,8 @@ function updatePreviousYearKPIs(dataBruta, selectedUnidades, startDate, endDate)
     document.getElementById("kpi-total-meta-py").textContent = formatCurrency(metaTotal);
     const totalPercentEl = document.getElementById("kpi-total-percent-py");
     totalPercentEl.textContent = formatPercent(percentTotal);
-    totalPercentEl.style.color = totalColor;
-    document.getElementById("kpi-total-progress-py").style.backgroundColor = totalColor;
+    totalPercentEl.style.color = getSolidColorForPercentage(percentTotal);
+    document.getElementById("kpi-total-progress-py").style.background = totalColor;
     document.getElementById("kpi-total-progress-py").style.width = `${Math.min(percentTotal * 100, 100)}%`;
 
     const vendasColor = getColorForPercentage(percentVendas);
@@ -1214,8 +1227,8 @@ function updatePreviousYearKPIs(dataBruta, selectedUnidades, startDate, endDate)
     document.getElementById("kpi-vendas-meta-py").textContent = formatCurrency(metaVendas);
     const vendasPercentEl = document.getElementById("kpi-vendas-percent-py");
     vendasPercentEl.textContent = formatPercent(percentVendas);
-    vendasPercentEl.style.color = vendasColor;
-    document.getElementById("kpi-vendas-progress-py").style.backgroundColor = vendasColor;
+    vendasPercentEl.style.color = getSolidColorForPercentage(percentVendas);
+    document.getElementById("kpi-vendas-progress-py").style.background = vendasColor;
     document.getElementById("kpi-vendas-progress-py").style.width = `${Math.min(percentVendas * 100, 100)}%`;
 
     const posVendasColor = getColorForPercentage(percentPosVendas);
@@ -1223,8 +1236,8 @@ function updatePreviousYearKPIs(dataBruta, selectedUnidades, startDate, endDate)
     document.getElementById("kpi-posvendas-meta-py").textContent = formatCurrency(metaPosVendas);
     const posVendasPercentEl = document.getElementById("kpi-posvendas-percent-py");
     posVendasPercentEl.textContent = formatPercent(percentPosVendas);
-    posVendasPercentEl.style.color = posVendasColor;
-    document.getElementById("kpi-posvendas-progress-py").style.backgroundColor = posVendasColor;
+    posVendasPercentEl.style.color = getSolidColorForPercentage(percentPosVendas);
+    document.getElementById("kpi-posvendas-progress-py").style.background = posVendasColor;
     document.getElementById("kpi-posvendas-progress-py").style.width = `${Math.min(percentPosVendas * 100, 100)}%`;
 }
 
@@ -1424,7 +1437,7 @@ function updateDashboard() {
             const percent = totalMetaLeads > 0 ? (totalLeads / totalMetaLeads) : 0;
             if (leadsPercentEl) {
                 leadsPercentEl.textContent = `${(percent * 100).toFixed(1)}%`;
-                leadsPercentEl.style.color = getColorForPercentage(percent);
+                leadsPercentEl.style.color = getSolidColorForPercentage(percent);
             }
             if (leadsProgressEl) {
                 leadsProgressEl.style.width = `${Math.min(100, percent * 100)}%`;
@@ -1433,8 +1446,14 @@ function updateDashboard() {
             }
 // Regra de cor igual VVR
 function getColorForPercentage(percent) {
+    if (percent >= 1) return "linear-gradient(90deg, #51c46a 0%, #28a745 100%)"; // green gradient
+    if (percent >= 0.5) return "linear-gradient(90deg, #ff8a33 0%, #FF6600 50%, #e65500 100%)"; // brand orange gradient
+    return "linear-gradient(90deg, #ff6b6b 0%, #dc3545 100%)"; // red gradient
+}
+// Solid-color helper for percent text (keeps numbers without gradient)
+function getSolidColorForPercentage(percent) {
     if (percent >= 1) return "#28a745";
-    if (percent >= 0.5) return "#ffc107";
+    if (percent >= 0.5) return "#FF6600";
     return "#dc3545";
 }
         } catch (err) {
@@ -1524,7 +1543,7 @@ function getColorForPercentage(percent) {
             const percentAd = totalMetaAdesoes > 0 ? (totalAdesoes / totalMetaAdesoes) : 0;
             if (adesaoPercentEl) {
                 adesaoPercentEl.textContent = `${(percentAd * 100).toFixed(1)}%`;
-                adesaoPercentEl.style.color = getColorForPercentage(percentAd);
+                adesaoPercentEl.style.color = getSolidColorForPercentage(percentAd);
             }
             if (adesaoProgressEl) {
                 adesaoProgressEl.style.width = `${Math.min(100, percentAd * 100)}%`;
@@ -1616,7 +1635,7 @@ function getColorForPercentage(percent) {
         const percentCt = totalMetaContratos > 0 ? (totalContratos / totalMetaContratos) : 0;
         if (contratosPercentEl) {
             contratosPercentEl.textContent = `${(percentCt * 100).toFixed(1)}%`;
-            contratosPercentEl.style.color = getColorForPercentage(percentCt);
+            contratosPercentEl.style.color = getSolidColorForPercentage(percentCt);
         }
         if (contratosProgressEl) {
             contratosProgressEl.style.width = `${Math.min(100, percentCt * 100)}%`;
@@ -1687,7 +1706,7 @@ function getColorForPercentage(percent) {
         const percentRe = totalMetaReunioes > 0 ? (reunioesCount / totalMetaReunioes) : 0;
         if (reunioesPercentEl) {
             reunioesPercentEl.textContent = `${(percentRe * 100).toFixed(1)}%`;
-            reunioesPercentEl.style.color = getColorForPercentage(percentRe);
+            reunioesPercentEl.style.color = getSolidColorForPercentage(percentRe);
         }
         if (reunioesProgressEl) {
             reunioesProgressEl.style.width = `${Math.min(100, percentRe * 100)}%`;
