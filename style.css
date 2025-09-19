@@ -428,9 +428,9 @@ body {
     border-radius: 50% !important;
 }
 
-/* Legend label neutral color (matches other charts) */
+/* Legend label: force white to match dashboard contrast */
 .captacoes-chart-container .chart-legend li {
-    color: #adb5bd !important;
+    color: #F8F9FA !important;
     font-weight: 600;
 }
 
@@ -1116,6 +1116,25 @@ body {
             color: #FFFFFF !important;
         }
 
+        /* High-specificity override: force all Chart.js legend labels to the dashboard's white color
+           This covers both generated HTML legends (.chartjs-legend / .chart-legend) and Chart.js
+           canvas-rendered legends via default options. Kept highly specific and placed late so it
+           overrides previous theme rules that set legend text darker. */
+        #main-content .chart-legend, #main-content .chart-legend *,
+        #main-content .chartjs-legend, #main-content .chartjs-legend ul, #main-content .chartjs-legend ul li, #main-content .chartjs-legend ul li span {
+            color: #F8F9FA !important;
+        }
+
+        /* Extra safety: cover more DOM shapes Chart.js might generate for legends (anchors, links, nested spans) */
+        .chartjs-legend, .chartjs-legend *,
+        .chartjs-legend ul, .chartjs-legend ul li, .chartjs-legend ul li *,
+        .chart-legend, .chart-legend *,
+        .captacoes-chart-container .chartjs-legend ul li, .captacoes-chart-container .chartjs-legend ul li *,
+        .captacoes-chart-container .chart-legend li, .captacoes-chart-container .chart-legend li *,
+        .chart-legend li a, .chart-legend li a * {
+            color: #F8F9FA !important;
+        }
+
         /* Responsividade para telas menores */
         @media (max-width: 1400px) {
             .funil-indicators-grid {
@@ -1139,6 +1158,41 @@ body {
                 grid-template-columns: 1fr;
             }
             
+
+/* --- FALLBACK: garantir legenda branca para todos os formatos possíveis --- */
+/* Escopo aplicado a #main-content para reduzir impacto global */
+#main-content .chart-legend,
+#main-content .chart-legend *,
+#main-content .chartjs-legend,
+#main-content .chartjs-legend *,
+#main-content .chartjs-legend ul,
+#main-content .chartjs-legend ul li,
+#main-content .chartjs-legend ul li span,
+.chart-legend,
+.chart-legend *,
+.chartjs-legend,
+.chartjs-legend *,
+.chartjs-legend ul,
+.chartjs-legend ul li,
+.chartjs-legend ul li *,
+.captacoes-chart-container .chart-legend li,
+.captacoes-chart-container .chart-legend li * {
+    color: #F8F9FA !important;
+    fill: #F8F9FA !important;   /* para ícones SVG */
+    stroke: #F8F9FA !important; /* para bordas de SVG se houver */
+    background-color: transparent !important;
+}
+
+/* Forçar também cores nos elementos gerados via <a> ou <span> dentro da legenda */
+.chart-legend li a, .chart-legend li a * {
+    color: #F8F9FA !important;
+}
+
+/* Pequena proteção para evitar que regras que definam texto preto por herança alcancem legendas */
+#main-content [class*="legend"], #main-content [class*="legend"] * {
+    color: #F8F9FA !important;
+}
+
             .funil-card-wide {
                 grid-column: span 1;
             }

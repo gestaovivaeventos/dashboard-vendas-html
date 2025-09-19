@@ -65,14 +65,16 @@ if (Chart && Chart.defaults && Chart.defaults.plugins) {
             const text = ds.label || ds.name || `dataset ${i + 1}`;
             return {
                 text: (text || '').toString().toUpperCase(),
-                fillStyle: ds.backgroundColor || ds.fillStyle || ds.borderColor || '#000',
+                fillStyle: ds.backgroundColor || ds.fillStyle || ds.borderColor || '#F8F9FA',
                 hidden: !!ds.hidden,
                 lineCap: ds.borderCapStyle || 'butt',
                 lineDash: ds.borderDash || [],
                 lineDashOffset: ds.borderDashOffset || 0,
                 lineJoin: ds.borderJoinStyle || 'miter',
                 lineWidth: ds.borderWidth || 2,
-                strokeStyle: ds.borderColor || '#000',
+                strokeStyle: ds.borderColor || 'transparent',
+                // ✅ LINHA FALTANTE: Adicione esta linha para definir a cor do TEXTO
+        fontColor: '#F8F9FA', // Você pode usar #FFFFFF também
                 datasetIndex: i
             };
         });
@@ -138,6 +140,55 @@ let allData = [],
   negociacoesPorFaseChart, // NOVO: Chart de negociações por fase
   perdasPorFaseChart; // NOVO: Chart de perdas por fase
 let currentVvrChartType = "total";
+
+/* --- Runtime safeguard: aplicar inline styles nas legendas geradas para garantir cor branca --- */
+function enforceLegendInlineColors() {
+    const selectors = [
+        '.chart-legend', '.chart-legend *',
+        '.chartjs-legend', '.chartjs-legend *',
+        '#captacoesChart + .chartjs-legend',
+    ];
+    const applyToExisting = () => {
+        selectors.forEach(sel => {
+            document.querySelectorAll(sel).forEach(el => {
+                try {
+                    el.style.setProperty('color', '#F8F9FA', 'important');
+                    el.style.setProperty('fill', '#F8F9FA', 'important');
+                    el.style.setProperty('stroke', '#F8F9FA', 'important');
+                    // ensure children also get inline color
+                    el.querySelectorAll('*').forEach(child => {
+                        child.style.setProperty('color', '#F8F9FA', 'important');
+                        child.style.setProperty('fill', '#F8F9FA', 'important');
+                    });
+                } catch (e) { /* ignore DOM timing errors */ }
+            });
+        });
+    };
+
+    // Apply once on load
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', applyToExisting);
+    } else {
+        applyToExisting();
+    }
+
+    // Observe for dynamically injected legends (Chart.js can generate them after charts are created)
+    const observer = new MutationObserver((mutations) => {
+        let needsApply = false;
+        for (const m of mutations) {
+            if (m.addedNodes && m.addedNodes.length) {
+                needsApply = true; break;
+            }
+        }
+        if (needsApply) applyToExisting();
+    });
+
+    const main = document.getElementById('main-content') || document.body;
+    observer.observe(main, { childList: true, subtree: true });
+}
+
+// Start the enforcement immediately
+enforceLegendInlineColors();
 let currentTableDataType = "total";
 let currentFilteredDataForTable = [];
 
@@ -7141,7 +7192,7 @@ function updateCaptacoesChart(dados) {
                 legend: {
                     position: 'right', // Legenda à direita
                     labels: {
-                        color: '#adb5bd', // use canonical neutral color
+                        color: '#F8F9FA', // use white for contrast
                         font: { size: 15, family: 'Poppins, Arial, sans-serif', weight: 600 },
                         padding: 18,
                         usePointStyle: true,
@@ -7159,7 +7210,7 @@ function updateCaptacoesChart(dados) {
                                         pointStyle: 'circle',
                                         hidden: false,
                                         index: index,
-                                        textColor: '#adb5bd',
+                                        textColor: '#F8F9FA',
                                         font: { family: 'Poppins, Arial, sans-serif', size: 15, weight: '600' }
                                     };
                                 });
@@ -7258,7 +7309,7 @@ function updateCaptacoesStackedBar(dados) {
                 y: { stacked: true, display: false }
             },
             plugins: {
-                legend: { position: 'bottom', labels: { color: '#adb5bd', boxWidth: 14, boxHeight: 14, padding: 10, font: { size: 16, family: 'Poppins, Arial, sans-serif', weight: 700 } } },
+                legend: { position: 'bottom', labels: { color: '#F8F9FA', boxWidth: 14, boxHeight: 14, padding: 10, font: { size: 16, family: 'Poppins, Arial, sans-serif', weight: 700 } } },
                 tooltip: {
                     callbacks: {
                         label: function(context) {
@@ -7300,9 +7351,9 @@ function updateMotivosPerdaTable(dadosFiltrados) {
     }
 
     // Verificar se há dados do funil disponíveis
-    if (!dadosFiltrados || dadosFiltrados.length === 0) {
+        if (!dadosFiltrados || dadosFiltrados.length === 0) {
         console.log("⚠️ Não há dados filtrados para processar motivos de perda");
-        tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: #adb5bd;">Nenhum dado disponível</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: #F8F9FA;">Nenhum dado disponível</td></tr>';
         return;
     }
 
@@ -7372,7 +7423,7 @@ function updateMotivosPerdaTable(dadosFiltrados) {
         // Se não há leads válidos, mostrar mensagem
         if (leadsComFasePerdido.length === 0) {
             console.log("⚠️ Nenhum lead perdido válido encontrado");
-            tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: #adb5bd; padding: 20px;">Nenhum motivo de perda encontrado no período selecionado</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: #F8F9FA; padding: 20px;">Nenhum motivo de perda encontrado no período selecionado</td></tr>';
             console.log("=== FIM updateMotivosPerdaTable ===");
             return;
         }
@@ -7531,7 +7582,7 @@ function updateDescartesTable(dadosFiltrados) {
         // Se não há leads válidos, mostrar mensagem
         if (leadsComDescarte.length === 0) {
             console.log("⚠️ Nenhum lead com descarte encontrado");
-            tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: #adb5bd; padding: 20px;">Nenhum descarte encontrado no período selecionado</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: #F8F9FA; padding: 20px;">Nenhum descarte encontrado no período selecionado</td></tr>';
             console.log("=== FIM updateDescartesTable ===");
             return;
         }
