@@ -71,7 +71,7 @@ if (Chart && Chart.defaults && Chart.defaults.plugins) {
                 lineDash: ds.borderDash || [],
                 lineDashOffset: ds.borderDashOffset || 0,
                 lineJoin: ds.borderJoinStyle || 'miter',
-                lineWidth: ds.borderWidth || 2,
+                lineWidth: ds.borderWidth || 0,
                 strokeStyle: ds.borderColor || 'transparent',
                 // ✅ LINHA FALTANTE: Adicione esta linha para definir a cor do TEXTO
         fontColor: '#F8F9FA', // Você pode usar #FFFFFF também
