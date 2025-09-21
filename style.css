@@ -157,7 +157,7 @@ body {
 }
         #sidebar-toggle.collapsed { left: 10px; }
 
-        .page-navigation { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #495057; padding-bottom: 20px; }
+    .page-navigation { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #343A40; padding-bottom: 20px; }
 .page-navigation button {
     /* Reaplicando visual de botão consistente com os chart-selector */
     background: linear-gradient(180deg, #3a3f44 0%, #2e3236 100%);
@@ -1411,7 +1411,7 @@ body {
             left: 0;
             right: 0;
             height: 2px;
-            background: linear-gradient(90deg, #ff8a33 0%, #FF6600 50%, #e65500 100%);
+            background: #343A40;
             border-radius: 12px 12px 0 0;
         }
 
