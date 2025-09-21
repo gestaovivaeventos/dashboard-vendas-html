@@ -1,3 +1,12 @@
+/* --- CORREÇÃO DE ALINHAMENTO DO CABEÇALHO DA TABELA DE CAPTAÇÕES --- */
+/*
+    Esta regra força o alinhamento de TODOS os cabeçalhos (th) dentro da
+    tabela específica de captações (#captacoes-funil-table) para a esquerda.
+    O '!important' garante que esta regra tenha prioridade sobre outras.
+*/
+#captacoes-funil-table thead th {
+        text-align: left !important;
+}
 /* --- ESTILOS PARA O NOVO TÍTULO DA TELA DE LOGIN --- */
 .login-heading {
     text-align: center;
@@ -739,9 +748,8 @@ body {
         
         /* Estilos para os indicadores do funil */
         .funil-indicators-grid {
-            display: grid;
-            grid-template-columns: repeat(12, 1fr);
-            grid-template-rows: auto auto;
+            display: flex; /* De 'grid' para 'flex' */
+            align-items: stretch; /* Garante que os filhos estiquem para a mesma altura */
             gap: 20px;
             grid-column: span 12;
             margin-bottom: 30px;
@@ -749,16 +757,16 @@ body {
 
         /* Container principal do funil horizontal em formato de setas */
         .funil-horizontal-container {
-            grid-column: 1 / span 9;
+            flex: 9; /* Ocupa 9 de 12 partes do espaço (proporcional) */
             display: flex;
-            align-items: center;
+            align-items: stretch; /* Força os itens a esticarem na altura */
             justify-content: flex-start;
             position: relative;
             background: transparent; /* Remove o fundo azul */
             border-radius: 0; /* Remove bordas arredondadas */
             padding: 20px 0; /* Reduz padding vertical, remove horizontal */
             border: none; /* Remove a borda */
-            min-height: 215px; /* Aumenta para acomodar os cards maiores (175px + padding) */
+            /* min-height removido */
             overflow: visible; /* Permite que elementos sejam visíveis */
         }
 
@@ -781,7 +789,7 @@ body {
             flex-direction: column;
             gap: 8px;
             min-width: 110px;
-            height: 175px; /* Aumentada de 120px para 175px para ficar na altura dos 2 cards laterais */
+            /* altura fixa removida para permitir esticar */
             justify-content: center;
             box-shadow: 0 4px 8px rgba(0,0,0,0.3);
             font-weight: bold;
@@ -845,10 +853,10 @@ body {
 
         /* Cards laterais para leads perdidos e descartados */
         .funil-side-cards {
-            grid-column: 10 / span 3;
+            flex: 3; /* Ocupa 3 de 12 partes do espaço (proporcional) */
             display: flex;
             flex-direction: column;
-            gap: 15px; /* Reduzido de 20px para 15px */
+            gap: 15px;
         }
 
         /* Quando o sidebar está recolhido, os cards laterais mantêm tamanho adequado */
