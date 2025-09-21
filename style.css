@@ -1,3 +1,13 @@
+/* --- CORREÇÃO DE SOBREPOSIÇÃO DO MENU DROPDOWN --- */
+/*
+    Esta regra será aplicada dinamicamente via JavaScript
+    apenas ao filtro que está aberto no momento. O z-index
+    maior garante que ele e seu menu dropdown fiquem na
+    frente de todos os outros filtros irmãos.
+*/
+.filter-item.filter-item-active {
+    z-index: 100000; /* Um valor maior que o z-index padrão */
+}
 /* --- CORREÇÃO DE ALINHAMENTO DO CABEÇALHO DA TABELA DE CAPTAÇÕES --- */
 /*
     Esta regra força o alinhamento de TODOS os cabeçalhos (th) dentro da
@@ -89,6 +99,7 @@ body {
     min-width: 100% !important;
     margin-top: 1px !important;
     box-sizing: border-box; /* Garante que padding não afete a largura final */
+    z-index: 100000;
 }
 
 .multiselect-container.dropdown-menu {
@@ -1326,8 +1337,6 @@ body {
     transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s ease;
     opacity: 1;
     transform: translateY(0);
-    /* LINHA ADICIONADA: Define uma camada padrão */
-    z-index: 99999;
 }
 
         /* ✅ Estados para transição suave - apenas quando navegando */

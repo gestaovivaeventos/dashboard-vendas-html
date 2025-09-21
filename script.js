@@ -1,4 +1,22 @@
 
+// --- CONFIGURAÇÃO PADRÃO REUTILIZÁVEL PARA OS FILTROS MULTISELECT ---
+const multiselectDefaultConfig = {
+    enableFiltering: true,
+    includeSelectAllOption: true,
+    selectAllText: "Marcar todos",
+    filterPlaceholder: "Pesquisar...",
+    buttonWidth: "100%",
+    maxHeight: 300,
+    onDropdownShow: function(event) {
+        $(this.$select).closest('.filter-item').addClass('filter-item-active');
+    },
+    onDropdownHide: function(event) {
+        $(this.$select).closest('.filter-item').removeClass('filter-item-active');
+    },
+    enableCaseInsensitiveFiltering: true,
+    filterBehavior: 'text'
+};
+
 // --- FUNÇÃO AUXILIAR PARA AJUSTAR CORES ---
 // Recebe uma cor em hexadecimal (ex: '#FFC107') e um percentual.
 // Percentual > 0 clareia, percentual < 0 escurece.
@@ -4735,20 +4753,13 @@ function updateDependentFilters(selectedUnidades = []) {
     
     // Recriar multiselects para cursos
     cursoFilter.multiselect({
-        enableFiltering: true,
-        includeSelectAllOption: true,
-        selectAllText: "Marcar todos",
-        filterPlaceholder: "Pesquisar...",
+        ...multiselectDefaultConfig,
         nonSelectedText: "Todos os cursos",
         nSelectedText: "cursos",
         allSelectedText: "Todos selecionados",
-        buttonWidth: "100%",
-        maxHeight: 300,
         onChange: updateDashboard,
         onSelectAll: updateDashboard,
         onDeselectAll: updateDashboard,
-        enableCaseInsensitiveFiltering: true,
-        filterBehavior: 'text',
         dropUp: false,
         dropRight: false,
         widthSynchronizationMode: 'ifPopupIsSmaller',
@@ -4761,20 +4772,13 @@ function updateDependentFilters(selectedUnidades = []) {
     // Recriar multiselects para consultores (apenas se for página do funil)
     if (isFunilPage) {
         consultorFilter.multiselect({
-            enableFiltering: true,
-            includeSelectAllOption: true,
-            selectAllText: "Marcar todos",
-            filterPlaceholder: "Pesquisar...",
+            ...multiselectDefaultConfig,
             nonSelectedText: "Todos os consultores",
             nSelectedText: "consultores",
             allSelectedText: "Todos selecionados",
-            buttonWidth: "100%",
-            maxHeight: 300,
             onChange: updateDashboard,
             onSelectAll: updateDashboard,
             onDeselectAll: updateDashboard,
-            enableCaseInsensitiveFiltering: true,
-            filterBehavior: 'text',
             dropUp: false,
             dropRight: false,
             widthSynchronizationMode: 'ifPopupIsSmaller',
@@ -4786,20 +4790,13 @@ function updateDependentFilters(selectedUnidades = []) {
 
         // Recriar multiselects para origem do lead (apenas se for página do funil)
         origemLeadFilter.multiselect({
-            enableFiltering: true,
-            includeSelectAllOption: true,
-            selectAllText: "Marcar todos",
-            filterPlaceholder: "Pesquisar...",
+            ...multiselectDefaultConfig,
             nonSelectedText: "Todas as origens",
             nSelectedText: "origens",
             allSelectedText: "Todas selecionadas",
-            buttonWidth: "100%",
-            maxHeight: 300,
             onChange: updateDashboard,
             onSelectAll: updateDashboard,
             onDeselectAll: updateDashboard,
-            enableCaseInsensitiveFiltering: true,
-            filterBehavior: 'text',
             dropUp: false,
             dropRight: false,
             widthSynchronizationMode: 'ifPopupIsSmaller',
@@ -4811,20 +4808,13 @@ function updateDependentFilters(selectedUnidades = []) {
 
         // Recriar multiselects para segmentação lead (apenas se for página do funil)
         segmentacaoLeadFilter.multiselect({
-            enableFiltering: true,
-            includeSelectAllOption: true,
-            selectAllText: "Marcar todos",
-            filterPlaceholder: "Pesquisar...",
+            ...multiselectDefaultConfig,
             nonSelectedText: "Todas as segmentações",
             nSelectedText: "segmentações",
             allSelectedText: "Todas selecionadas",
-            buttonWidth: "100%",
-            maxHeight: 300,
             onChange: updateDashboard,
             onSelectAll: updateDashboard,
             onDeselectAll: updateDashboard,
-            enableCaseInsensitiveFiltering: true,
-            filterBehavior: 'text',
             dropUp: false,
             dropRight: false,
             widthSynchronizationMode: 'ifPopupIsSmaller',
@@ -4836,20 +4826,13 @@ function updateDependentFilters(selectedUnidades = []) {
 
         // Recriar multiselects para etiquetas (apenas se for página do funil)
         etiquetasFilter.multiselect({
-            enableFiltering: true,
-            includeSelectAllOption: true,
-            selectAllText: "Marcar todos",
-            filterPlaceholder: "Pesquisar...",
+            ...multiselectDefaultConfig,
             nonSelectedText: "Todas as etiquetas",
             nSelectedText: "etiquetas",
             allSelectedText: "Todas selecionadas",
-            buttonWidth: "100%",
-            maxHeight: 300,
             onChange: updateDashboard,
             onSelectAll: updateDashboard,
             onDeselectAll: updateDashboard,
-            enableCaseInsensitiveFiltering: true,
-            filterBehavior: 'text',
             dropUp: false,
             dropRight: false,
             widthSynchronizationMode: 'ifPopupIsSmaller',
@@ -4863,20 +4846,13 @@ function updateDependentFilters(selectedUnidades = []) {
     // Recriar multiselects para fundos (apenas se não deve ocultar FUNDOS)
     if (!shouldHideFundos) {
         fundoFilter.multiselect({
-            enableFiltering: true,
-            includeSelectAllOption: true,
-            selectAllText: "Marcar todos",
-            filterPlaceholder: "Pesquisar...",
+            ...multiselectDefaultConfig,
             nonSelectedText: "Todos os fundos",
             nSelectedText: "fundos",
             allSelectedText: "Todos selecionados",
-            buttonWidth: "100%",
-            maxHeight: 300,
             onChange: updateDashboard,
             onSelectAll: updateDashboard,
             onDeselectAll: updateDashboard,
-            enableCaseInsensitiveFiltering: true,
-            filterBehavior: 'text',
             dropUp: false,
             dropRight: false,
             widthSynchronizationMode: 'ifPopupIsSmaller',
@@ -5401,6 +5377,12 @@ function populateFilters(selectedUnidades = []) {
                         updateDependentFilters([]);
                         updateDashboard();
                     },
+                    onDropdownShow: function(event) {
+                        $(this.$select).closest('.filter-item').addClass('filter-item-active');
+                    },
+                    onDropdownHide: function(event) {
+                        $(this.$select).closest('.filter-item').removeClass('filter-item-active');
+                    },
                     enableCaseInsensitiveFiltering: true,
                     filterBehavior: 'text',
                     dropUp: false,
@@ -5446,6 +5428,12 @@ function populateFilters(selectedUnidades = []) {
                     onChange: updateDashboard,
                     onSelectAll: updateDashboard,
                     onDeselectAll: updateDashboard,
+                    onDropdownShow: function(event) {
+                        $(this.$select).closest('.filter-item').addClass('filter-item-active');
+                    },
+                    onDropdownHide: function(event) {
+                        $(this.$select).closest('.filter-item').removeClass('filter-item-active');
+                    },
                     enableCaseInsensitiveFiltering: true,
                     filterBehavior: 'text',
                     dropUp: false,
@@ -5488,6 +5476,12 @@ function populateFilters(selectedUnidades = []) {
                         onChange: updateDashboard,
                         onSelectAll: updateDashboard,
                         onDeselectAll: updateDashboard,
+                        onDropdownShow: function(event) {
+                            $(this.$select).closest('.filter-item').addClass('filter-item-active');
+                        },
+                        onDropdownHide: function(event) {
+                            $(this.$select).closest('.filter-item').removeClass('filter-item-active');
+                        },
                         enableCaseInsensitiveFiltering: true,
                         filterBehavior: 'text',
                         dropUp: false,
@@ -5529,6 +5523,12 @@ function populateFilters(selectedUnidades = []) {
                         onChange: updateDashboard,
                         onSelectAll: updateDashboard,
                         onDeselectAll: updateDashboard,
+                        onDropdownShow: function(event) {
+                            $(this.$select).closest('.filter-item').addClass('filter-item-active');
+                        },
+                        onDropdownHide: function(event) {
+                            $(this.$select).closest('.filter-item').removeClass('filter-item-active');
+                        },
                         enableCaseInsensitiveFiltering: true,
                         filterBehavior: 'text',
                         dropUp: false,
@@ -5570,6 +5570,12 @@ function populateFilters(selectedUnidades = []) {
                         onChange: updateDashboard,
                         onSelectAll: updateDashboard,
                         onDeselectAll: updateDashboard,
+                        onDropdownShow: function(event) {
+                            $(this.$select).closest('.filter-item').addClass('filter-item-active');
+                        },
+                        onDropdownHide: function(event) {
+                            $(this.$select).closest('.filter-item').removeClass('filter-item-active');
+                        },
                         enableCaseInsensitiveFiltering: true,
                         filterBehavior: 'text',
                         dropUp: false,
@@ -5611,6 +5617,12 @@ function populateFilters(selectedUnidades = []) {
                         onChange: updateDashboard,
                         onSelectAll: updateDashboard,
                         onDeselectAll: updateDashboard,
+                        onDropdownShow: function(event) {
+                            $(this.$select).closest('.filter-item').addClass('filter-item-active');
+                        },
+                        onDropdownHide: function(event) {
+                            $(this.$select).closest('.filter-item').removeClass('filter-item-active');
+                        },
                         enableCaseInsensitiveFiltering: true,
                         filterBehavior: 'text',
                         dropUp: false,
@@ -5654,6 +5666,12 @@ function populateFilters(selectedUnidades = []) {
                         onChange: updateDashboard,
                         onSelectAll: updateDashboard,
                         onDeselectAll: updateDashboard,
+                        onDropdownShow: function(event) {
+                            $(this.$select).closest('.filter-item').addClass('filter-item-active');
+                        },
+                        onDropdownHide: function(event) {
+                            $(this.$select).closest('.filter-item').removeClass('filter-item-active');
+                        },
                         enableCaseInsensitiveFiltering: true,
                         filterBehavior: 'text',
                         dropUp: false,
