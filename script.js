@@ -3566,6 +3566,12 @@ function applyFundosFilterVisibility() {
                         onDeselectAll: updateDashboard,
                         enableCaseInsensitiveFiltering: true,
                         filterBehavior: 'text'
+                        ,onDropdownShow: function(event) {
+                            $(this.$select).closest('.filter-item').addClass('filter-active');
+                        },
+                        onDropdownHide: function(event) {
+                            $(this.$select).closest('.filter-item').removeClass('filter-active');
+                        }
                     });
                     console.log('🔧 ✅ Multiselect FUNDOS reinicializado com sucesso');
                 } catch (error) {
@@ -3717,6 +3723,12 @@ function applyTipoAdesaoFilterVisibility() {
                             } else {
                                 console.log('🔧 ❌ Ignorando deselectAll - não estamos na página 2');
                             }
+                        }
+                        ,onDropdownShow: function(event) {
+                            $(this.$select).closest('.filter-item').addClass('filter-active');
+                        },
+                        onDropdownHide: function(event) {
+                            $(this.$select).closest('.filter-item').removeClass('filter-active');
                         }
                     });
                     console.log('🔧 ✅ Multiselect TIPO ADESÃO reinicializado com sucesso');
@@ -3873,6 +3885,12 @@ function applyTipoServicoFilterVisibility() {
                                 console.log('🔧 ❌ Ignorando deselectAll - não estamos na página 2');
                             }
                         }
+                        ,onDropdownShow: function(event) {
+                            $(this.$select).closest('.filter-item').addClass('filter-active');
+                        },
+                        onDropdownHide: function(event) {
+                            $(this.$select).closest('.filter-item').removeClass('filter-active');
+                        }
                     });
                     console.log('🔧 ✅ Multiselect TIPO SERVIÇO reinicializado com sucesso');
                 } catch (error) {
@@ -4010,6 +4028,12 @@ function applyTipoClienteFilterVisibility() {
                                 console.log('👥 ❌ Ignorando deselectAll - não estamos na página 2');
                             }
                         }
+                        ,onDropdownShow: function(event) {
+                            $(this.$select).closest('.filter-item').addClass('filter-active');
+                        },
+                        onDropdownHide: function(event) {
+                            $(this.$select).closest('.filter-item').removeClass('filter-active');
+                        }
                     });
                     console.log('👥 ✅ Multiselect TIPO CLIENTE reinicializado com sucesso');
                 } catch (error) {
@@ -4141,6 +4165,12 @@ function applyConsultorComercialFilterVisibility() {
                                 updateDashboard();
                             }
                         }
+                        ,onDropdownShow: function(event) {
+                            $(this.$select).closest('.filter-item').addClass('filter-active');
+                        },
+                        onDropdownHide: function(event) {
+                            $(this.$select).closest('.filter-item').removeClass('filter-active');
+                        }
                     });
                     console.log('👨‍💼 ✅ Multiselect CONSULTOR COMERCIAL reinicializado com sucesso');
                 } catch (error) {
@@ -4259,6 +4289,12 @@ function applyIndicacaoAdesaoFilterVisibility() {
                             if (currentPage === 'page2') {
                                 updateDashboard();
                             }
+                        }
+                        ,onDropdownShow: function(event) {
+                            $(this.$select).closest('.filter-item').addClass('filter-active');
+                        },
+                        onDropdownHide: function(event) {
+                            $(this.$select).closest('.filter-item').removeClass('filter-active');
                         }
                     });
                     console.log('📌 ✅ Multiselect INDICAÇÃO ADESÃO reinicializado com sucesso');
@@ -4409,6 +4445,12 @@ function applyInstituicaoFilterVisibility() {
                             } else {
                                 console.log('🔧 ❌ Ignorando deselectAll - não estamos na página 2');
                             }
+                        }
+                        ,onDropdownShow: function(event) {
+                            $(this.$select).closest('.filter-item').addClass('filter-active');
+                        },
+                        onDropdownHide: function(event) {
+                            $(this.$select).closest('.filter-item').removeClass('filter-active');
                         }
                     });
                     console.log('🔧 ✅ Multiselect INSTITUIÇÃO reinicializado com sucesso');

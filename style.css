@@ -1,43 +1,9 @@
 /* --- CORREÇÃO DEFINITIVA DE SOBREPOSIÇÃO DE FILTROS --- */
-/* Esta técnica inverte a ordem de empilhamento padrão, dando
-   maior prioridade (z-index) aos filtros que aparecem primeiro na lista.
-   Isso garante que, ao abrir um menu para baixo, ele sempre ficará
-   na frente dos filtros que estão abaixo dele. */
-
-.filter-item {
-    position: relative; /* Garante que o z-index funcione */
+/* Esta regra dá prioridade máxima (coloca na frente) apenas
+   ao contêiner do filtro que está com o menu aberto no momento. */
+.filter-item.filter-active {
+    z-index: 100;
 }
-
-.filter-item:nth-child(1) { z-index: 20; }
-.filter-item:nth-child(2) { z-index: 19; }
-.filter-item:nth-child(3) { z-index: 18; }
-.filter-item:nth-child(4) { z-index: 17; }
-.filter-item:nth-child(5) { z-index: 16; }
-.filter-item:nth-child(6) { z-index: 15; }
-.filter-item:nth-child(7) { z-index: 14; }
-.filter-item:nth-child(8) { z-index: 13; }
-.filter-item:nth-child(9) { z-index: 12; }
-.filter-item:nth-child(10) { z-index: 11; }
-.filter-item:nth-child(11) { z-index: 10; }
-.filter-item:nth-child(12) { z-index: 9; }
-.filter-item:nth-child(13) { z-index: 8; }
-.filter-item:nth-child(14) { z-index: 7; }
-.filter-item:nth-child(15) { z-index: 6; }
-/* --- CORREÇÃO DEFINITIVA DE SOBREPOSIÇÃO DE FILTROS --- */
-/* Inverte a ordem de empilhamento dos filtros,
-   dando maior prioridade (z-index) aos itens que aparecem primeiro. */
-.filter-item:nth-child(1) { z-index: 20; }
-.filter-item:nth-child(2) { z-index: 19; }
-.filter-item:nth-child(3) { z-index: 18; }
-.filter-item:nth-child(4) { z-index: 17; }
-.filter-item:nth-child(5) { z-index: 16; }
-.filter-item:nth-child(6) { z-index: 15; }
-.filter-item:nth-child(7) { z-index: 14; }
-.filter-item:nth-child(8) { z-index: 13; }
-.filter-item:nth-child(9) { z-index: 12; }
-.filter-item:nth-child(10) { z-index: 11; }
-.filter-item:nth-child(11) { z-index: 10; }
-.filter-item:nth-child(12) { z-index: 9; }
 .filter-item:nth-child(13) { z-index: 8; }
 .filter-item:nth-child(14) { z-index: 7; }
 .filter-item:nth-child(15) { z-index: 6; }
