@@ -7,12 +7,6 @@ const multiselectDefaultConfig = {
     filterPlaceholder: "Pesquisar...",
     buttonWidth: "100%",
     maxHeight: 300,
-    onDropdownShow: function(event) {
-        $(this.$select).closest('.filter-item').addClass('filter-item-active');
-    },
-    onDropdownHide: function(event) {
-        $(this.$select).closest('.filter-item').removeClass('filter-item-active');
-    },
     enableCaseInsensitiveFiltering: true,
     filterBehavior: 'text'
 };
