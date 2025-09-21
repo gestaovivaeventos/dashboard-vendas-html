@@ -120,9 +120,12 @@
         <div id="login-container">
             <h1 class="page-title">Dashboard de Vendas</h1>
             <section class="access-control" id="access-section">
-                <label for="access-code">Digite seu Login de Acesso</label>
+                <div class="login-heading">
+                    <h3 class="main-heading">Seja bem vindo!</h3>
+                    <p class="sub-heading">Faça o seu login</p>
+                </div>
                 <input type="text" id="access-code" maxlength="20" placeholder="Insira seu login">
-                <button id="submit-code">Liberar Acesso</button>
+                <button id="submit-code">Entrar</button>
                 <p id="error-message">Login inválido!</p>
             </section>
             <img id="company-logo-login" src="logo_viva.png" alt="Logo Viva Eventos">
@@ -304,7 +307,7 @@
                         </div>
                     </section>
                     <section class="chart-container" id="chart-vvr-mes-section" style="display: none;">
-                        <h2>VVR Realizado vs. Meta por Mês (Ano Vigente)</h2>
+                        <h2 id="vvr-vs-meta-title">VVR Realizado vs. Meta por Mês</h2>
                         <div class="chart-selector">
                             <button id="btn-total" class="active" data-type="total">Total</button>
                             <button id="btn-vendas" data-type="vendas">Vendas</button>
@@ -424,19 +427,17 @@
                     </div>
                     <section class="table-container" id="consultor-table-section" style="display: none;">
                         <h2>Desempenho por Consultor Comercial</h2>
-                        <div class="table-card" role="region" aria-label="Tabela Desempenho por Consultor Comercial">
-                            <table id="consultor-table" class="display" style="width:100%">
-                                <thead>
-                                    <tr>
-                                        <th>Unidade</th>
-                                        <th>Consultor Comercial</th>
-                                        <th>VVR Total</th>
-                                        <th>Total de Adesões</th>
-                                    </tr>
-                                </thead>
-                                <tbody></tbody>
-                            </table>
-                        </div>
+                        <table id="consultor-table" class="display" style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th>Unidade</th>
+                                    <th>Consultor Comercial</th>
+                                    <th>VVR Total</th>
+                                    <th>Total de Adesões</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
                     </section>
                     <section class="table-container" id="detalhada-adesoes-table-section" style="display: none;">
                         <h2>Adesões Detalhadas no Período</h2>
@@ -529,7 +530,6 @@
                                 <!-- Placeholder para nova tabela de captações: a tabela original foi removida conforme solicitado -->
                                 <div id="captacoes-table-placeholder" class="captacoes-table-placeholder">
                                     <h2 class="kpi-vvr-title" style="margin-top:0;">Desempenho por Captação (Funil)</h2>
-                                        <div class="table-card" role="region" aria-label="Tabela de Captações">
                                             <table id="captacoes-funil-table" class="display" style="width:100%">
                                                 <thead>
                                                     <tr>
@@ -541,7 +541,6 @@
                                                 </thead>
                                                 <tbody></tbody>
                                             </table>
-                                        </div>
                                 </div>
                             </div>
                             

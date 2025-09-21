@@ -1,4 +1,27 @@
-// Arquivo: script.js (do Dashboard de Vendas) - VERSÃO COMPLETA E CORRIGIDA
+
+// --- FUNÇÃO AUXILIAR PARA AJUSTAR CORES ---
+// Recebe uma cor em hexadecimal (ex: '#FFC107') e um percentual.
+// Percentual > 0 clareia, percentual < 0 escurece.
+function adjustColor(hex, percent) {
+    let r = parseInt(hex.substring(1, 3), 16);
+    let g = parseInt(hex.substring(3, 5), 16);
+    let b = parseInt(hex.substring(5, 7), 16);
+
+    r = parseInt(r * (100 + percent) / 100);
+    g = parseInt(g * (100 + percent) / 100);
+    b = parseInt(b * (100 + percent) / 100);
+
+    r = (r < 255) ? r : 255;  
+    g = (g < 255) ? g : 255;  
+    b = (b < 255) ? b : 255;  
+
+    const RR = ((r.toString(16).length === 1) ? "0" + r.toString(16) : r.toString(16));
+    const GG = ((g.toString(16).length === 1) ? "0" + g.toString(16) : g.toString(16));
+    const BB = ((b.toString(16).length === 1) ? "0" + b.toString(16) : b.toString(16));
+
+    return "#" + RR + GG + BB;
+}
+// ...existing code...
 
 // --- CONFIGURAÇÕES GLOBAIS ---
 const SALES_SPREADSHEET_ID = "1HXyq_r2ssJ5c7wXdrBUc-WdqrlCfiZYE1EuIWbIDg0U";
@@ -1762,6 +1785,8 @@ function getSolidColorForPercentage(percent) {
 
 
 function updateVvrVsMetaPorMesChart(salesDataForYear, anoVigente) {
+    // ✅ Atualiza o título do gráfico com o ano vigente
+    document.getElementById("vvr-vs-meta-title").textContent = `VVR Realizado vs. Meta por Mês (${anoVigente})`;
     const allYearPeriodos = Array.from({ length: 12 }, (_, i) => `${anoVigente}-${String(i + 1).padStart(2, "0")}`);
     const chartDataMap = new Map();
     
@@ -1833,7 +1858,8 @@ function updateVvrVsMetaPorMesChart(salesDataForYear, anoVigente) {
         const [year, month] = periodo.split("-");
         const date = new Date(year, month - 1);
         const monthName = date.toLocaleString("pt-BR", { month: "short" }).replace(".", "");
-        return `${monthName}-${year.slice(2)}`;
+        // ✅ ALTERAÇÃO: Retorna apenas o nome do mês
+        return monthName;
     });
 
     if (vvrVsMetaPorMesChart) vvrVsMetaPorMesChart.destroy();
@@ -2312,12 +2338,13 @@ function updateMonthlyVvrChart(historicalData, selectedUnidades) {
                     anchor: 'end',
                     align: 'top',
                     clamp: true,
+                    // ✅ ALTERAÇÃO: A função formatter foi ajustada para remover o "R$"
                     formatter: function(value) {
                         if (!value || value === 0) return '';
                         const num = Number(value);
-                        if (Math.abs(num) >= 1000000) return 'R$ ' + (num / 1000000).toFixed(1).replace('.0','') + ' mi';
-                        if (Math.abs(num) >= 1000) return 'R$ ' + (num / 1000).toFixed(1).replace('.0','') + 'k';
-                        return 'R$ ' + num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                        if (Math.abs(num) >= 1000000) return (num / 1000000).toFixed(1).replace('.0','') + ' mi';
+                        if (Math.abs(num) >= 1000) return (num / 1000).toFixed(1).replace('.0','') + 'k';
+                        return num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                     }
                 },
             },
@@ -2745,12 +2772,12 @@ function updateTicketCharts(filteredData) {
                     align: "end",
                     color: "white",
                     font: { weight: "bold", family: 'Poppins, Arial, sans-serif', size: 14 },
+                    // ✅ ALTERAÇÃO: A função formatter foi ajustada para remover o "R$"
                     formatter: function(value) {
                         if (!value || value === 0) return "";
                         const num = Number(value);
-                        if (Math.abs(num) >= 1000000) return 'R$ ' + (num / 1000000).toFixed(1).replace('.0','') + ' mi';
-                        if (Math.abs(num) >= 1000) return 'R$ ' + (num / 1000).toFixed(1).replace('.0','') + 'k';
-                        return formatCurrency(value);
+                        if (Math.abs(num) >= 1000) return (num / 1000).toFixed(1).replace('.0','') + 'k';
+                        return num.toLocaleString('pt-BR'); // Usa formatação local sem moeda
                     }
                 },
                 tooltip: {
@@ -2851,12 +2878,12 @@ function drawMonthlyTicketChart(data, year) {
                     align: "end",
                     color: "white",
                     font: { weight: "bold", family: 'Poppins, Arial, sans-serif', size: 14 },
+                    // ✅ ALTERAÇÃO: A função formatter foi ajustada para remover o "R$"
                     formatter: function(value) {
                         if (!value || value === 0) return "";
                         const num = Number(value);
-                        if (Math.abs(num) >= 1000000) return 'R$ ' + (num / 1000000).toFixed(1).replace('.0','') + ' mi';
-                        if (Math.abs(num) >= 1000) return 'R$ ' + (num / 1000).toFixed(1).replace('.0','') + 'k';
-                        return formatCurrency(value);
+                        if (Math.abs(num) >= 1000) return (num / 1000).toFixed(1).replace('.0','') + 'k';
+                        return num.toLocaleString('pt-BR'); // Usa formatação local sem moeda
                     }
                 },
                 tooltip: {
@@ -7761,7 +7788,21 @@ function updateCaptacoesStackedBar(dados) {
     const datasets = valores.map((v, idx) => ({
         label: labels[idx],
         data: [percents[idx]],
-        backgroundColor: cores[idx % cores.length],
+        // Gradiente horizontal sutil para cada segmento
+        backgroundColor: function(context) {
+            const chart = context.chart;
+            const {ctx, chartArea} = chart;
+            const baseColor = cores[idx % cores.length];
+            if (!chartArea) {
+                return baseColor; // Fallback
+            }
+            const gradient = ctx.createLinearGradient(chartArea.left, 0, chartArea.right, 0);
+            const darkerColor = adjustColor(baseColor, -20); // Escurece 20%
+            const lighterColor = adjustColor(baseColor, 20); // Clareia 20%
+            gradient.addColorStop(0, darkerColor);
+            gradient.addColorStop(1, lighterColor);
+            return gradient;
+        },
         borderColor: '#2b2f31',
         borderWidth: 0
     }));
