@@ -6230,17 +6230,19 @@ function updateAdesoesDrillDownCharts(filteredData) {
                 {
                     label: "Pós Venda",
                     data: adesoesPosVendasAnual,
-                    legendColor: '#ADB5BD',
+                    // ✅ CORREÇÃO 1: Adiciona a cor sólida para a legenda
+                    legendColor: '#6c757d',
+                    // ✅ CORREÇÃO 2: Novo gradiente para a barra com melhor contraste
                     backgroundColor: function(context) {
                         const chart = context.chart;
                         const {ctx, chartArea} = chart;
                         if (!chartArea) {
-                            return '#6c757d';
+                            return '#6c757d'; // Fallback
                         }
                         const gradient = ctx.createLinearGradient(chartArea.left, 0, chartArea.right, 0);
-                        gradient.addColorStop(0, '#E9ECEF');
-                        gradient.addColorStop(0.5, '#ADB5BD');
-                        gradient.addColorStop(1, '#6c757d');
+                        // Novo gradiente que evita o branco e tem bom contraste
+                        gradient.addColorStop(0, '#ADB5BD'); // Cinza mais claro na esquerda
+                        gradient.addColorStop(1, '#495057'); // Cinza mais escuro na direita
                         return gradient;
                     }
                 },
@@ -6322,10 +6324,12 @@ function updateAdesoesDrillDownCharts(filteredData) {
             plugins: {
                 datalabels: {
                     color: function(context) {
+                        // Usa texto escuro para o 'Pós Venda' para contrastar com a parte clara do gradiente
                         if (context.dataset.label === 'Pós Venda') {
-                            return '#212529'; // Escuro para contraste no cinza
+                            return '#212529'; 
                         }
-                        return '#FFFFFF'; // Branco para laranja
+                        // Usa texto branco para a 'Venda'
+                        return '#FFFFFF';
                     },
                     font: { family: 'Poppins, Arial, sans-serif', size: 16, weight: '700' },
                     formatter: (value) => {
