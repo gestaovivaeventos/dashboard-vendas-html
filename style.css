@@ -1,3 +1,8 @@
+/* Previne o "piscar" dos filtros antes da estilização do JavaScript */
+#sidebar .filters select[multiple] {
+    position: absolute;
+    visibility: hidden;
+}
 /* --- CORREÇÃO DEFINITIVA DE SOBREPOSIÇÃO DE FILTROS --- */
 /* Esta regra dá prioridade máxima (coloca na frente) apenas
    ao contêiner do filtro que está com o menu aberto no momento. */
