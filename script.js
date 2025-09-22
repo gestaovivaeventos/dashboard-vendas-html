@@ -1248,6 +1248,11 @@ function updatePreviousYearKPIs(dataBruta, selectedUnidades, startDate, endDate)
     let metaVendas = 0;
     let metaPosVendas = 0;
 
+    // ADICIONADO: datas do ano anterior
+    const startDatePY = new Date(startDate);
+    startDatePY.setFullYear(startDate.getFullYear() - 1);
+    const endDatePY = new Date(endDate);
+    endDatePY.setFullYear(endDate.getFullYear() - 1);
     // --- TRAVA DE SEGURANÇA DEFINITIVA DENTRO DA FUNÇÃO ---
     const canCalculateMeta = (userAccessLevel === 'ALL_UNITS' || selectedUnidades.length > 0);
 
@@ -1259,7 +1264,8 @@ function updatePreviousYearKPIs(dataBruta, selectedUnidades, startDate, endDate)
         metasData.forEach((metaInfo, key) => {
             const [unidade, ano, mes] = key.split("-");
             const metaDate = new Date(ano, parseInt(mes) - 1, 1);
-            if (unitsToConsider.includes(unidade) && metaDate >= startDate && metaDate < endDate) {
+            // Usar datas do ano anterior para meta
+            if (unitsToConsider.includes(unidade) && metaDate >= startDatePY && metaDate < endDatePY) {
                 metaVendas += metaInfo.meta_vvr_vendas;
                 metaPosVendas += metaInfo.meta_vvr_posvendas;
             }
