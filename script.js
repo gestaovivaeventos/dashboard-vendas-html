@@ -3142,6 +3142,7 @@ function drawMonthlyContractsChart(data, year) {
     console.log('📊 Contratos por mês para', year, ':', contractsByMonth);
 
     const monthLabels = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
+    const maxValue = Math.max(...contractsByMonth);
     if (monthlyContractsChart) monthlyContractsChart.destroy();
     monthlyContractsChart = new Chart(document.getElementById("monthlyContractsChart"), {
         type: "bar",
@@ -3204,7 +3205,7 @@ function drawMonthlyContractsChart(data, year) {
                     color: "white",
                     font: { family: 'Poppins, Arial, sans-serif', size: 14, weight: "600" },
                     formatter: (value) => (value > 0 ? value.toLocaleString("pt-BR") : ""),
-                    clamp: true,
+                    clamp: false, // permite rótulo "vazar" para fora
                 },
                 tooltip: {
                     displayColors: true,
@@ -3221,6 +3222,7 @@ function drawMonthlyContractsChart(data, year) {
             scales: {
                 y: {
                     beginAtZero: true,
+                    max: maxValue > 0 ? Math.ceil(maxValue * 1.2) : 5, // espaço extra no topo
                     ticks: { font: { family: 'Poppins, Arial, sans-serif', size: 16 }, color: '#adb5bd' },
                     grid: { color: 'rgba(255,255,255,0.04)' },
                 },
