@@ -3410,6 +3410,9 @@ function addEventListeners() {
             this.classList.add("active");
             document.querySelectorAll(".page-content").forEach((page) => page.classList.remove("active"));
             document.getElementById(this.dataset.page).classList.add("active");
+
+        // Rola para o topo ao trocar de página
+        window.scrollTo(0, 0);
             
             // Recarregar os filtros sempre que mudar de/para a página do funil (page3)
             if ((previousPage === "page3" || newPage === "page3") && 
