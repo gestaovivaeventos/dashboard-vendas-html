@@ -1803,12 +1803,10 @@ function getSolidColorForPercentage(percent) {
 
 
 function updateVvrVsMetaPorMesChart(salesDataForYear, anoVigente) {
-    // ✅ Atualiza o título do gráfico com o ano vigente
+    // --- 1. PREPARAÇÃO DOS DADOS (esta parte do código não muda) ---
     document.getElementById("vvr-vs-meta-title").textContent = `VVR Realizado vs. Meta por Mês (${anoVigente})`;
     const allYearPeriodos = Array.from({ length: 12 }, (_, i) => `${anoVigente}-${String(i + 1).padStart(2, "0")}`);
     const chartDataMap = new Map();
-    
-    // Inicializa o mapa do gráfico com valores zerados
     allYearPeriodos.forEach((periodo) => {
         chartDataMap.set(periodo, {
             realizado_vendas: 0,
@@ -1818,11 +1816,7 @@ function updateVvrVsMetaPorMesChart(salesDataForYear, anoVigente) {
             meta_total: 0,
         });
     });
-
     const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-
-    // 1. Calcula o VALOR REALIZADO (esta parte já estava correta)
-    // Ela usa 'salesDataForYear', que já vem filtrado ou vazio
     salesDataForYear.forEach((d) => {
         const year = d.dt_cadastro_integrante.getFullYear();
         const month = String(d.dt_cadastro_integrante.getMonth() + 1).padStart(2, "0");
@@ -1835,16 +1829,12 @@ function updateVvrVsMetaPorMesChart(salesDataForYear, anoVigente) {
             }
         }
     });
-
-    // 2. Calcula a META (lógica de segurança aplicada aqui)
     const selectedUnidades = $("#unidade-filter").val() || [];
     const canCalculateMeta = (userAccessLevel === 'ALL_UNITS' || selectedUnidades.length > 0);
-
     if (canCalculateMeta) {
         const unitsToConsider = (userAccessLevel === 'ALL_UNITS' && selectedUnidades.length === 0)
             ? [...new Set(allData.map(d => d.nm_unidade))]
             : selectedUnidades;
-
         metasData.forEach((metaInfo, key) => {
             const [unidade, ano, mes] = key.split("-");
             const periodo = `${ano}-${mes}`;
@@ -1857,9 +1847,6 @@ function updateVvrVsMetaPorMesChart(salesDataForYear, anoVigente) {
             }
         });
     }
-    // Se 'canCalculateMeta' for falso, os valores de meta no chartDataMap permanecerão 0.
-
-    // 3. Monta e desenha o gráfico (nenhuma alteração aqui)
     let realizadoValues, metaValues;
     if (currentVvrChartType === "vendas") {
         realizadoValues = allYearPeriodos.map((p) => chartDataMap.get(p).realizado_vendas);
@@ -1867,187 +1854,130 @@ function updateVvrVsMetaPorMesChart(salesDataForYear, anoVigente) {
     } else if (currentVvrChartType === "posvendas") {
         realizadoValues = allYearPeriodos.map((p) => chartDataMap.get(p).realizado_posvendas);
         metaValues = allYearPeriodos.map((p) => chartDataMap.get(p).meta_posvendas);
-    } else { // 'total'
+    } else {
         realizadoValues = allYearPeriodos.map((p) => chartDataMap.get(p).realizado_vendas + chartDataMap.get(p).realizado_posvendas);
         metaValues = allYearPeriodos.map((p) => chartDataMap.get(p).meta_total);
     }
-
     const formattedLabels = allYearPeriodos.map((periodo) => {
         const [year, month] = periodo.split("-");
         const date = new Date(year, month - 1);
-        const monthName = date.toLocaleString("pt-BR", { month: "short" }).replace(".", "");
-        // ✅ ALTERAÇÃO: Retorna apenas o nome do mês
-        return monthName;
+        return date.toLocaleString("pt-BR", { month: "short" }).replace(".", "");
     });
+    // --- FIM DA PREPARAÇÃO ---
 
-    if (vvrVsMetaPorMesChart) vvrVsMetaPorMesChart.destroy();
-    Chart.register(ChartDataLabels);
-    vvrVsMetaPorMesChart = new Chart(document.getElementById("vvrVsMetaPorMesChart"), {
-        type: "bar",
-        data: {
-            labels: formattedLabels,
-            datasets: [
-                {
-                    label: "VVR Realizado",
-                    data: realizadoValues,
-                    // ✅ ALTERAÇÃO: Troca a cor sólida por uma função que cria o gradiente
-                    backgroundColor: function(context) {
-                        const chart = context.chart;
-                        const {ctx, chartArea} = chart;
-                        if (!chartArea) {
-                            // Fallback para quando o gráfico ainda não está totalmente renderizado
-                            return '#FF6600';
-                        }
-                        // Cria o gradiente vertical (de cima para baixo)
-                        const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
-                        // Adiciona as cores do botão, na mesma ordem (do mais claro no topo para o mais escuro na base)
-                        gradient.addColorStop(0, '#ff8a33');
-                        gradient.addColorStop(0.5, '#FF6600');
-                        gradient.addColorStop(1, '#e65500');
-                        return gradient;
+    // --- 2. LÓGICA DE ATUALIZAÇÃO COM ANIMAÇÃO ---
+    if (vvrVsMetaPorMesChart) {
+        // Se o gráfico JÁ EXISTE, apenas atualizamos seus dados e chamamos .update()
+        vvrVsMetaPorMesChart.data.labels = formattedLabels;
+        vvrVsMetaPorMesChart.data.datasets[0].data = realizadoValues;
+        vvrVsMetaPorMesChart.data.datasets[1].data = metaValues;
+        vvrVsMetaPorMesChart.update(); // Esta é a chamada que ativa a animação
+    } else {
+        // Se o gráfico NÃO EXISTE (primeira carga da página), nós o criamos.
+        Chart.register(ChartDataLabels);
+        vvrVsMetaPorMesChart = new Chart(document.getElementById("vvrVsMetaPorMesChart"), {
+            type: "bar",
+            data: {
+                labels: formattedLabels,
+                datasets: [
+                    {
+                        label: "VVR Realizado",
+                        data: realizadoValues,
+                        backgroundColor: function(context) {
+                            const chart = context.chart;
+                            const {ctx, chartArea} = chart;
+                            if (!chartArea) { return '#FF6600'; }
+                            const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+                            gradient.addColorStop(0, '#ff8a33');
+                            gradient.addColorStop(0.5, '#FF6600');
+                            gradient.addColorStop(1, '#e65500');
+                            return gradient;
+                        },
+                        order: 1
                     },
-                    order: 1
-                },
-                {
-                    label: "Meta VVR",
-                    data: metaValues,
-                    type: "line",
-                    borderColor: "#FFFFFF",
-                    order: 0,
-                    datalabels: {
-                        display: true,
-                        align: "bottom",
-                        backgroundColor: "rgba(0, 0, 0, 0.6)",
-                        borderRadius: 4,
-                        color: "white",
-                        font: { size: 15 },
-                        padding: 4,
-                        formatter: (value) => {
-                            if (value >= 1000000) {
-                                return `${(value / 1000000).toFixed(0)} mi`;
-                            } else if (value >= 1000) {
-                                return `${(value / 1000).toFixed(0)} k`;
-                            }
-                            return value;
+                    {
+                        label: "Meta VVR",
+                        data: metaValues,
+                        type: "line",
+                        borderColor: "#FFFFFF",
+                        order: 0,
+                        datalabels: {
+                            display: true,
+                            align: "bottom",
+                            backgroundColor: "rgba(0, 0, 0, 0.6)",
+                            borderRadius: 4,
+                            color: "white",
+                            font: { size: 15 },
+                            padding: 4,
+                            formatter: (value) => {
+                                if (value >= 1000000) return `${(value / 1000000).toFixed(0)} mi`;
+                                if (value >= 1000) return `${(value / 1000).toFixed(0)} k`;
+                                return value;
+                            },
                         },
                     },
-                },
-            ],
-        },
-        options: {
-            plugins: {
-                legend: {
-                    labels: {
-                        generateLabels: function(chart) {
-                            const datasets = chart.data.datasets;
-                            return datasets.map((ds, i) => {
-                                let fillStyle = '#FF6600';
-                                if (ds.label === 'Meta VVR') fillStyle = '#FFFFFF';
-                                if (ds.label === 'VVR Realizado') fillStyle = '#FF6600';
-                                return {
-                                    text: (ds.label || '').toString().toUpperCase(),
-                                    fillStyle: fillStyle,
-                                    hidden: !!ds.hidden,
-                                    lineCap: ds.borderCapStyle || 'butt',
-                                    lineDash: ds.borderDash || [],
-                                    lineDashOffset: ds.borderDashOffset || 0,
-                                    lineJoin: ds.borderJoinStyle || 'miter',
-                                    fontColor: '#F8F9FA',
-                                    lineWidth: ds.borderWidth || 0,
-                                    strokeStyle: ds.borderColor || 'transparent',
-                                    datasetIndex: i,
-                                    pointStyle: ds.pointStyle || 'rect',
-                                    pointRadius: ds.pointRadius || 5,
-                                    boxWidth: 20,
-                                    boxHeight: 10
-                                };
-                            });
-                        }
-                    }
-                }
+                ],
             },
-            maintainAspectRatio: false,
-            interaction: { mode: "index", intersect: false },
-            plugins: {
-                // make datalabels visually match the cumulative chart pattern
-                datalabels: {
-                    anchor: "end",
-                    align: "end",
-                    display: true,
-                    backgroundColor: "rgba(52, 58, 64, 0.7)",
-                    borderRadius: 4,
-                    color: "white",
-                    font: { weight: "bold", size: 14, family: 'Poppins, Arial, sans-serif' },
-                    padding: 4,
-                    formatter: (value) => {
-                        if (value === null || value === undefined) return '';
-                        if (value >= 1000000) return `${(value / 1000000).toFixed(1)} mi`;
-                        if (value >= 1000) return `${(value / 1000).toFixed(0)}k`;
-                        return value.toFixed ? value.toFixed(0) : value;
-                    }
-                },
-                // tooltip: match cumulative tooltip sizing and font family
-                tooltip: {
-                    padding: 12,
-                    usePointStyle: true,
-                    displayColors: true,
-                    /* Ensure tooltip marker is filled with the dataset color */
-                    callbacks: Object.assign({
-                        labelColor: function(context) {
-                            const color = context.dataset.borderColor || context.dataset.backgroundColor || '#ffffff';
-                            return { borderColor: color, backgroundColor: color, borderWidth: 1 };
+            options: {
+                // ... (O restante das suas opções originais do gráfico)
+                maintainAspectRatio: false,
+                interaction: { mode: "index", intersect: false },
+                plugins: {
+                    datalabels: {
+                        anchor: "end",
+                        align: "end",
+                        display: true,
+                        backgroundColor: "rgba(52, 58, 64, 0.7)",
+                        borderRadius: 4,
+                        color: "white",
+                        font: { weight: "bold", size: 14, family: 'Poppins, Arial, sans-serif' },
+                        padding: 4,
+                        formatter: (value) => {
+                            if (value === null || value === undefined) return '';
+                            if (value >= 1000000) return `${(value / 1000000).toFixed(1)} mi`;
+                            if (value >= 1000) return `${(value / 1000).toFixed(0)}k`;
+                            return value.toFixed ? value.toFixed(0) : value;
                         }
-                    }, (function(){
-                        // preserve existing callbacks if any (label defined later)
-                        return {};
-                    })()),
-                    backgroundColor: 'rgba(0,0,0,0.85)',
-                    borderRadius: 6,
-                    bodyFont: { size: 18, family: 'Poppins, Arial, sans-serif', weight: 'bold' },
-                    titleFont: { size: 16, family: 'Poppins, Arial, sans-serif', weight: 'bold' },
-                    footerFont: { size: 16, family: 'Poppins, Arial, sans-serif', weight: 'bold' },
-                    callbacks: {
-                        label: function (context) {
-                            let label = context.dataset.label || "";
-                            if (label) { label += ": "; }
-                            if (context.parsed.y !== null) { label += formatCurrency(context.parsed.y); }
-                            return label;
-                        }
-                    }
-                },
-                // increase legend font size to match cumulative chart
-                legend: {
-                    labels: {
-                        font: { size: 18 }
-                    }
-                },
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        // match cumulative axis style: slightly smaller and lighter color
-                        font: { size: 16 },
-                        color: '#adb5bd',
-                        callback: function(value) {
-                            if (value >= 1000000) {
-                                return (value / 1000000).toFixed(0) + ' mi';
-                            } else if (value >= 1000) {
-                                return (value / 1000).toFixed(0) + ' K';
+                    },
+                    tooltip: {
+                        padding: 12,
+                        usePointStyle: true,
+                        backgroundColor: 'rgba(0,0,0,0.85)',
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.dataset.label || "";
+                                if (label) { label += ": "; }
+                                if (context.parsed.y !== null) { label += formatCurrency(context.parsed.y); }
+                                return label;
                             }
-                            return value;
                         }
+                    },
+                    legend: {
+                        labels: {
+                            font: { size: 18 }
+                        }
+                    },
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            font: { size: 16 },
+                            color: '#adb5bd',
+                            callback: function(value) {
+                                if (value >= 1000000) return (value / 1000000).toFixed(0) + ' mi';
+                                if (value >= 1000) return (value / 1000).toFixed(0) + ' K';
+                                return value;
+                            }
+                        }
+                    },
+                    x: {
+                        ticks: { font: { size: 16 }, color: '#adb5bd' }
                     }
                 },
-                x: {
-                    ticks: {
-                        font: { size: 16 },
-                        color: '#adb5bd'
-                    }
-                }
             },
-        },
-    });
+        });
+    }
 }
 
 // O restante do seu código (updateCumulativeVvrChart, updateMonthlyVvrChart, etc.)
