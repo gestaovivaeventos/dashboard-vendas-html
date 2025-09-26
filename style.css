@@ -1,3 +1,28 @@
+/* --- LÓGICA PARA POSICIONAR O RODAPÉ NO FINAL DA PÁGINA (ALINHADO À ESQUERDA) --- */
+
+/* 1. Prepara o contêiner principal para que o rodapé se posicione em relação a ele */
+.dashboard-wrapper {
+    position: relative;
+    min-height: 100vh; /* Garante que o wrapper tenha no mínimo a altura da tela */
+    padding-bottom: 60px; /* Cria um espaço no final para o rodapé não cobrir o conteúdo */
+    box-sizing: border-box;
+}
+
+/* 2. Posiciona o rodapé absolutamente no final esquerdo do contêiner */
+.dashboard-footer {
+    position: absolute;
+    bottom: 0px; /* Distância da parte de baixo */
+    left: 370px;  /* Distância da esquerda (350px da sidebar + 20px de padding) */
+    text-align: left; /* <<< AQUI ESTÁ A MUDANÇA PRINCIPAL */
+    color: #8b949e;
+    font-size: 0.9em;
+    font-weight: 500;
+}
+
+/* 3. Ajuste para quando a sidebar estiver recolhida */
+#main-content.full-width + .dashboard-footer {
+    left: 20px; /* Quando a sidebar some, alinha com o padding da página */
+}
 /* Previne o "piscar" dos filtros antes da estilização do JavaScript */
 #sidebar .filters select[multiple] {
     position: absolute;
