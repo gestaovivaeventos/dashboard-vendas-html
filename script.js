@@ -240,7 +240,7 @@ async function fetchAccessData() {
             const userLogin = login && login.trim() ? login.trim() : (accessCode ? accessCode.trim() : null);
             
             if (userLogin) {
-                if (accessLevel === '1') {
+                if (accessLevel === '1'|| accessLevel === '22')  {
                     accessDataFromSheet.set(userLogin, 'ALL_UNITS');
                 } else if (unitName) {
                     const unit = unitName.trim();
