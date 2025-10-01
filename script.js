@@ -42,11 +42,12 @@ const SALES_SPREADSHEET_ID = "1HXyq_r2ssJ5c7wXdrBUc-WdqrlCfiZYE1EuIWbIDg0U";
 document.addEventListener('DOMContentLoaded', function() {
     const hoje = new Date();
     const primeiroDiaMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+    const ultimoDiaMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0); // último dia do mês atual
     
     flatpickr("#date-range", {
         mode: "range",
         dateFormat: "d/m/Y",
-        defaultDate: [primeiroDiaMes, hoje],
+        defaultDate: [primeiroDiaMes, ultimoDiaMes],
         locale: "pt",
         theme: "dark",
         showMonths: 2,
@@ -1073,9 +1074,36 @@ function updateMainKPIs(dataBruta, selectedUnidades, startDate, endDate, retryCo
     };
     const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
+    // 🔍 DEBUG CRÍTICO: Verificar dados recebidos
+    console.log('🔍 DEBUG DADOS KPI:');
+    console.log('  - dataBruta.length:', dataBruta.length);
+    console.log('  - startDate:', startDate);  
+    console.log('  - endDate:', endDate);
+    
+    if (dataBruta.length > 0) {
+        console.log('  - Primeira data exemplo:', dataBruta[0].dt_cadastro_integrante);
+        console.log('  - Últimas 3 datas:', dataBruta.slice(-3).map(d => d.dt_cadastro_integrante));
+        
+        // Verificar quantos registros estão no período de outubro/2025
+        const outubr2025 = dataBruta.filter(d => {
+            const data = d.dt_cadastro_integrante;
+            return data.getFullYear() === 2025 && data.getMonth() === 9; // Outubro = mês 9
+        });
+        console.log('  - Registros de outubro/2025:', outubr2025.length);
+        
+        if (outubr2025.length > 0) {
+            console.log('  - Valores outubro/2025:', outubr2025.map(d => ({data: d.dt_cadastro_integrante, valor: d.vl_plano})));
+        }
+    }
+
     const realizadoVendas = dataBruta.filter((d) => normalizeText(d.venda_posvenda) === "VENDA").reduce((sum, d) => sum + d.vl_plano, 0);
     const realizadoPosVendas = dataBruta.filter((d) => normalizeText(d.venda_posvenda) === "POS VENDA").reduce((sum, d) => sum + d.vl_plano, 0);
     const realizadoTotal = realizadoVendas + realizadoPosVendas;
+    
+    console.log('🔍 RESULTADO FILTROS:');
+    console.log('  - realizadoVendas:', realizadoVendas);
+    console.log('  - realizadoPosVendas:', realizadoPosVendas);
+    console.log('  - realizadoTotal:', realizadoTotal);
 
     let metaVendas = 0;
     let metaPosVendas = 0;
@@ -1156,16 +1184,22 @@ function updateMainKPIs(dataBruta, selectedUnidades, startDate, endDate, retryCo
         
         console.log('🔍 BUSCANDO METAS PARA UNIDADES SELECIONADAS:');
         
-        metasData.forEach((metaInfo, key) => {
-            const [unidade, ano, mes] = key.split("-");
-            const metaDate = new Date(ano, parseInt(mes) - 1, 1);
-            
-            if (metaDate >= startDate && metaDate < endDate) {
-                if (unitsToConsider.includes(unidade)) {
-                    metaVendas += metaInfo.meta_vvr_vendas;
-                    metaPosVendas += metaInfo.meta_vvr_posvendas;
+        // 🔧 APLICAR LÓGICA EXATA DOS INDICADORES OPERACIONAIS QUE FUNCIONA
+        const unidadesSelecionadasNorm = unitsToConsider.map(u => u ? u.toString().toLowerCase().trim() : '');
+        metasData.forEach((metaInfo, chave) => {
+            const [unidadeMetaRaw, anoMeta, mesMeta] = chave.split("-");
+            const unidadeMeta = unidadeMetaRaw ? unidadeMetaRaw.toString().toLowerCase().trim() : '';
+            if (!unidadeMeta) return;
+            if (unidadesSelecionadasNorm.length > 0 && !unidadesSelecionadasNorm.includes(unidadeMeta)) return;
+            if (anoMeta && mesMeta) {
+                const metaDate = new Date(Number(anoMeta), Number(mesMeta) - 1, 1);
+                const metaRangeStart = new Date(metaDate.getFullYear(), metaDate.getMonth(), 1, 0, 0, 0, 0);
+                const metaRangeEnd = new Date(metaDate.getFullYear(), metaDate.getMonth() + 1, 0, 23, 59, 59, 999); // último dia do mês às 23:59:59
+                if (metaRangeStart <= endDate && metaRangeEnd >= startDate) {
+                    metaVendas += (metaInfo.meta_vvr_vendas || 0);
+                    metaPosVendas += (metaInfo.meta_vvr_posvendas || 0);
                     metasEncontradas++;
-                    console.log(`✅ Meta encontrada: ${unidade}-${ano}-${mes} = ${metaInfo.meta_vvr_vendas + metaInfo.meta_vvr_posvendas}`);
+                    console.log(`✅ Meta encontrada: ${unidadeMetaRaw}-${anoMeta}-${mesMeta} = ${(metaInfo.meta_vvr_vendas || 0) + (metaInfo.meta_vvr_posvendas || 0)}`);
                 }
             }
         });
@@ -1249,10 +1283,8 @@ function updatePreviousYearKPIs(dataBruta, selectedUnidades, startDate, endDate)
     let metaPosVendas = 0;
 
     // ADICIONADO: datas do ano anterior
-    const startDatePY = new Date(startDate);
-    startDatePY.setFullYear(startDate.getFullYear() - 1);
-    const endDatePY = new Date(endDate);
-    endDatePY.setFullYear(endDate.getFullYear() - 1);
+    const startDatePY = new Date(startDate.getFullYear() - 1, startDate.getMonth(), startDate.getDate(), 0, 0, 0, 0);
+    const endDatePY = new Date(endDate.getFullYear() - 1, endDate.getMonth(), endDate.getDate(), 23, 59, 59, 999);
     // --- TRAVA DE SEGURANÇA DEFINITIVA DENTRO DA FUNÇÃO ---
     const canCalculateMeta = (userAccessLevel === 'ALL_UNITS' || selectedUnidades.length > 0);
 
@@ -1261,13 +1293,22 @@ function updatePreviousYearKPIs(dataBruta, selectedUnidades, startDate, endDate)
             ? [...new Set(allData.map(d => d.nm_unidade))]
             : selectedUnidades;
             
-        metasData.forEach((metaInfo, key) => {
-            const [unidade, ano, mes] = key.split("-");
-            const metaDate = new Date(ano, parseInt(mes) - 1, 1);
-            // Usar datas do ano anterior para meta
-            if (unitsToConsider.includes(unidade) && metaDate >= startDatePY && metaDate < endDatePY) {
-                metaVendas += metaInfo.meta_vvr_vendas;
-                metaPosVendas += metaInfo.meta_vvr_posvendas;
+        // 🔧 APLICAR LÓGICA EXATA DOS INDICADORES OPERACIONAIS QUE FUNCIONA (ANO ANTERIOR)
+        const unidadesSelecionadasNorm = unitsToConsider.map(u => u ? u.toString().toLowerCase().trim() : '');
+        metasData.forEach((metaInfo, chave) => {
+            const [unidadeMetaRaw, anoMeta, mesMeta] = chave.split("-");
+            const unidadeMeta = unidadeMetaRaw ? unidadeMetaRaw.toString().toLowerCase().trim() : '';
+            if (!unidadeMeta) return;
+            if (unidadesSelecionadasNorm.length > 0 && !unidadesSelecionadasNorm.includes(unidadeMeta)) return;
+            if (anoMeta && mesMeta) {
+                const metaDate = new Date(Number(anoMeta), Number(mesMeta) - 1, 1);
+                const metaRangeStart = new Date(metaDate.getFullYear(), metaDate.getMonth(), 1, 0, 0, 0, 0);
+                const metaRangeEnd = new Date(metaDate.getFullYear(), metaDate.getMonth() + 1, 0, 23, 59, 59, 999); // último dia do mês às 23:59:59
+                // Para ano anterior, compara com startDatePY e endDatePY
+                if (metaRangeStart <= endDatePY && metaRangeEnd >= startDatePY) {
+                    metaVendas += (metaInfo.meta_vvr_vendas || 0);
+                    metaPosVendas += (metaInfo.meta_vvr_posvendas || 0);
+                }
             }
         });
     }
@@ -1434,12 +1475,11 @@ function updateDashboard() {
     
     const startDateString = document.getElementById("start-date").value;
     const [startYear, startMonth, startDay] = startDateString.split('-').map(Number);
-    const startDate = new Date(startYear, startMonth - 1, startDay);
+    const startDate = new Date(startYear, startMonth - 1, startDay, 0, 0, 0, 0); // 00:00:00.000
     
     const endDateString = document.getElementById("end-date").value;
     const [endYear, endMonth, endDay] = endDateString.split('-').map(Number);
-    const endDate = new Date(endYear, endMonth - 1, endDay);
-    endDate.setDate(endDate.getDate() + 1);
+    const endDate = new Date(endYear, endMonth - 1, endDay, 23, 59, 59, 999); // 23:59:59.999
 
     const anoVigenteParaGrafico = startDate.getFullYear();
 
@@ -1571,6 +1611,18 @@ function getSolidColorForPercentage(percent) {
         dataParaGraficoAnual = allData.filter(d => filterLogic(d) && d.dt_cadastro_integrante.getFullYear() === anoVigenteParaGrafico);
         allDataForOtherCharts = allData.filter(filterLogic);
 
+        // 🔍 DEBUG COMPARATIVO: Verificar dataBrutaFiltrada
+        console.log('🔍 DEBUG INDICADORES OPERACIONAIS:');
+        console.log('  - allData.length:', allData.length);
+        console.log('  - dataBrutaFiltrada.length:', dataBrutaFiltrada.length);
+        console.log('  - startDate:', startDate);
+        console.log('  - endDate:', endDate);
+        
+        if (dataBrutaFiltrada.length > 0) {
+            console.log('  - Primeira data filtrada:', dataBrutaFiltrada[0].dt_cadastro_integrante);
+            console.log('  - Última data filtrada:', dataBrutaFiltrada[dataBrutaFiltrada.length - 1].dt_cadastro_integrante);
+        }
+
         // --- Indicadores Operacionais: ADESÃO TOTAL ---
         try {
             const adesoesValidas = dataBrutaFiltrada.filter(d => d.codigo_integrante && d.codigo_integrante.toString().trim() !== '');
@@ -1643,9 +1695,9 @@ function getSolidColorForPercentage(percent) {
             return unidadeMatch && cursoMatch && fundoMatch && tipoServicoMatch && tipoClienteMatch && instituicaoMatch && dateMatch;
         });
 
-        const sDPY = new Date(startDate); sDPY.setFullYear(sDPY.getFullYear() - 1);
-        const eDPY = new Date(endDate); eDPY.setFullYear(eDPY.getFullYear() - 1);
-        dataBrutaFiltradaPY = allData.filter(d => filterLogic(d) && d.dt_cadastro_integrante >= sDPY && d.dt_cadastro_integrante < eDPY);
+        const sDPY = new Date(startDate.getFullYear() - 1, startDate.getMonth(), startDate.getDate(), 0, 0, 0, 0);
+        const eDPY = new Date(endDate.getFullYear() - 1, endDate.getMonth(), endDate.getDate(), 23, 59, 59, 999);
+        dataBrutaFiltradaPY = allData.filter(d => filterLogic(d) && d.dt_cadastro_integrante >= sDPY && d.dt_cadastro_integrante <= eDPY);
     }
     
     // ATUALIZAÇÃO DOS COMPONENTES
