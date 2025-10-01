@@ -5191,11 +5191,11 @@ function populateFilters(selectedUnidades = []) {
         console.log('🏢 Criando filtro com unidades:', unidades.length);
         
         unidades.forEach((u) => {
-            const isSelected = currentSelectedValues.includes(u);
+            // Adiciona todas as opções como SELECIONADAS por padrão
             unidadeFilter.append($("<option>", { 
                 value: u, 
                 text: u,
-                selected: isSelected 
+                selected: true // <-- A MUDANÇA PRINCIPAL ESTÁ AQUI
             }));
         });
 
@@ -5426,8 +5426,11 @@ function populateFilters(selectedUnidades = []) {
                 if (currentSelectedValues.length > 0) {
                     unidadeFilter.multiselect('select', currentSelectedValues);
                 }
+
+                // ADICIONE ESTA LINHA ABAIXO:
+                unidadeFilter.multiselect('refresh');
                 
-                console.log('Multiselect de unidades inicializado com sucesso');
+                console.log('Multiselect de unidades inicializado e ATUALIZADO com sucesso');
             } catch (error) {
                 console.error('Erro ao inicializar multiselect de unidades:', error);
             }
