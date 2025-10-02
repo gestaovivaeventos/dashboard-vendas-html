@@ -584,11 +584,14 @@ async function fetchFundosData() {
 }
 
 async function fetchMetasData() {
+  console.log("� fetchMetasData INICIADA!");
+  console.log("�🔍 === INÍCIO fetchMetasData ===");
   if (!METAS_SPREADSHEET_ID || !METAS_SHEET_NAME || !API_KEY) {
     console.error("Configurações da planilha de metas incompletas.");
     return new Map();
   }
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${METAS_SPREADSHEET_ID}/values/${METAS_SHEET_NAME}!A:Z?key=${API_KEY}`;
+  console.log('🔍 URL da API:', url);
   try {
     const response = await fetch(url);
     if (!response.ok) {
@@ -597,8 +600,19 @@ async function fetchMetasData() {
     }
     const data = await response.json();
     const rows = data.values || [];
+    console.log(`🔍 Total de linhas recebidas: ${rows.length}`);
+    
+    // Debug: Mostrar as últimas 10 linhas recebidas
+    console.log('🔍 ÚLTIMAS 10 LINHAS RECEBIDAS:');
+    const ultimasLinhas = rows.slice(-10);
+    ultimasLinhas.forEach((row, index) => {
+      const linhaReal = rows.length - 10 + index + 1;
+      console.log(`  Linha ${linhaReal}:`, row);
+    });
+    
     const metasMap = new Map();
     const headers = rows[0].map((h) => h.trim().toLowerCase());
+    console.log('🔍 Headers encontrados:', headers);
     
         const unidadeIndex = headers.indexOf("nm_unidade"),
             anoIndex = headers.indexOf("ano"),
@@ -1001,7 +1015,7 @@ function processAndCrossReferenceData(salesData, startDate, endDate) {
 }
 
 function updateMainKPIs(dataBruta, selectedUnidades, startDate, endDate, retryCount = 0) {
-    console.log('� updateMainKPIs INICIADA - dados recebidos:', dataBruta.length, 'registros');
+    console.log('🔍 updateMainKPIs called with:');
     console.log('  - selectedUnidades:', selectedUnidades);
     console.log('  - selectedUnidades length:', selectedUnidades.length);
     console.log('  - userAccessLevel:', userAccessLevel);
@@ -1009,30 +1023,36 @@ function updateMainKPIs(dataBruta, selectedUnidades, startDate, endDate, retryCo
     console.log('  - endDate:', endDate);
     console.log('  - retryCount:', retryCount);
     
-    // ✅ CORREÇÃO: Sempre calcular KPIs, mesmo sem metas (metas ficam zeradas)
-    if (!metasData) {
-        console.warn('⚠️ Metas não disponíveis - KPIs serão calculados apenas com valores realizados');
+    // 🆕 VALIDAÇÃO CRÍTICA: Não calcular se dados não estão prontos
+    if (!metasData || metasData.size === 0) {
+        if (retryCount < 10) { // Máximo 10 tentativas (1 segundo)
+            console.log('⚠️ METAS NÃO CARREGADAS (vazia) - adiando cálculo...');
+            setTimeout(() => {
+                updateMainKPIs(dataBruta, selectedUnidades, startDate, endDate, retryCount + 1);
+            }, 100);
+            return;
+        } else {
+            console.warn('⚠️ TIMEOUT: Metas não carregaram após 10 tentativas - prosseguindo sem metas');
+            // Prosseguir mesmo sem metas para não bloquear o dashboard
+        }
     }
     
-    // 🚨 DEBUG ESPECÍFICO PARA KPIs COM DATAS FUTURAS - MOVIDO PARA CIMA
-    const today = new Date();
-    const isSelectingFutureOnly = startDate >= today;
-    const dadosPassadoKPI = dataBruta.filter(d => d.dt_cadastro_integrante < today);
-    const dadosFuturoKPI = dataBruta.filter(d => d.dt_cadastro_integrante >= today);
-    
-    console.log('🚨 TESTE KPIs COM DATAS FUTURAS:');
-    console.log('  📅 Período:', startDate.toISOString().split('T')[0], 'até', endDate.toISOString().split('T')[0]);
-    console.log('  📅 Só futuro?', isSelectingFutureOnly);
-    console.log('  📊 Total dados para KPI:', dataBruta.length);
-    console.log('  📊 Dados passado/presente:', dadosPassadoKPI.length);
-    console.log('  📊 Dados futuro:', dadosFuturoKPI.length);
-    
-    if (dadosFuturoKPI.length > 0) {
-        console.log('  💰 Valores futuros para KPI:');
-        dadosFuturoKPI.slice(0, 3).forEach((d, i) => {
-            console.log(`    [${i}] ${d.dt_cadastro_integrante.toISOString().split('T')[0]} - R$${d.vl_plano} - ${d.venda_posvenda}`);
-        });
+    // 🆕 VALIDAÇÃO ADICIONAL: Verificar se metas básicas foram carregadas
+    if (metasData.size < 5) { // Esperamos pelo menos 5 metas (mais flexível)
+        if (retryCount < 10) { // Reduzir tentativas para 10 (1 segundo)
+            console.log(`⚠️ METAS INCOMPLETAS (${metasData.size} < 5) - adiando cálculo...`);
+            setTimeout(() => {
+                updateMainKPIs(dataBruta, selectedUnidades, startDate, endDate, retryCount + 1);
+            }, 100);
+            return;
+        } else {
+            console.warn(`⚠️ TIMEOUT: Só carregaram ${metasData.size} metas após 10 tentativas - prosseguindo mesmo assim`);
+            // Prosseguir mesmo assim para não bloquear o dashboard
+        }
     }
+    
+    console.log('✅ Dados validados - prosseguindo com cálculo de KPIs');
+    console.log('  - metasData.size:', metasData.size);
     
     const getColorForPercentage = (percent) => {
         // Use subtle left-to-right gradients for each state
@@ -1074,7 +1094,7 @@ function updateMainKPIs(dataBruta, selectedUnidades, startDate, endDate, retryCo
     const realizadoPosVendas = dataBruta.filter((d) => normalizeText(d.venda_posvenda) === "POS VENDA").reduce((sum, d) => sum + d.vl_plano, 0);
     const realizadoTotal = realizadoVendas + realizadoPosVendas;
     
-    console.log('� RESULTADO KPIs:');
+    console.log('🔍 RESULTADO FILTROS:');
     console.log('  - realizadoVendas:', realizadoVendas);
     console.log('  - realizadoPosVendas:', realizadoPosVendas);
     console.log('  - realizadoTotal:', realizadoTotal);
@@ -1087,7 +1107,7 @@ function updateMainKPIs(dataBruta, selectedUnidades, startDate, endDate, retryCo
     const canCalculateMeta = (userAccessLevel === 'ALL_UNITS' || selectedUnidades.length > 0);
     console.log('🔍 canCalculateMeta:', canCalculateMeta);
 
-    if (canCalculateMeta && metasData && metasData.size > 0) {
+    if (canCalculateMeta) {
         // 🆕 CORREÇÃO: Para cálculo de metas, devemos incluir TODAS as unidades com meta,
         // não apenas as que têm vendas!
         let unitsToConsider;
@@ -1585,26 +1605,16 @@ function getSolidColorForPercentage(percent) {
         dataParaGraficoAnual = allData.filter(d => filterLogic(d) && d.dt_cadastro_integrante.getFullYear() === anoVigenteParaGrafico);
         allDataForOtherCharts = allData.filter(filterLogic);
 
-        // � DEBUG ESPECÍFICO PARA DATAS FUTURAS
-        const today = new Date();
-        const isSelectingFutureOnly = startDate >= today;
-        const dadosPassado = dataBrutaFiltrada.filter(d => d.dt_cadastro_integrante < today);
-        const dadosFuturo = dataBrutaFiltrada.filter(d => d.dt_cadastro_integrante >= today);
+        // 🔍 DEBUG COMPARATIVO: Verificar dataBrutaFiltrada
+        console.log('🔍 DEBUG INDICADORES OPERACIONAIS:');
+        console.log('  - allData.length:', allData.length);
+        console.log('  - dataBrutaFiltrada.length:', dataBrutaFiltrada.length);
+        console.log('  - startDate:', startDate);
+        console.log('  - endDate:', endDate);
         
-        if (isSelectingFutureOnly || dadosFuturo.length > 0) {
-            console.log('� TESTE DATAS FUTURAS:');
-            console.log('  📅 Período selecionado:', startDate.toISOString().split('T')[0], 'até', endDate.toISOString().split('T')[0]);
-            console.log('  📅 Só futuro?', isSelectingFutureOnly);
-            console.log('  📊 Total dados filtrados:', dataBrutaFiltrada.length);
-            console.log('  📊 Dados passado/presente:', dadosPassado.length);
-            console.log('  📊 Dados futuro:', dadosFuturo.length);
-            
-            if (dadosFuturo.length > 0) {
-                console.log('  💰 Valores futuros encontrados:');
-                dadosFuturo.slice(0, 3).forEach((d, i) => {
-                    console.log(`    [${i}] ${d.dt_cadastro_integrante.toISOString().split('T')[0]} - R$${d.vl_plano} - ${d.venda_posvenda} - ${d.nm_unidade}`);
-                });
-            }
+        if (dataBrutaFiltrada.length > 0) {
+            console.log('  - Primeira data filtrada:', dataBrutaFiltrada[0].dt_cadastro_integrante);
+            console.log('  - Última data filtrada:', dataBrutaFiltrada[dataBrutaFiltrada.length - 1].dt_cadastro_integrante);
         }
 
         // --- Indicadores Operacionais: ADESÃO TOTAL ---
@@ -6034,20 +6044,12 @@ function populateFilters(selectedUnidades = []) {
         console.error('❌ Erro ao inicializar filtros básicos:', error);
     }
 
-    // ✅ CORREÇÃO: Define as datas padrão APENAS se ainda não foram definidas
-    const startDateEl = document.getElementById("start-date");
-    const endDateEl = document.getElementById("end-date");
-    
-    if (!startDateEl.value || !endDateEl.value) {
-        console.log('🗓️ Definindo datas padrão (primeira inicialização)');
-        const hoje = new Date();
-        const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
-        const fimMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
-        startDateEl.value = inicioMes.toISOString().split("T")[0];
-        endDateEl.value = fimMes.toISOString().split("T")[0];
-    } else {
-        console.log('🗓️ Mantendo datas existentes:', startDateEl.value, 'até', endDateEl.value);
-    }
+    // Define as datas padrão
+    const hoje = new Date();
+    const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+    const fimMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
+    document.getElementById("start-date").value = inicioMes.toISOString().split("T")[0];
+    document.getElementById("end-date").value = fimMes.toISOString().split("T")[0];
 }
 
 // ...
@@ -7909,14 +7911,8 @@ function updateMotivosPerdaTable(dadosFiltrados) {
         return;
     }
 
-    const tbody = tableEl.querySelector('tbody');
-    if (!tbody) {
-        console.error("❌ Elemento tbody da tabela 'motivos-perda-table' não encontrado");
-        return;
-    }
-
     // Verificar se há dados do funil disponíveis
-    if (!dadosFiltrados || dadosFiltrados.length === 0) {
+        if (!dadosFiltrados || dadosFiltrados.length === 0) {
         console.log("⚠️ Não há dados filtrados para processar motivos de perda");
         tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: #F8F9FA;">Nenhum dado disponível</td></tr>';
         return;
