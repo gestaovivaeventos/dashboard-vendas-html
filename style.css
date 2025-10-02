@@ -33,8 +33,20 @@
    ao contêiner do filtro que está com o menu aberto no momento. */
 /* --- CORREÇÃO DEFINITIVA DE SOBREPOSIÇÃO DE FILTROS --- */
 .filter-item.filter-active {
-    z-index: 999999;}
-.filter-item:nth-child(1) { z-index: 20; }
+    z-index: 999999;
+}
+
+/* Z-index específico para cada filtro evitar sobreposição */
+.filter-item:nth-child(1) { z-index: 20 !important; position: relative !important; }
+.filter-item:nth-child(2) { z-index: 19 !important; position: relative !important; }
+.filter-item:nth-child(3) { z-index: 18 !important; position: relative !important; }
+.filter-item:nth-child(4) { z-index: 17 !important; position: relative !important; }
+.filter-item:nth-child(5) { z-index: 16 !important; position: relative !important; }
+.filter-item:nth-child(6) { z-index: 15 !important; position: relative !important; }
+.filter-item:nth-child(7) { z-index: 14 !important; position: relative !important; }
+.filter-item:nth-child(8) { z-index: 13 !important; position: relative !important; }
+.filter-item:nth-child(9) { z-index: 12 !important; position: relative !important; }
+.filter-item:nth-child(10) { z-index: 11 !important; position: relative !important; }
 
 
 
@@ -46,7 +58,45 @@
     frente de todos os outros filtros irmãos.
 */
 .filter-item.filter-item-active {
-    z-index: 100000; /* Um valor maior que o z-index padrão */
+    z-index: 1000000 !important; /* Um valor maior que o z-index padrão */
+    position: relative !important;
+}
+
+/* Correção adicional para dropdowns dentro de filtros ativos */
+.filter-item.filter-item-active .multiselect-container,
+.filter-item.filter-active .multiselect-container,
+.filter-item:hover .multiselect-container,
+.btn-group.open .multiselect-container {
+    z-index: 1000001 !important;
+    position: absolute !important;
+}
+
+/* Garantir que o botão do filtro também tenha z-index alto */
+.filter-item.filter-active,
+.filter-item.filter-item-active {
+    z-index: 1000000 !important;
+    position: relative !important;
+}
+
+/* Correção específica para multiselect dropdown menu */
+.multiselect-container.dropdown-menu.show,
+.dropdown-menu.multiselect-container {
+    z-index: 1000002 !important;
+    position: absolute !important;
+}
+
+/* Correção específica para filtros de curso e fundos */
+#curso-filter-container,
+#fundos-filter-container,
+#fundo-filter-container {
+    position: relative !important;
+}
+
+#curso-filter-container .multiselect-container,
+#fundos-filter-container .multiselect-container,
+#fundo-filter-container .multiselect-container {
+    z-index: 999999 !important;
+    position: absolute !important;
 }
 /* --- CORREÇÃO DE ALINHAMENTO DO CABEÇALHO DA TABELA DE CAPTAÇÕES --- */
 /*
@@ -139,7 +189,13 @@ body {
     min-width: 100% !important;
     margin-top: 1px !important;
     box-sizing: border-box; /* Garante que padding não afete a largura final */
-    z-index: 100000;
+    z-index: 999999 !important;
+}
+
+/* Correção específica para filtros abertos */
+.filter-item .btn-group.open .multiselect-container {
+    z-index: 999999 !important;
+    position: absolute !important;
 }
 
 .multiselect-container.dropdown-menu {

@@ -932,7 +932,7 @@ async function fetchFunilData() {
   }
 }
 
-function processAndCrossReferenceData(salesData, startDate, endDate) {
+function processAndCrossReferenceData(salesData, startDate, endDate, selectedUnidades = []) {
   // 🔄 Primeiro: Processar dados de vendas
   const vendasPorMesUnidade = salesData.reduce((acc, d) => {
     const year = d.dt_cadastro_integrante.getFullYear();
@@ -970,7 +970,11 @@ function processAndCrossReferenceData(salesData, startDate, endDate) {
             const [ano, mes] = periodo.split('-');
             const metaDate = new Date(parseInt(ano), parseInt(mes) - 1, 1);
             
-            if (metaDate >= startDate && metaDate < endDate) {
+            // Verificar se está no período E se a unidade está no filtro
+            const noPeriodo = metaDate >= startDate && metaDate < endDate;
+            const unidadePermitida = selectedUnidades.length === 0 || selectedUnidades.includes(unidade);
+            
+            if (noPeriodo && unidadePermitida) {
               console.log(`✅ Adicionando unidade só com meta: ${unidade} - ${periodo}`);
               vendasPorMesUnidade[chaveMeta] = {
                 unidade: unidade,
@@ -979,7 +983,7 @@ function processAndCrossReferenceData(salesData, startDate, endDate) {
                 realizado_adesoes: 0,
               };
             } else {
-              console.log(`❌ Meta fora do período: ${unidade} - ${periodo} (${metaDate})`);
+              console.log(`❌ Meta excluída - Período: ${noPeriodo}, Filtro: ${unidadePermitida} - ${unidade} - ${periodo}`);
             }
           }
         }
@@ -1819,7 +1823,7 @@ function getSolidColorForPercentage(percent) {
     updateFunilIndicators(startDate, endDate, finalSelectedUnidades);
     updateMainKPIs(dataBrutaFiltrada, finalSelectedUnidades, startDate, endDate);
     
-    const dataAgregadaComVendas = processAndCrossReferenceData(dataBrutaFiltrada, startDate, endDate);
+    const dataAgregadaComVendas = processAndCrossReferenceData(dataBrutaFiltrada, startDate, endDate, finalSelectedUnidades);
     currentFilteredDataForTable = dataAgregadaComVendas; 
     updateDataTable(dataAgregadaComVendas);
     
@@ -5376,18 +5380,15 @@ function populateFilters(selectedUnidades = []) {
                         console.log('Unidade onChange triggered:', option.val(), checked);
                         const selectedOptions = $('#unidade-filter').val() || [];
                         console.log('Selected unidades:', selectedOptions);
-                        updateDependentFilters(selectedOptions);
                         updateDashboard();
                     },
                     onSelectAll: function() {
                         console.log('Unidade onSelectAll triggered');
                         const selectedOptions = $('#unidade-filter').val() || [];
-                        updateDependentFilters(selectedOptions);
                         updateDashboard();
                     },
                     onDeselectAll: function() {
                         console.log('Unidade onDeselectAll triggered');
-                        updateDependentFilters([]);
                         updateDashboard();
                     },
                     onDropdownShow: function(event) {
