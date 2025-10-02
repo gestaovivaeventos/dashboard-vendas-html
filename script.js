@@ -7589,6 +7589,13 @@ let captacoesDataTable = null;
 
 // Função para atualizar a tabela de captações usando DataTables (mantém estilo consistente com outros relatórios)
 function updateCaptacoesTable(dados) {
+    // Verificar se o elemento da tabela existe
+    const tableEl = document.getElementById('captacoes-funil-table');
+    if (!tableEl) {
+        console.error("❌ Elemento 'captacoes-funil-table' não encontrado");
+        return;
+    }
+
     // Preparar linhas para DataTable
     const rows = dados.map(item => [
         item.origem,
@@ -7606,7 +7613,7 @@ function updateCaptacoesTable(dados) {
     }
 
     // Inicializa DataTable com opções e botão de exportação, linguagem pt-BR
-    captacoesDataTable = $("#captacoes-table").DataTable({
+    captacoesDataTable = $("#captacoes-funil-table").DataTable({
         data: rows,
         columns: [
             { title: "Origem do Lead" },
@@ -7666,7 +7673,7 @@ function updateCaptacoesFooter(dados) {
     const totalAbsoluto = dados.reduce((s, i) => s + i.total, 0);
     const totalPercentual = dados.reduce((s, i) => s + i.percentual, 0);
 
-    const $tfoot = $('#captacoes-table tfoot tr');
+    const $tfoot = $('#captacoes-funil-table tfoot tr');
     if ($tfoot.length) {
         $tfoot.find('td').eq(2).text(totalPercentual.toFixed(1) + '%');
         $tfoot.find('td').eq(3).text(totalAbsoluto);
@@ -8099,6 +8106,12 @@ function updateDescartesTable(dadosFiltrados) {
         const tableEl = document.getElementById('descartes-table');
         if (!tableEl) {
             console.warn("⚠️ Elemento 'descartes-table' não encontrado — a placeholder provavelmente está ativa. Saindo sem atualizar.");
+            return;
+        }
+
+        const tbody = tableEl.querySelector('tbody');
+        if (!tbody) {
+            console.error("❌ Elemento tbody da tabela 'descartes-table' não encontrado");
             return;
         }
 
