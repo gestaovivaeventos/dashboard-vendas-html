@@ -123,6 +123,105 @@ if (Chart && Chart.defaults) {
 let userAccessLevel = null;
 let accessDataFromSheet = new Map(); // NOVO: Armazenará os códigos da planilha
 
+// ========== CONTROLE DE META INTERNA/FRANQUIA ==========
+let isMetaInterna = false; // Flag para meta interna (85%) vs meta franquia (100%)
+const META_INTERNA_MULTIPLICADOR = 0.85; // 85% da meta original
+
+// ========== FUNÇÕES AUXILIARES PARA META INTERNA/FRANQUIA ==========
+function atualizarIndicadoresTitulos(tipoMeta) {
+    // Atualizar todos os indicadores de meta nos títulos
+    const indicadores = [
+        'kpi-meta-indicator-1',
+        'kpi-meta-indicator-2', 
+        'table-meta-indicator'
+    ];
+    
+    indicadores.forEach(id => {
+        const elemento = document.getElementById(id);
+        if (elemento) {
+            elemento.textContent = tipoMeta;
+        }
+    });
+}
+
+function aplicarMultiplicadorMeta(valorMeta) {
+    return isMetaInterna ? valorMeta * META_INTERNA_MULTIPLICADOR : valorMeta;
+}
+
+function alternarTipoMeta(ativarMetaInterna) {
+    const checkbox = document.getElementById('meta-toggle-checkbox');
+    const labelLeft = document.querySelector('.meta-toggle-label-left');
+    const labelRight = document.querySelector('.meta-toggle-label-right');
+    const currentText = document.getElementById('meta-current-text');
+    const descriptionText = document.getElementById('meta-description-text');
+    
+    if (ativarMetaInterna) {
+        isMetaInterna = true;
+        
+        // Atualizar toggle switch
+        checkbox.checked = true;
+        
+        // Atualizar labels
+        labelLeft.classList.remove('active');
+        labelRight.classList.add('active');
+        
+        // Atualizar textos informativos
+        currentText.textContent = '🎯 Meta Interna (85%)';
+        descriptionText.textContent = 'Meta ajustada para controle interno da empresa com 85% dos valores originais';
+        
+        // Atualizar indicadores nos títulos
+        atualizarIndicadoresTitulos('(Meta Interna)');
+        
+        console.log('✅ Meta INTERNA ativada (85%)');
+    } else {
+        isMetaInterna = false;
+        
+        // Atualizar toggle switch
+        checkbox.checked = false;
+        
+        // Atualizar labels
+        labelLeft.classList.add('active');
+        labelRight.classList.remove('active');
+        
+        // Atualizar textos informativos
+        currentText.textContent = '🚀 Super Meta (100%)';
+        descriptionText.textContent = 'Metas originais das bases de dados para controle das franquias';
+        
+        // Atualizar indicadores nos títulos
+        atualizarIndicadoresTitulos('(Super Meta)');
+        
+        console.log('✅ SUPER META ativada (100%)');
+    }
+    
+    // Recalcular e atualizar os KPIs
+    updateDashboard();
+}
+
+function inicializarControlesMeta() {
+    console.log('🎯 Inicializando controles de meta...');
+    
+    // Mostrar a seção de controle de meta
+    const metaToggleSection = document.getElementById('meta-toggle-section');
+    if (metaToggleSection) {
+        metaToggleSection.style.display = 'block';
+    }
+    
+    // Adicionar evento ao toggle switch
+    const checkbox = document.getElementById('meta-toggle-checkbox');
+    if (checkbox) {
+        checkbox.addEventListener('change', function() {
+            alternarTipoMeta(this.checked);
+        });
+        
+        console.log('✅ Event listener adicionado ao toggle switch');
+    }
+    
+    // Inicializar no estado padrão (Super Meta)
+    alternarTipoMeta(false);
+    
+    console.log('✅ Controles de meta inicializados');
+}
+
 let allData = [],
   fundosData = [],
   funilData = [], // NOVO: Dados do funil
@@ -411,10 +510,16 @@ async function initializeDashboard() {
         applyInstituicaoFilterVisibility();
       }, 500);
       
+      // 🎯 Inicializar controles de meta franquia/interna
+      inicializarControlesMeta();
+      
       addEventListeners();
       updateDashboard();
     } else {
       loader.innerHTML = "Nenhum dado de vendas encontrado ou falha ao carregar.";
+      
+      // 🎯 Mesmo sem dados, inicializar controles de meta para visualização
+      inicializarControlesMeta();
     }
   } catch (error) {
     console.error("Erro fatal na inicialização:", error);
@@ -1202,10 +1307,23 @@ function updateMainKPIs(dataBruta, selectedUnidades, startDate, endDate, retryCo
     }
     // Se 'canCalculateMeta' for falso, as metas permanecerão 0.
 
+    // ========== APLICAR MULTIPLICADOR DE META INTERNA ==========
+    const metaVendasOriginal = metaVendas;
+    const metaPosVendasOriginal = metaPosVendas;
+    
+    // Aplicar multiplicador se meta interna estiver ativa
+    metaVendas = aplicarMultiplicadorMeta(metaVendas);
+    metaPosVendas = aplicarMultiplicadorMeta(metaPosVendas);
+    
     const metaTotal = metaVendas + metaPosVendas;
-    console.log('🔍 RESULTADO FINAL:');
-    console.log('  - metaTotal:', metaTotal);
-    console.log('  - metaTotal formatado:', formatCurrency(metaTotal));
+    
+    console.log('🎯 CONTROLE DE METAS:');
+    console.log('  - Tipo de meta:', isMetaInterna ? 'INTERNA (85%)' : 'FRANQUIA (100%)');
+    console.log('  - Meta Vendas (original):', formatCurrency(metaVendasOriginal));
+    console.log('  - Meta Vendas (aplicada):', formatCurrency(metaVendas));
+    console.log('  - Meta Pós-Vendas (original):', formatCurrency(metaPosVendasOriginal));
+    console.log('  - Meta Pós-Vendas (aplicada):', formatCurrency(metaPosVendas));
+    console.log('  - Meta Total (aplicada):', formatCurrency(metaTotal));
     
     const percentTotal = metaTotal > 0 ? realizadoTotal / metaTotal : 0;
     const percentVendas = metaVendas > 0 ? realizadoVendas / metaVendas : 0;
@@ -1291,7 +1409,20 @@ function updatePreviousYearKPIs(dataBruta, selectedUnidades, startDate, endDate)
         });
     }
     
+    // ========== APLICAR MULTIPLICADOR DE META INTERNA (ANO ANTERIOR) ==========
+    const metaVendasOriginal = metaVendas;
+    const metaPosVendasOriginal = metaPosVendas;
+    
+    // Aplicar multiplicador se meta interna estiver ativa
+    metaVendas = aplicarMultiplicadorMeta(metaVendas);
+    metaPosVendas = aplicarMultiplicadorMeta(metaPosVendas);
+    
     const metaTotal = metaVendas + metaPosVendas;
+    
+    console.log('🎯 CONTROLE DE METAS (ANO ANTERIOR):');
+    console.log('  - Tipo de meta:', isMetaInterna ? 'INTERNA (85%)' : 'FRANQUIA (100%)');
+    console.log('  - Meta Total (aplicada):', formatCurrency(metaTotal));
+    
     const percentTotal = metaTotal > 0 ? realizadoTotal / metaTotal : 0;
     const percentVendas = metaVendas > 0 ? realizadoVendas / metaVendas : 0;
     const percentPosVendas = metaPosVendas > 0 ? realizadoPosVendas / metaPosVendas : 0;
@@ -1844,7 +1975,9 @@ function getSolidColorForPercentage(percent) {
 
 function updateVvrVsMetaPorMesChart(salesDataForYear, anoVigente) {
     // --- 1. PREPARAÇÃO DOS DADOS (esta parte do código não muda) ---
-    document.getElementById("vvr-vs-meta-title").textContent = `VVR Realizado vs. Meta por Mês (${anoVigente})`;
+    const indicadorMeta = isMetaInterna ? '(Meta Interna)' : '(Super Meta)';
+    const titleElement = document.getElementById("vvr-vs-meta-title");
+    titleElement.innerHTML = `VVR REALIZADO VS. META POR MÊS (${anoVigente}) <span class="meta-indicator-highlight">${indicadorMeta}</span>`;
     const allYearPeriodos = Array.from({ length: 12 }, (_, i) => `${anoVigente}-${String(i + 1).padStart(2, "0")}`);
     const chartDataMap = new Map();
     allYearPeriodos.forEach((periodo) => {
@@ -1890,13 +2023,13 @@ function updateVvrVsMetaPorMesChart(salesDataForYear, anoVigente) {
     let realizadoValues, metaValues;
     if (currentVvrChartType === "vendas") {
         realizadoValues = allYearPeriodos.map((p) => chartDataMap.get(p).realizado_vendas);
-        metaValues = allYearPeriodos.map((p) => chartDataMap.get(p).meta_vendas);
+        metaValues = allYearPeriodos.map((p) => aplicarMultiplicadorMeta(chartDataMap.get(p).meta_vendas));
     } else if (currentVvrChartType === "posvendas") {
         realizadoValues = allYearPeriodos.map((p) => chartDataMap.get(p).realizado_posvendas);
-        metaValues = allYearPeriodos.map((p) => chartDataMap.get(p).meta_posvendas);
+        metaValues = allYearPeriodos.map((p) => aplicarMultiplicadorMeta(chartDataMap.get(p).meta_posvendas));
     } else {
         realizadoValues = allYearPeriodos.map((p) => chartDataMap.get(p).realizado_vendas + chartDataMap.get(p).realizado_posvendas);
-        metaValues = allYearPeriodos.map((p) => chartDataMap.get(p).meta_total);
+        metaValues = allYearPeriodos.map((p) => aplicarMultiplicadorMeta(chartDataMap.get(p).meta_total));
     }
     const formattedLabels = allYearPeriodos.map((periodo) => {
         const [year, month] = periodo.split("-");
@@ -3214,13 +3347,13 @@ function updateDataTable(data) {
         
         if (currentTableDataType === "vendas") {
             realizado = vendasDoPeriodo.filter((v) => normalizeText(v.venda_posvenda) === "VENDA").reduce((sum, v) => sum + v.vl_plano, 0);
-            meta = d.meta_vvr_vendas;
+            meta = aplicarMultiplicadorMeta(d.meta_vvr_vendas);
         } else if (currentTableDataType === "posvendas") {
             realizado = vendasDoPeriodo.filter((v) => normalizeText(v.venda_posvenda) === "POS VENDA").reduce((sum, v) => sum + v.vl_plano, 0);
-            meta = d.meta_vvr_posvendas;
+            meta = aplicarMultiplicadorMeta(d.meta_vvr_posvendas);
         } else {
             realizado = d.realizado_vvr;
-            meta = d.meta_vvr_total;
+            meta = aplicarMultiplicadorMeta(d.meta_vvr_total);
         }
         const atingimentoVvr = meta > 0 ? realizado / meta : 0;
         // Função para formatar a data de YYYY-MM para mmm/YYYY
@@ -3382,6 +3515,18 @@ function addEventListeners() {
             this.classList.add("active");
             document.querySelectorAll(".page-content").forEach((page) => page.classList.remove("active"));
             document.getElementById(this.dataset.page).classList.add("active");
+            
+            // 🎯 CONTROLAR VISIBILIDADE DOS CONTROLES DE META (apenas página 1)
+            const metaToggleSection = document.getElementById('meta-toggle-section');
+            if (metaToggleSection) {
+                if (newPage === 'page1') {
+                    metaToggleSection.style.display = 'block';
+                    console.log('🎯 Controles de meta MOSTRADOS (página 1)');
+                } else {
+                    metaToggleSection.style.display = 'none';
+                    console.log('🎯 Controles de meta OCULTOS (página ' + newPage + ')');
+                }
+            }
 
         // Rola para o topo ao trocar de página
         window.scrollTo(0, 0);

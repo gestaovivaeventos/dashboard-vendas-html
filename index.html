@@ -225,8 +225,33 @@
                     <img id="company-logo" src="logo_viva.png" alt="Logo da Empresa">
                 </header>
                 <div id="page1" class="page-content active">
+                    <!-- Controle de Meta - Toggle Switch Compacto -->
+                    <section class="kpi-container" id="meta-toggle-section" style="display: none;">
+                        <h2 class="kpi-vvr-title">CONFIGURAÇÃO DE METAS</h2>
+                        <div class="kpi-main-wrapper" style="padding: 8px 30px;">
+                            <div class="meta-toggle-compact-container">
+                                <div class="meta-toggle-switch-wrapper">
+                                    <span class="meta-toggle-label-left">🚀 Super Meta</span>
+                                    <label class="meta-toggle-switch-compact">
+                                        <input type="checkbox" id="meta-toggle-checkbox">
+                                        <span class="meta-toggle-slider-compact">
+                                            <span class="meta-toggle-indicator"></span>
+                                        </span>
+                                    </label>
+                                    <span class="meta-toggle-label-right">🎯 Meta Interna</span>
+                                </div>
+                                <div class="meta-toggle-info">
+                                    <div class="meta-toggle-status">
+                                        <span id="meta-current-text" class="meta-toggle-current">Super Meta (100%)</span>
+                                        <span class="meta-toggle-separator">•</span>
+                                        <span id="meta-description-text" class="meta-toggle-description">Metas originais das bases de dados para controle das franquias</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
                     <section class="kpi-container" id="kpi-section" style="display: none;">
-                        <h2 class="kpi-vvr-title">VVR NO PERÍODO SELECIONADO</h2>
+                        <h2 class="kpi-vvr-title">VVR NO PERÍODO SELECIONADO <span id="kpi-meta-indicator-1" class="meta-indicator-highlight">(Super Meta)</span></h2>
                         <div class="kpi-main-wrapper">
                             <div class="kpi-main-cards-container">
                                 <div class="kpi-main-card">
@@ -251,7 +276,7 @@
                         </div>
                     </section>
                     <section class="kpi-container" id="kpi-section-py" style="display: none;">
-                        <h2 class="kpi-vvr-title">VVR NO MESMO PERÍODO SELECIONADO NO ANO ANTERIOR</h2>
+                        <h2 class="kpi-vvr-title">VVR NO MESMO PERÍODO SELECIONADO NO ANO ANTERIOR <span id="kpi-meta-indicator-2" class="meta-indicator-highlight">(Super Meta)</span></h2>
                         <div class="kpi-main-wrapper" style="width: 100%; grid-column: span 12;">
                             <div class="kpi-main-cards-container">
                                 <div class="kpi-main-card">
@@ -307,7 +332,7 @@
                         </div>
                     </section>
                     <section class="chart-container" id="chart-vvr-mes-section" style="display: none;">
-                        <h2 id="vvr-vs-meta-title">VVR Realizado vs. Meta por Mês</h2>
+                        <h2 id="vvr-vs-meta-title" class="kpi-vvr-title">VVR REALIZADO VS. META POR MÊS</h2>
                         <div class="chart-selector">
                             <button id="btn-total" class="active" data-type="total">Total</button>
                             <button id="btn-vendas" data-type="vendas">Vendas</button>
@@ -325,7 +350,7 @@
                         </div>
                     </section>
                     <section class="table-container" id="table-section" style="display: none;">
-                        <h2>Dados Detalhados por Mês/Unidade (Período Selecionado)</h2>
+                        <h2 class="kpi-vvr-title">DADOS DETALHADOS POR MÊS/UNIDADE (PERÍODO SELECIONADO) <span id="table-meta-indicator" class="meta-indicator-highlight">(Super Meta)</span></h2>
                         <div class="chart-selector">
                             <button class="active" data-type="total">Total</button>
                             <button data-type="vendas">Vendas</button>
@@ -650,7 +675,6 @@
     </div>
 
     <script src="script.js"></script>
-    <script src="date-picker.js"></script>
     <script>
         $(document).ready(function() {
             // Remove a lógica de login antiga - agora é gerenciada pelo script.js

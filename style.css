@@ -145,6 +145,15 @@
     border-bottom: 1px solid #555;
     padding-bottom: 2px;
 }
+
+.meta-indicator-highlight {
+    color: #ff6600 !important;
+    font-size: 1.2rem;
+    letter-spacing: 0.06em;
+    font-family: 'Poppins', Arial, sans-serif;
+    font-weight: 600;
+    text-transform: uppercase;
+}
 body { 
     font-family: 'Poppins', sans-serif; 
     background-color: #212529; 
@@ -2337,3 +2346,186 @@ input[type=number] {
             font-size: 1.1rem !important; /* Aumenta footer quando sidebar recolhido */
             padding: 16px 12px !important;
         }
+
+/* ========== TOGGLE SWITCH COMPACTO PARA METAS ========== */
+.meta-toggle-compact-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 30px;
+    width: 100%;
+    min-height: 20px;
+    flex-wrap: wrap;
+}
+
+.meta-toggle-switch-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.meta-toggle-label-left,
+.meta-toggle-label-right {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #8b949e;
+    white-space: nowrap;
+    transition: color 0.3s ease;
+}
+
+.meta-toggle-label-left.active {
+    color: #ff6600;
+    font-weight: 700;
+}
+
+.meta-toggle-label-right.active {
+    color: #ff6600;
+    font-weight: 700;
+}
+
+/* Toggle Switch */
+.meta-toggle-switch-compact {
+    position: relative;
+    display: inline-block;
+    width: 80px;
+    height: 40px;
+}
+
+.meta-toggle-switch-compact input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.meta-toggle-slider-compact {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, #ff6600 0%, #e65500 100%);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 20px;
+    border: 2px solid #cc5200;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.meta-toggle-indicator {
+    position: absolute;
+    content: "";
+    height: 30px;
+    width: 30px;
+    left: 3px;
+    top: 3px;
+    background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 50%;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.meta-toggle-indicator::before {
+    content: "100%";
+    color: #ff6600;
+    font-size: 9px;
+    font-weight: 900;
+}
+
+/* Estado ativo (Meta Interna) */
+input:checked + .meta-toggle-slider-compact {
+    background: linear-gradient(135deg, #ff6600 0%, #e65500 100%);
+    border-color: #cc5200;
+}
+
+input:checked + .meta-toggle-slider-compact .meta-toggle-indicator {
+    transform: translateX(38px);
+}
+
+input:checked + .meta-toggle-slider-compact .meta-toggle-indicator::before {
+    content: "85%";
+    color: #ff6600;
+}
+
+/* Efeito hover */
+.meta-toggle-slider-compact:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+/* Informações da meta ativa */
+.meta-toggle-info {
+    flex: 1;
+    display: flex;
+    align-items: center;
+}
+
+.meta-toggle-status {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.meta-toggle-current {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #adb5bd;
+    font-family: 'Poppins', Arial, sans-serif;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.meta-toggle-separator {
+    color: #6c757d;
+    font-size: 1.2rem;
+}
+
+.meta-toggle-description {
+    font-size: 1rem;
+    color: #adb5bd;
+    line-height: 1.4;
+}
+
+/* Responsividade */
+@media (max-width: 992px) {
+    .meta-toggle-compact-container {
+        flex-direction: column;
+        gap: 20px;
+        text-align: center;
+    }
+    
+    .meta-toggle-switch-wrapper {
+        justify-content: center;
+    }
+    
+    .meta-toggle-status {
+        justify-content: center;
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .meta-toggle-separator {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .meta-toggle-label-left,
+    .meta-toggle-label-right {
+        font-size: 1rem;
+    }
+    
+    .meta-toggle-current {
+        font-size: 1.2rem;
+    }
+    
+    .meta-toggle-description {
+        font-size: 0.9rem;
+    }
+}
