@@ -3391,7 +3391,25 @@ function updateDataTable(data) {
         }
         const atingimentoVvr = meta > 0 ? realizado / meta : 0;
         const periodoSelecionado = getPeriodoSelecionadoFormatado();
-        return [unidade, periodoSelecionado, formatCurrency(realizado), formatCurrency(meta), formatPercent(atingimentoVvr)];
+        return [
+            unidade, 
+            periodoSelecionado, 
+            {
+                display: formatCurrency(realizado),
+                sort: realizado,
+                type: 'num'
+            },
+            {
+                display: formatCurrency(meta),
+                sort: meta,
+                type: 'num'
+            },
+            {
+                display: formatPercent(atingimentoVvr),
+                sort: atingimentoVvr,
+                type: 'num'
+            }
+        ];
     });
     // Ordena apenas as linhas de unidade
     tableRows = tableRows.sort((a, b) => String(a[0]).localeCompare(String(b[0])));
@@ -3479,11 +3497,55 @@ function updateDataTable(data) {
             data: tableRows, // Apenas dados das unidades, sem o total
             pageLength: 10,
             columns: [
-                { title: "Unidade" },
-                { title: "Período" },
-                { title: `VVR Realizado ${getTipo()}` },
-                { title: `Meta VVR ${getTipo()}` },
-                { title: `Atingimento VVR ${getTipo()}` }
+                { title: "Unidade", type: "string" },
+                { title: "Período", type: "string" },
+                { title: `VVR Realizado ${getTipo()}`, type: "currency" },
+                { title: `Meta VVR ${getTipo()}`, type: "currency" },
+                { title: `Atingimento VVR ${getTipo()}`, type: "percent" }
+            ],
+            columnDefs: [
+                {
+                    // Colunas de valores monetários (VVR Realizado e Meta VVR)
+                    targets: [2, 3],
+                    type: "num",
+                    render: function(data, type, row) {
+                        if (typeof data === 'object' && data !== null) {
+                            if (type === 'display') {
+                                return data.display; // Formatação para exibição
+                            }
+                            if (type === 'sort' || type === 'type') {
+                                return data.sort; // Valor numérico para ordenação
+                            }
+                        }
+                        // Fallback para dados em formato string
+                        if (type === 'sort' || type === 'type') {
+                            const numericValue = parseFloat(data.replace("R$", "").replace(/\./g, "").replace(",", ".").trim()) || 0;
+                            return numericValue;
+                        }
+                        return data;
+                    }
+                },
+                {
+                    // Coluna de porcentagem (Atingimento VVR)
+                    targets: [4],
+                    type: "num",
+                    render: function(data, type, row) {
+                        if (typeof data === 'object' && data !== null) {
+                            if (type === 'display') {
+                                return data.display; // Formatação para exibição
+                            }
+                            if (type === 'sort' || type === 'type') {
+                                return data.sort; // Valor numérico para ordenação
+                            }
+                        }
+                        // Fallback para dados em formato string
+                        if (type === 'sort' || type === 'type') {
+                            const numericValue = parseFloat(data.replace("%", "").replace(",", ".").trim()) || 0;
+                            return numericValue;
+                        }
+                        return data;
+                    }
+                }
             ],
             language: {
                 sEmptyTable: "Nenhum registro disponível na tabela",
