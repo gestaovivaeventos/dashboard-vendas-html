@@ -3339,38 +3339,133 @@ function drawMonthlyContractsChart(data, year) {
 }
 
 function updateDataTable(data) {
-    const tableData = data.map((d) => {
-        const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-        let realizado = 0;
-        let meta = 0;
+    // Agrupar dados por unidade, acumulando valores de todos os períodos
+    const unidadesMap = new Map();
+    const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    
+    data.forEach((d) => {
+        const unidade = d.unidade;
         const vendasDoPeriodo = allData.filter((v) => v.nm_unidade === d.unidade && `${v.dt_cadastro_integrante.getFullYear()}-${String(v.dt_cadastro_integrante.getMonth() + 1).padStart(2, "0")}` === d.periodo);
         
+        if (!unidadesMap.has(unidade)) {
+            unidadesMap.set(unidade, {
+                realizado_vendas: 0,
+                realizado_posvendas: 0,
+                realizado_total: 0,
+                meta_vendas: 0,
+                meta_posvendas: 0,
+                meta_total: 0
+            });
+        }
+        
+        const unidadeData = unidadesMap.get(unidade);
+        
+        // Acumular valores realizados
+        const realizadoVendas = vendasDoPeriodo.filter((v) => normalizeText(v.venda_posvenda) === "VENDA").reduce((sum, v) => sum + v.vl_plano, 0);
+        const realizadoPosVendas = vendasDoPeriodo.filter((v) => normalizeText(v.venda_posvenda) === "POS VENDA").reduce((sum, v) => sum + v.vl_plano, 0);
+        
+        unidadeData.realizado_vendas += realizadoVendas;
+        unidadeData.realizado_posvendas += realizadoPosVendas;
+        unidadeData.realizado_total += d.realizado_vvr;
+        
+        // Acumular valores de meta
+        unidadeData.meta_vendas += d.meta_vvr_vendas;
+        unidadeData.meta_posvendas += d.meta_vvr_posvendas;
+        unidadeData.meta_total += d.meta_vvr_total;
+    });
+    
+    // Converter Map para array e formatar dados
+    // Gera linhas de unidade normalmente, mas NÃO inclui o total na ordenação
+    let tableRows = Array.from(unidadesMap.entries()).map(([unidade, dados]) => {
+        let realizado = 0;
+        let meta = 0;
         if (currentTableDataType === "vendas") {
-            realizado = vendasDoPeriodo.filter((v) => normalizeText(v.venda_posvenda) === "VENDA").reduce((sum, v) => sum + v.vl_plano, 0);
-            meta = aplicarMultiplicadorMeta(d.meta_vvr_vendas);
+            realizado = dados.realizado_vendas;
+            meta = aplicarMultiplicadorMeta(dados.meta_vendas);
         } else if (currentTableDataType === "posvendas") {
-            realizado = vendasDoPeriodo.filter((v) => normalizeText(v.venda_posvenda) === "POS VENDA").reduce((sum, v) => sum + v.vl_plano, 0);
-            meta = aplicarMultiplicadorMeta(d.meta_vvr_posvendas);
+            realizado = dados.realizado_posvendas;
+            meta = aplicarMultiplicadorMeta(dados.meta_posvendas);
         } else {
-            realizado = d.realizado_vvr;
-            meta = aplicarMultiplicadorMeta(d.meta_vvr_total);
+            realizado = dados.realizado_total;
+            meta = aplicarMultiplicadorMeta(dados.meta_total);
         }
         const atingimentoVvr = meta > 0 ? realizado / meta : 0;
-        // Função para formatar a data de YYYY-MM para mmm/YYYY
-        const formatPeriodo = (periodo) => {
-            const [ano, mes] = periodo.split('-');
-            const date = new Date(ano, parseInt(mes) - 1);
-            const mesAbreviado = date.toLocaleDateString('pt-BR', { month: 'short' })
-                .replace('.', '')  // Remove o ponto do mês abreviado
-                .toLowerCase();    // Deixa em minúsculo
-            return `${mesAbreviado}/${ano}`;
-        };
+        const periodoSelecionado = getPeriodoSelecionadoFormatado();
+        return [unidade, periodoSelecionado, formatCurrency(realizado), formatCurrency(meta), formatPercent(atingimentoVvr)];
+    });
+    // Ordena apenas as linhas de unidade
+    tableRows = tableRows.sort((a, b) => String(a[0]).localeCompare(String(b[0])));
 
-        return [d.unidade, formatPeriodo(d.periodo), formatCurrency(realizado), formatCurrency(meta), formatPercent(atingimentoVvr)];
-    }).sort((a, b) => String(a[1]).localeCompare(String(b[0])));
+    // Calcular totais gerais
+    let totalRealizado = 0;
+    let totalMeta = 0;
+    Array.from(unidadesMap.values()).forEach(dados => {
+        if (currentTableDataType === "vendas") {
+            totalRealizado += dados.realizado_vendas;
+            totalMeta += dados.meta_vendas;
+        } else if (currentTableDataType === "posvendas") {
+            totalRealizado += dados.realizado_posvendas;
+            totalMeta += dados.meta_posvendas;
+        } else {
+            totalRealizado += dados.realizado_total;
+            totalMeta += dados.meta_total;
+        }
+    });
+    
+    // Aplicar multiplicador apenas no final para evitar problemas
+    const metaTotalFinal = aplicarMultiplicadorMeta(totalMeta);
+    const atingimentoTotal = metaTotalFinal > 0 ? totalRealizado / metaTotalFinal : 0;
+    
+    // Salvar linha de totais separadamente para exibir em todas as páginas
+    let totalRow = null;
+    if (Array.from(unidadesMap.values()).length > 0) {
+        const periodoSelecionado = getPeriodoSelecionadoFormatado();
+        totalRow = [
+            'TOTAL GERAL', 
+            periodoSelecionado, 
+            formatCurrency(totalRealizado), 
+            formatCurrency(metaTotalFinal), 
+            formatPercent(atingimentoTotal)
+        ];
+    }
+    
+    // Função auxiliar para obter período formatado
+    function getPeriodoSelecionadoFormatado() {
+        const startDateInput = document.getElementById("start-date");
+        const endDateInput = document.getElementById("end-date");
+        
+        if (startDateInput && endDateInput && startDateInput.value && endDateInput.value) {
+            // Ajustar para timezone local para evitar problemas de fuso horário
+            const startDate = new Date(startDateInput.value + 'T12:00:00');
+            const endDate = new Date(endDateInput.value + 'T12:00:00');
+            
+            const formatMes = (date) => {
+                const meses = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 
+                              'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+                const ano = date.getFullYear().toString().slice(-2); // Últimos 2 dígitos do ano
+                return `${meses[date.getMonth()]}/${ano}`;
+            };
+            
+            // Verificar se é o mesmo mês e ano
+            if (startDate.getFullYear() === endDate.getFullYear() && 
+                startDate.getMonth() === endDate.getMonth()) {
+                return formatMes(startDate);
+            } else {
+                return `${formatMes(startDate)} - ${formatMes(endDate)}`;
+            }
+        }
+        
+        return "Período Selecionado";
+    }
 
     if (dataTable) {
-        dataTable.clear().rows.add(tableData).draw();
+        // Limpa a tabela e adiciona apenas os dados das unidades (sem o total)
+        dataTable.clear().rows.add(tableRows).draw();
+        
+        // Adiciona a linha de total fixo após cada redesenho
+        if (totalRow) {
+            addTotalRowToTable(totalRow);
+        }
     } else {
         // Define os títulos das colunas com base no tipo de dados selecionado
         const getTipo = () => {
@@ -3380,9 +3475,8 @@ function updateDataTable(data) {
                 default: return "(Total)";
             }
         };
-        
         dataTable = $("#dados-table").DataTable({
-            data: tableData,
+            data: tableRows, // Apenas dados das unidades, sem o total
             pageLength: 10,
             columns: [
                 { title: "Unidade" },
@@ -3406,6 +3500,12 @@ function updateDataTable(data) {
             },
             destroy: true,
             dom: "Bfrtip",
+            drawCallback: function(settings) {
+                // Adiciona a linha de total após cada redesenho da página
+                if (totalRow) {
+                    addTotalRowToTable(totalRow);
+                }
+            },
             buttons: [{
                 extend: "excelHtml5", text: "Exportar para Excel", title: `Relatorio_Vendas_${new Date().toLocaleDateString("pt-BR")}`, className: "excel-button",
                 exportOptions: {
@@ -3418,10 +3518,41 @@ function updateDataTable(data) {
                             return data;
                         },
                     },
+                    // Exclui a linha TOTAL GERAL da exportação se desejado
+                    rows: function(idx, data, node) {
+                        return data[0] !== 'TOTAL GERAL';
+                    }
                 },
             }],
+            // Ordenação padrão pela primeira coluna (Unidade)
+            order: [[0, 'asc']]
         });
+        
+        // Adiciona a linha de total inicial se existir
+        if (totalRow) {
+            addTotalRowToTable(totalRow);
+        }
     }
+}
+
+// Função para adicionar linha de total fixo em todas as páginas
+function addTotalRowToTable(totalRowData) {
+    // Remove linha de total existente se houver
+    $('#dados-table .total-row').remove();
+    
+    // Cria nova linha de total
+    const totalRowHtml = `
+        <tr class="total-row">
+            <td>${totalRowData[0]}</td>
+            <td>${totalRowData[1]}</td>
+            <td>${totalRowData[2]}</td>
+            <td>${totalRowData[3]}</td>
+            <td>${totalRowData[4]}</td>
+        </tr>
+    `;
+    
+    // Adiciona a linha de total após a última linha da página atual
+    $('#dados-table tbody').append(totalRowHtml);
 }
 
 function addEventListeners() {
