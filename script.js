@@ -38,13 +38,17 @@ function adjustColor(hex, percent) {
 // --- CONFIGURAÇÕES GLOBAIS ---
 const SALES_SPREADSHEET_ID = "1HXyq_r2ssJ5c7wXdrBUc-WdqrlCfiZYE1EuIWbIDg0U";
 
+// Variável global para o flatpickr
+let dateRangePicker;
+
 // Configuração do seletor de datas
 document.addEventListener('DOMContentLoaded', function() {
     const hoje = new Date();
     const primeiroDiaMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
     const ultimoDiaMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0); // último dia do mês atual
     
-    flatpickr("#date-range", {
+    // Inicializar flatpickr
+    dateRangePicker = flatpickr("#date-range", {
         mode: "range",
         dateFormat: "d/m/Y",
         defaultDate: [primeiroDiaMes, ultimoDiaMes],
@@ -57,12 +61,172 @@ document.addEventListener('DOMContentLoaded', function() {
             if (selectedDates.length === 2) {
                 document.getElementById('start-date').value = selectedDates[0].toISOString().split('T')[0];
                 document.getElementById('end-date').value = selectedDates[1].toISOString().split('T')[0];
+                
+                // Verificar se o período selecionado corresponde a alguma opção pré-definida
+                const matchingOption = findMatchingPeriodOption(selectedDates[0], selectedDates[1]);
+                
+                // Atualizar estado das opções
+                document.querySelectorAll('.period-option').forEach(opt => opt.classList.remove('active'));
+                if (matchingOption) {
+                    matchingOption.classList.add('active');
+                }
+                
                 // Dispara o evento de mudança para atualizar os dados
                 document.getElementById('start-date').dispatchEvent(new Event('change'));
             }
         }
     });
+
+    // Configurar botões de período pré-definido
+    setupPeriodShortcuts();
+    
+    // Marcar "Este mês" como ativo por padrão (corresponde ao período inicial)
+    setTimeout(() => {
+        const esteMesOption = document.querySelector('.period-option[data-period="estemes"]');
+        if (esteMesOption) {
+            esteMesOption.classList.add('active');
+        }
+    }, 100);
 });
+
+// Função para configurar os botões de período pré-definido
+function setupPeriodShortcuts() {
+    const dropdownBtn = document.getElementById('period-dropdown-btn');
+    const dropdown = document.getElementById('period-dropdown');
+    const periodOptions = document.querySelectorAll('.period-option');
+    
+    // Toggle dropdown ao clicar no botão
+    dropdownBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        dropdown.classList.toggle('show');
+    });
+    
+    // Fechar dropdown ao clicar fora
+    document.addEventListener('click', function(e) {
+        if (!dropdown.contains(e.target) && !dropdownBtn.contains(e.target)) {
+            dropdown.classList.remove('show');
+        }
+    });
+    
+    // Configurar opções de período
+    periodOptions.forEach(option => {
+        option.addEventListener('click', function() {
+            const period = this.getAttribute('data-period');
+            const dates = getPredefinedPeriod(period);
+            
+            if (dates) {
+                // Atualizar o flatpickr
+                dateRangePicker.setDate([dates.start, dates.end]);
+                
+                // Atualizar campos hidden
+                document.getElementById('start-date').value = dates.start.toISOString().split('T')[0];
+                document.getElementById('end-date').value = dates.end.toISOString().split('T')[0];
+                
+                // Marcar opção como ativa
+                periodOptions.forEach(opt => opt.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Fechar dropdown
+                dropdown.classList.remove('show');
+                
+                // Disparar evento para atualizar dados
+                document.getElementById('start-date').dispatchEvent(new Event('change'));
+            }
+        });
+    });
+}
+
+// Função para calcular datas dos períodos pré-definidos
+function getPredefinedPeriod(period) {
+    const hoje = new Date();
+    const year = hoje.getFullYear();
+    const month = hoje.getMonth();
+    const day = hoje.getDate();
+    
+    switch(period) {
+        case 'hoje':
+            return {
+                start: new Date(year, month, day),
+                end: new Date(year, month, day)
+            };
+            
+        case 'ontem':
+            const ontem = new Date(hoje);
+            ontem.setDate(day - 1);
+            return {
+                start: ontem,
+                end: new Date(ontem)
+            };
+            
+        case 'ultimos7dias':
+            const sete_dias_atras = new Date(hoje);
+            sete_dias_atras.setDate(day - 6); // -6 porque inclui hoje
+            return {
+                start: sete_dias_atras,
+                end: hoje
+            };
+            
+        case 'ultimos30dias':
+            const trinta_dias_atras = new Date(hoje);
+            trinta_dias_atras.setDate(day - 29); // -29 porque inclui hoje
+            return {
+                start: trinta_dias_atras,
+                end: hoje
+            };
+            
+        case 'estemes':
+            return {
+                start: new Date(year, month, 1),
+                end: new Date(year, month + 1, 0) // último dia do mês atual
+            };
+            
+        case 'mespassado':
+            return {
+                start: new Date(year, month - 1, 1),
+                end: new Date(year, month, 0) // último dia do mês anterior
+            };
+            
+        case 'esteano':
+            return {
+                start: new Date(year, 0, 1), // 1º de janeiro
+                end: new Date(year, 11, 31) // 31 de dezembro
+            };
+            
+        case 'anopassado':
+            return {
+                start: new Date(year - 1, 0, 1), // 1º de janeiro do ano anterior
+                end: new Date(year - 1, 11, 31) // 31 de dezembro do ano anterior
+            };
+            
+        default:
+            return null;
+    }
+}
+
+// Função para encontrar se um período selecionado corresponde a alguma opção pré-definida
+function findMatchingPeriodOption(startDate, endDate) {
+    const options = document.querySelectorAll('.period-option');
+    
+    for (let option of options) {
+        const period = option.getAttribute('data-period');
+        const predefinedDates = getPredefinedPeriod(period);
+        
+        if (predefinedDates) {
+            // Comparar datas (normalizar para início do dia)
+            const start1 = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+            const end1 = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+            const start2 = new Date(predefinedDates.start.getFullYear(), predefinedDates.start.getMonth(), predefinedDates.start.getDate());
+            const end2 = new Date(predefinedDates.end.getFullYear(), predefinedDates.end.getMonth(), predefinedDates.end.getDate());
+            
+            if (start1.getTime() === start2.getTime() && end1.getTime() === end2.getTime()) {
+                return option;
+            }
+        }
+    }
+    
+    return null;
+}
+
 const SALES_SHEET_NAME = "ADESOES";
 const FUNDOS_SHEET_NAME = "FUNDOS";
 const METAS_SPREADSHEET_ID = "1KywSOsTn7qUdVp2dLthWD3Y27RsE1aInk6hRJhp7BFw";
