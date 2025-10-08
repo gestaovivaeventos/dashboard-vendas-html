@@ -41,11 +41,242 @@ const SALES_SPREADSHEET_ID = "1HXyq_r2ssJ5c7wXdrBUc-WdqrlCfiZYE1EuIWbIDg0U";
 // Variável global para o flatpickr
 let dateRangePicker;
 
+// Variável global para preservar a seleção do filtro rápido de unidades
+let lastQuickFilterSelection = null;
+
+// --- FUNÇÕES PARA FILTRO RÁPIDO DE UNIDADES ---
+function filterSingleUnit(unitName) {
+    const unidadeFilter = $("#unidade-filter");
+    
+    // Salva a seleção na variável global para preservar entre mudanças de página
+    lastQuickFilterSelection = [unitName];
+    console.log('💾 Salvando seleção do filtro rápido:', lastQuickFilterSelection);
+    
+    // Desmarca todas as opções
+    unidadeFilter.multiselect('deselectAll', false);
+    
+    // Seleciona apenas a unidade específica
+    unidadeFilter.multiselect('select', unitName);
+    
+    // Fecha o painel de acesso rápido
+    closeUnidadeQuickPanel();
+    
+    // Atualiza o dashboard imediatamente
+    updateDashboard();
+}
+
+
+
+// Armazena todas as unidades para filtrar
+let allUnidades = [];
+
+function createUnidadeQuickList(unidades) {
+    // Armazena todas as unidades globalmente
+    allUnidades = [...unidades];
+    
+    // Renderiza a lista inicial
+    renderUnidadeList(unidades);
+    
+    // Configura a pesquisa
+    setupUnidadeSearch();
+}
+
+function renderUnidadeList(unidades) {
+    const listContainer = document.getElementById('unidade-quick-list');
+    if (!listContainer) return;
+    
+    // Limpa a lista
+    listContainer.innerHTML = '';
+    
+    if (unidades.length === 0) {
+        const noResults = document.createElement('div');
+        noResults.className = 'unidade-no-results';
+        noResults.textContent = 'Nenhuma unidade encontrada';
+        listContainer.appendChild(noResults);
+        return;
+    }
+    
+    // Cria item para cada unidade
+    unidades.forEach(unidade => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'unidade-item-wrapper';
+        
+        const name = document.createElement('span');
+        name.className = 'unidade-quick-name';
+        name.textContent = unidade;
+        name.title = unidade; // Tooltip com nome completo
+        
+        const btn = document.createElement('button');
+        btn.className = 'unidade-quick-filter-btn';
+        btn.textContent = 'Somente';
+        btn.onclick = () => filterSingleUnit(unidade);
+        
+        wrapper.appendChild(name);
+        wrapper.appendChild(btn);
+        listContainer.appendChild(wrapper);
+    });
+}
+
+function setupUnidadeSearch() {
+    const searchInput = document.getElementById('unidade-search');
+    if (!searchInput) return;
+    
+    searchInput.addEventListener('input', function(e) {
+        const searchTerm = e.target.value.toLowerCase().trim();
+        
+        if (searchTerm === '') {
+            // Se não há termo de busca, mostra todas
+            renderUnidadeList(allUnidades);
+        } else {
+            // Filtra unidades que contenham o termo
+            const filteredUnidades = allUnidades.filter(unidade => 
+                unidade.toLowerCase().includes(searchTerm)
+            );
+            renderUnidadeList(filteredUnidades);
+        }
+    });
+    
+    // Limpa a pesquisa quando o painel é fechado
+    searchInput.addEventListener('blur', function() {
+        setTimeout(() => {
+            if (!document.getElementById('unidade-quick-panel')?.classList.contains('active')) {
+                searchInput.value = '';
+                renderUnidadeList(allUnidades);
+            }
+        }, 200);
+    });
+}
+
+// Inicializa os eventos do painel de acesso rápido
+function initUnidadeQuickAccess() {
+    // Aguarda um pouco para garantir que os elementos estejam carregados
+    setTimeout(() => {
+        const quickBtn = document.getElementById('unidade-quick-access-btn');
+        const panel = document.getElementById('unidade-quick-panel');
+        
+        if (quickBtn) {
+            quickBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                e.preventDefault();
+                // IMPORTANTE: NÃO fazer nada que possa afetar o layout da sidebar
+                const isActive = panel && panel.classList.contains('active');
+                if (isActive) {
+                    closeUnidadeQuickPanel();
+                } else {
+                    openUnidadeQuickPanel();
+                }
+            });
+        }
+        
+        // Event listener global para fechar ao clicar fora (igual aos outros filtros)
+        document.addEventListener('click', function(event) {
+            if (panel && panel.classList.contains('active')) {
+                const isClickInside = panel.contains(event.target) || 
+                                    quickBtn?.contains(event.target);
+                
+                if (!isClickInside) {
+                    closeUnidadeQuickPanel();
+                }
+            }
+        });
+    }, 500);
+}
+
+// Funções separadas para abrir e fechar - mais controle
+function openUnidadeQuickPanel() {
+    // Fechar o filtro normal de unidades se estiver aberto
+    try {
+        console.log('🔍 Verificando se filtro normal está aberto...');
+        
+        // Múltiplas estratégias para detectar e fechar o multiselect
+        const unidadeFilterContainer = document.querySelector('.filter-item-unidades');
+        console.log('Container encontrado:', !!unidadeFilterContainer);
+        
+        if (unidadeFilterContainer) {
+            // Estratégia 1: Procurar por dropdown visível
+            let dropdownFound = false;
+            const allDropdowns = unidadeFilterContainer.querySelectorAll('.multiselect-container');
+            console.log('Dropdowns encontrados:', allDropdowns.length);
+            
+            allDropdowns.forEach((dropdown, index) => {
+                console.log(`Dropdown ${index}:`, {
+                    classes: dropdown.className,
+                    display: dropdown.style.display,
+                    visible: dropdown.offsetHeight > 0
+                });
+                
+                if (dropdown.offsetHeight > 0 || dropdown.style.display === 'block' || dropdown.classList.contains('open')) {
+                    dropdownFound = true;
+                    console.log('🎯 Dropdown aberto encontrado!');
+                }
+            });
+            
+            // Estratégia 2: Verificar se há elementos com aria-expanded="true"
+            const expandedElements = unidadeFilterContainer.querySelectorAll('[aria-expanded="true"]');
+            console.log('Elementos expandidos:', expandedElements.length);
+            
+            if (dropdownFound || expandedElements.length > 0) {
+                console.log('🔄 Tentando fechar filtro normal...');
+                
+                // Tentar método jQuery primeiro
+                const normalUnidadeFilter = $("#unidade-filter");
+                if (normalUnidadeFilter.length > 0) {
+                    try {
+                        // Simular clique no botão do multiselect para fechar
+                        const multiselectButton = unidadeFilterContainer.querySelector('.multiselect.dropdown-toggle');
+                        if (multiselectButton) {
+                            multiselectButton.click();
+                            console.log('✅ Filtro normal fechado via clique no botão');
+                        } else {
+                            // Fallback: forçar fechamento
+                            allDropdowns.forEach(dropdown => {
+                                dropdown.style.display = 'none';
+                                dropdown.classList.remove('open');
+                            });
+                            expandedElements.forEach(el => el.setAttribute('aria-expanded', 'false'));
+                            console.log('✅ Filtro normal fechado via DOM direto');
+                        }
+                    } catch (error) {
+                        console.log('❌ Erro no fechamento:', error);
+                    }
+                }
+            } else {
+                console.log('ℹ️ Nenhum filtro normal aberto detectado');
+            }
+        }
+    } catch (error) {
+        console.log('❌ Erro geral:', error);
+    }
+    
+    const panel = document.getElementById('unidade-quick-panel');
+    if (panel && !panel.classList.contains('active')) {
+        panel.classList.add('active');
+        console.log('✅ Filtro rápido aberto');
+    }
+}
+
+function closeUnidadeQuickPanel() {
+    const panel = document.getElementById('unidade-quick-panel');
+    if (panel && panel.classList.contains('active')) {
+        panel.classList.remove('active');
+        
+        // Limpa a pesquisa quando fecha o painel
+        const searchInput = document.getElementById('unidade-search');
+        if (searchInput) {
+            searchInput.value = '';
+            renderUnidadeList(allUnidades);
+        }
+    }
+}
+
 // Configuração do seletor de datas
 document.addEventListener('DOMContentLoaded', function() {
     const hoje = new Date();
     const primeiroDiaMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
     const ultimoDiaMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0); // último dia do mês atual
+    
+    // Inicializar painel de acesso rápido de unidades
+    initUnidadeQuickAccess();
     
     // Inicializar flatpickr
     dateRangePicker = flatpickr("#date-range", {
@@ -190,6 +421,12 @@ function getPredefinedPeriod(period) {
             return {
                 start: new Date(year, 0, 1), // 1º de janeiro
                 end: new Date(year, 11, 31) // 31 de dezembro
+            };
+            
+        case 'esteanoateagora':
+            return {
+                start: new Date(year, 0, 1), // 1º de janeiro
+                end: new Date() // data atual
             };
             
         case 'anopassado':
@@ -660,8 +897,12 @@ async function initializeDashboard() {
       document.getElementById("filters-section").style.display = "flex";
 
       // ✅ GARANTIR POPULAÇÃO DOS FILTROS: Usar retry para garantir que dados estão prontos
-
-      retryPopulateFilters();
+      // CORREÇÃO: Preservar seleção do filtro rápido ou seleção atual
+      const currentUnidadesSelection = $("#unidade-filter").val() || [];
+      const unidadesToPreserve = lastQuickFilterSelection || currentUnidadesSelection;
+      console.log('💾 Preservando seleção de unidades (inicialização):', unidadesToPreserve);
+      console.log('   - Filtro rápido ativo:', !!lastQuickFilterSelection);
+      retryPopulateFilters(unidadesToPreserve);
       
       // 🆕 Aplicar visibilidade dos filtros específicos por página
       setTimeout(() => {
@@ -3897,13 +4138,19 @@ function addEventListeners() {
                 // Pequeno delay para garantir que a mudança de página terminou
                 setTimeout(() => {
                     console.log('🔄 Recarregando filtros após mudança de página...');
+                    // CORREÇÃO: Preservar seleção do filtro rápido ou seleção atual
+                    const currentUnidadesSelection = $("#unidade-filter").val() || [];
+                    const unidadesToPreserve = lastQuickFilterSelection || currentUnidadesSelection;
+                    console.log('💾 Preservando seleção de unidades:', unidadesToPreserve);
+                    console.log('   - Filtro rápido ativo:', !!lastQuickFilterSelection);
+                    
                     if (userAccessLevel === "ALL_UNITS") {
-                        retryPopulateFilters();
+                        retryPopulateFilters(unidadesToPreserve);
                     } else if (Array.isArray(userAccessLevel)) {
                         retryUpdateDependentFilters(userAccessLevel);
                     } else {
                         // Para usuário único, recriar a lógica dos filtros
-                        retryPopulateFilters();
+                        retryPopulateFilters(unidadesToPreserve);
                     }
                 }, 100);
             }
@@ -5620,9 +5867,6 @@ function populateFilters(selectedUnidades = []) {
         }
     }
     
-    console.log('jQuery found unidade filter?', unidadeFilter.length > 0);
-    console.log('Multiselect plugin available?', typeof unidadeFilter.multiselect === 'function');
-    
     if (unidadeFilter.length === 0) {
         console.error('Elemento #unidade-filter não encontrado!');
         return;
@@ -5638,9 +5882,6 @@ function populateFilters(selectedUnidades = []) {
     if (!shouldHideFundos) {
         fundoFilter.empty();
     }
-    
-    console.log('🧹 Filtros limpos. Curso filter options:', cursoFilter.children().length);
-    console.log('🧹 Fundo filter options:', fundoFilter.children().length);
 
     if (userAccessLevel === "ALL_UNITS") {
         // Salva as seleções atuais antes de qualquer modificação
@@ -5666,9 +5907,8 @@ function populateFilters(selectedUnidades = []) {
         const unidadesFundos = fundosData.map((d) => d.nm_unidade);
         const unidadesFunil = funilData ? funilData.map((d) => d.nm_unidade).filter(Boolean) : [];
         
-        // 🆕 CORREÇÃO: Incluir unidades que só existem nas metas
+        // Incluir unidades que só existem nas metas
         const unidadesMetas = Array.from(metasData.keys()).map(key => key.split("-")[0]);
-        console.log('🎯 Unidades das metas:', unidadesMetas.length);
         
         // Combina TODAS as unidades: vendas, fundos, funil E metas
         const unidades = [...new Set([...unidadesVendas, ...unidadesFundos, ...unidadesFunil, ...unidadesMetas])].sort();
@@ -5678,35 +5918,30 @@ function populateFilters(selectedUnidades = []) {
             unidades.sort();
         }
         
-        console.log('🏢 Criando filtro com unidades:', unidades.length);
+        // CORREÇÃO: Determinar quais unidades devem estar selecionadas
+        const unidadesToSelect = selectedUnidades.length > 0 ? selectedUnidades : unidades;
+        console.log('🎯 Unidades a serem selecionadas:', unidadesToSelect);
         
         unidades.forEach((u) => {
-            // Adiciona todas as opções como SELECIONADAS por padrão
+            // Só seleciona a unidade se ela estiver na lista de unidades para seleção
+            const shouldSelect = unidadesToSelect.includes(u);
             unidadeFilter.append($("<option>", { 
                 value: u, 
                 text: u,
-                selected: true // <-- A MUDANÇA PRINCIPAL ESTÁ AQUI
+                selected: shouldSelect
             }));
         });
 
+        // Cria a lista de acesso rápido
+        createUnidadeQuickList(unidades);
+
         // Filtra os dados com base nas unidades selecionadas
-        const unidadesFiltradas = selectedUnidades.length > 0 ? selectedUnidades : [
-            ...new Set([
-                ...allData.map(d => d.nm_unidade),
-                ...fundosData.map(d => d.nm_unidade),
-                ...(funilData ? funilData.map(d => d.nm_unidade).filter(Boolean) : [])
-            ])
-        ];
+        const unidadesFiltradas = unidadesToSelect;
         
         const dadosFiltrados = allData.filter(d => unidadesFiltradas.includes(d.nm_unidade));
         const fundosFiltrados = fundosData.filter(d => unidadesFiltradas.includes(d.nm_unidade));
         
-        console.log('🔍 DADOS BÁSICOS:');
-        console.log('allData total:', allData.length);
-        console.log('fundosData total:', fundosData.length);
-        console.log('funilData total:', funilData ? funilData.length : 0);
-        console.log('dadosFiltrados:', dadosFiltrados.length);
-        console.log('fundosFiltrados:', fundosFiltrados.length);
+
         
         // Só filtrar dados do funil se estivermos na página do funil E se houver dados do funil
         let funilFiltrado = [];
@@ -5740,7 +5975,6 @@ function populateFilters(selectedUnidades = []) {
                 return criadoDate && criadoDate >= startDate && criadoDate < endDate;
             });
 
-            console.log('funilFiltrado (unidade+periodo):', funilFiltrado.length);
             // Atualiza a tabela de captações baseada na base de funil filtrada
             try { updateCaptacoesFunilTable(funilFiltrado); } catch(e) { console.error('Erro ao atualizar captacoes funil table:', e); }
         }
@@ -5749,106 +5983,53 @@ function populateFilters(selectedUnidades = []) {
         let cursos = [];
         if (isFunilPage) {
             // Para página do funil, usar coluna D do funil (Qual é o seu curso?)
-            console.log('🎯 USANDO DADOS DO FUNIL para cursos');
-            console.log('funilFiltrado length:', funilFiltrado.length);
-            if (funilFiltrado.length > 0) {
-                console.log('Amostra funilFiltrado:', funilFiltrado.slice(0, 3).map(d => ({
-                    titulo: d.titulo,
-                    curso: d.curso,
-                    nm_unidade: d.nm_unidade
-                })));
-                
-                // Debug específico da coluna curso
-                console.log('🔍 VERIFICANDO COLUNA CURSO:');
-                console.log('Primeiros 10 valores da coluna curso:');
-                funilFiltrado.slice(0, 10).forEach((item, index) => {
-                    console.log(`  ${index + 1}. curso: "${item.curso}" | título: "${item.titulo}"`);
-                });
-                
-                // Contar quantos têm curso preenchido vs vazio
-                const comCurso = funilFiltrado.filter(d => d.curso && d.curso.trim() !== '' && d.curso !== 'N/A');
-                const semCurso = funilFiltrado.filter(d => !d.curso || d.curso.trim() === '' || d.curso === 'N/A');
-                console.log(`📊 Com curso: ${comCurso.length} | Sem curso: ${semCurso.length}`);
-                
-                if (comCurso.length > 0) {
-                    console.log('Exemplos COM curso:', comCurso.slice(0, 5).map(d => d.curso));
-                }
-            }
             const cursosFunil = funilFiltrado.map((d) => d.curso || '').filter(c => c && c.trim() !== '' && c !== 'N/A');
-            console.log('cursosFunil brutos:', cursosFunil.slice(0, 10));
             cursos = [...new Set(cursosFunil)].sort();
-            console.log('Cursos do funil (populateFilters):', cursos);
         } else {
             // Para outras páginas, usar dados de vendas e fundos
-            console.log('🎯 USANDO DADOS DE VENDAS/FUNDOS para cursos');
-            console.log('dadosFiltrados length:', dadosFiltrados.length);
-            console.log('fundosFiltrados length:', fundosFiltrados.length);
             const cursosVendas = dadosFiltrados.map((d) => d.curso_fundo || '').filter(c => c && c !== 'N/A');
             const cursosFundos = fundosFiltrados.map((d) => d.curso_fundo || '').filter(c => c && c !== 'N/A');
-            console.log('cursosVendas length:', cursosVendas.length);
-            console.log('cursosFundos length:', cursosFundos.length);
             cursos = [...new Set([...cursosVendas, ...cursosFundos])].sort();
-            console.log('Cursos de vendas/fundos:', cursos.length, 'únicos');
         }
         
         cursos.forEach((c) => {
             cursoFilter.append($("<option>", { value: c, text: c }));
         });
-        
-        console.log('📝 Opções adicionadas ao filtro de curso:', cursos.length);
-        console.log('📝 Curso filter agora tem:', cursoFilter.children().length, 'opções');
-        console.log('📝 Primeiras 5 opções:', cursos.slice(0, 5));
 
         // Populate consultores filter (apenas se for página do funil)
         if (isFunilPage && funilFiltrado.length > 0) {
-            console.log('🎯 POPULANDO CONSULTORES DO FUNIL');
             const consultoresFunil = funilFiltrado.map((d) => d.consultor || '').filter(c => c && c.trim() !== '' && c !== 'N/A');
             const consultores = [...new Set(consultoresFunil)].sort();
-            console.log('Consultores do funil (populateFilters):', consultores);
             
             consultores.forEach((c) => {
                 consultorFilter.append($("<option>", { value: c, text: c }));
             });
-            
-            console.log('📝 Opções adicionadas ao filtro de consultor:', consultores.length);
         }
 
         // Populate origem do lead filter (apenas se for página do funil)
         if (isFunilPage && funilFiltrado.length > 0) {
-            console.log('🎯 POPULANDO ORIGEM DO LEAD DO FUNIL');
             const origemLeadFunil = funilFiltrado.map((d) => d.origem_lead || '').filter(o => o && o.trim() !== '' && o !== 'N/A');
             const origensLead = [...new Set(origemLeadFunil)].sort();
-            console.log('Origens do lead do funil (populateFilters):', origensLead);
             
             origensLead.forEach((o) => {
                 origemLeadFilter.append($("<option>", { value: o, text: o }));
             });
-            
-            console.log('📝 Opções adicionadas ao filtro de origem do lead:', origensLead.length);
 
             // Populate segmentacao lead filter (apenas se for página do funil)
-            console.log('🎯 POPULANDO SEGMENTAÇÃO LEAD DO FUNIL');
             const segmentacaoLeadFunil = funilFiltrado.map((d) => d.segmentacao_lead || '').filter(s => s && s.trim() !== '' && s !== 'N/A');
             const segmentacoesLead = [...new Set(segmentacaoLeadFunil)].sort();
-            console.log('Segmentações do lead do funil (populateFilters):', segmentacoesLead);
             
             segmentacoesLead.forEach((s) => {
                 segmentacaoLeadFilter.append($("<option>", { value: s, text: s }));
             });
-            
-            console.log('📝 Opções adicionadas ao filtro de segmentação lead:', segmentacoesLead.length);
 
             // Populate etiquetas filter (apenas se for página do funil)
-            console.log('🎯 POPULANDO ETIQUETAS DO FUNIL');
             const etiquetasFunil = funilFiltrado.map((d) => d.etiquetas || '').filter(e => e && e.trim() !== '' && e !== 'N/A');
             const etiquetas = [...new Set(etiquetasFunil)].sort();
-            console.log('Etiquetas do funil (populateFilters):', etiquetas);
             
             etiquetas.forEach((e) => {
                 etiquetasFilter.append($("<option>", { value: e, text: e }));
             });
-            
-            console.log('📝 Opções adicionadas ao filtro de etiquetas:', etiquetas.length);
         }
 
         // Populate fundos filter (apenas se não deve ocultar FUNDOS)
@@ -5875,26 +6056,42 @@ function populateFilters(selectedUnidades = []) {
                     filterPlaceholder: "Pesquisar...",
                     nonSelectedText: "Todas as unidades",
                     nSelectedText: "unidades",
-                    allSelectedText: "Todas selecionadas",
+                    allSelectedText: "Todas",
                     buttonWidth: "100%",
                     maxHeight: 300,
                     onChange: function(option, checked) {
-                        console.log('Unidade onChange triggered:', option.val(), checked);
-                        const selectedOptions = $('#unidade-filter').val() || [];
-                        console.log('Selected unidades:', selectedOptions);
+                        // Limpar a seleção do filtro rápido quando há alteração manual
+                        if (lastQuickFilterSelection) {
+                            console.log('🔧 Limpando filtro rápido devido à seleção manual');
+                            lastQuickFilterSelection = null;
+                        }
                         updateDashboard();
                     },
                     onSelectAll: function() {
-                        console.log('Unidade onSelectAll triggered');
-                        const selectedOptions = $('#unidade-filter').val() || [];
+                        // Limpar a seleção do filtro rápido quando há seleção manual de todos
+                        if (lastQuickFilterSelection) {
+                            console.log('🔧 Limpando filtro rápido devido ao "Selecionar Todos"');
+                            lastQuickFilterSelection = null;
+                        }
                         updateDashboard();
                     },
                     onDeselectAll: function() {
-                        console.log('Unidade onDeselectAll triggered');
+                        // Limpar a seleção do filtro rápido quando há deseleção manual de todos
+                        if (lastQuickFilterSelection) {
+                            console.log('🔧 Limpando filtro rápido devido ao "Desselecionar Todos"');
+                            lastQuickFilterSelection = null;
+                        }
                         updateDashboard();
                     },
                     onDropdownShow: function(event) {
                         $(this.$select).closest('.filter-item').addClass('filter-item-active');
+                        
+                        // Fechar o filtro rápido se estiver aberto
+                        const quickPanel = document.getElementById('unidade-quick-panel');
+                        if (quickPanel && quickPanel.classList.contains('active')) {
+                            closeUnidadeQuickPanel();
+                            console.log('🔄 Fechando filtro rápido de unidades');
+                        }
                     },
                     onDropdownHide: function(event) {
                         $(this.$select).closest('.filter-item').removeClass('filter-item-active');
@@ -5910,14 +6107,23 @@ function populateFilters(selectedUnidades = []) {
                     }
                 });
                 
-                if (currentSelectedValues.length > 0) {
+                // CORREÇÃO: Aplicar as seleções corretas após inicialização
+                console.log('🔧 Aplicando seleções após inicialização multiselect:');
+                console.log('  - currentSelectedValues:', currentSelectedValues);
+                console.log('  - selectedUnidades:', selectedUnidades);
+                console.log('  - unidadesToSelect:', unidadesToSelect);
+                
+                // Se há seleções específicas, aplicá-las. Caso contrário, manter como está.
+                if (selectedUnidades.length > 0) {
+                    unidadeFilter.multiselect('deselectAll', false);
+                    unidadeFilter.multiselect('select', selectedUnidades);
+                    console.log('  - ✅ Seleções específicas aplicadas:', selectedUnidades);
+                } else if (currentSelectedValues.length > 0) {
                     unidadeFilter.multiselect('select', currentSelectedValues);
+                    console.log('  - ✅ Seleções anteriores restauradas:', currentSelectedValues);
                 }
 
-                // ADICIONE ESTA LINHA ABAIXO:
                 unidadeFilter.multiselect('refresh');
-                
-                console.log('Multiselect de unidades inicializado e ATUALIZADO com sucesso');
             } catch (error) {
                 console.error('Erro ao inicializar multiselect de unidades:', error);
             }
@@ -5928,10 +6134,9 @@ function populateFilters(selectedUnidades = []) {
                 try {
                     if (cursoFilter.data('multiselect')) {
                         cursoFilter.multiselect('destroy');
-                        console.log('🔄 Multiselect de curso destruído');
                     }
                 } catch (e) {
-                    console.log('🔄 Nenhum multiselect de curso para destruir');
+                    // Silencioso
                 }
                 
                 cursoFilter.multiselect({
