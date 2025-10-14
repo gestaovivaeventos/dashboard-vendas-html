@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Central Dashboards Viva Eventos</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.2/css/bootstrap.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="login-screen">
+        <div id="login-container">
+            <h1 class="page-title">Central de Dashboards</h1>
+            <section class="access-control" id="access-section">
+                <div class="login-heading">
+                    <h3 class="main-heading">Seja bem vindo!</h3>
+                    <p class="sub-heading">Faça o seu login</p>
+                </div>
+                <input type="text" id="access-code" maxlength="20" placeholder="Insira seu login">
+                <button id="submit-code">Entrar</button>
+                <p id="error-message">Login inválido!</p>
+            </section>
+            <img id="company-logo-login" src="Logo-viva.png" alt="Logo Viva Eventos">
+        </div>
+    </div>
+
+    <div class="main-wrapper" id="dashboard-wrapper">
+        <header class="header">
+            <h1>Central de Dashboards</h1>
+            <img src="Logo-viva.png" alt="Logo Viva Eventos">
+        </header>
+        <div class="dashboard-layout">
+            <nav class="dashboard-list" id="dashboard-list">
+                <div class="menu-group">
+                    <div class="menu-group-toggle">
+                        <span>Gestão por Resultados</span>
+                        <span class="arrow-icon">&#9660;</span>
+                    </div>
+                    <div class="sub-menu">
+                        <a href="#" class="dashboard-link" id="nav-link-okrs" data-target="preview-okrs">
+                            <span class="list-icon">&#127919;</span>OKRs e KPIs
+                            <span class="favorite-star"></span>
+                        </a>
+                        <a href="#" class="dashboard-link" data-original-target="_blank" data-target="preview-kpis-franquia">
+                            <span class="list-icon">&#128202;</span>Relatório Gerencial 
+                            <span class="favorite-star"></span>
+                        </a>
+                    </div>
+                </div>
+                <div class="menu-group">
+                    <div class="menu-group-toggle">
+                        <span>Dashboards Gerais</span>
+                        <span class="arrow-icon">&#9660;</span>
+                    </div>
+                    <div class="sub-menu">
+                        <a href="#" class="dashboard-link" id="nav-link-vendas" data-target="preview-vendas">
+                            <span class="list-icon">&#128200;</span>Dashboard de Vendas
+                            <span class="favorite-star"></span>
+                        </a>
+                        <a href="#" class="dashboard-link" data-original-target="_blank" data-target="preview-carteira">
+                            <span class="list-icon">&#128101;</span>Carteira de Clientes
+                            <span class="favorite-star"></span>
+                        </a>
+                        <a href="#" class="dashboard-link" data-original-target="_blank" data-target="preview-inadimplencia">
+                            <span class="list-icon">&#128201;</span>Inadimplência e Endividamento
+                            <span class="favorite-star"></span>
+                        </a>
+                        <a href="#" class="dashboard-link" data-original-target="_blank" data-target="preview-pesquisas">
+                            <span class="list-icon">&#128221;</span>Pesquisas NPS
+                            <span class="favorite-star"></span>
+                        </a>
+                        <a href="#" class="dashboard-link" data-original-target="_blank" data-target="preview-kpis">
+                            <span class="list-icon">&#128273;</span>Indicadores Chaves
+                            <span class="favorite-star"></span>
+                        </a>
+                        <a href="#" class="dashboard-link" data-original-target="_blank" data-target="preview-eventos">
+                            <span class="list-icon">&#128198;</span>Eventos
+                            <span class="favorite-star"></span>
+                        </a>
+                        <a href="#" class="dashboard-link" data-original-target="_blank" data-target="preview-academy">
+                            <span class="list-icon">&#127891;</span>Relatório Viva Academy
+                            <span class="favorite-star"></span>
+                        </a>
+                    </div>
+                </div>
+            </nav>
+
+            <div class="dashboard-preview-pane">
+                <div id="welcome-pane" class="preview-content active">
+                    <h2 id="welcome-greeting">Olá!</h2>
+                    <h2>Bem-vindo(a) à Central de Dashboards Viva Eventos!</h2>
+                    <p>
+                        Use o menu à esquerda para explorar os dashboards disponíveis.
+                        <br><br>
+                        <strong>Dica: Personalize seu Acesso Rápido!</strong><br> Clique no ícone de estrela ☆ ao lado do seu dashboard mais usado para marcá-lo como favorito.
+
+                        Da próxima vez que você fizer o login, o sistema te levará diretamente para ele, pulando esta tela de boas-vindas. É a forma mais rápida de acessar os dados que você mais precisa!
+                    </p>
+                </div>
+                <div id="preview-okrs" class="preview-content">
+                    <h2>OKRs Franqueadora</h2>
+                    <p>Acompanhamento dos Objetivos estratégicos da franqueadora.</p>
+                </div>
+                <div id="preview-kpis-franquia" class="preview-content">
+                    <h2>KPIs Franqueadora</h2>
+                    <p>Análise dos principais Indicadores de Performance da franqueadora.</p>
+                </div>
+                <div id="preview-vendas" class="preview-content">
+                    <h2>Dashboard de Vendas</h2>
+                    <p>Análise completa de metas, VVR, desempenho de vendas, funil de vendas e indicadores de performance, com filtros por período e unidade de negócio.</p>
+                </div>
+                <div id="preview-carteira" class="preview-content">
+                    <h2>Carteira de Clientes</h2>
+                    <p>Tenha uma visão geral da sua base de clientes, com segmentação detalhada, saúde da carteira, atingimento de MAC entre outros.</p>
+                </div>
+                <div id="preview-inadimplencia" class="preview-content">
+                    <h2>Inadimplência e Endividamento</h2>
+                    <p>Monitore a saúde financeira dos fundos. Analise os valores e índices de inadimplência e endividamento para identificar riscos, comparar performances e tomar ações estratégicas.</p>
+                </div>
+                <div id="preview-pesquisas" class="preview-content">
+                    <h2>Dashboard de Pesquisas</h2>
+                    <p>Visualize os resultados de pesquisas de satisfação, Net Promoter Score (NPS) semestral e pós eventos, e colete feedbacks valiosos dos seus clientes.</p>
+                </div>
+                <div id="preview-kpis" class="preview-content">
+                    <h2>Indicadores Chaves</h2>
+                    <p>Painel consolidado com os principais indicadores de performance da empresa para uma tomada de decisão rápida e eficaz.</p>
+                </div>
+                <div id="preview-eventos" class="preview-content">
+                    <h2>Dashboard de Eventos</h2>
+                    <p>Monitore métricas sobre a execução dos eventos, níveis de satisfação dos participantes e toda a logística operacional.</p>
+                </div>
+                <div id="preview-academy" class="preview-content">
+                    <h2>Relatório de Conclusão Viva Academy</h2>
+                    <p>Acompanhe o progresso e a conclusão dos treinamentos da plataforma Viva Academy por franqueado e colaborador.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+    <p class="central-footer">📊 Developed by Gestão de Dados - VIVA Eventos Brasil 2025</p>
+</body>
+</html>
