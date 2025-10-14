@@ -179,3 +179,5 @@ app.listen(PORT, () => {
     console.log(`\n✅ Servidor rodando com sucesso na porta ${PORT}`);
     console.log(`🚀 Acesse a aplicação localmente em http://localhost:${PORT}`);
 });
+
+// Forçando um novo push para o Vercel
