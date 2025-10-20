@@ -3761,40 +3761,35 @@ function updateDataTable(data) {
 
     data.forEach((d) => {
         const unidade = d.unidade;
-        // Filtra todas as vendas da unidade APENAS dentro do período selecionado.
-        // Antes era usado todo o mês (comparando YYYY-MM) o que fazia com que "Vendas" e "Pós-Venda"
-        // mostrassem o total do mês mesmo quando o usuário escolhia um intervalo parcial.
-        const vendasDoPeriodo = allData.filter((v) => {
-            if (!v || !v.nm_unidade || !v.dt_cadastro_integrante) return false;
-            if (v.nm_unidade !== d.unidade) return false;
-            if (!startDate || !endDate) return false;
-            return v.dt_cadastro_integrante >= startDate && v.dt_cadastro_integrante < endDate;
-        });
-        
+
+        // Se a unidade ainda não foi inicializada no mapa, calcular os valores realizados
+        // (Vendas / Pós-Vendas / Total) com base no intervalo selecionado APENAS UMA VEZ.
         if (!unidadesMap.has(unidade)) {
+            // Filtra todas as vendas da unidade APENAS dentro do período selecionado.
+            const vendasDoPeriodo = allData.filter((v) => {
+                if (!v || !v.nm_unidade || !v.dt_cadastro_integrante) return false;
+                if (v.nm_unidade !== unidade) return false;
+                if (!startDate || !endDate) return false;
+                return v.dt_cadastro_integrante >= startDate && v.dt_cadastro_integrante < endDate;
+            });
+
+            const realizadoVendas = vendasDoPeriodo.filter((v) => normalizeText(v.venda_posvenda) === "VENDA").reduce((sum, v) => sum + (v.vl_plano || 0), 0);
+            const realizadoPosVendas = vendasDoPeriodo.filter((v) => normalizeText(v.venda_posvenda) === "POS VENDA").reduce((sum, v) => sum + (v.vl_plano || 0), 0);
+            const realizadoTotalNoPeriodo = vendasDoPeriodo.reduce((sum, v) => sum + (v.vl_plano || 0), 0);
+
             unidadesMap.set(unidade, {
-                realizado_vendas: 0,
-                realizado_posvendas: 0,
-                realizado_total: 0,
+                realizado_vendas: realizadoVendas,
+                realizado_posvendas: realizadoPosVendas,
+                realizado_total: realizadoTotalNoPeriodo,
                 meta_vendas: 0,
                 meta_posvendas: 0,
                 meta_total: 0
             });
         }
-        
+
         const unidadeData = unidadesMap.get(unidade);
-        
-        // Acumular valores realizados
-        const realizadoVendas = vendasDoPeriodo.filter((v) => normalizeText(v.venda_posvenda) === "VENDA").reduce((sum, v) => sum + v.vl_plano, 0);
-        const realizadoPosVendas = vendasDoPeriodo.filter((v) => normalizeText(v.venda_posvenda) === "POS VENDA").reduce((sum, v) => sum + v.vl_plano, 0);
-        
-    unidadeData.realizado_vendas += realizadoVendas;
-    unidadeData.realizado_posvendas += realizadoPosVendas;
-    // Calcular total a partir das vendas filtradas pelo período (vendasDoPeriodo)
-    const realizadoTotalNoPeriodo = vendasDoPeriodo.reduce((sum, v) => sum + (v.vl_plano || 0), 0);
-    unidadeData.realizado_total += realizadoTotalNoPeriodo;
-        
-        // Acumular valores de meta
+
+        // Acumular valores de meta (meta são por período e devem ser somadas em múltiplos meses)
         unidadeData.meta_vendas += d.meta_vvr_vendas;
         unidadeData.meta_posvendas += d.meta_vvr_posvendas;
         unidadeData.meta_total += d.meta_vvr_total;
