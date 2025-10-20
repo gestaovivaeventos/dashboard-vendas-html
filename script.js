@@ -3748,9 +3748,28 @@ function updateDataTable(data) {
     const unidadesMap = new Map();
     const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     
+    // Recupera período selecionado (mesmo critério usado no restante do código)
+    const startDateInput = document.getElementById("start-date");
+    const endDateInput = document.getElementById("end-date");
+    let startDate = null, endDate = null;
+    if (startDateInput && endDateInput && startDateInput.value && endDateInput.value) {
+        const [sY, sM, sD] = startDateInput.value.split('-').map(Number);
+        const [eY, eM, eD] = endDateInput.value.split('-').map(Number);
+        startDate = new Date(sY, sM - 1, sD, 0, 0, 0, 0);
+        endDate = new Date(eY, eM - 1, eD, 23, 59, 59, 999);
+    }
+
     data.forEach((d) => {
         const unidade = d.unidade;
-        const vendasDoPeriodo = allData.filter((v) => v.nm_unidade === d.unidade && `${v.dt_cadastro_integrante.getFullYear()}-${String(v.dt_cadastro_integrante.getMonth() + 1).padStart(2, "0")}` === d.periodo);
+        // Filtra todas as vendas da unidade APENAS dentro do período selecionado.
+        // Antes era usado todo o mês (comparando YYYY-MM) o que fazia com que "Vendas" e "Pós-Venda"
+        // mostrassem o total do mês mesmo quando o usuário escolhia um intervalo parcial.
+        const vendasDoPeriodo = allData.filter((v) => {
+            if (!v || !v.nm_unidade || !v.dt_cadastro_integrante) return false;
+            if (v.nm_unidade !== d.unidade) return false;
+            if (!startDate || !endDate) return false;
+            return v.dt_cadastro_integrante >= startDate && v.dt_cadastro_integrante < endDate;
+        });
         
         if (!unidadesMap.has(unidade)) {
             unidadesMap.set(unidade, {
@@ -3769,9 +3788,11 @@ function updateDataTable(data) {
         const realizadoVendas = vendasDoPeriodo.filter((v) => normalizeText(v.venda_posvenda) === "VENDA").reduce((sum, v) => sum + v.vl_plano, 0);
         const realizadoPosVendas = vendasDoPeriodo.filter((v) => normalizeText(v.venda_posvenda) === "POS VENDA").reduce((sum, v) => sum + v.vl_plano, 0);
         
-        unidadeData.realizado_vendas += realizadoVendas;
-        unidadeData.realizado_posvendas += realizadoPosVendas;
-        unidadeData.realizado_total += d.realizado_vvr;
+    unidadeData.realizado_vendas += realizadoVendas;
+    unidadeData.realizado_posvendas += realizadoPosVendas;
+    // Calcular total a partir das vendas filtradas pelo período (vendasDoPeriodo)
+    const realizadoTotalNoPeriodo = vendasDoPeriodo.reduce((sum, v) => sum + (v.vl_plano || 0), 0);
+    unidadeData.realizado_total += realizadoTotalNoPeriodo;
         
         // Acumular valores de meta
         unidadeData.meta_vendas += d.meta_vvr_vendas;
