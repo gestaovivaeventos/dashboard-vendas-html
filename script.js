@@ -7428,13 +7428,31 @@ function updateConsultorTable(filteredData) {
         entry.total_adesoes += 1;
     });
 
-    const tableData = Array.from(performanceMap.values()).map((item) => [item.unidade, item.consultor, formatCurrency(item.vvr_total), item.total_adesoes]);
+    // 🔧 CORREÇÃO: Passar valor numérico bruto para permitir ordenação correta
+    const tableData = Array.from(performanceMap.values()).map((item) => [item.unidade, item.consultor, item.vvr_total, item.total_adesoes]);
 
     if (consultorDataTable) {
         consultorDataTable.clear().rows.add(tableData).draw();
     } else {
         consultorDataTable = $("#consultor-table").DataTable({
             data: tableData,
+            // 🔧 CORREÇÃO: Definir colunas com renderização para formatar VVR na exibição mas manter número para ordenação
+            columns: [
+                { title: "Unidade" },
+                { title: "Consultor Comercial" },
+                { 
+                    title: "VVR Total",
+                    render: function(data, type, row) {
+                        // Para ordenação e filtro, usar o valor numérico
+                        if (type === 'sort' || type === 'type') {
+                            return data;
+                        }
+                        // Para exibição, formatar como moeda
+                        return formatCurrency(data);
+                    }
+                },
+                { title: "Total de Adesões" }
+            ],
             pageLength: 10,
             language: {
                 sEmptyTable: "Nenhum registro disponível na tabela",
