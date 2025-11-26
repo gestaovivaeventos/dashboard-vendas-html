@@ -50,8 +50,6 @@ function filterSingleUnit(unitName) {
     
     // Salva a seleção na variável global para preservar entre mudanças de página
     lastQuickFilterSelection = [unitName];
-    console.log('💾 Salvando seleção do filtro rápido:', lastQuickFilterSelection);
-    
     // Desmarca todas as opções
     unidadeFilter.multiselect('deselectAll', false);
     
@@ -64,7 +62,6 @@ function filterSingleUnit(unitName) {
     // Atualiza o dashboard imediatamente
     updateDashboard();
 }
-
 
 
 // Armazena todas as unidades para filtrar
@@ -186,38 +183,21 @@ function initUnidadeQuickAccess() {
 function openUnidadeQuickPanel() {
     // Fechar o filtro normal de unidades se estiver aberto
     try {
-        console.log('🔍 Verificando se filtro normal está aberto...');
-        
         // Múltiplas estratégias para detectar e fechar o multiselect
         const unidadeFilterContainer = document.querySelector('.filter-item-unidades');
-        console.log('Container encontrado:', !!unidadeFilterContainer);
-        
         if (unidadeFilterContainer) {
             // Estratégia 1: Procurar por dropdown visível
             let dropdownFound = false;
             const allDropdowns = unidadeFilterContainer.querySelectorAll('.multiselect-container');
-            console.log('Dropdowns encontrados:', allDropdowns.length);
-            
             allDropdowns.forEach((dropdown, index) => {
-                console.log(`Dropdown ${index}:`, {
-                    classes: dropdown.className,
-                    display: dropdown.style.display,
-                    visible: dropdown.offsetHeight > 0
-                });
-                
                 if (dropdown.offsetHeight > 0 || dropdown.style.display === 'block' || dropdown.classList.contains('open')) {
                     dropdownFound = true;
-                    console.log('🎯 Dropdown aberto encontrado!');
                 }
             });
             
             // Estratégia 2: Verificar se há elementos com aria-expanded="true"
             const expandedElements = unidadeFilterContainer.querySelectorAll('[aria-expanded="true"]');
-            console.log('Elementos expandidos:', expandedElements.length);
-            
             if (dropdownFound || expandedElements.length > 0) {
-                console.log('🔄 Tentando fechar filtro normal...');
-                
                 // Tentar método jQuery primeiro
                 const normalUnidadeFilter = $("#unidade-filter");
                 if (normalUnidadeFilter.length > 0) {
@@ -226,7 +206,6 @@ function openUnidadeQuickPanel() {
                         const multiselectButton = unidadeFilterContainer.querySelector('.multiselect.dropdown-toggle');
                         if (multiselectButton) {
                             multiselectButton.click();
-                            console.log('✅ Filtro normal fechado via clique no botão');
                         } else {
                             // Fallback: forçar fechamento
                             allDropdowns.forEach(dropdown => {
@@ -234,24 +213,19 @@ function openUnidadeQuickPanel() {
                                 dropdown.classList.remove('open');
                             });
                             expandedElements.forEach(el => el.setAttribute('aria-expanded', 'false'));
-                            console.log('✅ Filtro normal fechado via DOM direto');
                         }
                     } catch (error) {
-                        console.log('❌ Erro no fechamento:', error);
                     }
                 }
             } else {
-                console.log('ℹ️ Nenhum filtro normal aberto detectado');
             }
         }
     } catch (error) {
-        console.log('❌ Erro geral:', error);
     }
     
     const panel = document.getElementById('unidade-quick-panel');
     if (panel && !panel.classList.contains('active')) {
         panel.classList.add('active');
-        console.log('✅ Filtro rápido aberto');
     }
 }
 
@@ -572,8 +546,6 @@ function alternarTipoMeta(ativarMetaInterna) {
         
         // Atualizar indicadores nos títulos
         atualizarIndicadoresTitulos('(Meta Interna)');
-        
-        console.log('✅ Meta INTERNA ativada (85%)');
     } else {
         isMetaInterna = false;
         
@@ -590,8 +562,6 @@ function alternarTipoMeta(ativarMetaInterna) {
         
         // Atualizar indicadores nos títulos
         atualizarIndicadoresTitulos('(Super Meta)');
-        
-        console.log('✅ SUPER META ativada (100%)');
     }
     
     // Recalcular e atualizar os KPIs
@@ -599,8 +569,6 @@ function alternarTipoMeta(ativarMetaInterna) {
 }
 
 function inicializarControlesMeta() {
-    console.log('🎯 Inicializando controles de meta...');
-    
     // Mostrar a seção de controle de meta
     const metaToggleSection = document.getElementById('meta-toggle-section');
     if (metaToggleSection) {
@@ -613,14 +581,10 @@ function inicializarControlesMeta() {
         checkbox.addEventListener('change', function() {
             alternarTipoMeta(this.checked);
         });
-        
-        console.log('✅ Event listener adicionado ao toggle switch');
     }
     
     // Inicializar no estado padrão (Super Meta)
     alternarTipoMeta(false);
-    
-    console.log('✅ Controles de meta inicializados');
 }
 
 let allData = [],
@@ -900,8 +864,6 @@ async function initializeDashboard() {
       // CORREÇÃO: Preservar seleção do filtro rápido ou seleção atual
       const currentUnidadesSelection = $("#unidade-filter").val() || [];
       const unidadesToPreserve = lastQuickFilterSelection || currentUnidadesSelection;
-      console.log('💾 Preservando seleção de unidades (inicialização):', unidadesToPreserve);
-      console.log('   - Filtro rápido ativo:', !!lastQuickFilterSelection);
       retryPopulateFilters(unidadesToPreserve);
       
       // 🆕 Aplicar visibilidade dos filtros específicos por página
@@ -1121,26 +1083,14 @@ async function fetchMetasData() {
         let metaLeadsIndex = headers.indexOf("meta_leads");
         if (metaLeadsIndex === -1) metaLeadsIndex = headers.indexOf("meta leads");
         if (metaLeadsIndex === -1) metaLeadsIndex = 8; // fallback para coluna I (índice 8)
-
-        console.log('🔍 Índice meta_leads detectado em:', metaLeadsIndex);
     // Detectar coluna meta_contratos (coluna K conforme informado)
     let metaContratosIndex = headers.indexOf("meta_contratos");
     if (metaContratosIndex === -1) metaContratosIndex = headers.indexOf("meta contratos");
     if (metaContratosIndex === -1) metaContratosIndex = 10; // fallback para coluna K (índice 10)
-    console.log('🔍 Índice meta_contratos detectado em:', metaContratosIndex);
     // Detectar coluna meta_reunioes (coluna J conforme informado)
     let metaReunioesIndex = headers.indexOf("meta_reunioes");
     if (metaReunioesIndex === -1) metaReunioesIndex = headers.indexOf("meta reunioes");
     if (metaReunioesIndex === -1) metaReunioesIndex = 9; // fallback para coluna J (índice 9)
-    console.log('🔍 Índice meta_reunioes detectado em:', metaReunioesIndex);
-
-    console.log('🔍 Índices das colunas:');
-    console.log(`  - nm_unidade: ${unidadeIndex}`);
-    console.log(`  - ano: ${anoIndex}`);
-    console.log(`  - mês: ${mesIndex}`);
-    console.log(`  - meta vvr_venda: ${metaVendasIndex}`);
-    console.log(`  - meta vvr_pos_venda: ${metaPosvendasIndex}`);
-
     let linhasProcessadas = 0;
     let vitoriaDaConquistaEncontrada = false;
     
@@ -1165,7 +1115,6 @@ async function fetchMetasData() {
               mes: mes,
               buscada: perdida
             });
-            console.log(`🎯 UNIDADE PERDIDA ENCONTRADA: ${perdida} -> linha ${index + 2}: "${unidade}"`);
           }
         });
       }
@@ -1173,11 +1122,6 @@ async function fetchMetasData() {
       // Debug específico para Vitória da Conquista
       if (unidade && unidade.includes('Vitória da Conquista')) {
         vitoriaDaConquistaEncontrada = true;
-        console.log(`🎯 VITÓRIA DA CONQUISTA ENCONTRADA na linha ${index + 2}:`);
-        console.log(`  - unidade: "${unidade}"`);
-        console.log(`  - ano: "${ano}"`);
-        console.log(`  - mes: "${mes}"`);
-        console.log(`  - row completa:`, row);
       }
       
       const parseMetaValue = (index) => parseFloat(String(row[index] || "0").replace(/\./g, "").replace(",", ".")) || 0;
@@ -1192,12 +1136,6 @@ async function fetchMetasData() {
       const deveProcessar = temUnidade && temAno && temMes;
       
       if (unidade && unidadesPerdidas.some(perdida => unidade.toLowerCase().includes(perdida.split(' ')[0]))) {
-        console.log(`🔍 VALIDAÇÃO linha ${index + 2} (${unidade}):`);
-        console.log(`  - unidade: "${unidade}" (válida: ${temUnidade})`);
-        console.log(`  - ano: "${ano}" (válido: ${temAno})`);
-        console.log(`  - mes: "${mes}" (válido: ${temMes})`);
-        console.log(`  - deve processar: ${deveProcessar}`);
-        console.log(`  - row:`, row);
       }
       
                     if (deveProcessar) {
@@ -1217,22 +1155,10 @@ async function fetchMetasData() {
                         linhasProcessadas++;
                     }
     });
-    
-    console.log(`🔍 Linhas processadas: ${linhasProcessadas}`);
-    console.log(`🔍 Total de metas carregadas: ${metasMap.size}`);
-    console.log(`🔍 Vitória da Conquista encontrada: ${vitoriaDaConquistaEncontrada}`);
-    
     // Resumo das unidades perdidas
-    console.log('📊 RESUMO DAS UNIDADES PERDIDAS:');
-    console.log(`  - Total buscadas: ${unidadesPerdidas.length}`);
-    console.log(`  - Total encontradas: ${unidadesEncontradas.length}`);
-    console.log('  - Unidades encontradas:', unidadesEncontradas);
-    
     const naoEncontradas = unidadesPerdidas.filter(perdida => 
       !unidadesEncontradas.some(enc => enc.buscada === perdida)
     );
-    console.log('  - Unidades NÃO encontradas:', naoEncontradas);
-    
     return metasMap;
   } catch (error) {
     console.error("Erro CRÍTICO ao buscar metas:", error);
@@ -1242,24 +1168,14 @@ async function fetchMetasData() {
 
 // --- NOVO: FUNÇÃO PARA CARREGAR DADOS DO FUNIL ---
 async function fetchFunilData() {
-  console.log("=== INÍCIO fetchFunilData ===");
-  console.log("FUNIL_SPREADSHEET_ID:", FUNIL_SPREADSHEET_ID);
-  console.log("FUNIL_SHEET_NAME:", FUNIL_SHEET_NAME);
-  console.log("API_KEY existe:", !!API_KEY);
-  
   if (!FUNIL_SPREADSHEET_ID || !FUNIL_SHEET_NAME || !API_KEY) {
     console.error("❌ Configurações da planilha do funil incompletas.");
     return [];
   }
   
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${FUNIL_SPREADSHEET_ID}/values/${FUNIL_SHEET_NAME}?key=${API_KEY}`;
-  console.log("URL da API:", url);
-  
   try {
-    console.log("Fazendo requisição para a API...");
     const response = await fetch(url);
-    console.log("Status da resposta:", response.status);
-    
     if (!response.ok) {
       const errorData = await response.json();
       console.error("❌ Erro API Google Sheets para funil:", errorData);
@@ -1267,20 +1183,12 @@ async function fetchFunilData() {
     }
     
     const data = await response.json();
-    console.log("Dados recebidos da API:", data);
-    
     const rows = data.values || [];
-    console.log("Número de linhas recebidas:", rows.length);
-    
     if (rows.length === 0) {
-      console.log("❌ Nenhuma linha encontrada na planilha");
       return [];
     }
     
     const headers = rows[0];
-    console.log("Headers da planilha:", headers);
-    console.log("Primeira linha completa:", rows[0]);
-    
     // Encontrar índices das colunas importantes
     const tituloIndex = 0; // Coluna A - Título
     const fasePerdidoIndex = 1; // Coluna B - Fase 7.2 Perdido
@@ -1314,7 +1222,6 @@ async function fetchFunilData() {
     headers.forEach((header, index) => {
       if (header && (header.toLowerCase().includes('nm_unidade') || header.toLowerCase().includes('unidade'))) {
         unidadeIndex = index;
-        console.log(`✅ Coluna unidade encontrada: "${header}" no índice ${index}`);
       }
     });
     
@@ -1322,44 +1229,14 @@ async function fetchFunilData() {
       console.warn("⚠️ Coluna nm_unidade não encontrada, tentando índice 72 como fallback");
       unidadeIndex = 72;
     }
-    
-    console.log("Índices - Título:", tituloIndex, "Fase Perdido:", fasePerdidoIndex, "Curso:", cursoIndex, "Origem Lead:", origemLeadIndex, "Criado em:", criadoEmIndex, "Qualificação Comissão:", qualificacaoComissaoIndex, "Diagnóstico Realizado:", diagnosticoRealizadoIndex, "Proposta Enviada:", propostaEnviadaIndex, "Fechamento Comissão:", fechamentoComissaoIndex, "CONCAT Motivo Perda:", concatMotivoPerdaIndex, "CONCAT Concorrente:", concatConcorrenteIndex, "Unidade:", unidadeIndex);
-    
     if (rows.length > 1) {
-      console.log("Segunda linha como exemplo:", rows[1]);
-      console.log("Título (A):", rows[1][tituloIndex]);
-      console.log("Fase Perdido (B):", rows[1][fasePerdidoIndex]);
-      console.log("Curso (D):", rows[1][cursoIndex]);
-      console.log("Origem Lead (G):", rows[1][origemLeadIndex]);
-      console.log("Criado em (M):", rows[1][criadoEmIndex]);
-      console.log("Consultor (BB):", rows[1][consultorIndex]);
-      
       // Debug específico da coluna D (curso)
-      console.log("🔍 DEBUG COLUNA D (CURSO):");
-      console.log("Header da coluna D:", headers[cursoIndex]);
-      console.log("Índice da coluna curso:", cursoIndex);
-      console.log("Valor na linha 2, coluna D:", rows[1][cursoIndex]);
-      console.log("Primeiras 5 linhas da coluna D:");
       for (let i = 1; i <= Math.min(5, rows.length - 1); i++) {
-        console.log(`  Linha ${i + 1}: "${rows[i][cursoIndex]}"`);
       }
       
       // Debug específico da coluna BB (consultor)
-      console.log("🔍 DEBUG COLUNA BB (CONSULTOR):");
-      console.log("Header da coluna BB:", headers[consultorIndex]);
-      console.log("Índice da coluna consultor:", consultorIndex);
-      console.log("Valor na linha 2, coluna BB:", rows[1][consultorIndex]);
-      console.log("Primeiras 5 linhas da coluna BB:");
       for (let i = 1; i <= Math.min(5, rows.length - 1); i++) {
-        console.log(`  Linha ${i + 1}: "${rows[i][consultorIndex]}"`);
       }
-      
-      console.log("Qualificação Comissão (BF):", rows[1][qualificacaoComissaoIndex]);
-      console.log("Diagnóstico Realizado (BH):", rows[1][diagnosticoRealizadoIndex]);
-      console.log("Proposta Enviada (BJ):", rows[1][propostaEnviadaIndex]);
-      console.log("Fechamento Comissão (BM):", rows[1][fechamentoComissaoIndex]);
-      console.log("CONCAT Motivo Perda (BS):", rows[1][concatMotivoPerdaIndex]);
-      console.log("Unidade (BU):", rows[1][unidadeIndex]);
     }
     
     // Primeiro, processar todos os dados sem filtrar
@@ -1393,48 +1270,24 @@ async function fetchFunilData() {
       perda_51: row[perda51Index] || '',
       row_data: row
     }));
-    
-    console.log("📊 Total de linhas processadas (sem filtro):", allProcessedData.length);
-    
     // Agora filtrar apenas os com título válido
     const processedData = allProcessedData.filter(item => item.titulo && item.titulo.trim() !== '');
-    
-    console.log("📊 Registros com título válido:", processedData.length);
-    console.log("📊 Registros removidos por título vazio:", allProcessedData.length - processedData.length);
-    
     // Debug: mostrar alguns registros sem título
     const semTitulo = allProcessedData.filter(item => !item.titulo || item.titulo.trim() === '');
     if (semTitulo.length > 0) {
-      console.log("⚠️ Amostra de registros sem título (removidos):");
       semTitulo.slice(0, 3).forEach((item, index) => {
-        console.log(`  ${index + 1}. Linha ${item.id}: título="${item.titulo}" | unidade="${item.nm_unidade}" | criado="${item.criado_em}"`);
       });
     }
-    
-    console.log("Dados processados:", processedData.length, "registros válidos");
     if (processedData.length > 0) {
-      console.log("Primeiro registro processado:", processedData[0]);
-      
       // Debug: mostrar todas as unidades encontradas
       const unidadesEncontradas = [...new Set(processedData.map(item => item.nm_unidade).filter(Boolean))];
-      console.log("🏢 Unidades encontradas na planilha:", unidadesEncontradas);
-      
       // Debug: contar por unidade
       const contadorPorUnidade = {};
       processedData.forEach(item => {
         const unidade = item.nm_unidade || 'SEM_UNIDADE';
         contadorPorUnidade[unidade] = (contadorPorUnidade[unidade] || 0) + 1;
       });
-      console.log("📊 Contagem por unidade:", contadorPorUnidade);
-      
-      console.log("Amostra de títulos:", processedData.slice(0, 3).map(item => ({
-        titulo: item.titulo,
-        unidade: item.nm_unidade,
-        criado_em: item.criado_em
-      })));
     }
-    
-    console.log("=== FIM fetchFunilData ===");
     return processedData;
   } catch (error) {
     console.error("❌ Erro CRÍTICO ao buscar dados do funil:", error);
@@ -1464,8 +1317,6 @@ function processAndCrossReferenceData(salesData, startDate, endDate, selectedUni
 
   // 🆕 Segundo: Adicionar unidades que só têm metas (sem vendas) DENTRO DO PERÍODO
   if (metasData && metasData.size > 0 && startDate && endDate) {
-    console.log('🔍 Adicionando unidades só com metas ao período:', startDate, 'até', endDate);
-    
     metasData.forEach((meta, chaveMeta) => {
       if (!vendasPorMesUnidade[chaveMeta]) {
         // Extrair unidade e período da chave (formato: "Unidade-AAAA-MM")
@@ -1485,7 +1336,6 @@ function processAndCrossReferenceData(salesData, startDate, endDate, selectedUni
             const unidadePermitida = selectedUnidades.length === 0 || selectedUnidades.includes(unidade);
             
             if (noPeriodo && unidadePermitida) {
-              console.log(`✅ Adicionando unidade só com meta: ${unidade} - ${periodo}`);
               vendasPorMesUnidade[chaveMeta] = {
                 unidade: unidade,
                 periodo: periodo,
@@ -1493,7 +1343,6 @@ function processAndCrossReferenceData(salesData, startDate, endDate, selectedUni
                 realizado_adesoes: 0,
               };
             } else {
-              console.log(`❌ Meta excluída - Período: ${noPeriodo}, Filtro: ${unidadePermitida} - ${unidade} - ${periodo}`);
             }
           }
         }
@@ -1515,14 +1364,6 @@ function processAndCrossReferenceData(salesData, startDate, endDate, selectedUni
 }
 
 function updateMainKPIs(dataBruta, selectedUnidades, startDate, endDate, retryCount = 0) {
-    console.log('� updateMainKPIs INICIADA - dados recebidos:', dataBruta.length, 'registros');
-    console.log('  - selectedUnidades:', selectedUnidades);
-    console.log('  - selectedUnidades length:', selectedUnidades.length);
-    console.log('  - userAccessLevel:', userAccessLevel);
-    console.log('  - startDate:', startDate);
-    console.log('  - endDate:', endDate);
-    console.log('  - retryCount:', retryCount);
-    
     // ✅ CORREÇÃO: Sempre calcular KPIs, mesmo sem metas (metas ficam zeradas)
     if (!metasData) {
         console.warn('⚠️ Metas não disponíveis - KPIs serão calculados apenas com valores realizados');
@@ -1533,18 +1374,8 @@ function updateMainKPIs(dataBruta, selectedUnidades, startDate, endDate, retryCo
     const isSelectingFutureOnly = startDate >= today;
     const dadosPassadoKPI = dataBruta.filter(d => d.dt_cadastro_integrante < today);
     const dadosFuturoKPI = dataBruta.filter(d => d.dt_cadastro_integrante >= today);
-    
-    console.log('🚨 TESTE KPIs COM DATAS FUTURAS:');
-    console.log('  📅 Período:', startDate.toISOString().split('T')[0], 'até', endDate.toISOString().split('T')[0]);
-    console.log('  📅 Só futuro?', isSelectingFutureOnly);
-    console.log('  📊 Total dados para KPI:', dataBruta.length);
-    console.log('  📊 Dados passado/presente:', dadosPassadoKPI.length);
-    console.log('  📊 Dados futuro:', dadosFuturoKPI.length);
-    
     if (dadosFuturoKPI.length > 0) {
-        console.log('  💰 Valores futuros para KPI:');
         dadosFuturoKPI.slice(0, 3).forEach((d, i) => {
-            console.log(`    [${i}] ${d.dt_cadastro_integrante.toISOString().split('T')[0]} - R$${d.vl_plano} - ${d.venda_posvenda}`);
         });
     }
     
@@ -1563,44 +1394,25 @@ function updateMainKPIs(dataBruta, selectedUnidades, startDate, endDate, retryCo
     const normalizeText = (text) => text?.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
     // 🔍 DEBUG CRÍTICO: Verificar dados recebidos
-    console.log('🔍 DEBUG DADOS KPI:');
-    console.log('  - dataBruta.length:', dataBruta.length);
-    console.log('  - startDate:', startDate);  
-    console.log('  - endDate:', endDate);
-    
     if (dataBruta.length > 0) {
-        console.log('  - Primeira data exemplo:', dataBruta[0].dt_cadastro_integrante);
-        console.log('  - Últimas 3 datas:', dataBruta.slice(-3).map(d => d.dt_cadastro_integrante));
-        
         // Verificar quantos registros estão no período de outubro/2025
         const outubr2025 = dataBruta.filter(d => {
             const data = d.dt_cadastro_integrante;
             return data.getFullYear() === 2025 && data.getMonth() === 9; // Outubro = mês 9
         });
-        console.log('  - Registros de outubro/2025:', outubr2025.length);
-        
         if (outubr2025.length > 0) {
-            console.log('  - Valores outubro/2025:', outubr2025.map(d => ({data: d.dt_cadastro_integrante, valor: d.vl_plano})));
         }
     }
 
     const realizadoVendas = dataBruta.filter((d) => normalizeText(d.venda_posvenda) === "VENDA").reduce((sum, d) => sum + d.vl_plano, 0);
     const realizadoPosVendas = dataBruta.filter((d) => normalizeText(d.venda_posvenda) === "POS VENDA").reduce((sum, d) => sum + d.vl_plano, 0);
     const realizadoTotal = realizadoVendas + realizadoPosVendas;
-    
-    console.log('� RESULTADO KPIs:');
-    console.log('  - realizadoVendas:', realizadoVendas);
-    console.log('  - realizadoPosVendas:', realizadoPosVendas);
-    console.log('  - realizadoTotal:', realizadoTotal);
-
     let metaVendas = 0;
     let metaPosVendas = 0;
     
     // --- TRAVA DE SEGURANÇA DEFINITIVA DENTRO DA FUNÇÃO ---
     // Só calcula a meta se o usuário for admin OU se for um franqueado com unidades selecionadas.
     const canCalculateMeta = (userAccessLevel === 'ALL_UNITS' || selectedUnidades.length > 0);
-    console.log('🔍 canCalculateMeta:', canCalculateMeta);
-
     if (canCalculateMeta && metasData && metasData.size > 0) {
         // 🆕 CORREÇÃO: Para cálculo de metas, devemos incluir TODAS as unidades com meta,
         // não apenas as que têm vendas!
@@ -1611,31 +1423,17 @@ function updateMainKPIs(dataBruta, selectedUnidades, startDate, endDate, retryCo
             const unidadesComMeta = [...new Set(Array.from(metasData.keys()).map(key => key.split("-")[0]))];
             const unidadesComVenda = [...new Set(allData.map(d => d.nm_unidade))];
             unitsToConsider = [...new Set([...unidadesComMeta, ...unidadesComVenda])];
-            console.log('🔍 Admin sem filtro - unidades com META:', unidadesComMeta);
-            console.log('🔍 Admin sem filtro - unidades com VENDA:', unidadesComVenda);
         } else {
             // Usuário específico ou admin com filtro: usa as unidades selecionadas
             unitsToConsider = selectedUnidades;
         }
-        
-        console.log('🔍 unitsToConsider FINAL:', unitsToConsider);
-        console.log('🔍 unitsToConsider length:', unitsToConsider.length);
-        
         // 🆕 Debug: Mostrar todas as unidades disponíveis
         const todasUnidades = [...new Set(allData.map(d => d.nm_unidade))];
-        console.log('🔍 Todas as unidades disponíveis:', todasUnidades);
-        console.log('🔍 Total de unidades disponíveis:', todasUnidades.length);
-
         // 🆕 Debug específico: Verificar dados de meta para Vitória da Conquista
-        console.log('🔍 DEBUG VITÓRIA DA CONQUISTA:');
-        console.log('  - Procurando por "Vitória da Conquista" em todasUnidades...');
         const vitoriaNasUnidades = todasUnidades.filter(u => 
             u.includes('Vitória') || u.includes('Conquista') || 
             u.toLowerCase().includes('vitoria') || u.toLowerCase().includes('conquista')
         );
-        console.log('  - Unidades com "Vitória/Conquista":', vitoriaNasUnidades);
-        
-        console.log('  - Procurando por "Vitória da Conquista" em metasData...');
         const vitoriaNasMetas = [];
         metasData.forEach((metaInfo, key) => {
             const [unidade, ano, mes] = key.split("-");
@@ -1653,7 +1451,6 @@ function updateMainKPIs(dataBruta, selectedUnidades, startDate, endDate, retryCo
             }
         });
         // 🆕 Debug específico para Vitória da Conquista (com e sem acento)
-        console.log('🔍 PROCURANDO VITORIA DA CONQUISTA (sem acento):');
         const vitoriaNasMetasSimplificado = [];
         metasData.forEach((metaInfo, key) => {
             const [unidade, ano, mes] = key.split("-");
@@ -1663,15 +1460,9 @@ function updateMainKPIs(dataBruta, selectedUnidades, startDate, endDate, retryCo
                     unidade: unidade,
                     total: metaInfo.meta_vvr_vendas + metaInfo.meta_vvr_posvendas
                 });
-                console.log(`🎯 ENCONTROU: ${key} = ${metaInfo.meta_vvr_vendas + metaInfo.meta_vvr_posvendas}`);
             }
         });
-        console.log('🔍 Total de metas Vitoria da Conquista:', vitoriaNasMetasSimplificado.length);
-
         let metasEncontradas = 0;
-        
-        console.log('🔍 BUSCANDO METAS PARA UNIDADES SELECIONADAS:');
-        
         // 🔧 APLICAR LÓGICA EXATA DOS INDICADORES OPERACIONAIS QUE FUNCIONA
         const unidadesSelecionadasNorm = unitsToConsider.map(u => u ? u.toString().toLowerCase().trim() : '');
         metasData.forEach((metaInfo, chave) => {
@@ -1687,13 +1478,11 @@ function updateMainKPIs(dataBruta, selectedUnidades, startDate, endDate, retryCo
                     metaVendas += (metaInfo.meta_vvr_vendas || 0);
                     metaPosVendas += (metaInfo.meta_vvr_posvendas || 0);
                     metasEncontradas++;
-                    console.log(`✅ Meta encontrada: ${unidadeMetaRaw}-${anoMeta}-${mesMeta} = ${(metaInfo.meta_vvr_vendas || 0) + (metaInfo.meta_vvr_posvendas || 0)}`);
                 }
             }
         });
         
         // 🆕 Debug: Verificar quais unidades NÃO têm meta
-        console.log('❌ UNIDADES SEM META:');
         unitsToConsider.forEach(unit => {
             const temMeta = Array.from(metasData.keys()).some(key => {
                 const [unidade, ano, mes] = key.split("-");
@@ -1702,13 +1491,8 @@ function updateMainKPIs(dataBruta, selectedUnidades, startDate, endDate, retryCo
             });
             
             if (!temMeta) {
-                console.log(`  - "${unit}" não tem meta cadastrada no período`);
             }
         });
-        
-        console.log('🔍 Total de metas encontradas:', metasEncontradas);
-        console.log('🔍 metaVendas:', metaVendas);
-        console.log('🔍 metaPosVendas:', metaPosVendas);
     }
     // Se 'canCalculateMeta' for falso, as metas permanecerão 0.
 
@@ -1721,15 +1505,6 @@ function updateMainKPIs(dataBruta, selectedUnidades, startDate, endDate, retryCo
     metaPosVendas = aplicarMultiplicadorMeta(metaPosVendas);
     
     const metaTotal = metaVendas + metaPosVendas;
-    
-    console.log('🎯 CONTROLE DE METAS:');
-    console.log('  - Tipo de meta:', isMetaInterna ? 'INTERNA (85%)' : 'FRANQUIA (100%)');
-    console.log('  - Meta Vendas (original):', formatCurrency(metaVendasOriginal));
-    console.log('  - Meta Vendas (aplicada):', formatCurrency(metaVendas));
-    console.log('  - Meta Pós-Vendas (original):', formatCurrency(metaPosVendasOriginal));
-    console.log('  - Meta Pós-Vendas (aplicada):', formatCurrency(metaPosVendas));
-    console.log('  - Meta Total (aplicada):', formatCurrency(metaTotal));
-    
     const percentTotal = metaTotal > 0 ? realizadoTotal / metaTotal : 0;
     const percentVendas = metaVendas > 0 ? realizadoVendas / metaVendas : 0;
     const percentPosVendas = metaPosVendas > 0 ? realizadoPosVendas / metaPosVendas : 0;
@@ -1823,11 +1598,6 @@ function updatePreviousYearKPIs(dataBruta, selectedUnidades, startDate, endDate)
     metaPosVendas = aplicarMultiplicadorMeta(metaPosVendas);
     
     const metaTotal = metaVendas + metaPosVendas;
-    
-    console.log('🎯 CONTROLE DE METAS (ANO ANTERIOR):');
-    console.log('  - Tipo de meta:', isMetaInterna ? 'INTERNA (85%)' : 'FRANQUIA (100%)');
-    console.log('  - Meta Total (aplicada):', formatCurrency(metaTotal));
-    
     const percentTotal = metaTotal > 0 ? realizadoTotal / metaTotal : 0;
     const percentVendas = metaVendas > 0 ? realizadoVendas / metaVendas : 0;
     const percentPosVendas = metaPosVendas > 0 ? realizadoPosVendas / metaPosVendas : 0;
@@ -1866,13 +1636,7 @@ function updatePreviousYearKPIs(dataBruta, selectedUnidades, startDate, endDate)
 // ...
 
 function updateDashboard() {
-    console.log('🔍 updateDashboard called');
     const selectedUnidades = $("#unidade-filter").val() || [];
-    console.log('🔍 Selected unidades in updateDashboard:', selectedUnidades);
-    console.log('🔍 userAccessLevel:', userAccessLevel);
-    console.log('🔍 Type of userAccessLevel:', typeof userAccessLevel);
-    console.log('🔍 Is array?', Array.isArray(userAccessLevel));
-    
     // 🆕 CORREÇÃO: Determinar selectedUnidades baseado no tipo de usuário
     let finalSelectedUnidades = selectedUnidades;
     
@@ -1886,28 +1650,16 @@ function updateDashboard() {
             
             // 🆕 CORREÇÃO CRÍTICA: Combinar TODAS as unidades
             finalSelectedUnidades = [...new Set([...unidadesVendas, ...unidadesMetas, ...unidadesFundos, ...unidadesFunil])];
-            
-            console.log('🔍 Admin sem seleção - TODAS as unidades:');
-            console.log('  - Vendas:', unidadesVendas.length);
-            console.log('  - Metas:', [...new Set(unidadesMetas)].length);
-            console.log('  - Fundos:', unidadesFundos.length);
-            console.log('  - Funil:', unidadesFunil.length);
-            console.log('  - TOTAL FINAL:', finalSelectedUnidades.length);
         }
     } else if (Array.isArray(userAccessLevel)) {
         // Multi-franqueado: se não selecionou nada, usar suas unidades
         if (selectedUnidades.length === 0) {
             finalSelectedUnidades = userAccessLevel;
-            console.log('🔍 Multi-franqueado sem seleção - usando suas unidades:', finalSelectedUnidades);
         }
     } else if (typeof userAccessLevel === 'string') {
         // Franqueado único: sempre usar sua unidade
         finalSelectedUnidades = [userAccessLevel];
-        console.log('🔍 Franqueado único - usando sua unidade:', finalSelectedUnidades);
     }
-    
-    console.log('🔍 Final selectedUnidades para cálculos:', finalSelectedUnidades);
-    
     const selectedCursos = $("#curso-filter").val() || [];
     const selectedFundos = $("#fundo-filter").val() || [];
     
@@ -1920,10 +1672,6 @@ function updateDashboard() {
     } else if (document.getElementById('btn-page3')?.classList.contains('active')) {
         currentActivePage = 'page3';
     }
-    
-    console.log('🔍 Página ativa detectada:', currentActivePage);
-    console.log('🔍 Valor BRUTO do filtro de fundos:', selectedFundos);
-    
     // 🚨 FILTRO DE FUNDOS - aplicar APENAS na página 2
     let selectedTipoAdesao, selectedTipoServico, selectedTipoCliente, selectedConsultorComercial, selectedIndicacaoAdesao, selectedInstituicao, selectedFundosForFiltering;
     
@@ -1937,7 +1685,6 @@ function updateDashboard() {
         selectedConsultorComercial = [];
         selectedIndicacaoAdesao = [];
         selectedInstituicao = [];
-        console.log('🔍 🛑 PÁGINAS 1/3 - FORÇANDO filtro de fundos VAZIO (ignorando valor:', selectedFundos, ')');
     } else {
         // ✅ PÁGINA 2: Aplicar filtro de fundos + filtros específicos
         selectedTipoAdesao = $("#tipo-adesao-filter").val() || [];
@@ -1947,44 +1694,17 @@ function updateDashboard() {
         selectedIndicacaoAdesao = $("#indicacao-adesao-filter").val() || [];
         selectedInstituicao = $("#instituicao-filter").val() || [];
         selectedFundosForFiltering = selectedFundos; // APLICAR filtro de fundos na página 2
-        console.log('🔍 ✅ PÁGINA 2 - aplicando filtro de fundos:', selectedFundos);
     }
-    
-    console.log('🔍 Filtros aplicados:');
-    console.log('  - Unidades (sempre):', finalSelectedUnidades.length, finalSelectedUnidades);
-    console.log('  - Cursos (sempre):', selectedCursos.length, selectedCursos);
-    console.log('  - 🎯 FUNDOS (APENAS página 2) - filtrando por nm_fundo:', selectedFundosForFiltering.length, selectedFundosForFiltering);
-    console.log('  - Página 2 específicos - TipoAdesao:', selectedTipoAdesao.length, 'TipoServico:', selectedTipoServico.length, 'Instituicao:', selectedInstituicao.length);
-    
     // 🆕 DEBUG: Verificar se há dados com nm_fundo nos dados de adesões
     if (currentActivePage === 'page2' && selectedFundosForFiltering.length > 0) {
         // 🆕 DEBUG DETALHADO: Verificar estrutura real dos dados
-        console.log('🔍 DEBUG ESTRUTURA DOS DADOS:');
-        console.log('📋 ADESÕES - Exemplo de registro completo:', allData[0]);
-        console.log('📋 ADESÕES - Campos relacionados a fundo:');
-        console.log('  - nm_fundo:', allData[0]?.nm_fundo);
-        console.log('  - curso_fundo:', allData[0]?.curso_fundo);
-        
         const totalAdesoes = allData.length;
         const adesoesComNmFundo = allData.filter(d => d.nm_fundo && d.nm_fundo !== 'N/A' && d.nm_fundo.trim() !== '').length;
         const adesoesComCursoFundo = allData.filter(d => d.curso_fundo && d.curso_fundo !== 'N/A' && d.curso_fundo.trim() !== '').length;
-        
-        console.log('� CONTAGEM ADESÕES:');
-        console.log('  - Total adesões:', totalAdesoes);
-        console.log('  - Adesões com nm_fundo válido:', adesoesComNmFundo);
-        console.log('  - Adesões com curso_fundo válido:', adesoesComCursoFundo);
-        
-        console.log('📝 EXEMPLOS nm_fundo (primeiros 10):');
         allData.slice(0, 10).forEach((d, i) => {
-            console.log(`  [${i}] nm_fundo: "${d.nm_fundo}"`);
         });
-        
-        console.log('📝 EXEMPLOS curso_fundo (primeiros 10):');
         allData.slice(0, 10).forEach((d, i) => {
-            console.log(`  [${i}] curso_fundo: "${d.curso_fundo}"`);
         });
-        
-        console.log('🎯 Filtro de fundos selecionado:', selectedFundosForFiltering);
     }
     
     const startDateString = document.getElementById("start-date").value;
@@ -2132,17 +1852,8 @@ function getSolidColorForPercentage(percent) {
         const dadosFuturo = dataBrutaFiltrada.filter(d => d.dt_cadastro_integrante >= today);
         
         if (isSelectingFutureOnly || dadosFuturo.length > 0) {
-            console.log('� TESTE DATAS FUTURAS:');
-            console.log('  📅 Período selecionado:', startDate.toISOString().split('T')[0], 'até', endDate.toISOString().split('T')[0]);
-            console.log('  📅 Só futuro?', isSelectingFutureOnly);
-            console.log('  📊 Total dados filtrados:', dataBrutaFiltrada.length);
-            console.log('  📊 Dados passado/presente:', dadosPassado.length);
-            console.log('  📊 Dados futuro:', dadosFuturo.length);
-            
             if (dadosFuturo.length > 0) {
-                console.log('  💰 Valores futuros encontrados:');
                 dadosFuturo.slice(0, 3).forEach((d, i) => {
-                    console.log(`    [${i}] ${d.dt_cadastro_integrante.toISOString().split('T')[0]} - R$${d.vl_plano} - ${d.venda_posvenda} - ${d.nm_unidade}`);
                 });
             }
         }
@@ -2196,7 +1907,6 @@ function getSolidColorForPercentage(percent) {
 
         // ✅ Log simples para verificar filtro de fundos
         if (currentActivePage === 'page2' && selectedFundosForFiltering.length > 0) {
-            console.log('🎯 FILTRO ATIVO | Fundos:', selectedFundosForFiltering.length, '| Dados antes:', allData.length, '| Dados depois:', allDataForOtherCharts.length);
         }
 
         // Filtrar dados de fundos usando dt_contrato
@@ -2380,8 +2090,6 @@ function getSolidColorForPercentage(percent) {
                               document.getElementById('page3')?.classList.contains('active');
         
         if (isFunilPageNow && funilData && funilData.length > 0) {
-            console.log('🔄 updateDashboard: Atualizando filtros do funil para o período selecionado...');
-            
             // Filtrar funil por unidade
             let funilPorUnidade = funilData.filter(d => finalSelectedUnidades.length === 0 || finalSelectedUnidades.includes(d.nm_unidade));
             
@@ -2397,9 +2105,6 @@ function getSolidColorForPercentage(percent) {
                 }
                 return criadoDate && criadoDate >= startDate && criadoDate < endDate;
             });
-            
-            console.log('🔄 Funil filtrado por período:', funilFiltradoFinal.length, 'registros');
-            
             // Atualizar os filtros com os dados filtrados
             repopulateFunilFiltersOnly(funilFiltradoFinal);
         }
@@ -3489,12 +3194,6 @@ function updateContractsCharts() {
     const selectedUnidades = $("#unidade-filter").val() || [];
     const selectedCursos = $("#curso-filter").val() || [];
     const selectedFundos = $("#fundo-filter").val() || [];
-    
-    console.log('📊 updateContractsCharts - filtros base:');
-    console.log('  - Unidades:', selectedUnidades);
-    console.log('  - Cursos:', selectedCursos);
-    console.log('  - Fundos BRUTO:', selectedFundos);
-    
     // 🚨 FILTRO DE FUNDOS - aplicar APENAS na página 2
     let selectedTipoServico, selectedTipoCliente, selectedConsultorComercial, selectedIndicacaoAdesao, selectedInstituicao, selectedFundosForCharts;
     
@@ -3509,7 +3208,6 @@ function updateContractsCharts() {
         selectedIndicacaoAdesao = [];
         selectedInstituicao = [];
         selectedFundosForCharts = [];
-        console.log('📊 🛑 updateContractsCharts - PÁGINAS 1/3 - FORÇANDO fundos VAZIO (ignorando:', selectedFundos, ')');
     } else {
         // ✅ PÁGINA 2: Aplicar filtro de fundos + filtros específicos
         selectedTipoServico = $("#tipo-servico-filter").val() || [];
@@ -3518,17 +3216,9 @@ function updateContractsCharts() {
         selectedIndicacaoAdesao = $("#indicacao-adesao-filter").val() || [];
         selectedInstituicao = $("#instituicao-filter").val() || [];
         selectedFundosForCharts = selectedFundos;
-        console.log('📊 ✅ updateContractsCharts - PÁGINA 2 - aplicando filtro de fundos:', selectedFundos);
-        console.log('  - Tipo Serviço:', selectedTipoServico);
-        console.log('  - Tipo Cliente:', selectedTipoCliente);
-        console.log('  - Consultor Comercial:', selectedConsultorComercial);
-        console.log('  - Indicação Adesão:', selectedIndicacaoAdesao);
-        console.log('  - Instituição:', selectedInstituicao);
     }
     
     // Aplicar filtros SEM restrição de período
-    console.log('📊 Total de dados de fundos antes do filtro:', fundosData.length);
-    
     const fundosParaGraficos = fundosData.filter(d => {
         const unidadeMatch = selectedUnidades.length === 0 || selectedUnidades.includes(d.nm_unidade);
         const cursoMatch = selectedCursos.length === 0 || (d.curso_fundo && selectedCursos.includes(d.curso_fundo));
@@ -3545,10 +3235,6 @@ function updateContractsCharts() {
         
         return unidadeMatch && cursoMatch && fundoMatch && tipoServicoMatch && tipoClienteMatch && instituicaoMatch;
     });
-    
-    console.log('📊 updateContractsCharts - dados filtrados:', fundosParaGraficos.length, 'contratos');
-    console.log('📊 Filtros aplicados - Unidades:', selectedUnidades.length, 'Cursos:', selectedCursos.length, 'Fundos:', selectedFundosForCharts.length, 'TipoServ:', selectedTipoServico.length, 'Inst:', selectedInstituicao.length);
-    
     fundosParaGraficos.forEach((d) => {
         if (d.dt_contrato) {
             const year = d.dt_contrato.getFullYear();
@@ -3559,9 +3245,6 @@ function updateContractsCharts() {
 
     const years = Object.keys(contractsByYear).sort().filter((year) => parseInt(year) >= 2019);
     const annualContractsData = years.map((year) => contractsByYear[year] || 0);
-
-    console.log('📊 Dados anuais dos contratos:', contractsByYear);
-
     if (yearlyContractsChart) yearlyContractsChart.destroy();
     yearlyContractsChart = new Chart(document.getElementById("yearlyContractsChart"), {
         type: "bar",
@@ -3673,15 +3356,10 @@ function drawMonthlyContractsChart(data, year) {
     const contractsByMonth = Array(12).fill(0);
 
     // 🆕 USAR OS DADOS JÁ FILTRADOS (incluindo tipo serviço e instituição)
-    console.log('📊 drawMonthlyContractsChart - usando dados filtrados para ano', year, ':', data.length, 'contratos');
-    
     data.filter(d => d.dt_contrato && d.dt_contrato.getFullYear() === parseInt(year)).forEach((d) => {
         const month = d.dt_contrato.getMonth();
         contractsByMonth[month]++;
     });
-
-    console.log('📊 Contratos por mês para', year, ':', contractsByMonth);
-
     const monthLabels = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
     const maxValue = Math.max(...contractsByMonth);
     if (monthlyContractsChart) monthlyContractsChart.destroy();
@@ -4079,13 +3757,8 @@ function addEventListeners() {
         button.addEventListener("click", function () {
             const previousPage = document.querySelector(".page-navigation button.active")?.dataset.page;
             const newPage = this.dataset.page;
-            
-            console.log('🔄 Navegação de página:', previousPage, '→', newPage);
-            
             // 🚨 TRANSIÇÃO SUAVE: Ocultar filtros ANTES da limpeza
             if (previousPage === "page2" && newPage !== "page2") {
-                console.log('🧹 Saindo da página 2 - iniciando transição suave...');
-                
                 // ✅ FASE 1: Ocultar filtros com transição suave
                 const filtersToHide = [
                     '#tipo-adesao-filter-container',
@@ -4107,15 +3780,12 @@ function addEventListeners() {
                 // ✅ FASE 2: Aguardar transição e então limpar (timing reduzido)
                 setTimeout(() => {
                     // 🆕 LIMPAR FILTRO DE FUNDOS FISICAMENTE
-                    console.log('🧹 🎯 LIMPANDO FILTRO DE FUNDOS...');
                     $("#fundo-filter").val([]);
                     try {
                         if ($("#fundo-filter").data('multiselect')) {
                             $("#fundo-filter").multiselect('refresh');
-                            console.log('🧹 ✅ Filtro de FUNDOS limpo e atualizado');
                         }
                     } catch (error) {
-                        console.log('🧹 ❌ Erro ao limpar filtro de fundos:', error);
                     }
                     
                     // Limpar seleções dos filtros específicos da página 2 SILENCIOSAMENTE
@@ -4146,13 +3816,10 @@ function addEventListeners() {
                         if ($("#instituicao-filter").data('multiselect')) {
                             $("#instituicao-filter").multiselect('refresh');
                         }
-                        console.log('🧹 ✅ Filtros específicos limpos SILENCIOSAMENTE');
                     } catch (error) {
-                        console.log('🧹 Erro ao atualizar multiselects:', error);
                     }
                     
                     // 🔄 ATUALIZAR DASHBOARD **ANTES** DA MUDANÇA VISUAL
-                    console.log('🔄 Atualizando dashboard ANTES da mudança visual...');
                     updateDashboard();
                 }, 200); // Timing reduzido para fluidez
             }
@@ -4168,10 +3835,8 @@ function addEventListeners() {
             if (metaToggleSection) {
                 if (newPage === 'page1') {
                     metaToggleSection.style.display = 'block';
-                    console.log('🎯 Controles de meta MOSTRADOS (página 1)');
                 } else {
                     metaToggleSection.style.display = 'none';
-                    console.log('🎯 Controles de meta OCULTOS (página ' + newPage + ')');
                 }
             }
 
@@ -4181,18 +3846,11 @@ function addEventListeners() {
             // Recarregar os filtros sempre que mudar de/para a página do funil (page3)
             if ((previousPage === "page3" || newPage === "page3") && 
                 previousPage !== newPage) {
-                
-                console.log('🔄 Mudança de página detectada:', previousPage, '→', newPage);
-                
                 // Pequeno delay para garantir que a mudança de página terminou
                 setTimeout(() => {
-                    console.log('🔄 Recarregando filtros após mudança de página...');
                     // CORREÇÃO: Preservar seleção do filtro rápido ou seleção atual
                     const currentUnidadesSelection = $("#unidade-filter").val() || [];
                     const unidadesToPreserve = lastQuickFilterSelection || currentUnidadesSelection;
-                    console.log('💾 Preservando seleção de unidades:', unidadesToPreserve);
-                    console.log('   - Filtro rápido ativo:', !!lastQuickFilterSelection);
-                    
                     if (userAccessLevel === "ALL_UNITS") {
                         retryPopulateFilters(unidadesToPreserve);
                     } else if (Array.isArray(userAccessLevel)) {
@@ -4206,8 +3864,6 @@ function addEventListeners() {
             
             // 🆕 FORÇAR APLICAÇÃO DA VISIBILIDADE DOS FILTROS APÓS QUALQUER MUDANÇA DE PÁGINA
             setTimeout(() => {
-                console.log('🔧 Aplicando visibilidade dos filtros após navegação...');
-                
                 // ✅ TRANSIÇÃO SUAVE: Mostrar filtros da nova página
                 if (newPage === "page2") {
                     // Remover classe hiding se existir
@@ -4239,19 +3895,15 @@ function addEventListeners() {
                 
                 // 🆕 🎯 LIMPEZA ADICIONAL: Se entramos numa página que NÃO é a 2, garantir que fundos está vazio
                 if (newPage !== "page2") {
-                    console.log('🧹 🎯 LIMPEZA ADICIONAL: Entrando na página', newPage, '- garantindo que filtro de fundos está vazio...');
                     $("#fundo-filter").val([]);
                     try {
                         if ($("#fundo-filter").data('multiselect')) {
                             $("#fundo-filter").multiselect('refresh');
-                            console.log('🧹 ✅ Filtro de fundos limpo após entrar na página', newPage);
                         }
                     } catch (error) {
-                        console.log('🧹 ❌ Erro ao limpar filtro de fundos após mudança:', error);
                     }
                     
                     // Forçar atualização do dashboard após a limpeza
-                    console.log('🔄 Forçando atualização do dashboard após limpeza...');
                     updateDashboard();
                 }
             }, 200);
@@ -4286,8 +3938,6 @@ function addEventListeners() {
 
 // 🆕 Função para aplicar visibilidade do filtro FUNDOS baseado na página ativa
 function applyFundosFilterVisibility() {
-    console.log('🔧 Aplicando visibilidade do filtro FUNDOS...');
-    
     // Detectar página ativa
     let currentActivePage = null;
     if (document.getElementById('btn-page1')?.classList.contains('active')) {
@@ -4301,10 +3951,6 @@ function applyFundosFilterVisibility() {
     const shouldShowFundos = (currentActivePage === 'page2');
     const fundoFilterContainer = document.getElementById('fundo-filter-container');
     const fundoFilter = $("#fundo-filter");
-    
-    console.log('🔧 applyFundosFilterVisibility - currentActivePage:', currentActivePage);
-    console.log('🔧 applyFundosFilterVisibility - shouldShowFundos:', shouldShowFundos);
-    
     if (fundoFilterContainer) {
         if (shouldShowFundos) {
             // Mostrar sem transição na inicialização, com transição na navegação
@@ -4316,17 +3962,12 @@ function applyFundosFilterVisibility() {
                 fundoFilterContainer.classList.remove('smooth-hiding');
                 fundoFilterContainer.classList.add('smooth-showing');
             }
-            
-            console.log('🔧 ✅ FUNDOS FORÇADO PARA VISÍVEL');
-            
             // 🆕 REINICIALIZAR MULTISELECT DO FUNDOS QUANDO FICAR VISÍVEL
             setTimeout(() => {
-                console.log('🔧 Reinicializando multiselect do FUNDOS...');
                 try {
                     // Destruir multiselect existente se houver
                     if (fundoFilter.data('multiselect')) {
                         fundoFilter.multiselect('destroy');
-                        console.log('🔧 Multiselect FUNDOS destruído');
                     }
                     
                     // Recriar multiselect
@@ -4352,7 +3993,6 @@ function applyFundosFilterVisibility() {
                             $(this.$select).closest('.filter-item').removeClass('filter-active');
                         }
                     });
-                    console.log('🔧 ✅ Multiselect FUNDOS reinicializado com sucesso');
                 } catch (error) {
                     console.error('🔧 ❌ Erro ao reinicializar multiselect FUNDOS:', error);
                 }
@@ -4372,10 +4012,8 @@ function applyFundosFilterVisibility() {
                 fundoFilterContainer.style.display = 'none';
                 fundoFilterContainer.style.visibility = 'hidden';
             }
-            console.log('🔧 ✅ FUNDOS FORÇADO PARA OCULTO');
         }
     } else {
-        console.log('🔧 ❌ fundoFilterContainer não encontrado');
     }
 }
 
@@ -4394,12 +4032,6 @@ function applyTipoAdesaoFilterVisibility() {
     const shouldShowTipoAdesao = (currentActivePage === 'page2');
     const tipoAdesaoFilterContainer = document.getElementById('tipo-adesao-filter-container');
     const tipoAdesaoFilter = $("#tipo-adesao-filter");
-    
-    console.log('🔧 applyTipoAdesaoFilterVisibility - currentActivePage:', currentActivePage);
-    console.log('🔧 applyTipoAdesaoFilterVisibility - shouldShowTipoAdesao:', shouldShowTipoAdesao);
-    console.log('🔧 applyTipoAdesaoFilterVisibility - allData disponível:', !!(allData && allData.length > 0));
-    console.log('🔧 applyTipoAdesaoFilterVisibility - allData length:', allData ? allData.length : 'undefined');
-    
     if (tipoAdesaoFilterContainer) {
         if (shouldShowTipoAdesao) {
             // Mostrar sem transição na inicialização, com transição na navegação
@@ -4411,50 +4043,30 @@ function applyTipoAdesaoFilterVisibility() {
                 tipoAdesaoFilterContainer.classList.remove('smooth-hiding');
                 tipoAdesaoFilterContainer.classList.add('smooth-showing');
             }
-            
-            console.log('🔧 ✅ TIPO ADESÃO FORÇADO PARA VISÍVEL');
-            
             // 🆕 POPULAR FILTRO DE TIPO DE ADESÃO IMEDIATAMENTE
             setTimeout(() => {
-                console.log('🔧 Populando filtro Tipo de Adesão DIRETAMENTE...');
-                
                 if (allData && allData.length > 0) {
                     tipoAdesaoFilter.empty();
-                    
-                    console.log('🔧 allData disponível, length:', allData.length);
-                    console.log('🔧 Amostra allData (primeiros 3):', allData.slice(0, 3));
-                    
                     // Verificar venda_posvenda na amostra
                     const amostraVendaPosvenda = allData.slice(0, 10).map(d => ({
                         unidade: d.nm_unidade,
                         venda_posvenda: d.venda_posvenda,
                         valor: d.vl_plano
                     }));
-                    console.log('🔧 Amostra venda_posvenda em allData:', amostraVendaPosvenda);
-                    
                     const tiposAdesao = allData
                         .map((d) => d.venda_posvenda || '')
                         .filter(t => t && t !== 'N/A' && t.trim() !== '')
                         .map(t => t.trim().toUpperCase());
-                    
-                    console.log('🔧 Tipos BRUTOS (primeiros 10):', tiposAdesao.slice(0, 10));
-                    
                     const tiposAdesaoUnicos = [...new Set(tiposAdesao)].sort();
-                    
-                    console.log('🔧 Tipos ÚNICOS encontrados:', tiposAdesaoUnicos);
-                    
                     tiposAdesaoUnicos.forEach((t) => {
                         tipoAdesaoFilter.append($("<option>", { value: t, text: t }));
-                        console.log('🔧 Adicionando opção:', t);
                     });
                 } else {
-                    console.log('🔧 ❌ allData não disponível ainda');
                 }
             }, 50);
             
             // 🆕 REINICIALIZAR MULTISELECT DO TIPO ADESÃO QUANDO FICAR VISÍVEL
             setTimeout(() => {
-                console.log('🔧 Reinicializando multiselect do TIPO ADESÃO...');
                 try {
                     // Destruir multiselect existente se houver
                     if (tipoAdesaoFilter.data('multiselect')) {
@@ -4472,35 +4084,25 @@ function applyTipoAdesaoFilterVisibility() {
                         maxHeight: 300,
                         numberDisplayed: 2,
                         onChange: function(option, checked) {
-                            console.log('🔧 Tipo Adesão filter changed:', option, 'checked:', checked);
                             // Só atualizar se estivermos na página 2
                             const currentPage = document.getElementById('btn-page2')?.classList.contains('active') ? 'page2' : 'other';
-                            console.log('🔧 Página detectada no onChange:', currentPage);
                             if (currentPage === 'page2') {
-                                console.log('🔧 ✅ Atualizando dashboard...');
                                 updateDashboard();
                             } else {
-                                console.log('🔧 ❌ Ignorando mudança de filtro - não estamos na página 2');
                             }
                         },
                         onSelectAll: function() {
-                            console.log('🔧 Tipo Adesão - MARCAR TODOS acionado');
                             const currentPage = document.getElementById('btn-page2')?.classList.contains('active') ? 'page2' : 'other';
                             if (currentPage === 'page2') {
-                                console.log('🔧 ✅ Atualizando dashboard (selectAll)...');
                                 updateDashboard();
                             } else {
-                                console.log('🔧 ❌ Ignorando selectAll - não estamos na página 2');
                             }
                         },
                         onDeselectAll: function() {
-                            console.log('🔧 Tipo Adesão - DESMARCAR TODOS acionado');
                             const currentPage = document.getElementById('btn-page2')?.classList.contains('active') ? 'page2' : 'other';
                             if (currentPage === 'page2') {
-                                console.log('🔧 ✅ Atualizando dashboard (deselectAll)...');
                                 updateDashboard();
                             } else {
-                                console.log('🔧 ❌ Ignorando deselectAll - não estamos na página 2');
                             }
                         }
                         ,onDropdownShow: function(event) {
@@ -4510,7 +4112,6 @@ function applyTipoAdesaoFilterVisibility() {
                             $(this.$select).closest('.filter-item').removeClass('filter-active');
                         }
                     });
-                    console.log('🔧 ✅ Multiselect TIPO ADESÃO reinicializado com sucesso');
                 } catch (error) {
                     console.error('🔧 ❌ Erro ao reinicializar multiselect TIPO ADESÃO:', error);
                 }
@@ -4530,10 +4131,8 @@ function applyTipoAdesaoFilterVisibility() {
                 tipoAdesaoFilterContainer.style.display = 'none';
                 tipoAdesaoFilterContainer.style.visibility = 'hidden';
             }
-            console.log('🔧 ✅ TIPO ADESÃO FORÇADO PARA OCULTO');
         }
     } else {
-        console.log('🔧 ❌ tipoAdesaoFilterContainer não encontrado');
     }
 }
 
@@ -4552,12 +4151,6 @@ function applyTipoServicoFilterVisibility() {
     const shouldShowTipoServico = (currentActivePage === 'page2');
     const tipoServicoFilterContainer = document.getElementById('tipo-servico-filter-container');
     const tipoServicoFilter = $("#tipo-servico-filter");
-    
-    console.log('🔧 applyTipoServicoFilterVisibility - currentActivePage:', currentActivePage);
-    console.log('🔧 applyTipoServicoFilterVisibility - shouldShowTipoServico:', shouldShowTipoServico);
-    console.log('🔧 applyTipoServicoFilterVisibility - allData disponível:', !!(allData && allData.length > 0));
-    console.log('🔧 applyTipoServicoFilterVisibility - fundosData disponível:', !!(fundosData && fundosData.length > 0));
-    
     if (tipoServicoFilterContainer) {
         if (shouldShowTipoServico) {
             // Mostrar sem transição na inicialização, com transição na navegação
@@ -4569,13 +4162,8 @@ function applyTipoServicoFilterVisibility() {
                 tipoServicoFilterContainer.classList.remove('smooth-hiding');
                 tipoServicoFilterContainer.classList.add('smooth-showing');
             }
-            
-            console.log('🔧 ✅ TIPO SERVIÇO FORÇADO PARA VISÍVEL');
-            
             // 🆕 POPULAR FILTRO DE TIPO DE SERVIÇO IMEDIATAMENTE
             setTimeout(() => {
-                console.log('🔧 Populando filtro Tipo de Serviço DIRETAMENTE...');
-                
                 const tiposServico = new Set();
                 
                 // Buscar dados de ADESÕES
@@ -4585,7 +4173,6 @@ function applyTipoServicoFilterVisibility() {
                             tiposServico.add(d.tp_servico.trim().toUpperCase());
                         }
                     });
-                    console.log('🔧 Tipos de serviço encontrados em ADESÕES:', tiposServico.size);
                 }
                 
                 // Buscar dados de FUNDOS
@@ -4595,27 +4182,21 @@ function applyTipoServicoFilterVisibility() {
                             tiposServico.add(d.tipo_servico.trim().toUpperCase());
                         }
                     });
-                    console.log('🔧 Tipos de serviço encontrados em FUNDOS:', tiposServico.size);
                 }
                 
                 if (tiposServico.size > 0) {
                     tipoServicoFilter.empty();
                     
                     const tiposServicoUnicos = [...tiposServico].sort();
-                    console.log('🔧 Tipos de Serviço ÚNICOS encontrados:', tiposServicoUnicos);
-                    
                     tiposServicoUnicos.forEach((t) => {
                         tipoServicoFilter.append($("<option>", { value: t, text: t }));
-                        console.log('🔧 Adicionando opção Tipo Serviço:', t);
                     });
                 } else {
-                    console.log('🔧 ❌ Nenhum tipo de serviço encontrado');
                 }
             }, 50);
             
             // 🆕 REINICIALIZAR MULTISELECT DO TIPO SERVIÇO QUANDO FICAR VISÍVEL
             setTimeout(() => {
-                console.log('🔧 Reinicializando multiselect do TIPO SERVIÇO...');
                 try {
                     // Destruir multiselect existente se houver
                     if (tipoServicoFilter.data('multiselect')) {
@@ -4633,35 +4214,25 @@ function applyTipoServicoFilterVisibility() {
                         maxHeight: 300,
                         numberDisplayed: 2,
                         onChange: function(option, checked) {
-                            console.log('🔧 Tipo Serviço filter changed:', option, 'checked:', checked);
                             // Só atualizar se estivermos na página 2
                             const currentPage = document.getElementById('btn-page2')?.classList.contains('active') ? 'page2' : 'other';
-                            console.log('🔧 Página detectada no onChange:', currentPage);
                             if (currentPage === 'page2') {
-                                console.log('🔧 ✅ Atualizando dashboard...');
                                 updateDashboard();
                             } else {
-                                console.log('🔧 ❌ Ignorando mudança de filtro - não estamos na página 2');
                             }
                         },
                         onSelectAll: function() {
-                            console.log('🔧 Tipo Serviço - MARCAR TODOS acionado');
                             const currentPage = document.getElementById('btn-page2')?.classList.contains('active') ? 'page2' : 'other';
                             if (currentPage === 'page2') {
-                                console.log('🔧 ✅ Atualizando dashboard (selectAll)...');
                                 updateDashboard();
                             } else {
-                                console.log('🔧 ❌ Ignorando selectAll - não estamos na página 2');
                             }
                         },
                         onDeselectAll: function() {
-                            console.log('🔧 Tipo Serviço - DESMARCAR TODOS acionado');
                             const currentPage = document.getElementById('btn-page2')?.classList.contains('active') ? 'page2' : 'other';
                             if (currentPage === 'page2') {
-                                console.log('🔧 ✅ Atualizando dashboard (deselectAll)...');
                                 updateDashboard();
                             } else {
-                                console.log('🔧 ❌ Ignorando deselectAll - não estamos na página 2');
                             }
                         }
                         ,onDropdownShow: function(event) {
@@ -4671,7 +4242,6 @@ function applyTipoServicoFilterVisibility() {
                             $(this.$select).closest('.filter-item').removeClass('filter-active');
                         }
                     });
-                    console.log('🔧 ✅ Multiselect TIPO SERVIÇO reinicializado com sucesso');
                 } catch (error) {
                     console.error('🔧 ❌ Erro ao reinicializar multiselect TIPO SERVIÇO:', error);
                 }
@@ -4691,10 +4261,8 @@ function applyTipoServicoFilterVisibility() {
                 tipoServicoFilterContainer.style.display = 'none';
                 tipoServicoFilterContainer.style.visibility = 'hidden';
             }
-            console.log('🔧 ✅ TIPO SERVIÇO FORÇADO PARA OCULTO');
         }
     } else {
-        console.log('🔧 ❌ tipoServicoFilterContainer não encontrado');
     }
 }
 
@@ -4715,9 +4283,6 @@ function applyTipoClienteFilterVisibility() {
                 tipoClienteFilterContainer.classList.remove('smooth-hiding');
                 tipoClienteFilterContainer.classList.add('smooth-showing');
             }
-            
-            console.log('👥 ✅ TIPO CLIENTE mostrado para página 2');
-            
             const tipoClienteFilter = $('#tipo-cliente-filter');
             
             // População similar ao tipo serviço
@@ -4731,7 +4296,6 @@ function applyTipoClienteFilterVisibility() {
                             tiposCliente.add(d.tipo_cliente.trim().toUpperCase());
                         }
                     });
-                    console.log('👥 Tipos de cliente encontrados em ADESÕES:', tiposCliente.size);
                 }
                 
                 // Buscar dados de FUNDOS
@@ -4741,27 +4305,21 @@ function applyTipoClienteFilterVisibility() {
                             tiposCliente.add(d.tipo_cliente.trim().toUpperCase());
                         }
                     });
-                    console.log('👥 Tipos de cliente encontrados em FUNDOS:', tiposCliente.size);
                 }
                 
                 if (tiposCliente.size > 0) {
                     tipoClienteFilter.empty();
                     
                     const tiposClienteUnicos = [...tiposCliente].sort();
-                    console.log('👥 Tipos de Cliente ÚNICOS encontrados:', tiposClienteUnicos);
-                    
                     tiposClienteUnicos.forEach((t) => {
                         tipoClienteFilter.append($("<option>", { value: t, text: t }));
-                        console.log('👥 Adicionando opção Tipo Cliente:', t);
                     });
                 } else {
-                    console.log('👥 ❌ Nenhum tipo de cliente encontrado');
                 }
             }, 50);
             
             // Reinicializar multiselect
             setTimeout(() => {
-                console.log('👥 Reinicializando multiselect do TIPO CLIENTE...');
                 try {
                     if (tipoClienteFilter.data('multiselect')) {
                         tipoClienteFilter.multiselect('destroy');
@@ -4777,34 +4335,24 @@ function applyTipoClienteFilterVisibility() {
                         maxHeight: 300,
                         numberDisplayed: 2,
                         onChange: function(option, checked) {
-                            console.log('👥 Tipo Cliente filter changed:', option, 'checked:', checked);
                             const currentPage = document.getElementById('btn-page2')?.classList.contains('active') ? 'page2' : 'other';
-                            console.log('👥 Página detectada no onChange:', currentPage);
                             if (currentPage === 'page2') {
-                                console.log('👥 ✅ Atualizando dashboard...');
                                 updateDashboard();
                             } else {
-                                console.log('👥 ❌ Ignorando mudança de filtro - não estamos na página 2');
                             }
                         },
                         onSelectAll: function() {
-                            console.log('👥 Tipo Cliente - MARCAR TODOS acionado');
                             const currentPage = document.getElementById('btn-page2')?.classList.contains('active') ? 'page2' : 'other';
                             if (currentPage === 'page2') {
-                                console.log('👥 ✅ Atualizando dashboard (selectAll)...');
                                 updateDashboard();
                             } else {
-                                console.log('👥 ❌ Ignorando selectAll - não estamos na página 2');
                             }
                         },
                         onDeselectAll: function() {
-                            console.log('👥 Tipo Cliente - DESMARCAR TODOS acionado');
                             const currentPage = document.getElementById('btn-page2')?.classList.contains('active') ? 'page2' : 'other';
                             if (currentPage === 'page2') {
-                                console.log('👥 ✅ Atualizando dashboard (deselectAll)...');
                                 updateDashboard();
                             } else {
-                                console.log('👥 ❌ Ignorando deselectAll - não estamos na página 2');
                             }
                         }
                         ,onDropdownShow: function(event) {
@@ -4814,7 +4362,6 @@ function applyTipoClienteFilterVisibility() {
                             $(this.$select).closest('.filter-item').removeClass('filter-active');
                         }
                     });
-                    console.log('👥 ✅ Multiselect TIPO CLIENTE reinicializado com sucesso');
                 } catch (error) {
                     console.error('👥 ❌ Erro ao reinicializar multiselect TIPO CLIENTE:', error);
                 }
@@ -4834,10 +4381,8 @@ function applyTipoClienteFilterVisibility() {
                 tipoClienteFilterContainer.style.display = 'none';
                 tipoClienteFilterContainer.style.visibility = 'hidden';
             }
-            console.log('👥 ✅ TIPO CLIENTE FORÇADO PARA OCULTO');
         }
     } else {
-        console.log('👥 ❌ tipoClienteFilterContainer não encontrado');
     }
 }
 
@@ -4858,9 +4403,6 @@ function applyConsultorComercialFilterVisibility() {
                 consultorComercialFilterContainer.classList.remove('smooth-hiding');
                 consultorComercialFilterContainer.classList.add('smooth-showing');
             }
-            
-            console.log('👨‍💼 ✅ CONSULTOR COMERCIAL mostrado para página 2');
-            
             const consultorComercialFilter = $('#consultor-comercial-filter');
             
             // População baseada apenas em ADESÕES
@@ -4878,8 +4420,6 @@ function applyConsultorComercialFilterVisibility() {
                             temCamposVazios = true;
                         }
                     });
-                    console.log('👨‍💼 Consultores comerciais encontrados em ADESÕES:', consultoresComerciais.size);
-                    console.log('👨‍💼 Tem campos vazios/N/A:', temCamposVazios);
                 }
                 
                 if (consultoresComerciais.size > 0 || temCamposVazios) {
@@ -4890,23 +4430,16 @@ function applyConsultorComercialFilterVisibility() {
                     // ✅ ADICIONAR opção para campos vazios se existirem
                     if (temCamposVazios) {
                         consultorComercialFilter.append($("<option>", { value: "VAZIO", text: "(Campos Vazios/N/A)" }));
-                        console.log('👨‍💼 Adicionando opção para campos vazios');
                     }
-                    
-                    console.log('👨‍💼 Consultores Comerciais ÚNICOS encontrados:', consultoresUnicos);
-                    
                     consultoresUnicos.forEach((c) => {
                         consultorComercialFilter.append($("<option>", { value: c, text: c }));
-                        console.log('👨‍💼 Adicionando opção Consultor Comercial:', c);
                     });
                 } else {
-                    console.log('👨‍💼 ❌ Nenhum consultor comercial encontrado');
                 }
             }, 50);
             
             // Reinicializar multiselect
             setTimeout(() => {
-                console.log('👨‍💼 Reinicializando multiselect do CONSULTOR COMERCIAL...');
                 try {
                     if (consultorComercialFilter.data('multiselect')) {
                         consultorComercialFilter.multiselect('destroy');
@@ -4923,13 +4456,10 @@ function applyConsultorComercialFilterVisibility() {
                         maxHeight: 300,
                         numberDisplayed: 2,
                         onChange: function(option, checked) {
-                            console.log('👨‍💼 Consultor Comercial filter changed:', option, 'checked:', checked);
                             const currentPage = document.getElementById('btn-page2')?.classList.contains('active') ? 'page2' : 'other';
                             if (currentPage === 'page2') {
-                                console.log('👨‍💼 ✅ Atualizando dashboard...');
                                 updateDashboard();
                             } else {
-                                console.log('👨‍💼 ❌ Ignorando mudança de filtro - não estamos na página 2');
                             }
                         },
                         onSelectAll: function() {
@@ -4951,7 +4481,6 @@ function applyConsultorComercialFilterVisibility() {
                             $(this.$select).closest('.filter-item').removeClass('filter-active');
                         }
                     });
-                    console.log('👨‍💼 ✅ Multiselect CONSULTOR COMERCIAL reinicializado com sucesso');
                 } catch (error) {
                     console.error('👨‍💼 ❌ Erro ao reinicializar multiselect CONSULTOR COMERCIAL:', error);
                 }
@@ -4971,10 +4500,8 @@ function applyConsultorComercialFilterVisibility() {
                 consultorComercialFilterContainer.style.display = 'none';
                 consultorComercialFilterContainer.style.visibility = 'hidden';
             }
-            console.log('👨‍💼 ✅ CONSULTOR COMERCIAL FORÇADO PARA OCULTO');
         }
     } else {
-        console.log('👨‍💼 ❌ consultorComercialFilterContainer não encontrado');
     }
 }
 
@@ -4995,9 +4522,6 @@ function applyIndicacaoAdesaoFilterVisibility() {
                 indicacaoAdesaoFilterContainer.classList.remove('smooth-hiding');
                 indicacaoAdesaoFilterContainer.classList.add('smooth-showing');
             }
-            
-            console.log('📌 ✅ INDICAÇÃO ADESÃO mostrado para página 2');
-            
             const indicacaoAdesaoFilter = $('#indicacao-adesao-filter');
             
             // População baseada apenas em ADESÕES
@@ -5011,27 +4535,21 @@ function applyIndicacaoAdesaoFilterVisibility() {
                             indicacoesAdesao.add(d.indicado_por.trim().toUpperCase());
                         }
                     });
-                    console.log('📌 Indicações de adesão encontradas em ADESÕES:', indicacoesAdesao.size);
                 }
                 
                 if (indicacoesAdesao.size > 0) {
                     indicacaoAdesaoFilter.empty();
                     
                     const indicacoesUnicas = [...indicacoesAdesao].sort();
-                    console.log('📌 Indicações Adesão ÚNICAS encontradas:', indicacoesUnicas);
-                    
                     indicacoesUnicas.forEach((i) => {
                         indicacaoAdesaoFilter.append($("<option>", { value: i, text: i }));
-                        console.log('📌 Adicionando opção Indicação Adesão:', i);
                     });
                 } else {
-                    console.log('📌 ❌ Nenhuma indicação de adesão encontrada');
                 }
             }, 50);
             
             // Reinicializar multiselect
             setTimeout(() => {
-                console.log('📌 Reinicializando multiselect do INDICAÇÃO ADESÃO...');
                 try {
                     if (indicacaoAdesaoFilter.data('multiselect')) {
                         indicacaoAdesaoFilter.multiselect('destroy');
@@ -5048,13 +4566,10 @@ function applyIndicacaoAdesaoFilterVisibility() {
                         maxHeight: 300,
                         numberDisplayed: 2,
                         onChange: function(option, checked) {
-                            console.log('📌 Indicação Adesão filter changed:', option, 'checked:', checked);
                             const currentPage = document.getElementById('btn-page2')?.classList.contains('active') ? 'page2' : 'other';
                             if (currentPage === 'page2') {
-                                console.log('📌 ✅ Atualizando dashboard...');
                                 updateDashboard();
                             } else {
-                                console.log('📌 ❌ Ignorando mudança de filtro - não estamos na página 2');
                             }
                         },
                         onSelectAll: function() {
@@ -5076,7 +4591,6 @@ function applyIndicacaoAdesaoFilterVisibility() {
                             $(this.$select).closest('.filter-item').removeClass('filter-active');
                         }
                     });
-                    console.log('📌 ✅ Multiselect INDICAÇÃO ADESÃO reinicializado com sucesso');
                 } catch (error) {
                     console.error('📌 ❌ Erro ao reinicializar multiselect INDICAÇÃO ADESÃO:', error);
                 }
@@ -5096,10 +4610,8 @@ function applyIndicacaoAdesaoFilterVisibility() {
                 indicacaoAdesaoFilterContainer.style.display = 'none';
                 indicacaoAdesaoFilterContainer.style.visibility = 'hidden';
             }
-            console.log('📌 ✅ INDICAÇÃO ADESÃO FORÇADO PARA OCULTO');
         }
     } else {
-        console.log('📌 ❌ indicacaoAdesaoFilterContainer não encontrado');
     }
 }
 
@@ -5118,22 +4630,12 @@ function applyInstituicaoFilterVisibility() {
     const shouldShowInstituicao = (currentActivePage === 'page2');
     const instituicaoFilterContainer = document.getElementById('instituicao-filter-container');
     const instituicaoFilter = $("#instituicao-filter");
-    
-    console.log('🔧 applyInstituicaoFilterVisibility - currentActivePage:', currentActivePage);
-    console.log('🔧 applyInstituicaoFilterVisibility - shouldShowInstituicao:', shouldShowInstituicao);
-    console.log('🔧 applyInstituicaoFilterVisibility - allData disponível:', !!(allData && allData.length > 0));
-    console.log('🔧 applyInstituicaoFilterVisibility - fundosData disponível:', !!(fundosData && fundosData.length > 0));
-    
     if (instituicaoFilterContainer) {
         if (shouldShowInstituicao) {
             instituicaoFilterContainer.style.display = 'block';
             instituicaoFilterContainer.style.visibility = 'visible';
-            console.log('🔧 ✅ INSTITUIÇÃO FORÇADO PARA VISÍVEL');
-            
             // 🆕 POPULAR FILTRO DE INSTITUIÇÃO IMEDIATAMENTE
             setTimeout(() => {
-                console.log('🔧 Populando filtro Instituição DIRETAMENTE...');
-                
                 const instituicoes = new Set();
                 
                 // Buscar dados de ADESÕES
@@ -5143,7 +4645,6 @@ function applyInstituicaoFilterVisibility() {
                             instituicoes.add(d.nm_instituicao.trim().toUpperCase());
                         }
                     });
-                    console.log('🔧 Instituições encontradas em ADESÕES:', instituicoes.size);
                 }
                 
                 // Buscar dados de FUNDOS
@@ -5153,27 +4654,21 @@ function applyInstituicaoFilterVisibility() {
                             instituicoes.add(d.instituicao.trim().toUpperCase());
                         }
                     });
-                    console.log('🔧 Instituições encontradas em FUNDOS:', instituicoes.size);
                 }
                 
                 if (instituicoes.size > 0) {
                     instituicaoFilter.empty();
                     
                     const instituicoesUnicas = [...instituicoes].sort();
-                    console.log('🔧 Instituições ÚNICAS encontradas:', instituicoesUnicas);
-                    
                     instituicoesUnicas.forEach((t) => {
                         instituicaoFilter.append($("<option>", { value: t, text: t }));
-                        console.log('🔧 Adicionando opção Instituição:', t);
                     });
                 } else {
-                    console.log('🔧 ❌ Nenhuma instituição encontrada');
                 }
             }, 50);
             
             // 🆕 REINICIALIZAR MULTISELECT DA INSTITUIÇÃO QUANDO FICAR VISÍVEL
             setTimeout(() => {
-                console.log('🔧 Reinicializando multiselect da INSTITUIÇÃO...');
                 try {
                     // Destruir multiselect existente se houver
                     if (instituicaoFilter.data('multiselect')) {
@@ -5194,35 +4689,25 @@ function applyInstituicaoFilterVisibility() {
                         enableCaseInsensitiveFiltering: true,
                         filterBehavior: 'text',
                         onChange: function(option, checked) {
-                            console.log('🔧 Instituição filter changed:', option, 'checked:', checked);
                             // Só atualizar se estivermos na página 2
                             const currentPage = document.getElementById('btn-page2')?.classList.contains('active') ? 'page2' : 'other';
-                            console.log('🔧 Página detectada no onChange:', currentPage);
                             if (currentPage === 'page2') {
-                                console.log('🔧 ✅ Atualizando dashboard...');
                                 updateDashboard();
                             } else {
-                                console.log('🔧 ❌ Ignorando mudança de filtro - não estamos na página 2');
                             }
                         },
                         onSelectAll: function() {
-                            console.log('🔧 Instituição - MARCAR TODOS acionado');
                             const currentPage = document.getElementById('btn-page2')?.classList.contains('active') ? 'page2' : 'other';
                             if (currentPage === 'page2') {
-                                console.log('🔧 ✅ Atualizando dashboard (selectAll)...');
                                 updateDashboard();
                             } else {
-                                console.log('🔧 ❌ Ignorando selectAll - não estamos na página 2');
                             }
                         },
                         onDeselectAll: function() {
-                            console.log('🔧 Instituição - DESMARCAR TODOS acionado');
                             const currentPage = document.getElementById('btn-page2')?.classList.contains('active') ? 'page2' : 'other';
                             if (currentPage === 'page2') {
-                                console.log('🔧 ✅ Atualizando dashboard (deselectAll)...');
                                 updateDashboard();
                             } else {
-                                console.log('🔧 ❌ Ignorando deselectAll - não estamos na página 2');
                             }
                         }
                         ,onDropdownShow: function(event) {
@@ -5232,7 +4717,6 @@ function applyInstituicaoFilterVisibility() {
                             $(this.$select).closest('.filter-item').removeClass('filter-active');
                         }
                     });
-                    console.log('🔧 ✅ Multiselect INSTITUIÇÃO reinicializado com sucesso');
                 } catch (error) {
                     console.error('🔧 ❌ Erro ao reinicializar multiselect INSTITUIÇÃO:', error);
                 }
@@ -5241,17 +4725,13 @@ function applyInstituicaoFilterVisibility() {
         } else {
             instituicaoFilterContainer.style.display = 'none';
             instituicaoFilterContainer.style.visibility = 'hidden';
-            console.log('🔧 ✅ INSTITUIÇÃO FORÇADO PARA OCULTO');
         }
     } else {
-        console.log('🔧 ❌ instituicaoFilterContainer não encontrado');
     }
 }
 
 // Função para atualizar filtros dependentes quando as unidades mudam
 function updateDependentFilters(selectedUnidades = []) {
-    console.log('updateDependentFilters called with:', selectedUnidades);
-    
     // ⚠️ VALIDAÇÃO CRÍTICA: Verificar se os dados estão carregados
     if (!allData || allData.length === 0) {
         console.warn('⚠️ allData ainda não carregado em updateDependentFilters - aguardando...');
@@ -5262,9 +4742,6 @@ function updateDependentFilters(selectedUnidades = []) {
         console.warn('⚠️ fundosData ainda não carregado em updateDependentFilters - aguardando...');
         return;
     }
-    
-    console.log('✅ Dados validados em updateDependentFilters - prosseguindo');
-    
     const cursoFilter = $("#curso-filter");
     const consultorFilter = $("#consultor-filter");
     const origemLeadFilter = $("#origem-lead-filter");
@@ -5306,12 +4783,6 @@ function updateDependentFilters(selectedUnidades = []) {
     // Lógica simples: MOSTRAR FUNDOS apenas na página 2
     const shouldShowFundos = (currentActivePage === 'page2');
     const shouldHideFundos = !shouldShowFundos;
-    
-    console.log('🔍 Detecção de página (updateDependentFilters):');
-    console.log('  - currentActivePage:', currentActivePage);
-    console.log('  - shouldShowFundos:', shouldShowFundos);
-    console.log('  - shouldHideFundos:', shouldHideFundos);
-    
     // Ocultar/mostrar filtros baseado na página
     const fundoFilterContainer = document.getElementById('fundo-filter-container');
     const consultorFilterContainer = document.getElementById('consultor-filter-container');
@@ -5320,24 +4791,14 @@ function updateDependentFilters(selectedUnidades = []) {
     const etiquetasFilterContainer = document.getElementById('etiquetas-filter-container');
     
     if (fundoFilterContainer) {
-        console.log('🎯 CONTROLE FILTRO FUNDOS:');
-        console.log('  - fundoFilterContainer encontrado:', !!fundoFilterContainer);
-        console.log('  - currentActivePage:', currentActivePage);
-        console.log('  - shouldShowFundos:', shouldShowFundos);
-        console.log('  - shouldHideFundos:', shouldHideFundos);
-        
         if (shouldHideFundos) {
             fundoFilterContainer.style.display = 'none';
             fundoFilterContainer.style.visibility = 'hidden';
-            console.log('  - ✅ FUNDOS OCULTADO FORÇADAMENTE');
         } else {
             fundoFilterContainer.style.display = 'block';
             fundoFilterContainer.style.visibility = 'visible';
-            console.log('  - ✅ FUNDOS EXIBIDO FORÇADAMENTE');
-            
             // 🆕 REINICIALIZAR MULTISELECT DO FUNDOS quando ficar visível
             setTimeout(() => {
-                console.log('  - 🔧 Reinicializando multiselect FUNDOS (updateDependentFilters)...');
                 try {
                     if (fundoFilter.data('multiselect')) {
                         fundoFilter.multiselect('destroy');
@@ -5358,14 +4819,12 @@ function updateDependentFilters(selectedUnidades = []) {
                         enableCaseInsensitiveFiltering: true,
                         filterBehavior: 'text'
                     });
-                    console.log('  - ✅ Multiselect FUNDOS reinicializado (updateDependentFilters)');
                 } catch (error) {
                     console.error('  - ❌ Erro ao reinicializar multiselect FUNDOS:', error);
                 }
             }, 50);
         }
     } else {
-        console.log('❌ fundoFilterContainer NÃO ENCONTRADO!');
     }
     
     if (consultorFilterContainer) {
@@ -5412,7 +4871,6 @@ function updateDependentFilters(selectedUnidades = []) {
             fundoFilter.multiselect('destroy');
         }
     } catch(e) {
-        console.log("Multiselect de filtros dependentes não existia ainda");
     }
     
     // Limpar opções
@@ -5447,7 +4905,6 @@ function updateDependentFilters(selectedUnidades = []) {
         // Para página do funil, usar coluna D do funil (Qual é o seu curso?)
         const cursosFunil = funilFiltrado.map((d) => d.curso || '').filter(c => c && c.trim() !== '' && c !== 'N/A');
         cursos = [...new Set(cursosFunil)].sort();
-        console.log('Cursos do funil:', cursos);
     } else {
         // Para outras páginas, usar dados de vendas e fundos
         const cursosVendas = dadosFiltrados.map((d) => d.curso_fundo || '').filter(c => c && c !== 'N/A');
@@ -5463,8 +4920,6 @@ function updateDependentFilters(selectedUnidades = []) {
     if (isFunilPage) {
         const consultoresFunil = funilFiltrado.map((d) => d.consultor || '').filter(c => c && c.trim() !== '' && c !== 'N/A');
         const consultores = [...new Set(consultoresFunil)].sort();
-        console.log('Consultores do funil:', consultores);
-        
         consultores.forEach((c) => {
             consultorFilter.append($("<option>", { value: c, text: c }));
         });
@@ -5472,8 +4927,6 @@ function updateDependentFilters(selectedUnidades = []) {
         // Popular filtro de origem do lead (apenas se for página do funil)
         const origemLeadFunil = funilFiltrado.map((d) => d.origem_lead || '').filter(o => o && o.trim() !== '' && o !== 'N/A');
         const origensLead = [...new Set(origemLeadFunil)].sort();
-        console.log('Origens do lead do funil:', origensLead);
-        
         origensLead.forEach((o) => {
             origemLeadFilter.append($("<option>", { value: o, text: o }));
         });
@@ -5481,8 +4934,6 @@ function updateDependentFilters(selectedUnidades = []) {
         // Popular filtro de segmentação lead (apenas se for página do funil)
         const segmentacaoLeadFunil = funilFiltrado.map((d) => d.segmentacao_lead || '').filter(s => s && s.trim() !== '' && s !== 'N/A');
         const segmentacoesLead = [...new Set(segmentacaoLeadFunil)].sort();
-        console.log('Segmentações do lead do funil:', segmentacoesLead);
-        
         segmentacoesLead.forEach((s) => {
             segmentacaoLeadFilter.append($("<option>", { value: s, text: s }));
         });
@@ -5490,8 +4941,6 @@ function updateDependentFilters(selectedUnidades = []) {
         // Popular filtro de etiquetas (apenas se for página do funil)
         const etiquetasFunil = funilFiltrado.map((d) => d.etiquetas || '').filter(e => e && e.trim() !== '' && e !== 'N/A');
         const etiquetas = [...new Set(etiquetasFunil)].sort();
-        console.log('Etiquetas do funil:', etiquetas);
-        
         etiquetas.forEach((e) => {
             etiquetasFilter.append($("<option>", { value: e, text: e }));
         });
@@ -5499,29 +4948,13 @@ function updateDependentFilters(selectedUnidades = []) {
     
     // Popular filtro de fundos (apenas se não deve ocultar FUNDOS)
     if (!shouldHideFundos) {
-        console.log('🔧 🎯 POPULANDO FILTRO DE FUNDOS...');
-        console.log('  - dadosFiltrados length:', dadosFiltrados.length);
-        console.log('  - fundosFiltrados length:', fundosFiltrados.length);
-        
         const fundosFromVendas = dadosFiltrados.map((d) => d.nm_fundo || '').filter(f => f && f !== 'N/A');
         const fundosFromFundos = fundosFiltrados.map((d) => d.nm_fundo || '').filter(f => f && f !== 'N/A');
-        
-        console.log('  - fundosFromVendas length:', fundosFromVendas.length);
-        console.log('  - fundosFromVendas examples:', fundosFromVendas.slice(0, 5));
-        console.log('  - fundosFromFundos length:', fundosFromFundos.length);
-        console.log('  - fundosFromFundos examples:', fundosFromFundos.slice(0, 5));
-        
         const fundosUnicos = [...new Set([...fundosFromVendas, ...fundosFromFundos])].sort();
-        console.log('  - fundosUnicos length:', fundosUnicos.length);
-        console.log('  - fundosUnicos:', fundosUnicos);
-        
         fundosUnicos.forEach((f) => {
             fundoFilter.append($("<option>", { value: f, text: f }));
         });
-        
-        console.log('🔧 ✅ Filtro de fundos populado com', fundosUnicos.length, 'opções');
     } else {
-        console.log('🔧 ❌ Filtro de fundos OCULTO (shouldHideFundos = true)');
     }
     
     // 🆕 Popular filtro de tipo de adesão (apenas para página 2)
@@ -5529,10 +4962,6 @@ function updateDependentFilters(selectedUnidades = []) {
     const tipoAdesaoFilter = $("#tipo-adesao-filter");
     
     if (shouldShowTipoAdesao) {
-        console.log('🔧 Populando filtro Tipo de Adesão...');
-        console.log('🔧 dadosFiltrados length:', dadosFiltrados.length);
-        console.log('🔧 Amostra de dadosFiltrados (primeiros 3):', dadosFiltrados.slice(0, 3));
-        
         tipoAdesaoFilter.empty();
         
         // 🆕 Debug: Verificar se venda_posvenda existe nos dados
@@ -5541,26 +4970,14 @@ function updateDependentFilters(selectedUnidades = []) {
             venda_posvenda: d.venda_posvenda,
             valor: d.vl_plano
         }));
-        console.log('🔧 Amostra venda_posvenda:', amostraVendaPosvenda);
-        
         // 🆕 CORREÇÃO: Usar TODOS os dados de vendas, não apenas filtrados por unidade
         // para que o filtro mostre todas as opções disponíveis
         const dadosParaTipoAdesao = allData; // Em vez de dadosFiltrados
-        console.log('🔧 Usando allData para tipos de adesão. Total:', dadosParaTipoAdesao.length);
-        
         const tiposAdesao = dadosParaTipoAdesao
             .map((d) => d.venda_posvenda || '')
             .filter(t => t && t !== 'N/A' && t.trim() !== '')
             .map(t => t.trim().toUpperCase()); // Normalizar para maiúsculo
-        
-        console.log('🔧 Tipos de adesão BRUTOS (antes do Set):', tiposAdesao.slice(0, 20));
-        
         const tiposAdesaoUnicos = [...new Set(tiposAdesao)].sort();
-        
-        console.log('🔧 Tipos de adesão encontrados (únicos):', tiposAdesaoUnicos);
-        console.log('🔧 Quantidade total de registros processados:', dadosFiltrados.length);
-        console.log('🔧 Quantidade de tipos válidos:', tiposAdesao.length);
-        
         tiposAdesaoUnicos.forEach((t) => {
             tipoAdesaoFilter.append($("<option>", { value: t, text: t }));
         });
@@ -5683,7 +5100,6 @@ function updateDependentFilters(selectedUnidades = []) {
     
     // 🆕 Recriar multiselect para tipo de adesão (apenas se for página 2)
     if (shouldShowTipoAdesao) {
-        console.log('🔧 Inicializando multiselect Tipo de Adesão...');
         tipoAdesaoFilter.multiselect({
             includeSelectAllOption: true,
             selectAllText: "Marcar todos",
@@ -5693,7 +5109,6 @@ function updateDependentFilters(selectedUnidades = []) {
             buttonWidth: "100%",
             maxHeight: 300,
             onChange: function() {
-                console.log('🔧 Tipo Adesão filter changed, updating dashboard...');
                 updateDashboard();
             },
             onSelectAll: updateDashboard,
@@ -5706,7 +5121,6 @@ function updateDependentFilters(selectedUnidades = []) {
                 ul: '<ul class="multiselect-container dropdown-menu" style="width: auto; min-width: 100%;"></ul>'
             }
         });
-        console.log('🔧 ✅ Multiselect Tipo de Adesão inicializado');
     }
 }
 
@@ -5716,19 +5130,15 @@ function updateDependentFilters(selectedUnidades = []) {
 
 // Função auxiliar para retentar população de filtros
 function retryPopulateFilters(selectedUnidades = [], maxRetries = 5, currentRetry = 0) {
-    console.log(`🔄 Tentativa ${currentRetry + 1} de ${maxRetries} para popular filtros`);
-    
     // Verificar se os dados estão carregados
     const dataReady = allData && allData.length > 0 && fundosData && fundosData.length > 0;
     
     if (dataReady) {
-        console.log('✅ Dados prontos - populando filtros...');
         populateFilters(selectedUnidades);
         return;
     }
     
     if (currentRetry < maxRetries - 1) {
-        console.log(`⏳ Dados ainda não prontos - tentando novamente em 500ms...`);
         setTimeout(() => {
             retryPopulateFilters(selectedUnidades, maxRetries, currentRetry + 1);
         }, 500);
@@ -5739,19 +5149,15 @@ function retryPopulateFilters(selectedUnidades = [], maxRetries = 5, currentRetr
 
 // Função auxiliar para retentar updateDependentFilters
 function retryUpdateDependentFilters(selectedUnidades = [], maxRetries = 5, currentRetry = 0) {
-    console.log(`🔄 Tentativa ${currentRetry + 1} de ${maxRetries} para updateDependentFilters`);
-    
     // Verificar se os dados estão carregados
     const dataReady = allData && allData.length > 0 && fundosData && fundosData.length > 0;
     
     if (dataReady) {
-        console.log('✅ Dados prontos - atualizando filtros dependentes...');
         updateDependentFilters(selectedUnidades);
         return;
     }
     
     if (currentRetry < maxRetries - 1) {
-        console.log(`⏳ Dados ainda não prontos - tentando novamente em 500ms...`);
         setTimeout(() => {
             retryUpdateDependentFilters(selectedUnidades, maxRetries, currentRetry + 1);
         }, 500);
@@ -5763,14 +5169,11 @@ function retryUpdateDependentFilters(selectedUnidades = [], maxRetries = 5, curr
 // 🆕 NOVA FUNÇÃO: Repopula apenas os filtros do funil (consultores, origem_lead, etc.) 
 // Chamada quando o período muda, para atualizar os filtros responsivamente
 function repopulateFunilFiltersOnly(funilFiltrado) {
-    console.log('🔄 repopulateFunilFiltersOnly chamado com', funilFiltrado?.length || 0, 'registros');
-    
     // Verificar se estamos na página do funil
     const isFunilPage = document.getElementById('btn-page3')?.classList.contains('active') || 
                        document.getElementById('page3')?.classList.contains('active');
     
     if (!isFunilPage) {
-        console.log('  ⚠️ Não estamos na página do funil, ignorando');
         return;
     }
     
@@ -5786,7 +5189,6 @@ function repopulateFunilFiltersOnly(funilFiltrado) {
     etiquetasFilter.find('option:not(:first)').remove();
     
     if (!funilFiltrado || funilFiltrado.length === 0) {
-        console.log('  ⚠️ funilFiltrado vazio, não há dados para popular');
         return;
     }
     
@@ -5795,9 +5197,6 @@ function repopulateFunilFiltersOnly(funilFiltrado) {
         .map((d) => (d.consultor || '').trim())  // 🔧 TRIM para remover espaços
         .filter(c => c && c !== '' && c !== 'N/A');
     const consultores = [...new Set(consultoresFunil)].sort();
-    
-    console.log('  👨‍💼 Consultores encontrados:', consultores.length, consultores);
-    
     consultores.forEach((c) => {
         consultorFilter.append($("<option>", { value: c, text: c }));
     });
@@ -5807,9 +5206,6 @@ function repopulateFunilFiltersOnly(funilFiltrado) {
         .map((d) => (d.origem_lead || '').trim())  // 🔧 TRIM para remover espaços
         .filter(o => o && o !== '' && o !== 'N/A');
     const origensLead = [...new Set(origemLeadFunil)].sort();
-    
-    console.log('  📍 Origens de lead encontradas:', origensLead.length, origensLead);
-    
     origensLead.forEach((o) => {
         origemLeadFilter.append($("<option>", { value: o, text: o }));
     });
@@ -5819,9 +5215,6 @@ function repopulateFunilFiltersOnly(funilFiltrado) {
         .map((d) => (d.segmentacao_lead || '').trim())  // 🔧 TRIM para remover espaços
         .filter(s => s && s !== '' && s !== 'N/A');
     const segmentacoesLead = [...new Set(segmentacaoLeadFunil)].sort();
-    
-    console.log('  🏷️ Segmentações encontradas:', segmentacoesLead.length, segmentacoesLead);
-    
     segmentacoesLead.forEach((s) => {
         segmentacaoLeadFilter.append($("<option>", { value: s, text: s }));
     });
@@ -5831,9 +5224,6 @@ function repopulateFunilFiltersOnly(funilFiltrado) {
         .map((d) => (d.etiquetas || '').trim())  // 🔧 TRIM para remover espaços
         .filter(e => e && e !== '' && e !== 'N/A');
     const etiquetas = [...new Set(etiquetasFunil)].sort();
-    
-    console.log('  🏷️ Etiquetas encontradas:', etiquetas.length, etiquetas);
-    
     etiquetas.forEach((e) => {
         etiquetasFilter.append($("<option>", { value: e, text: e }));
     });
@@ -5844,19 +5234,12 @@ function repopulateFunilFiltersOnly(funilFiltrado) {
         origemLeadFilter.multiselect('rebuild');
         segmentacaoLeadFilter.multiselect('rebuild');
         etiquetasFilter.multiselect('rebuild');
-        console.log('  ✅ Multiselects reconstruídos com sucesso');
     } catch (e) {
         console.warn('  ⚠️ Erro ao reconstruir multiselects:', e);
     }
 }
 
 function populateFilters(selectedUnidades = []) {
-    console.log('populateFilters called with:', selectedUnidades);
-    console.log('userAccessLevel:', userAccessLevel);
-    console.log('allData length:', allData ? allData.length : 0);
-    console.log('fundosData length:', fundosData ? fundosData.length : 0);
-    console.log('funilData length:', funilData ? funilData.length : 0);
-    
     // ⚠️ VALIDAÇÃO CRÍTICA: Verificar se os dados estão carregados
     if (!allData || allData.length === 0) {
         console.warn('⚠️ allData ainda não carregado - aguardando...');
@@ -5867,9 +5250,6 @@ function populateFilters(selectedUnidades = []) {
         console.warn('⚠️ fundosData ainda não carregado - aguardando...');
         return;
     }
-    
-    console.log('✅ Dados validados - prosseguindo com populateFilters');
-    
     const unidadeFilter = $("#unidade-filter");
     const cursoFilter = $("#curso-filter");
     const consultorFilter = $("#consultor-filter");
@@ -5912,36 +5292,20 @@ function populateFilters(selectedUnidades = []) {
     // Lógica de exibição dos filtros por página
     const shouldShowFundos = true; // ✅ FUNDOS deve aparecer em TODAS as páginas
     const shouldHideFundos = false; // ✅ NUNCA ocultar fundos
-    
-    console.log('🔍 Detecção de página (populateFilters):');
-    console.log('  - currentActivePage:', currentActivePage);
-    console.log('  - shouldShowFundos:', shouldShowFundos, '(sempre true)');
-    console.log('  - shouldHideFundos:', shouldHideFundos, '(sempre false)');
-    
     // Ocultar/mostrar filtros baseado na página
     const fundoFilterContainer = document.getElementById('fundo-filter-container');
     const consultorFilterContainer = document.getElementById('consultor-filter-container');
     const origemLeadFilterContainer = document.getElementById('origem-lead-filter-container');
     
     if (fundoFilterContainer) {
-        console.log('🎯 CONTROLE FILTRO FUNDOS (populateFilters):');
-        console.log('  - fundoFilterContainer encontrado:', !!fundoFilterContainer);
-        console.log('  - currentActivePage:', currentActivePage);
-        console.log('  - shouldShowFundos:', shouldShowFundos);
-        console.log('  - shouldHideFundos:', shouldHideFundos);
-        
         if (shouldHideFundos) {
             fundoFilterContainer.style.display = 'none';
             fundoFilterContainer.style.visibility = 'hidden';
-            console.log('  - ✅ FUNDOS OCULTADO FORÇADAMENTE (populateFilters)');
         } else {
             fundoFilterContainer.style.display = 'block';
             fundoFilterContainer.style.visibility = 'visible';
-            console.log('  - ✅ FUNDOS EXIBIDO FORÇADAMENTE (populateFilters)');
-            
             // 🆕 REINICIALIZAR MULTISELECT DO FUNDOS quando ficar visível
             setTimeout(() => {
-                console.log('  - 🔧 Reinicializando multiselect FUNDOS (populateFilters)...');
                 try {
                     if (fundoFilter.data('multiselect')) {
                         fundoFilter.multiselect('destroy');
@@ -5962,14 +5326,12 @@ function populateFilters(selectedUnidades = []) {
                         enableCaseInsensitiveFiltering: true,
                         filterBehavior: 'text'
                     });
-                    console.log('  - ✅ Multiselect FUNDOS reinicializado (populateFilters)');
                 } catch (error) {
                     console.error('  - ❌ Erro ao reinicializar multiselect FUNDOS:', error);
                 }
             }, 50);
         }
     } else {
-        console.log('❌ fundoFilterContainer NÃO ENCONTRADO! (populateFilters)');
     }
     
     if (consultorFilterContainer) {
@@ -6032,7 +5394,6 @@ function populateFilters(selectedUnidades = []) {
                 unidadeFilter.multiselect('destroy');
             }
         } catch (e) {
-            console.log('Erro ao destruir multiselect:', e);
         }
         
         // Limpa e reconstrói as opções
@@ -6059,8 +5420,6 @@ function populateFilters(selectedUnidades = []) {
         
         // CORREÇÃO: Determinar quais unidades devem estar selecionadas
         const unidadesToSelect = selectedUnidades.length > 0 ? selectedUnidades : unidades;
-        console.log('🎯 Unidades a serem selecionadas:', unidadesToSelect);
-        
         unidades.forEach((u) => {
             // Só seleciona a unidade se ela estiver na lista de unidades para seleção
             const shouldSelect = unidadesToSelect.includes(u);
@@ -6154,8 +5513,6 @@ function populateFilters(selectedUnidades = []) {
 
         // Sempre inicializa os multiselects
         setTimeout(() => {
-            console.log('Inicializando todos os multiselects...');
-            
             // UNIDADES
             try {
                 unidadeFilter.multiselect({
@@ -6171,7 +5528,6 @@ function populateFilters(selectedUnidades = []) {
                     onChange: function(option, checked) {
                         // Limpar a seleção do filtro rápido quando há alteração manual
                         if (lastQuickFilterSelection) {
-                            console.log('🔧 Limpando filtro rápido devido à seleção manual');
                             lastQuickFilterSelection = null;
                         }
                         updateDashboard();
@@ -6179,7 +5535,6 @@ function populateFilters(selectedUnidades = []) {
                     onSelectAll: function() {
                         // Limpar a seleção do filtro rápido quando há seleção manual de todos
                         if (lastQuickFilterSelection) {
-                            console.log('🔧 Limpando filtro rápido devido ao "Selecionar Todos"');
                             lastQuickFilterSelection = null;
                         }
                         updateDashboard();
@@ -6187,7 +5542,6 @@ function populateFilters(selectedUnidades = []) {
                     onDeselectAll: function() {
                         // Limpar a seleção do filtro rápido quando há deseleção manual de todos
                         if (lastQuickFilterSelection) {
-                            console.log('🔧 Limpando filtro rápido devido ao "Desselecionar Todos"');
                             lastQuickFilterSelection = null;
                         }
                         updateDashboard();
@@ -6199,7 +5553,6 @@ function populateFilters(selectedUnidades = []) {
                         const quickPanel = document.getElementById('unidade-quick-panel');
                         if (quickPanel && quickPanel.classList.contains('active')) {
                             closeUnidadeQuickPanel();
-                            console.log('🔄 Fechando filtro rápido de unidades');
                         }
                     },
                     onDropdownHide: function(event) {
@@ -6217,19 +5570,12 @@ function populateFilters(selectedUnidades = []) {
                 });
                 
                 // CORREÇÃO: Aplicar as seleções corretas após inicialização
-                console.log('🔧 Aplicando seleções após inicialização multiselect:');
-                console.log('  - currentSelectedValues:', currentSelectedValues);
-                console.log('  - selectedUnidades:', selectedUnidades);
-                console.log('  - unidadesToSelect:', unidadesToSelect);
-                
                 // Se há seleções específicas, aplicá-las. Caso contrário, manter como está.
                 if (selectedUnidades.length > 0) {
                     unidadeFilter.multiselect('deselectAll', false);
                     unidadeFilter.multiselect('select', selectedUnidades);
-                    console.log('  - ✅ Seleções específicas aplicadas:', selectedUnidades);
                 } else if (currentSelectedValues.length > 0) {
                     unidadeFilter.multiselect('select', currentSelectedValues);
-                    console.log('  - ✅ Seleções anteriores restauradas:', currentSelectedValues);
                 }
 
                 unidadeFilter.multiselect('refresh');
@@ -6277,8 +5623,6 @@ function populateFilters(selectedUnidades = []) {
                         ul: '<ul class="multiselect-container dropdown-menu" style="width: auto; min-width: 100%;"></ul>'
                     }
                 });
-                
-                console.log('Multiselect de cursos inicializado com sucesso');
             } catch (error) {
                 console.error('Erro ao inicializar multiselect de cursos:', error);
             }
@@ -6290,10 +5634,8 @@ function populateFilters(selectedUnidades = []) {
                     try {
                         if (consultorFilter.data('multiselect')) {
                             consultorFilter.multiselect('destroy');
-                            console.log('🔄 Multiselect de consultor destruído');
                         }
                     } catch (e) {
-                        console.log('🔄 Nenhum multiselect de consultor para destruir');
                     }
                     
                     consultorFilter.multiselect({
@@ -6325,8 +5667,6 @@ function populateFilters(selectedUnidades = []) {
                             ul: '<ul class="multiselect-container dropdown-menu" style="width: auto; min-width: 100%;"></ul>'
                         }
                     });
-                    
-                    console.log('Multiselect de consultores inicializado com sucesso');
                 } catch (error) {
                     console.error('Erro ao inicializar multiselect de consultores:', error);
                 }
@@ -6337,10 +5677,8 @@ function populateFilters(selectedUnidades = []) {
                     try {
                         if (origemLeadFilter.data('multiselect')) {
                             origemLeadFilter.multiselect('destroy');
-                            console.log('🔄 Multiselect de origem do lead destruído');
                         }
                     } catch (e) {
-                        console.log('🔄 Nenhum multiselect de origem do lead para destruir');
                     }
                     
                     origemLeadFilter.multiselect({
@@ -6372,8 +5710,6 @@ function populateFilters(selectedUnidades = []) {
                             ul: '<ul class="multiselect-container dropdown-menu" style="width: auto; min-width: 100%;"></ul>'
                         }
                     });
-                    
-                    console.log('Multiselect de origem do lead inicializado com sucesso');
                 } catch (error) {
                     console.error('Erro ao inicializar multiselect de origem do lead:', error);
                 }
@@ -6384,10 +5720,8 @@ function populateFilters(selectedUnidades = []) {
                     try {
                         if (segmentacaoLeadFilter.data('multiselect')) {
                             segmentacaoLeadFilter.multiselect('destroy');
-                            console.log('🔄 Multiselect de segmentação lead destruído');
                         }
                     } catch (e) {
-                        console.log('🔄 Nenhum multiselect de segmentação lead para destruir');
                     }
                     
                     segmentacaoLeadFilter.multiselect({
@@ -6419,8 +5753,6 @@ function populateFilters(selectedUnidades = []) {
                             ul: '<ul class="multiselect-container dropdown-menu" style="width: auto; min-width: 100%;"></ul>'
                         }
                     });
-                    
-                    console.log('Multiselect de segmentação lead inicializado com sucesso');
                 } catch (error) {
                     console.error('Erro ao inicializar multiselect de segmentação lead:', error);
                 }
@@ -6431,10 +5763,8 @@ function populateFilters(selectedUnidades = []) {
                     try {
                         if (etiquetasFilter.data('multiselect')) {
                             etiquetasFilter.multiselect('destroy');
-                            console.log('🔄 Multiselect de etiquetas destruído');
                         }
                     } catch (e) {
-                        console.log('🔄 Nenhum multiselect de etiquetas para destruir');
                     }
                     
                     etiquetasFilter.multiselect({
@@ -6466,8 +5796,6 @@ function populateFilters(selectedUnidades = []) {
                             ul: '<ul class="multiselect-container dropdown-menu" style="width: auto; min-width: 100%;"></ul>'
                         }
                     });
-                    
-                    console.log('Multiselect de etiquetas inicializado com sucesso');
                 } catch (error) {
                     console.error('Erro ao inicializar multiselect de etiquetas:', error);
                 }
@@ -6480,10 +5808,8 @@ function populateFilters(selectedUnidades = []) {
                     try {
                         if (fundoFilter.data('multiselect')) {
                             fundoFilter.multiselect('destroy');
-                            console.log('🔄 Multiselect de fundos destruído');
                         }
                     } catch (e) {
-                        console.log('🔄 Nenhum multiselect de fundos para destruir');
                     }
                     
                     fundoFilter.multiselect({
@@ -6518,8 +5844,6 @@ function populateFilters(selectedUnidades = []) {
                             filterClearBtn: '<span class="input-group-btn"><button class="btn btn-default multiselect-clear-filter" type="button"><i class="fas fa-times"></i></button></span>'
                         }
                     });
-                    
-                    console.log('Multiselect de fundos inicializado com sucesso');
                 } catch (error) {
                     console.error('Erro ao inicializar multiselect de fundos:', error);
                 }
@@ -6528,7 +5852,6 @@ function populateFilters(selectedUnidades = []) {
 
     } else if (Array.isArray(userAccessLevel)) {
         // CENÁRIO 2: MULTI-FRANQUEADO (vê apenas as suas unidades, mas pode selecionar)
-        console.log('Setting up multi-franchise filter for:', userAccessLevel);
         userAccessLevel.forEach((u) => {
             unidadeFilter.append($("<option>", { value: u, text: u, selected: true }));
         });
@@ -6545,15 +5868,12 @@ function populateFilters(selectedUnidades = []) {
                 buttonWidth: "100%",
                 maxHeight: 300,
                 onChange: function(option, checked) {
-                    console.log('Multi-franchise onChange:', option.val(), checked);
                     updateDashboard();
                 },
                 onSelectAll: function() {
-                    console.log('Multi-franchise onSelectAll');
                     updateDashboard();
                 },
                 onDeselectAll: function() {
-                    console.log('Multi-franchise onDeselectAll');
                     updateDashboard();
                 },
                 enableCaseInsensitiveFiltering: true, // Habilita pesquisa case-insensitive
@@ -6563,13 +5883,11 @@ function populateFilters(selectedUnidades = []) {
 
         // 🆕 CHAMAR updateDependentFilters para usuários multi-franqueado após o setup inicial
         setTimeout(() => {
-            console.log('🔄 Chamando updateDependentFilters para usuário multi-franqueado...');
             retryUpdateDependentFilters(userAccessLevel);
         }, 150);
 
     } else {
         // CENÁRIO 3: FRANQUEADO DE UNIDADE ÚNICA (filtro travado)
-        console.log('Setting up single-franchise filter for:', userAccessLevel);
         unidadeFilter.append($("<option>", { value: userAccessLevel, text: userAccessLevel, selected: true }));
         setTimeout(() => {
             unidadeFilter.multiselect({
@@ -6588,7 +5906,6 @@ function populateFilters(selectedUnidades = []) {
         if (isFunilPage) {
             // Para página do funil, usar coluna D do funil (Qual é o seu curso?)
             cursosUnidade = [...new Set(funilUnidade.map(d => d.curso || ''))].filter(c => c && c.trim() !== '' && c !== 'N/A').sort();
-            console.log('Cursos do funil (usuário único):', cursosUnidade);
         } else {
             // Para outras páginas, usar dados de vendas e fundos
             cursosUnidade = [...new Set([
@@ -6667,32 +5984,26 @@ function populateFilters(selectedUnidades = []) {
 
         // 🆕 ADICIONAR FILTROS ESPECÍFICOS DO FUNIL para usuário único
         if (isFunilPage && funilUnidade && funilUnidade.length > 0) {
-            console.log('🎯 POPULANDO FILTROS DO FUNIL para usuário único');
-            
             // Popular filtro de consultores
             const consultoresUnidade = [...new Set(funilUnidade.map(d => d.consultor || ''))].filter(c => c && c.trim() !== '' && c !== 'N/A').sort();
-            console.log('Consultores da unidade (usuário único):', consultoresUnidade);
             consultoresUnidade.forEach(c => {
                 consultorFilter.append($("<option>", { value: c, text: c }));
             });
 
             // Popular filtro de origem do lead
             const origensLeadUnidade = [...new Set(funilUnidade.map(d => d.origem_lead || ''))].filter(o => o && o.trim() !== '' && o !== 'N/A').sort();
-            console.log('Origens do lead da unidade (usuário único):', origensLeadUnidade);
             origensLeadUnidade.forEach(o => {
                 origemLeadFilter.append($("<option>", { value: o, text: o }));
             });
 
             // Popular filtro de segmentação lead
             const segmentacoesUnidade = [...new Set(funilUnidade.map(d => d.segmentacao_lead || ''))].filter(s => s && s.trim() !== '' && s !== 'N/A').sort();
-            console.log('Segmentações da unidade (usuário único):', segmentacoesUnidade);
             segmentacoesUnidade.forEach(s => {
                 segmentacaoLeadFilter.append($("<option>", { value: s, text: s }));
             });
 
             // Popular filtro de etiquetas
             const etiquetasUnidade = [...new Set(funilUnidade.map(d => d.etiquetas || ''))].filter(e => e && e.trim() !== '' && e !== 'N/A').sort();
-            console.log('Etiquetas da unidade (usuário único):', etiquetasUnidade);
             etiquetasUnidade.forEach(e => {
                 etiquetasFilter.append($("<option>", { value: e, text: e }));
             });
@@ -6728,8 +6039,6 @@ function populateFilters(selectedUnidades = []) {
                     }
                 });
             });
-
-            console.log('✅ Filtros do funil configurados para usuário único');
         }
     }
 
@@ -6739,8 +6048,6 @@ function populateFilters(selectedUnidades = []) {
     const instituicaoFilter = $("#instituicao-filter");
     
     try {
-        console.log('🔧 Inicializando filtros Tipo Serviço e Instituição com texto padrão...');
-        
         // Inicializar Tipo Serviço com texto padrão
         if (tipoServicoFilter.length && !tipoServicoFilter.data('multiselect')) {
             tipoServicoFilter.multiselect({
@@ -6772,7 +6079,6 @@ function populateFilters(selectedUnidades = []) {
                     }
                 }
             });
-            console.log('✅ Filtro Tipo Serviço inicializado com texto padrão');
         }
         
         // Inicializar Instituição com texto padrão
@@ -6809,7 +6115,6 @@ function populateFilters(selectedUnidades = []) {
                     }
                 }
             });
-            console.log('✅ Filtro Instituição inicializado com texto padrão');
         }
         
         // Inicializar Tipo de Adesão com texto padrão
@@ -6844,7 +6149,6 @@ function populateFilters(selectedUnidades = []) {
                     }
                 }
             });
-            console.log('✅ Filtro Tipo de Adesão inicializado com texto padrão');
         }
         
     } catch (error) {
@@ -6856,14 +6160,12 @@ function populateFilters(selectedUnidades = []) {
     const endDateEl = document.getElementById("end-date");
     
     if (!startDateEl.value || !endDateEl.value) {
-        console.log('🗓️ Definindo datas padrão (primeira inicialização)');
         const hoje = new Date();
         const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
         const fimMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
         startDateEl.value = inicioMes.toISOString().split("T")[0];
         endDateEl.value = fimMes.toISOString().split("T")[0];
     } else {
-        console.log('🗓️ Mantendo datas existentes:', startDateEl.value, 'até', endDateEl.value);
     }
 }
 
@@ -7620,15 +6922,7 @@ function getCampoAuxiliar(concatMotivoPerda) {
 
 // --- FUNÇÃO PARA ATUALIZAR INDICADORES DO FUNIL ---
 function updateFunilIndicators(startDate, endDate, selectedUnidades) {
-    console.log("=== INÍCIO updateFunilIndicators ===");
-    console.log("Parâmetros recebidos:");
-    console.log("- startDate:", startDate);
-    console.log("- endDate:", endDate);
-    console.log("- selectedUnidades:", selectedUnidades);
-    console.log("- funilData total:", funilData ? funilData.length : 0, "registros");
-    
     if (!funilData || funilData.length === 0) {
-        console.log("❌ Sem dados do funil para processar");
         // Zerar todos os cards
         document.getElementById("funil-total-leads").textContent = "0";
         document.getElementById("funil-qualificacao-comissao").textContent = "0";
@@ -7639,17 +6933,10 @@ function updateFunilIndicators(startDate, endDate, selectedUnidades) {
         document.getElementById("funil-leads-desqualificados").textContent = "0";
         return;
     }
-    
-    console.log("✅ Dados disponíveis:", funilData.length, "registros");
-    
     // Debug: verificar quantos registros têm títulos válidos
     const registrosComTitulo = funilData.filter(item => item.titulo && item.titulo.trim() !== '');
-    console.log("📋 Registros com título válido:", registrosComTitulo.length, "de", funilData.length, "total");
-    
     // Debug: verificar quantos registros têm datas válidas
     const registrosComData = funilData.filter(item => item.criado_em && item.criado_em.trim() !== '');
-    console.log("📅 Registros com data de criação:", registrosComData.length, "de", funilData.length, "total");
-    
     // Função para converter data DD/MM/YYYY para objeto Date
     const parseDate = (dateString) => {
         if (!dateString || typeof dateString !== 'string') return null;
@@ -7668,17 +6955,11 @@ function updateFunilIndicators(startDate, endDate, selectedUnidades) {
     // PASSO 1: FILTRAR POR PERÍODO DE DATA
     let dadosFiltradosPorData = funilData.filter(item => {
         if (!item.criado_em) {
-            console.log("⚠️ Item sem data de criação:", item.titulo);
             return false; // Excluir itens sem data
         }
         
         const dataItem = parseDate(item.criado_em);
         if (!dataItem) {
-            console.log("⚠️ Data inválida encontrada:", {
-                titulo: item.titulo,
-                dataOriginal: item.criado_em,
-                unidade: item.nm_unidade
-            });
             return false;
         }
         
@@ -7686,272 +6967,140 @@ function updateFunilIndicators(startDate, endDate, selectedUnidades) {
         const dentroIntervalo = dataItem >= startDate && dataItem < endDate;
         
         if (!dentroIntervalo) {
-            console.log("📅 Data fora do intervalo:", {
-                titulo: item.titulo,
-                data: item.criado_em,
-                dataParsed: dataItem.toLocaleDateString('pt-BR'),
-                unidade: item.nm_unidade,
-                startDate: startDate.toLocaleDateString('pt-BR'),
-                endDate: endDate.toLocaleDateString('pt-BR')
-            });
         } else {
-            console.log("✅ Data válida:", {
-                titulo: item.titulo,
-                data: item.criado_em,
-                dataParsed: dataItem.toLocaleDateString('pt-BR'),
-                unidade: item.nm_unidade
-            });
         }
         
         return dentroIntervalo;
     });
-    
-    console.log("� Dados após filtro de data (${startDate.toLocaleDateString('pt-BR')} a ${endDate.toLocaleDateString('pt-BR')}):", dadosFiltradosPorData.length, "registros");
-    
     // Debug detalhado: mostrar TODOS os registros que passaram pelo filtro de data
-    console.log("🔍 TODOS os registros após filtro de data:");
     dadosFiltradosPorData.forEach((item, index) => {
-      console.log(`  ${index + 1}. "${item.titulo}" | ${item.criado_em} | ${item.nm_unidade}`);
     });
     
     // PASSO 2: FILTRAR POR UNIDADE (se selecionadas)
     let dadosFinaisFiltrados = dadosFiltradosPorData;
     
     if (selectedUnidades && selectedUnidades.length > 0) {
-        console.log("🔍 Filtrando por unidades:", selectedUnidades);
-        
         // Verificar se estamos na página do funil - melhorando a detecção
         const btnFunil = document.getElementById('btn-page3');
         const pageFunil = document.getElementById('page3');
         const isFunilPage = (btnFunil && btnFunil.classList.contains('active')) || 
                            (pageFunil && (pageFunil.style.display === 'block' || pageFunil.classList.contains('active')));
-        
-        console.log("🔍 Detecção da página do funil:", {
-            btnFunilActive: btnFunil?.classList.contains('active'),
-            pageFunilDisplay: pageFunil?.style.display,
-            pageFunilClass: pageFunil?.classList.contains('active'),
-            isFunilPage: isFunilPage
-        });
-        
         // Aplicar filtro de unidade normalmente em todas as páginas, incluindo funil
         dadosFinaisFiltrados = dadosFiltradosPorData.filter(item => {
             const unidadeItem = item.nm_unidade;
             if (!unidadeItem) {
-                console.log("⚠️ Item sem unidade:", item);
                 return false;
             }
             
             const pertenceUnidade = selectedUnidades.includes(unidadeItem);
             
             if (!pertenceUnidade) {
-                console.log("❌ Unidade não está no filtro:", {
-                    titulo: item.titulo,
-                    unidade: unidadeItem,
-                    unidadesPermitidas: selectedUnidades
-                });
             } else {
-                console.log("✅ Unidade aceita:", {
-                    titulo: item.titulo,
-                    unidade: unidadeItem
-                });
             }
             
             return pertenceUnidade;
         });
-        
-        console.log("📊 Dados após filtro de unidade:", dadosFinaisFiltrados.length, "registros");
     } else {
-        console.log("📊 Mantendo todos os dados (sem filtro de unidade)");
     }
     
     // PASSO 2.5: FILTRAR POR CURSO (se estiver na página do funil e curso selecionado)
     const selectedCursos = $("#curso-filter").val() || [];
     if (selectedCursos && selectedCursos.length > 0) {
-        console.log("🔍 Filtrando por cursos:", selectedCursos);
-        
         dadosFinaisFiltrados = dadosFinaisFiltrados.filter(item => {
             const cursoItem = item.curso;
             if (!cursoItem || cursoItem.trim() === '') {
-                console.log("⚠️ Item sem curso:", {
-                    titulo: item.titulo,
-                    curso: cursoItem
-                });
                 return false;
             }
             
             const cursoPertence = selectedCursos.includes(cursoItem.trim());
             
             if (!cursoPertence) {
-                console.log("❌ Curso não está no filtro:", {
-                    titulo: item.titulo,
-                    curso: cursoItem,
-                    cursosPermitidos: selectedCursos
-                });
             } else {
-                console.log("✅ Curso aceito:", {
-                    titulo: item.titulo,
-                    curso: cursoItem
-                });
             }
             
             return cursoPertence;
         });
-        
-        console.log("📊 Dados após filtro de curso:", dadosFinaisFiltrados.length, "registros");
     } else {
-        console.log("📊 Mantendo todos os dados (sem filtro de curso)");
     }
     
     // PASSO 2.6: FILTRAR POR CONSULTOR (se estiver na página do funil e consultor selecionado)
     const selectedConsultores = $("#consultor-filter").val() || [];
     if (selectedConsultores && selectedConsultores.length > 0) {
-        console.log("🔍 Filtrando por consultores:", selectedConsultores);
-        
         dadosFinaisFiltrados = dadosFinaisFiltrados.filter(item => {
             const consultorItem = item.consultor;
             if (!consultorItem || consultorItem.trim() === '') {
-                console.log("⚠️ Item sem consultor:", {
-                    titulo: item.titulo,
-                    consultor: consultorItem
-                });
                 return false;
             }
             
             const consultorPertence = selectedConsultores.includes(consultorItem.trim());
             
             if (!consultorPertence) {
-                console.log("❌ Consultor não está no filtro:", {
-                    titulo: item.titulo,
-                    consultor: consultorItem,
-                    consultoresPermitidos: selectedConsultores
-                });
             } else {
-                console.log("✅ Consultor aceito:", {
-                    titulo: item.titulo,
-                    consultor: consultorItem
-                });
             }
             
             return consultorPertence;
         });
-        
-        console.log("📊 Dados após filtro de consultor:", dadosFinaisFiltrados.length, "registros");
     } else {
-        console.log("📊 Mantendo todos os dados (sem filtro de consultor)");
     }
 
     // PASSO 2.7: FILTRAR POR ORIGEM DO LEAD (se estiver na página do funil e origem selecionada)
     const selectedOrigensLead = $("#origem-lead-filter").val() || [];
     if (selectedOrigensLead && selectedOrigensLead.length > 0) {
-        console.log("🔍 Filtrando por origens do lead:", selectedOrigensLead);
-        
         dadosFinaisFiltrados = dadosFinaisFiltrados.filter(item => {
             const origemLeadItem = item.origem_lead;
             if (!origemLeadItem || origemLeadItem.trim() === '') {
-                console.log("⚠️ Item sem origem do lead:", {
-                    titulo: item.titulo,
-                    origem_lead: origemLeadItem
-                });
                 return false;
             }
             
             const origemPertence = selectedOrigensLead.includes(origemLeadItem.trim());
             
             if (!origemPertence) {
-                console.log("❌ Origem do lead não está no filtro:", {
-                    titulo: item.titulo,
-                    origem_lead: origemLeadItem,
-                    origensPermitidas: selectedOrigensLead
-                });
             } else {
-                console.log("✅ Origem do lead aceita:", {
-                    titulo: item.titulo,
-                    origem_lead: origemLeadItem
-                });
             }
             
             return origemPertence;
         });
-        
-        console.log("📊 Dados após filtro de origem do lead:", dadosFinaisFiltrados.length, "registros");
     } else {
-        console.log("📊 Mantendo todos os dados (sem filtro de origem do lead)");
     }
 
     // PASSO 2.8: FILTRAR POR SEGMENTAÇÃO LEAD (se estiver na página do funil e segmentação selecionada)
     const selectedSegmentacoesLead = $("#segmentacao-lead-filter").val() || [];
     if (selectedSegmentacoesLead && selectedSegmentacoesLead.length > 0) {
-        console.log("🔍 Filtrando por segmentações do lead:", selectedSegmentacoesLead);
-        
         dadosFinaisFiltrados = dadosFinaisFiltrados.filter(item => {
             const segmentacaoLeadItem = item.segmentacao_lead;
             if (!segmentacaoLeadItem || segmentacaoLeadItem.trim() === '') {
-                console.log("⚠️ Item sem segmentação do lead:", {
-                    titulo: item.titulo,
-                    segmentacao_lead: segmentacaoLeadItem
-                });
                 return false;
             }
             
             const segmentacaoPertence = selectedSegmentacoesLead.includes(segmentacaoLeadItem.trim());
             
             if (!segmentacaoPertence) {
-                console.log("❌ Segmentação do lead não está no filtro:", {
-                    titulo: item.titulo,
-                    segmentacao_lead: segmentacaoLeadItem,
-                    segmentacoesPermitidas: selectedSegmentacoesLead
-                });
             } else {
-                console.log("✅ Segmentação do lead aceita:", {
-                    titulo: item.titulo,
-                    segmentacao_lead: segmentacaoLeadItem
-                });
             }
             
             return segmentacaoPertence;
         });
-        
-        console.log("📊 Dados após filtro de segmentação do lead:", dadosFinaisFiltrados.length, "registros");
     } else {
-        console.log("📊 Mantendo todos os dados (sem filtro de segmentação do lead)");
     }
 
     // PASSO 2.9: FILTRAR POR ETIQUETAS (se estiver na página do funil e etiquetas selecionadas)
     const selectedEtiquetas = $("#etiquetas-filter").val() || [];
     if (selectedEtiquetas && selectedEtiquetas.length > 0) {
-        console.log("🔍 Filtrando por etiquetas:", selectedEtiquetas);
-        
         dadosFinaisFiltrados = dadosFinaisFiltrados.filter(item => {
             const etiquetasItem = item.etiquetas;
             if (!etiquetasItem || etiquetasItem.trim() === '') {
-                console.log("⚠️ Item sem etiquetas:", {
-                    titulo: item.titulo,
-                    etiquetas: etiquetasItem
-                });
                 return false;
             }
             
             const etiquetasPertence = selectedEtiquetas.includes(etiquetasItem.trim());
             
             if (!etiquetasPertence) {
-                console.log("❌ Etiquetas não estão no filtro:", {
-                    titulo: item.titulo,
-                    etiquetas: etiquetasItem,
-                    etiquetasPermitidas: selectedEtiquetas
-                });
             } else {
-                console.log("✅ Etiquetas aceitas:", {
-                    titulo: item.titulo,
-                    etiquetas: etiquetasItem
-                });
             }
             
             return etiquetasPertence;
         });
-        
-        console.log("📊 Dados após filtro de etiquetas:", dadosFinaisFiltrados.length, "registros");
     } else {
-        console.log("📊 Mantendo todos os dados (sem filtro de etiquetas)");
     }
     
     // PASSO 3: CONTAR LINHAS com título válido (não vazio)
@@ -7960,13 +7109,9 @@ function updateFunilIndicators(startDate, endDate, selectedUnidades) {
     });
     
     const totalLeads = leadsValidos.length;
-    console.log("📊 Total de leads no período filtrado:", totalLeads);
-    
     // Mostrar amostra dos dados contados
     if (leadsValidos.length > 0) {
-        console.log("🔍 Amostra dos leads contados:");
         leadsValidos.slice(0, 5).forEach((item, index) => {
-            console.log(`  ${index + 1}. Título: "${item.titulo}" | Unidade: "${item.nm_unidade}" | Criado: "${item.criado_em}"`);
         });
     }
     
@@ -7974,7 +7119,6 @@ function updateFunilIndicators(startDate, endDate, selectedUnidades) {
     const cardElement = document.getElementById("funil-total-leads");
     if (cardElement) {
         cardElement.textContent = totalLeads.toString();
-        console.log("✅ Card 'Total de Leads Criados' atualizado com:", totalLeads);
     } else {
         console.error("❌ Elemento 'funil-total-leads' não encontrado");
     }
@@ -7987,13 +7131,9 @@ function updateFunilIndicators(startDate, endDate, selectedUnidades) {
     });
     
     const totalQualificacaoComissao = leadsComQualificacaoComissao.length;
-    console.log("📊 Total de leads com Qualificação Comissão preenchida:", totalQualificacaoComissao);
-    
     // Mostrar amostra dos dados de qualificação comissão
     if (leadsComQualificacaoComissao.length > 0) {
-        console.log("🔍 Amostra dos leads com Qualificação Comissão:");
         leadsComQualificacaoComissao.slice(0, 5).forEach((item, index) => {
-            console.log(`  ${index + 1}. Título: "${item.titulo}" | Qualificação: "${item.qualificacao_comissao}" | Unidade: "${item.nm_unidade}"`);
         });
     }
     
@@ -8001,7 +7141,6 @@ function updateFunilIndicators(startDate, endDate, selectedUnidades) {
     const qualificacaoCardElement = document.getElementById("funil-qualificacao-comissao");
     if (qualificacaoCardElement) {
         qualificacaoCardElement.textContent = totalQualificacaoComissao.toString();
-        console.log("✅ Card 'Qualificação Comissão' atualizado com:", totalQualificacaoComissao);
     } else {
         console.error("❌ Elemento 'funil-qualificacao-comissao' não encontrado");
     }
@@ -8018,24 +7157,10 @@ function updateFunilIndicators(startDate, endDate, selectedUnidades) {
         // Se AMBOS são vazios/NULL, retorna false (não conta = 0)
         // Se pelo menos UM tem valor, retorna true (conta = 1)
         const temReuniaoRealizada = !(diagnosticoVazio && propostaVazia);
-        
-        console.log("🔍 Análise de reunião realizada:", {
-            titulo: item.titulo,
-            diagnostico: item.diagnostico_realizado || 'NULL',
-            proposta: item.proposta_enviada || 'NULL',
-            diagnosticoVazio: diagnosticoVazio,
-            propostaVazia: propostaVazia,
-            temReuniaoRealizada: temReuniaoRealizada,
-            criado_em: item.criado_em
-        });
-        
         return temReuniaoRealizada;
     });
     
     const totalReuniaoRealizada = leadsComReuniaoRealizada.length;
-    console.log("📊 Total de leads com Reunião Realizada (período filtrado):", totalReuniaoRealizada);
-    console.log("📊 Total de leads analisados (período filtrado):", dadosFinaisFiltrados.length);
-    
     // Debug detalhado: mostrar estatísticas
     const leadsComDiagnostico = dadosFinaisFiltrados.filter(item => 
         item.titulo && item.titulo.trim() !== '' && 
@@ -8045,17 +7170,9 @@ function updateFunilIndicators(startDate, endDate, selectedUnidades) {
         item.titulo && item.titulo.trim() !== '' && 
         item.proposta_enviada && item.proposta_enviada.trim() !== ''
     );
-    
-    console.log("📊 Estatísticas detalhadas:");
-    console.log("  - Leads com Diagnóstico preenchido:", leadsComDiagnostico.length);
-    console.log("  - Leads com Proposta preenchida:", leadsComProposta.length);
-    console.log("  - Leads com pelo menos um preenchido (Reunião Realizada):", totalReuniaoRealizada);
-    
     // Mostrar amostra dos dados de reunião realizada
     if (leadsComReuniaoRealizada.length > 0) {
-        console.log("🔍 Amostra dos leads com Reunião Realizada:");
         leadsComReuniaoRealizada.slice(0, 5).forEach((item, index) => {
-            console.log(`  ${index + 1}. Título: "${item.titulo}" | Diagnóstico: "${item.diagnostico_realizado || 'NULL'}" | Proposta: "${item.proposta_enviada || 'NULL'}" | Data: "${item.criado_em}"`);
         });
     }
     
@@ -8063,7 +7180,6 @@ function updateFunilIndicators(startDate, endDate, selectedUnidades) {
     const reuniaoCardElement = document.getElementById("funil-reuniao-realizada");
     if (reuniaoCardElement) {
         reuniaoCardElement.textContent = totalReuniaoRealizada.toString();
-        console.log("✅ Card 'Reunião Realizada' atualizado com:", totalReuniaoRealizada);
     } else {
         console.error("❌ Elemento 'funil-reuniao-realizada' não encontrado");
     }
@@ -8077,25 +7193,15 @@ function updateFunilIndicators(startDate, endDate, selectedUnidades) {
         const temPropostaEnviada = item.proposta_enviada && item.proposta_enviada.trim() !== '';
         
         if (temPropostaEnviada) {
-            console.log("✅ Lead com proposta enviada:", {
-                titulo: item.titulo,
-                proposta_enviada: item.proposta_enviada,
-                criado_em: item.criado_em,
-                unidade: item.nm_unidade
-            });
         }
         
         return temPropostaEnviada;
     });
     
     const totalPropostasEnviadas = leadsComPropostaEnviada.length;
-    console.log("📊 Total de leads com Propostas Enviadas (período filtrado):", totalPropostasEnviadas);
-    
     // Mostrar amostra dos dados de propostas enviadas
     if (leadsComPropostaEnviada.length > 0) {
-        console.log("🔍 Amostra dos leads com Propostas Enviadas:");
         leadsComPropostaEnviada.slice(0, 5).forEach((item, index) => {
-            console.log(`  ${index + 1}. Título: "${item.titulo}" | Proposta: "${item.proposta_enviada}" | Data: "${item.criado_em}" | Unidade: "${item.nm_unidade}"`);
         });
     }
     
@@ -8103,7 +7209,6 @@ function updateFunilIndicators(startDate, endDate, selectedUnidades) {
     const propostasEnviadasCardElement = document.getElementById("funil-propostas-enviadas");
     if (propostasEnviadasCardElement) {
         propostasEnviadasCardElement.textContent = totalPropostasEnviadas.toString();
-        console.log("✅ Card 'Propostas Enviadas' atualizado com:", totalPropostasEnviadas);
     } else {
         console.error("❌ Elemento 'funil-propostas-enviadas' não encontrado");
     }
@@ -8117,25 +7222,15 @@ function updateFunilIndicators(startDate, endDate, selectedUnidades) {
         const temFechamentoComissao = item.fechamento_comissao && item.fechamento_comissao.trim() !== '';
         
         if (temFechamentoComissao) {
-            console.log("✅ Lead com fechamento comissão:", {
-                titulo: item.titulo,
-                fechamento_comissao: item.fechamento_comissao,
-                criado_em: item.criado_em,
-                unidade: item.nm_unidade
-            });
         }
         
         return temFechamentoComissao;
     });
     
     const totalFechamentoComissao = leadsComFechamentoComissao.length;
-    console.log("📊 Total de leads com Fechamento Comissão (período filtrado):", totalFechamentoComissao);
-    
     // Mostrar amostra dos dados de fechamento comissão
     if (leadsComFechamentoComissao.length > 0) {
-        console.log("🔍 Amostra dos leads com Fechamento Comissão:");
         leadsComFechamentoComissao.slice(0, 5).forEach((item, index) => {
-            console.log(`  ${index + 1}. Título: "${item.titulo}" | Fechamento: "${item.fechamento_comissao}" | Data: "${item.criado_em}" | Unidade: "${item.nm_unidade}"`);
         });
     }
     
@@ -8143,7 +7238,6 @@ function updateFunilIndicators(startDate, endDate, selectedUnidades) {
     const contratosCardElement = document.getElementById("funil-contratos-fechados");
     if (contratosCardElement) {
         contratosCardElement.textContent = totalFechamentoComissao.toString();
-        console.log("✅ Card 'Contratos Fechados Comissão' atualizado com:", totalFechamentoComissao);
     } else {
         console.error("❌ Elemento 'funil-contratos-fechados' não encontrado");
     }
@@ -8152,10 +7246,8 @@ function updateFunilIndicators(startDate, endDate, selectedUnidades) {
     // Regra complexa: Leads na fase 7.2 Perdido, mas com várias condições de descarte
     
     // Primeiro, vamos ver o que temos na coluna fase_perdido
-    console.log("🔍 Analisando coluna fase_perdido nos primeiros 10 registros:");
     dadosFinaisFiltrados.slice(0, 10).forEach((item, index) => {
         if (item.fase_perdido && item.fase_perdido.trim() !== '') {
-            console.log(`  ${index + 1}. Título: "${item.titulo}" | Fase Perdido: "${item.fase_perdido}" | Motivo: "${item.concat_motivo_perda}"`);
         }
     });
     
@@ -8175,11 +7267,6 @@ function updateFunilIndicators(startDate, endDate, selectedUnidades) {
         
         // 2. Deve ter motivo da perda preenchido
         if (!item.concat_motivo_perda || item.concat_motivo_perda.trim() === '') {
-            console.log("❌ Lead perdido descartado (motivo vazio):", {
-                titulo: item.titulo,
-                fase_perdido: item.fase_perdido,
-                concat_motivo_perda: 'VAZIO'
-            });
             return false;
         }
         
@@ -8188,35 +7275,17 @@ function updateFunilIndicators(startDate, endDate, selectedUnidades) {
         const comecaComDescarte = campoAuxiliar.startsWith("Descarte");
         
         if (comecaComDescarte) {
-            console.log("❌ Lead perdido descartado (inicia com 'Descarte'):", {
-                titulo: item.titulo,
-                concat_motivo_perda: item.concat_motivo_perda,
-                campo_auxiliar: campoAuxiliar
-            });
             return false;
         }
         
         // 4. Se passou por todas as verificações, contar como lead perdido válido
-        console.log("✅ Lead perdido válido:", {
-            titulo: item.titulo,
-            fase_perdido: item.fase_perdido,
-            concat_motivo_perda: item.concat_motivo_perda,
-            campo_auxiliar: campoAuxiliar,
-            criado_em: item.criado_em,
-            unidade: item.nm_unidade
-        });
-        
         return true;
     });
     
     const totalLeadsPerdidos = leadsComFasePerdido.length;
-    console.log("📊 Total de Leads Perdidos válidos (período filtrado):", totalLeadsPerdidos);
-    
     // Mostrar amostra dos dados de leads perdidos
     if (leadsComFasePerdido.length > 0) {
-        console.log("🔍 Amostra dos Leads Perdidos válidos:");
         leadsComFasePerdido.slice(0, 5).forEach((item, index) => {
-            console.log(`  ${index + 1}. Título: "${item.titulo}" | Motivo: "${item.concat_motivo_perda}" | Data: "${item.criado_em}"`);
         });
     }
     
@@ -8224,7 +7293,6 @@ function updateFunilIndicators(startDate, endDate, selectedUnidades) {
     const leadsPerdidosCardElement = document.getElementById("funil-leads-perdidos");
     if (leadsPerdidosCardElement) {
         leadsPerdidosCardElement.textContent = totalLeadsPerdidos.toString();
-        console.log("✅ Card 'Leads Perdidos' atualizado com:", totalLeadsPerdidos);
     } else {
         console.error("❌ Elemento 'funil-leads-perdidos' não encontrado");
     }
@@ -8255,13 +7323,6 @@ function updateFunilIndicators(startDate, endDate, selectedUnidades) {
         const comecaComDescarte = campoAuxiliar.startsWith("Descarte");
         
         if (comecaComDescarte) {
-            console.log("✅ Lead descartado válido:", {
-                titulo: item.titulo,
-                concat_motivo_perda: item.concat_motivo_perda,
-                campo_auxiliar: campoAuxiliar,
-                criado_em: item.criado_em,
-                unidade: item.nm_unidade
-            });
             return true; // INCLUIR os que começam com "Descarte"
         }
         
@@ -8269,13 +7330,9 @@ function updateFunilIndicators(startDate, endDate, selectedUnidades) {
     });
     
     const totalLeadsDescartados = leadsDescartados.length;
-    console.log("📊 Total de Leads Descartados válidos (período filtrado):", totalLeadsDescartados);
-    
     // Mostrar amostra dos dados de leads descartados
     if (leadsDescartados.length > 0) {
-        console.log("🔍 Amostra dos Leads Descartados válidos:");
         leadsDescartados.slice(0, 5).forEach((item, index) => {
-            console.log(`  ${index + 1}. Título: "${item.titulo}" | Motivo: "${item.concat_motivo_perda}" | Data: "${item.criado_em}"`);
         });
     }
     
@@ -8283,7 +7340,6 @@ function updateFunilIndicators(startDate, endDate, selectedUnidades) {
     const leadsDescartadosCardElement = document.getElementById("funil-leads-desqualificados");
     if (leadsDescartadosCardElement) {
         leadsDescartadosCardElement.textContent = totalLeadsDescartados.toString();
-        console.log("✅ Card 'Leads Descartados/Desqualificados' atualizado com:", totalLeadsDescartados);
     } else {
         console.error("❌ Elemento 'funil-leads-desqualificados' não encontrado");
     }
@@ -8292,13 +7348,8 @@ function updateFunilIndicators(startDate, endDate, selectedUnidades) {
     updateCaptacoes(dadosFinaisFiltrados);
     
     // PASSO 11.5: Atualizar a tabela de motivos de perda detalhados
-    console.log("🔍 Chamando updateMotivosPerdaTable com", dadosFinaisFiltrados.length, "registros");
     updateMotivosPerdaTable(dadosFinaisFiltrados);
-    
-    console.log("🔍 Chamando updateDescartesTable com", dadosFinaisFiltrados.length, "registros");
     updateDescartesTable(dadosFinaisFiltrados);
-    
-    console.log("🔍 Chamando updateConcorrentesTable com", dadosFinaisFiltrados.length, "registros");
     updateConcorrentesTable(dadosFinaisFiltrados);
     
     // PASSO 12: Atualizar o gráfico de negociações por fase
@@ -8306,8 +7357,6 @@ function updateFunilIndicators(startDate, endDate, selectedUnidades) {
     
     // PASSO 13: Atualizar o gráfico de perdas por fase
     createPerdasPorFaseChart(dadosFinaisFiltrados);
-    
-    console.log("=== FIM updateFunilIndicators ===");
 }
 
 // Função para classificar o tipo de captação baseado na origem do lead
@@ -8348,15 +7397,10 @@ function getTipoCaptacao(origemLead) {
 
 // Função para atualizar a seção de captações
 function updateCaptacoes(dadosFiltrados) {
-    console.log("=== INÍCIO updateCaptacoes ===");
-    
     // Filtrar apenas leads com título válido
     const leadsValidos = dadosFiltrados.filter(item => 
         item.titulo && item.titulo.trim() !== ''
     );
-    
-    console.log("📊 Total de leads válidos para captações:", leadsValidos.length);
-    
     // Agrupar por origem do lead
     const origemContador = {};
     const tipoContador = {};
@@ -8377,10 +7421,6 @@ function updateCaptacoes(dadosFiltrados) {
         }
         tipoContador[tipo]++;
     });
-    
-    console.log("📊 Contadores por origem:", origemContador);
-    console.log("📊 Contadores por tipo:", tipoContador);
-    
     // Criar dados para a tabela
     const dadosTabela = [];
     const totalLeads = leadsValidos.length;
@@ -8414,8 +7454,6 @@ function updateCaptacoes(dadosFiltrados) {
     // Atualizar gráfico
     // Render 100% stacked bar instead of doughnut
     updateCaptacoesStackedBar(dadosGrafico);
-    
-    console.log("=== FIM updateCaptacoes ===");
 }
 
 // Função para atualizar a tabela de captações
@@ -8640,8 +7678,6 @@ function updateCaptacoesChart(dados) {
         },
         plugins: [ChartDataLabels] // Plugin para exibir percentuais nas fatias
     });
-    
-    console.log("✅ Gráfico de captações atualizado com", dados.length, "categorias");
 }
 
 // Nova função: cria um gráfico de barras 100% empilhadas (horizontal) com os mesmos dados
@@ -8742,9 +7778,6 @@ function updateCaptacoesStackedBar(dados) {
 
 // Função para atualizar a tabela de motivos de perda
 function updateMotivosPerdaTable(dadosFiltrados) {
-    console.log("=== INÍCIO updateMotivosPerdaTable ===");
-    console.log("📊 Dados filtrados recebidos:", dadosFiltrados ? dadosFiltrados.length : 0);
-    
     const tableEl = document.getElementById('motivos-perda-table');
     if (!tableEl) {
         console.error("❌ Elemento 'motivos-perda-table' não encontrado");
@@ -8759,34 +7792,25 @@ function updateMotivosPerdaTable(dadosFiltrados) {
 
     // Verificar se há dados do funil disponíveis
     if (!dadosFiltrados || dadosFiltrados.length === 0) {
-        console.log("⚠️ Não há dados filtrados para processar motivos de perda");
         tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: #F8F9FA;">Nenhum dado disponível</td></tr>';
         return;
     }
 
     try {
         // Debug: Verificar estrutura dos dados
-        console.log("🔍 Amostra dos primeiros 3 registros:", dadosFiltrados.slice(0, 3));
-        
         // Debug: Verificar quantos leads têm fase_perdido preenchida
         const leadsComFasePerdidoPreenchida = dadosFiltrados.filter(item => 
             item && item.fase_perdido && item.fase_perdido.trim() !== ''
         );
-        console.log("📊 Leads com fase_perdido preenchida:", leadsComFasePerdidoPreenchida.length);
-        
         // Debug: Verificar quantos são da fase 7.2
         const leadsNaFase72 = dadosFiltrados.filter(item => 
             item && item.fase_perdido && 
             (item.fase_perdido.includes("7.2") || item.fase_perdido.toLowerCase().includes("perdido"))
         );
-        console.log("📊 Leads na fase 7.2 Perdido:", leadsNaFase72.length);
-        
         // Debug: Verificar quantos têm motivo preenchido
         const leadsComMotivo = dadosFiltrados.filter(item => 
             item && item.concat_motivo_perda && item.concat_motivo_perda.trim() !== ''
         );
-        console.log("📊 Leads com motivo de perda preenchido:", leadsComMotivo.length);
-
         // Filtrar apenas leads perdidos VÁLIDOS (MESMA LÓGICA DO CARD - exclui os que começam com "Descarte")
         const leadsComFasePerdido = dadosFiltrados.filter(item => {
             try {
@@ -8806,20 +7830,9 @@ function updateMotivosPerdaTable(dadosFiltrados) {
                 // 3. Aplicar a regra do campo auxiliar e verificar se começa com "Descarte"
                 const campoAuxiliar = getCampoAuxiliar(item.concat_motivo_perda);
                 const comecaComDescarte = campoAuxiliar.startsWith("Descarte");
-                
-                console.log("🔍 Processando lead:", {
-                    titulo: item.titulo,
-                    motivo_original: item.concat_motivo_perda,
-                    campo_auxiliar: campoAuxiliar,
-                    comeca_com_descarte: comecaComDescarte
-                });
-                
                 if (comecaComDescarte) {
-                    console.log("❌ Lead descartado (motivo de descarte)");
                     return false; // EXCLUIR os que começam com "Descarte"
                 }
-                
-                console.log("✅ Lead válido para tabela");
                 return true;
             } catch (error) {
                 console.error("Erro ao processar item:", item, error);
@@ -8829,9 +7842,7 @@ function updateMotivosPerdaTable(dadosFiltrados) {
 
         // Se não há leads válidos, mostrar mensagem
         if (leadsComFasePerdido.length === 0) {
-            console.log("⚠️ Nenhum lead perdido válido encontrado");
             tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: #F8F9FA; padding: 20px;">Nenhum motivo de perda encontrado no período selecionado</td></tr>';
-            console.log("=== FIM updateMotivosPerdaTable ===");
             return;
         }
 
@@ -8856,10 +7867,6 @@ function updateMotivosPerdaTable(dadosFiltrados) {
                 console.error("Erro ao contar motivo:", item, error);
             }
         });
-
-        console.log("📈 Contagem de motivos:", motivoContador);
-        console.log("📊 Total de leads perdidos contabilizados:", totalLeadsPerdidos);
-
         // Converter para array e ordenar por quantidade (descendente)
         const dadosTabela = Object.keys(motivoContador).map(motivo => ({
             motivo,
@@ -8923,20 +7930,13 @@ function updateMotivosPerdaTable(dadosFiltrados) {
                 autoWidth: false
             });
         }
-
-        console.log('✅ Tabela de motivos de perda atualizada com', dadosTabela.length, 'motivos (DataTable)');
-        
     } catch (error) {
         console.error("❌ Erro geral na função updateMotivosPerdaTable:", error);
     }
-    
-    console.log("=== FIM updateMotivosPerdaTable ===");
 }
 
 // Função para atualizar a tabela de descartes (motivos que começam com "Descarte")
 function updateDescartesTable(dadosFiltrados) {
-    console.log("=== INÍCIO updateDescartesTable ===");
-    
     try {
         const tableEl = document.getElementById('descartes-table');
         if (!tableEl) {
@@ -8949,9 +7949,6 @@ function updateDescartesTable(dadosFiltrados) {
             console.error("❌ Elemento tbody da tabela 'descartes-table' não encontrado");
             return;
         }
-
-        console.log("📊 Processando", dadosFiltrados.length, "registros para tabela de descartes");
-
         // Filtrar apenas leads que têm motivos de descarte
         const leadsComDescarte = dadosFiltrados.filter(item => {
             try {
@@ -8971,20 +7968,9 @@ function updateDescartesTable(dadosFiltrados) {
                 // 3. Aplicar a regra do campo auxiliar e verificar se começa com "Descarte"
                 const campoAuxiliar = getCampoAuxiliar(item.concat_motivo_perda);
                 const comecaComDescarte = campoAuxiliar.startsWith("Descarte");
-                
-                console.log("🔍 Processando lead para descarte:", {
-                    titulo: item.titulo,
-                    motivo_original: item.concat_motivo_perda,
-                    campo_auxiliar: campoAuxiliar,
-                    comeca_com_descarte: comecaComDescarte
-                });
-                
                 if (comecaComDescarte) {
-                    console.log("✅ Lead válido para tabela de descartes");
                     return true; // INCLUIR apenas os que começam com "Descarte"
                 }
-                
-                console.log("❌ Lead descartado (não é descarte)");
                 return false;
             } catch (error) {
                 console.error("Erro ao processar item:", item, error);
@@ -8994,9 +7980,7 @@ function updateDescartesTable(dadosFiltrados) {
 
         // Se não há leads válidos, mostrar mensagem
         if (leadsComDescarte.length === 0) {
-            console.log("⚠️ Nenhum lead com descarte encontrado");
             tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: #F8F9FA; padding: 20px;">Nenhum descarte encontrado no período selecionado</td></tr>';
-            console.log("=== FIM updateDescartesTable ===");
             return;
         }
 
@@ -9020,10 +8004,6 @@ function updateDescartesTable(dadosFiltrados) {
                 console.error("Erro ao contar motivo de descarte:", item, error);
             }
         });
-
-        console.log("📈 Contagem de descartes:", motivoContador);
-        console.log("📊 Total de leads descartados contabilizados:", totalLeadsDescartados);
-
         // Converter para array e ordenar por quantidade (descendente)
         const dadosTabela = Object.keys(motivoContador).map(motivo => ({
             motivo,
@@ -9088,22 +8068,15 @@ function updateDescartesTable(dadosFiltrados) {
                 autoWidth: false
             });
         }
-
-        console.log('✅ Tabela de descartes atualizada com', dadosTabela.length, 'motivos (DataTable)');
-        
     } catch (error) {
         console.error("❌ Erro geral na função updateDescartesTable:", error);
     }
-    
-    console.log("=== FIM updateDescartesTable ===");
 }
 
 // Função para atualizar a tabela de concorrentes (removida)
 let concorrentesDataTable = null;
 function updateConcorrentesTable(dadosFiltrados) {
     try {
-        console.log('=== INÍCIO updateConcorrentesTable ===');
-
         const tbodyEl = document.getElementById('concorrentes-table') || null;
         if (!tbodyEl) {
             console.info('concorrentes table not present in DOM - skipping population');
@@ -9188,13 +8161,9 @@ function updateConcorrentesTable(dadosFiltrados) {
             });
             setTimeout(function() { try { concorrentesDataTable.columns.adjust(); } catch (e) { } }, 120);
         }
-
-        console.log('✅ Tabela de concorrentes atualizada com', tabela.length, 'linhas');
-
     } catch (err) {
         console.error('Erro em updateConcorrentesTable:', err);
     }
-    console.log('=== FIM updateConcorrentesTable ===');
 }
 
 // === NOVA SEÇÃO: NEGOCIAÇÕES E PERDAS POR FASE ===
@@ -9203,8 +8172,6 @@ let negociacoesPorFaseChartInstance = null;
 
 // Função para criar o gráfico de negociações por fase
 function createNegociacoesPorFaseChart(dadosFiltrados) {
-    console.log("=== INÍCIO createNegociacoesPorFaseChart ===");
-    
     // Contar quantidade de cards por fase atual
     const faseContador = {};
     
@@ -9214,9 +8181,6 @@ function createNegociacoesPorFaseChart(dadosFiltrados) {
             faseContador[fase] = (faseContador[fase] || 0) + 1;
         }
     });
-    
-    console.log("📊 Contador por fase:", faseContador);
-    
     // Preparar dados para o gráfico (sem ordenação - a ordenação será feita na função do gráfico)
     const dadosGrafico = Object.keys(faseContador).map(fase => ({
         fase: fase,
@@ -9225,8 +8189,6 @@ function createNegociacoesPorFaseChart(dadosFiltrados) {
     
     // Atualizar gráfico
     updateNegociacoesPorFaseChart(dadosGrafico);
-    
-    console.log("=== FIM createNegociacoesPorFaseChart ===");
 }
 
 // Função para atualizar o gráfico de negociações por fase
@@ -9365,8 +8327,6 @@ function updateNegociacoesPorFaseChart(dados) {
         },
         plugins: [ChartDataLabels]
     });
-    
-    console.log("✅ Gráfico de negociações por fase atualizado com", dados.length, "fases");
 }
 
 // === GRÁFICO DE PERDAS POR FASE ===
@@ -9375,8 +8335,6 @@ let perdasPorFaseChartInstance = null;
 
 // Função para criar o gráfico de perdas por fase
 function createPerdasPorFaseChart(dadosFiltrados) {
-    console.log("=== INÍCIO createPerdasPorFaseChart ===");
-    
     // Contar perdas por fase baseado nas colunas específicas
     const perdasContador = {
         '1.1 Qualificação do Lead': 0,
@@ -9406,9 +8364,6 @@ function createPerdasPorFaseChart(dadosFiltrados) {
             if (item.perda_51 && item.perda_51.toLowerCase() === 'sim') perdasContador['5.1 Captação de Adesões']++;
         }
     });
-    
-    console.log("📊 Contador de perdas por fase:", perdasContador);
-    
     // Preparar dados para o gráfico (SEMPRE exibir todas as fases, mesmo com zero)
     const dadosGrafico = Object.keys(perdasContador).map(fase => ({
         fase: fase,
@@ -9417,8 +8372,6 @@ function createPerdasPorFaseChart(dadosFiltrados) {
     
     // Atualizar gráfico
     updatePerdasPorFaseChart(dadosGrafico);
-    
-    console.log("=== FIM createPerdasPorFaseChart ===");
 }
 
 // Função para atualizar o gráfico de perdas por fase
@@ -9545,8 +8498,6 @@ function updatePerdasPorFaseChart(dados) {
         },
         plugins: [ChartDataLabels]
     });
-    
-    console.log("✅ Gráfico de perdas por fase atualizado com", dados.length, "fases");
 }
 
 // --- Nova função: Monta e inicializa a tabela de indicadores operacionais ---
