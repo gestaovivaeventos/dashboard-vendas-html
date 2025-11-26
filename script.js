@@ -2373,6 +2373,39 @@ function getSolidColorForPercentage(percent) {
     } catch (err) {
         console.error('Erro ao atualizar tabela de indicadores:', err);
     }
+    
+    // 🔄 RESPONSIVIDADE DOS FILTROS DO FUNIL: Atualizar filtros quando período muda
+    try {
+        const isFunilPageNow = document.getElementById('btn-page3')?.classList.contains('active') || 
+                              document.getElementById('page3')?.classList.contains('active');
+        
+        if (isFunilPageNow && funilData && funilData.length > 0) {
+            console.log('🔄 updateDashboard: Atualizando filtros do funil para o período selecionado...');
+            
+            // Filtrar funil por unidade
+            let funilPorUnidade = funilData.filter(d => finalSelectedUnidades.length === 0 || finalSelectedUnidades.includes(d.nm_unidade));
+            
+            // Filtrar funil por período
+            let funilFiltradoFinal = funilPorUnidade.filter(item => {
+                let criado = item.criado_em || (item.row_data && item.row_data[12]);
+                let criadoDate = null;
+                if (criado instanceof Date) criadoDate = criado;
+                else if (typeof criado === 'string') {
+                    const parts = criado.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+                    if (parts) criadoDate = new Date(parts[3], parts[2]-1, parts[1]);
+                    else criadoDate = new Date(criado);
+                }
+                return criadoDate && criadoDate >= startDate && criadoDate < endDate;
+            });
+            
+            console.log('🔄 Funil filtrado por período:', funilFiltradoFinal.length, 'registros');
+            
+            // Atualizar os filtros com os dados filtrados
+            repopulateFunilFiltersOnly(funilFiltradoFinal);
+        }
+    } catch (err) {
+        console.error('Erro ao atualizar filtros do funil:', err);
+    }
 }
 
 // ...
@@ -5727,6 +5760,96 @@ function retryUpdateDependentFilters(selectedUnidades = [], maxRetries = 5, curr
     }
 }
 
+// 🆕 NOVA FUNÇÃO: Repopula apenas os filtros do funil (consultores, origem_lead, etc.) 
+// Chamada quando o período muda, para atualizar os filtros responsivamente
+function repopulateFunilFiltersOnly(funilFiltrado) {
+    console.log('🔄 repopulateFunilFiltersOnly chamado com', funilFiltrado?.length || 0, 'registros');
+    
+    // Verificar se estamos na página do funil
+    const isFunilPage = document.getElementById('btn-page3')?.classList.contains('active') || 
+                       document.getElementById('page3')?.classList.contains('active');
+    
+    if (!isFunilPage) {
+        console.log('  ⚠️ Não estamos na página do funil, ignorando');
+        return;
+    }
+    
+    const consultorFilter = $("#consultor-filter");
+    const origemLeadFilter = $("#origem-lead-filter");
+    const segmentacaoLeadFilter = $("#segmentacao-lead-filter");
+    const etiquetasFilter = $("#etiquetas-filter");
+    
+    // Limpar opções existentes (exceto a primeira que é geralmente placeholder)
+    consultorFilter.find('option:not(:first)').remove();
+    origemLeadFilter.find('option:not(:first)').remove();
+    segmentacaoLeadFilter.find('option:not(:first)').remove();
+    etiquetasFilter.find('option:not(:first)').remove();
+    
+    if (!funilFiltrado || funilFiltrado.length === 0) {
+        console.log('  ⚠️ funilFiltrado vazio, não há dados para popular');
+        return;
+    }
+    
+    // Populate consultores filter
+    const consultoresFunil = funilFiltrado
+        .map((d) => (d.consultor || '').trim())  // 🔧 TRIM para remover espaços
+        .filter(c => c && c !== '' && c !== 'N/A');
+    const consultores = [...new Set(consultoresFunil)].sort();
+    
+    console.log('  👨‍💼 Consultores encontrados:', consultores.length, consultores);
+    
+    consultores.forEach((c) => {
+        consultorFilter.append($("<option>", { value: c, text: c }));
+    });
+    
+    // Populate origem do lead filter
+    const origemLeadFunil = funilFiltrado
+        .map((d) => (d.origem_lead || '').trim())  // 🔧 TRIM para remover espaços
+        .filter(o => o && o !== '' && o !== 'N/A');
+    const origensLead = [...new Set(origemLeadFunil)].sort();
+    
+    console.log('  📍 Origens de lead encontradas:', origensLead.length, origensLead);
+    
+    origensLead.forEach((o) => {
+        origemLeadFilter.append($("<option>", { value: o, text: o }));
+    });
+    
+    // Populate segmentacao lead filter
+    const segmentacaoLeadFunil = funilFiltrado
+        .map((d) => (d.segmentacao_lead || '').trim())  // 🔧 TRIM para remover espaços
+        .filter(s => s && s !== '' && s !== 'N/A');
+    const segmentacoesLead = [...new Set(segmentacaoLeadFunil)].sort();
+    
+    console.log('  🏷️ Segmentações encontradas:', segmentacoesLead.length, segmentacoesLead);
+    
+    segmentacoesLead.forEach((s) => {
+        segmentacaoLeadFilter.append($("<option>", { value: s, text: s }));
+    });
+    
+    // Populate etiquetas filter
+    const etiquetasFunil = funilFiltrado
+        .map((d) => (d.etiquetas || '').trim())  // 🔧 TRIM para remover espaços
+        .filter(e => e && e !== '' && e !== 'N/A');
+    const etiquetas = [...new Set(etiquetasFunil)].sort();
+    
+    console.log('  🏷️ Etiquetas encontradas:', etiquetas.length, etiquetas);
+    
+    etiquetas.forEach((e) => {
+        etiquetasFilter.append($("<option>", { value: e, text: e }));
+    });
+    
+    // Reinicializar multiselects para refletir novas opções
+    try {
+        consultorFilter.multiselect('rebuild');
+        origemLeadFilter.multiselect('rebuild');
+        segmentacaoLeadFilter.multiselect('rebuild');
+        etiquetasFilter.multiselect('rebuild');
+        console.log('  ✅ Multiselects reconstruídos com sucesso');
+    } catch (e) {
+        console.warn('  ⚠️ Erro ao reconstruir multiselects:', e);
+    }
+}
+
 function populateFilters(selectedUnidades = []) {
     console.log('populateFilters called with:', selectedUnidades);
     console.log('userAccessLevel:', userAccessLevel);
@@ -5993,6 +6116,9 @@ function populateFilters(selectedUnidades = []) {
 
             // Atualiza a tabela de captações baseada na base de funil filtrada
             try { updateCaptacoesFunilTable(funilFiltrado); } catch(e) { console.error('Erro ao atualizar captacoes funil table:', e); }
+            
+            // 🔄 NOVA: Atualizar os filtros do funil quando o período muda (torna os filtros responsivos ao período)
+            repopulateFunilFiltersOnly(funilFiltrado);
         }
 
         // Populate cursos filter baseado na página atual
@@ -6012,41 +6138,8 @@ function populateFilters(selectedUnidades = []) {
             cursoFilter.append($("<option>", { value: c, text: c }));
         });
 
-        // Populate consultores filter (apenas se for página do funil)
-        if (isFunilPage && funilFiltrado.length > 0) {
-            const consultoresFunil = funilFiltrado.map((d) => d.consultor || '').filter(c => c && c.trim() !== '' && c !== 'N/A');
-            const consultores = [...new Set(consultoresFunil)].sort();
-            
-            consultores.forEach((c) => {
-                consultorFilter.append($("<option>", { value: c, text: c }));
-            });
-        }
-
-        // Populate origem do lead filter (apenas se for página do funil)
-        if (isFunilPage && funilFiltrado.length > 0) {
-            const origemLeadFunil = funilFiltrado.map((d) => d.origem_lead || '').filter(o => o && o.trim() !== '' && o !== 'N/A');
-            const origensLead = [...new Set(origemLeadFunil)].sort();
-            
-            origensLead.forEach((o) => {
-                origemLeadFilter.append($("<option>", { value: o, text: o }));
-            });
-
-            // Populate segmentacao lead filter (apenas se for página do funil)
-            const segmentacaoLeadFunil = funilFiltrado.map((d) => d.segmentacao_lead || '').filter(s => s && s.trim() !== '' && s !== 'N/A');
-            const segmentacoesLead = [...new Set(segmentacaoLeadFunil)].sort();
-            
-            segmentacoesLead.forEach((s) => {
-                segmentacaoLeadFilter.append($("<option>", { value: s, text: s }));
-            });
-
-            // Populate etiquetas filter (apenas se for página do funil)
-            const etiquetasFunil = funilFiltrado.map((d) => d.etiquetas || '').filter(e => e && e.trim() !== '' && e !== 'N/A');
-            const etiquetas = [...new Set(etiquetasFunil)].sort();
-            
-            etiquetas.forEach((e) => {
-                etiquetasFilter.append($("<option>", { value: e, text: e }));
-            });
-        }
+        // ✅ REMOVIDO: Código antigo de população de consultores/origem/segmentação/etiquetas
+        // Agora usa repopulateFunilFiltersOnly() para evitar duplicatas e garantir responsividade
 
         // Populate fundos filter (apenas se não deve ocultar FUNDOS)
         if (!shouldHideFundos) {
